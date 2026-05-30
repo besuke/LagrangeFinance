@@ -1,0 +1,926 @@
+# Chapter 03
+
+
+## ch03_01
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_01: 無リスク金利の値を格納する変数Rを作成
+
+R <- 0.1
+print(R) 
+
+## [1] 0.1
+```
+
+## ch03_02
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_02: 2次元の無リスク金利ベクトルを作成
+
+R <- c(0.1, 0.2)
+
+## [1] 0.1 0.2
+```
+
+## ch03_03
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_03: 11次元の無リスク金利ベクトルを作成
+
+R <- seq(0.1, 0.2, 0.01)
+## [1] 0.10 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.20
+
+R <- seq(from = 0.1, to = 0.2, length = 11)
+## [1] 0.10 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.20
+```
+
+## ch03_04
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_04: ベクトルの要素へのアクセス
+
+# 第2要素へのアクセス
+R[2] 
+i <- 2
+R[i]
+## [1] 0.11
+
+# 第2-第5要素へのアクセス
+R[2:5]
+## [1] 0.11 0.12 0.13 0.14
+
+# 第2-第11要素へのアクセス
+R[2:length(R)] # length(R)はRの次元11を返す
+R[-1]
+## [1] 0.11 0.12 0.13 0.14 0.15 0.16 0.17 0.18 0.19 0.20
+```
+
+## ch03_05
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_05: 1年後の確実な100万円の現在価値
+
+PV <- 100 / (1 + R)
+
+##  [1] 90.90909 90.09009 89.28571 88.49558 87.71930 86.95652 86.20690 85.47009 84.74576 84.03361 83.33333
+```
+
+## ch03_06
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_06: 次元が一致するベクトル同士の割り算
+
+CF <- seq(from = 110, to = 120, length = 11) # CFを11次元の等差数列として定義
+
+PV <- CF / (1 + R)
+##  [1] 100 100 100 100 100 100 100 100 100 100 100
+```
+
+## ch03_07
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_07: 割引率と現在価値の関係を描画
+
+PV <- 100 / (1 + R)
+plot(PV)
+```
+
+## ch03_08
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_08: 割引率と現在価値の関係を表した図の見栄えを改善
+
+PV <- 100 / (1 + R)
+plot(x = R,
+     y = PV, 
+     xlab = "Discount Rate",
+     ylab = "Present Value",
+     type = "l",
+     main = "Figure: Effect of Discount Rate on Present Value")
+```
+
+## ch03_09
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_09: 割引率と現在価値の関係を表した図をPNG形式で出力
+
+png("PV.png", 
+    pointsize = 12, 
+    width = 20, 
+    height = 10, 
+    units = "cm", 
+    res = 200)
+
+plot(x = R, 
+     y = PV, 
+     xlab = "Discount Rate", 
+     ylab = "Present Value",
+     type = "l",
+     main = "Figure: Effect of Discount Rate on Present Value")
+
+dev.off()
+```
+
+## ch03_10
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_10: 3行2列の行列の作成
+
+x <- matrix(1:6, nrow = 3, ncol = 2)
+
+##      [,1] [,2]
+## [1,]    1    4
+## [2,]    2    5
+## [3,]    3    6
+```
+
+## ch03_11
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_11: 文字を要素とする行列の作成
+
+y <- matrix(c("a", "b", "c", "d"), nrow = 2, ncol = 2)
+
+##      [,1] [,2]
+## [1,] "a"  "c" 
+## [2,] "b"  "d" 
+```
+
+## ch03_12
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_12: リストの作成
+
+x <- list(10:11, "ABC")
+
+x[[1]]
+## [1] 10 11
+
+x[[2]]
+## [1] "ABC"
+```
+
+## ch03_13
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_13: データフレームの作成
+
+ID <- c(1001, 1002, 1003)
+name <- c("Firm A", "Firm B", "Firm C")
+ROE <- c(0.08, 0.12, 0.15)
+x <- data.frame(ID, name, ROE)
+
+##     ID   name  ROE
+## 1 1001 Firm A 0.08
+## 2 1002 Firm B 0.12
+## 3 1003 Firm C 0.15
+```
+
+## ch03_14
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_14: 割引率を0.1とする場合のプロジェクトXのNPVの計算
+
+R <- 0.1
+NPV <- -100 + 50 / (1 + R) + 50 / (1 + R)^2 + 50 / (1 + R)^3
+
+## [1] 24.3426
+```
+
+## ch03_15
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_15: for文を用いたプロジェクトXのNPVの計算 (1)
+
+R <- 0.1
+NPV <- -100
+for (i in 1:3) {
+  NPV <- NPV + 50 / (1 + R)^i
+}
+print(NPV)
+```
+
+## ch03_16
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_16: for文を用いたプロジェクトXのNPVの計算 (2)
+
+R <- 0.1
+NPV <- -100
+for (i in 1:3) {
+  print(NPV) # ここにprint()関数を挿入
+  NPV <- NPV + 50 / (1 + R)^i
+}
+print(NPV)
+
+## [1] -100
+## [1] -54.54545
+## [1] -13.22314
+## [1] 24.3426
+```
+
+## ch03_17
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_17: NPVに基づく投資判断
+
+if (NPV >= 0) {
+  print("プロジェクトを実行！")
+}
+```
+
+## ch03_18
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_18: 異なる割引率に対してプロジェクトXのNPVを計算した上で折れ線グラフに可視化
+
+R <- seq(0.1, 0.2, length = 11) # 11次元のRベクトルを用意
+NPV <- rep(NA, length(R)) # 対応するNPVをNAで初期化（NAは欠損値の意味）
+
+for (i in 1:length(R)) { # 外側のfor文で特定の割引率を固定
+  NPV[i] <- -100
+  for (j in 1:3) { # 内側のfor文で各年度の将来キャッシュフローの現在価値を累積
+    NPV[i] <- NPV[i] + 50 / (1 + R[i])^j
+  }
+}
+
+plot(x = R, 
+     y = NPV, 
+     xlab = "Discount Rate",
+     ylab = "Present Value", 
+     type = "l",
+     main = "Figure: Discount Rate and NPV")
+```
+
+## ch03_19
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_19: ベクトル化によるNPVの計算
+
+R <- 0.1
+CF <- c(-100, 50, 50, 50)
+years <- 0:3
+PV_CF <- CF / (1 + R)^years
+NPV <- sum(PV_CF)
+
+## [1] 24.3426
+```
+
+## ch03_20
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_20: 任意の割引率に対して1年後に受け取る100万円の現在価値を計算する独自関数
+
+calculate_PV <- function(R) {
+  PV <- 100 / (1 + R)
+  return(PV)
+}
+
+calculate_PV(0.1)
+
+## [1] 90.90909
+```
+
+## ch03_21
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_21: よりシンプルにcalculate_PV()を定義した場合
+
+calculate_PV <- function(R) 100 / (1 + R) 
+
+calculate_PV(0.1)
+
+## [1] 90.90909
+```
+
+## ch03_22
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_22: 二つの割引率に対して現在価値を計算できるようcalculate_PV()を拡張
+
+calculate_PV <- function(R1, R2 = 0) {
+  PV1 <- 100 / (1 + R1)
+  PV2 <- 100 / (1 + R2)
+  c(PV1, PV2)
+}
+
+calculate_PV(0.1, 0.2)
+## [1] 90.90909 83.33333
+
+calculate_PV(0.1)
+## [1]  90.90909 100.00000
+```
+
+## ch03_23
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_23: 任意の割引率とキャッシュフローに対して現在価値を計算できるようcalculate_PV()を拡張
+
+calculate_PV <- function(R, CF) {
+  N <- length(CF) # キャッシュフローの発生する回数をNとして定義
+  PV <- CF[1]
+  for (i in 2:N) {
+    PV <- PV + CF[i] / (1 + R)^(i - 1)
+  }
+  return(PV)
+}
+
+calculate_PV(0.1, c(-100, 40, 50, 60))
+
+## [1] 22.76484
+```
+
+## ch03_24
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_24: コメントが詳細で分かりやすいコードの例
+
+# 2021年1月1日作成
+# 現在価値の計算
+
+# 任意の割引率に対して現在価値を計算するcalculate_PV()を定義
+calculate_PV <- function(R) 100 / (1 + R)
+
+# 割引率を0.1とする例
+calculate_PV(0.1)
+```
+
+## ch03_25
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_25: 関数内でグローバル変数の変更を試みた例
+
+calculate_PV <- function(R) {
+  PV <- 100 / (1 + R)
+  R <- R + 0.01
+  return(PV)
+}
+
+R <- 0.1
+for (i in 1:11) print(calculate_PV(R))
+
+## [1] 90.90909
+## [1] 90.90909
+## （同じ計算結果が全部で11回繰り返し表示される）
+```
+
+## ch03_26
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_26: polyroot()関数に基づく3次方程式の数値解
+
+polyroot(c(60, 50, 40, -100))
+
+## [1] -0.4082389+0.5714615i -0.4082389-0.5714615i  1.2164779-0.0000000i
+```
+
+## ch03_27
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_27: 数値解の中から実数解を目視で選んでIRRを計算
+
+solutions <- polyroot(c(60, 50, 40, -100))
+Y <- Re(solutions[3])
+IRR <- Y - 1
+
+## [1] 0.2164779
+```
+
+## ch03_28
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_28: Im()関数を用いて虚部のみ抽出
+
+Im(solutions)
+
+## [1]  5.714615e-01 -5.714615e-01 -7.815970e-16
+```
+
+## ch03_29
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_29: 等価演算子==を用いて実数解かどうかを判定
+
+Im(solutions) == 0
+
+## [1] FALSE FALSE FALSE
+```
+
+## ch03_30
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_30: 数値的誤差を許容して実数解かどうかを判定
+
+error_tolerance <- 1e-10
+
+abs(Im(solutions)) # abs()関数は絶対値を返す
+## [1] 5.714615e-01 5.714615e-01 7.815970e-16
+
+abs(Im(solutions)) < error_tolerance
+## [1] FALSE FALSE  TRUE
+```
+
+## ch03_31
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_31: 数値解の中から実数解を機械的に抽出
+
+is_real <- (abs(Im(solutions)) < error_tolerance)
+Re(solutions[is_real]) # Re()関数は複素数の実部を返す
+
+## [1] 1.216478
+```
+
+## ch03_32
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_32: 任意のCFに対してIRRを計算するcalculate_IRR()関数を定義
+
+calculate_IRR <- function(CF) {
+  N <- length(CF) # キャッシュフローの発生する回数をNとして定義
+  solutions <- polyroot(CF[N:1]) # CFベクトルの順序を逆転させた上でpolyroot()関数に代入
+  error_tolerance <- 1e-10
+  is_real <- (abs(Im(solutions)) < error_tolerance)
+  Re(solutions[is_real]) - 1
+}
+```
+
+## ch03_33
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_33: calculate_IRR()関数の実行例
+
+CF <- c(-100, 40, 50, 60)
+calculate_IRR(CF)
+
+# [1] 0.2164779
+```
+
+## ch03_34
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_34: calculate_IRR()関数の完成版（エラーメッセージ付き）
+
+calculate_IRR <- function(CF) {
+  N <- length(CF) 
+  solutions <- polyroot(CF[N:1]) 
+  error_tolerance <- 1e-10
+  is_real <- (abs(Im(solutions)) < error_tolerance)
+  if (sum(is_real) != 1) stop("IRR法の適用を再考！") # !=は「左辺と右辺が等しくなければ」の意味
+  Re(solutions[is_real]) - 1
+}
+```
+
+## ch03_35
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_35: エラーメッセージが表示される例
+
+CF <- c(-100, 100, 120, -120)
+result <- calculate_IRR(CF)
+
+##   calculate_IRR(CF) でエラー: IRR法の適用を再考！
+```
+
+## ch03_36
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_36: CSVファイルの読み込み
+
+daily_stock_return  <- read.csv("ch03_daily_stock_return.csv") 
+```
+
+## ch03_37
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_37: データフレームの冒頭を確認
+
+head(daily_stock_return)
+```
+
+## ch03_38
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_38: データフレームの行数を確認
+
+nrow(daily_stock_return)
+
+## [1] 21
+```
+
+## ch03_39
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_39: データフレームの内部構造を確認
+
+str(daily_stock_return)
+
+## 'data.frame':	21 obs. of  3 variables:
+## $ date : chr  "2020-04-01" "2020-04-02" "2020-04-03" "2020-04-06" ...
+## $ firm1: num  -0.03948 0.00598 0.05579 0.04193 -0.02019 ...
+## $ firm2: num  0.07696 -0.00725 -0.0173 0.00217 0.07555 ...
+```
+
+## ch03_40
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_40: 日次リターンの平均値を計算
+
+mean(daily_stock_return$firm1)
+## [1] 0.01416117
+
+mean(daily_stock_return$firm2)
+## [1] 0.008025261
+```
+
+## ch03_41
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_41: 日次リターンの標準偏差と相関を計算
+
+sd(daily_stock_return$firm1) # sdはstandard deviation（標準偏差）の略
+## [1] 0.0538396
+
+cor(daily_stock_return$firm1, daily_stock_return$firm2) # corはcorrelation（相関）の略
+## [1] 0.2334892
+```
+
+## ch03_42
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_42: 最も日次リターンが低い日付を抽出
+
+worst_day_ID <- which.min(daily_stock_return$firm1) # which.min()関数で行番号を取得
+## [1] 20
+
+daily_stock_return$date[worst_day_ID] # 取得した行番号を代入して日付を取得
+## [1] "2020-04-28"
+```
+
+## ch03_43
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_43: 日次リターンがプラスである日付のみを抽出
+
+daily_stock_return[daily_stock_return$firm1 > 0, ]$date # 企業1のみで条件付け
+# 2次元目の要素を空白とすると，全ての列が選択される
+# daily_stock_return$date[daily_stock_return$firm1 > 0]と書いても同じ
+
+## [1] "2020-04-02" "2020-04-03" "2020-04-06" "2020-04-09" "2020-04-10" "2020-04-13" "2020-04-15" "2020-04-17" "2020-04-20" "2020-04-22" "2020-04-27" "2020-04-30"
+
+daily_stock_return[daily_stock_return$firm1 > 0 & daily_stock_return$firm2 > 0, ]$date # 企業1と2の両方で条件付け
+
+## [1] "2020-04-06" "2020-04-09" "2020-04-10" "2020-04-13" "2020-04-15" "2020-04-17" "2020-04-20"
+```
+
+## ch03_44
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_44: データフレームにおける列の作成・書き換え・削除
+
+daily_stock_return$difference <- daily_stock_return$firm1 - daily_stock_return$firm2  # 両銘柄の差分を計算して新しい列に保存
+daily_stock_return$firm1 <- 1 + daily_stock_return$firm1  # 企業1のネットリターンをグロスリターンに変換
+daily_stock_return$firm2 <- NULL  # 企業2のデータを削除
+```
+
+## ch03_45
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_45: データフレームをCSVファイルに出力
+
+write.csv(daily_stock_return, "ch03_output.csv")
+```
+
+## ch03_46
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_46: industry列を文字型として定義
+
+firm_ID <- c(1, 2, 3)
+name <- c("Firm A", "Firm B", "Firm C")
+industry <- c("Machinery", "Chemicals", "Machinery")
+
+firm_data <- data.frame(firm_ID, name, industry) 
+```
+
+## ch03_47
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_47: industry列をファクター型に変換
+
+firm_data$industry <- as.factor(firm_data$industry)
+str(firm_data)
+
+## 'data.frame':	3 obs. of  3 variables:
+##  $ firm_ID : num  1 2 3
+##  $ name    : chr  "Firm A" "Firm B" "Firm C"
+##  $ industry: Factor w/ 2 levels "Chemicals","Machinery": 2 1 2
+```
+
+## ch03_48
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_48: date列を文字型として定義
+
+date <- c("2021/4/1", "2021/4/2", "2021/4/5")
+stock_return <- c(0.02, -0.01, -0.02)
+
+stock_return_data <- data.frame(date, stock_return) 
+str(stock_return_data)
+
+## 'data.frame':	3 obs. of  2 variables:
+## $ date        : chr  "2021/4/1" "2021/4/2" "2021/4/5"
+## $ stock_return: num  0.02 -0.01 -0.02
+```
+
+## ch03_49
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_49: date列を日付型に変換
+
+stock_return_data$date <- as.Date(stock_return_data$date)
+str(stock_return_data)
+
+## 'data.frame':	3 obs. of  2 variables:
+##  $ date        : Date, format: "2021-04-01" "2021-04-02" "2021-04-05"
+##  $ stock_return: num  0.02 -0.01 -0.02 
+```
+
+## ch03_50
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_50: 日付型の変数に対する足し算の例
+
+stock_return_data$date <- stock_return_data$date + 1 # 文字型の変数に足し算するとエラーになる
+head(stock_return_data)
+
+##         date stock_return
+## 1 2021-04-02         0.02
+## 2 2021-04-03        -0.01
+## 3 2021-04-06        -0.02 
+```
+
+## ch03_51
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_51: tidyverseのインストール
+
+install.packages("tidyverse")
+```
+
+## ch03_52
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_52: dplyrに含まれるnear()関数
+
+dplyr::near(c(1, 2, 1 + 1e-16), 1) # tidyverse::near()だとエラーになる
+
+## [1]  TRUE FALSE  TRUE
+```
+
+## ch03_53
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_53: tidyverseの読み込み
+
+library("tidyverse")
+near(c(1, 2, 1 + 1e-16), 1) # dplyr::を省略できる
+
+## [1]  TRUE FALSE  TRUE
+```
+
+## ch03_54
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_54: 異なる初期投資額に対して内部収益率をそれぞれ計算
+
+initial_cost <- seq(80, 100, by = 1) # 21次元のinitial_costベクトルを用意
+IRR <- rep(NA, length(initial_cost)) # 対応するIRRをNAで初期化
+
+for (i in 1:length(initial_cost)) {
+  IRR[i] <- calculate_IRR(c(-initial_cost[i], 100)) # 各initial_costに対応してIRRを計算
+}
+
+figure_data <- data.frame(initial_cost, IRR) # 計算結果をデータフレームに格納
+head(figure_data)
+```
+
+## ch03_55
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_55: ggplot2を用いて初期投資額と内部収益率の関係を描画
+
+ggplot(data = figure_data) + geom_line(mapping = aes(x = initial_cost, y = IRR)) # ggplot()関数で描画オブジェクトを作成し, geom_line()関数で折れ線グラフを描画
+```
+
+## ch03_56
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_56: 折れ線グラフの上に点グラフを追加
+
+ggplot(data = figure_data) + 
+  geom_line(mapping = aes(x = initial_cost, y = IRR)) + 
+  geom_point(mapping = aes(x = initial_cost, y = IRR)) # geom_point()関数で点グラフを描画
+```
+
+## ch03_57
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_57: ggplot2で作成した図の見栄えを改善
+
+ggplot(data = figure_data) +
+  geom_line(mapping = aes(x = initial_cost, y = IRR)) +
+  geom_point(mapping = aes(x = initial_cost, y = IRR)) +
+  labs(x = "Initial Cost", y = "IRR", title = "Initial Cost and IRR") + # 両軸の変数名やタイトルを設定
+  theme_classic() # 背景などグラフ全体の体裁（テーマ）を設定
+```
+
+## ch03_58
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_58: 初期投資額が100の点を強調
+
+ggplot(data = figure_data) +
+  geom_line(mapping = aes(x = initial_cost, y = IRR)) +
+  geom_point(mapping = aes(x = initial_cost, y = IRR)) +
+  labs(x = "Initial Cost", y = "IRR", title = "Initial Cost and IRR") +
+  theme_classic() +
+  annotate(geom = "text", x = 99, y = 0.05, label = "Initial Cost 100") + # 位置を指定して文字列を追加
+  annotate(geom = "segment", x = 100, xend = 100, y = 0.04, yend = 0.01, color = "black", linewidth = 0.5, arrow = arrow(length = unit(0.3, "cm"))) # 始点や終点などを指定して矢印を追加
+
+ggsave("IRR.pdf", width = 20, height = 10, units = "cm") # 完成した図をPDF型式で保存
+```

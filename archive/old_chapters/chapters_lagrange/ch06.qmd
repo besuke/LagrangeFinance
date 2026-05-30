@@ -1,0 +1,600 @@
+# 第6章 ファクター・モデルの導入
+
+### 6.1 ファクター構築の準備
+
+#### 6.1.1 市場ポートフォリオの構築
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(broom)
+
+monthly_data <- read_csv("ch05_output1.csv")
+annual_data  <- read_csv("ch05_output2.csv")
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>% 
+  group_by(firm_ID) %>% # firm_IDでグループ化
+  mutate(lagged_ME = lag(ME)) %>% 
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>%
+  group_by(year) %>% # yearでグループ化
+  mutate(w_M = lagged_ME / sum(lagged_ME, na.rm = TRUE)) %>% # 分子は当該銘柄の時価総額, 分母は各銘柄の時価総額の合計
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>% 
+  mutate(w_M = replace(w_M, year >= 2016 & is.na(w_M), 0)) # 2016年以降の欠損値は0で置き換え
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data %>% 
+  group_by(year) %>% 
+  summarize(weight_sum = sum(w_M)) # あえてsum(w_M, na.rm = TRUE)としない
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+monthly_data <- annual_data %>% 
+  select(year, firm_ID, w_M) %>% # 追加に必要な情報のみ抽出
+  full_join(monthly_data, by = c("year", "firm_ID")) %>% # yearとfirm_IDのペアをキーに結合
+  select(-w_M, w_M) # w_Mを最終列に移動
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+factor_data <- monthly_data %>% 
+  filter(month_ID >= 13) %>% # 2016年以降のデータを抽出
+  group_by(month_ID) %>% # month_IDでグループ化
+  summarize(R_F = R_F[1], # 当該月の無リスク金利はどの銘柄でも共通なので最初の値を抽出
+            R_M = sum(w_M * R, na.rm = TRUE)) %>% # 各銘柄の月次リターンの加重平均を計算
+  mutate(R_Me = R_M - R_F) # 月次超過リターンを計算
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ggplot(factor_data) + 
+  geom_histogram(aes(x = R_Me)) + 
+  labs(x = "Monthly Excess Return of Market Portfolio", y = "Count") +
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+factor_data %>% 
+  mutate(gross_R_M = 1 + R_M, # ネット・リターンをグロス・リターンに換算
+         cumulative_gross_R_M = cumprod(gross_R_M)) %>% # グロス・リターンを累積
+  ggplot() +
+  geom_line(aes(x = month_ID, y = cumulative_gross_R_M)) + 
+  labs(x = "Month ID", y = "Cumulative Gross Return") + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+factor_data %>% 
+  mutate(gross_R_M = 1 + R_M,
+         cumulative_gross_R_M = cumprod(gross_R_M)) %>% 
+  select(month_ID, cumulative_gross_R_M) %>% 
+  rbind(c(12, 1), .) %>% # 折れ線グラフの始点を追加
+  ggplot() +
+  geom_line(aes(x = month_ID, y = cumulative_gross_R_M)) + 
+  geom_hline(yintercept = 1, linetype = "dotted") + # 元本の水準を点線で図示
+  labs(x = "Month ID", y = "Cumulative Gross Return") +
+  scale_x_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>% 
+  group_by(year) %>% 
+  mutate(ME_rank10 = as.factor(ntile(lagged_ME, 10))) %>% # ntile()関数を用いて十個のグループに分類
+  ungroup()
+```
+
+#### 6.1.2 ポートフォリオ・ソート
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data %>% 
+  select(year, firm_ID, ME_rank10) %>% 
+  drop_na() %>% # 欠損行を削除
+  group_by(year, ME_rank10) %>% # yearとME_rank10でグループ化
+  summarize(N = n()) %>% # 各ポートフォリオの企業数をカウント
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_sorted_portfolio <- annual_data %>%
+  select(year, firm_ID, ME_rank10) %>% # 年次データから追加したい情報を抽出
+  full_join(monthly_data, by = c("year", "firm_ID")) %>% # yearとfirm_IDをキーに月次データと結合
+  drop_na() %>% # 欠損行を削除 
+  group_by(month_ID, ME_rank10) %>% # month_IDとME_rank10に関してグループ化
+  summarize(Re = mean(Re)) %>% # 各グループで月次超過リターンの平均値を計算
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_cross_sectional_return <- ME_sorted_portfolio %>% 
+  group_by(ME_rank10) %>% # ME_rank10に関してグループ化
+  summarize(mean_Re = mean(Re)) # 月次超過リターンの平均値を計算
+
+ggplot(ME_cross_sectional_return) + 
+  geom_col(aes(x = ME_rank10, y = mean_Re)) + # 棒グラフを描くにはgeom_col()関数を用いる
+  labs(x = "ME Rank", y = "Mean Monthly Excess Return") + 
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>% 
+  mutate(lagged_BEME = lagged_BE / lagged_ME) %>% 
+  group_by(year) %>% 
+  mutate(BEME_rank10 = as.factor(ntile(lagged_BEME, 10))) %>% # 簿価時価比率に基づいて十個のグループに分類
+  ungroup()
+  
+BEME_sorted_portfolio <- annual_data %>%
+  select(year, firm_ID, BEME_rank10, lagged_ME) %>%
+  full_join(monthly_data, by = c("year", "firm_ID")) %>%
+  drop_na() %>% 
+  group_by(month_ID, BEME_rank10) %>%
+  summarize(Re = mean(Re)) %>% # 月次超過リターンの平均値を計算
+  ungroup()
+
+group_by(BEME_sorted_portfolio, BEME_rank10) %>%
+  summarize(mean_Re = mean(Re)) %>%
+  ggplot() + 
+  geom_col(aes(x = BEME_rank10, y = mean_Re)) + 
+  geom_hline(yintercept = 0) + # y = 0の直線を追加
+  labs(x = "BE/ME Rank", y = "Mean Monthly Excess Return") + 
+  scale_y_continuous(limits = c(-0.005, 0.02)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+# 中盤で保有比率wと月次超過リターンReを計算している箇所を除けば, ch06_15aと全く同じ
+
+annual_data <- annual_data %>% 
+  mutate(lagged_BEME = lagged_BE / lagged_ME) %>% 
+  group_by(year) %>% 
+  mutate(BEME_rank10 = as.factor(ntile(lagged_BEME, 10))) %>% 
+  ungroup()
+  
+BEME_sorted_portfolio <- annual_data %>%
+  select(year, firm_ID, BEME_rank10, lagged_ME) %>%
+  full_join(monthly_data, by = c("year", "firm_ID")) %>%
+  drop_na() %>% 
+  group_by(month_ID, BEME_rank10) %>%
+  mutate(w = lagged_ME / sum(lagged_ME)) %>% # 各ポートフォリオで保有比率を計算
+  summarize(Re = sum(w * Re)) %>% # 時価総額加重の月次超過リターンを計算
+  ungroup() 
+
+group_by(BEME_sorted_portfolio, BEME_rank10) %>%
+  summarize(mean_Re = mean(Re)) %>%
+  ggplot() + 
+  geom_col(aes(x = BEME_rank10, y = mean_Re)) + 
+  geom_hline(yintercept = 0) + 
+  labs(x = "BE/ME Rank", y = "Mean Monthly Excess Return") + 
+  scale_y_continuous(limits = c(-0.005, 0.02)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_sorted_portfolio <- factor_data %>% 
+  select(-R_F) %>% # 無リスク金利は重複するので結合前に削除
+  full_join(ME_sorted_portfolio, by = "month_ID") %>% # month_IDをキーに
+  select(-R_Me, R_Me) # R_Meを最終列へ移動
+```
+
+### 6.2 CAPMの実証的な検証
+
+#### 6.2.2 時系列回帰
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_sorted_portfolio %>% 
+  filter(ME_rank10 == 1) %>% # 時価総額が最小のポートフォリオを抽出
+  lm(Re ~ R_Me, data = .) %>% # .を使ってlm()関数の第二引数にデータを代入
+  tidy() # 線形回帰の結果をtidy()関数でデータフレームに変換
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_sorted_portfolio %>% 
+  filter(ME_rank10 == 1) %>%
+  ggplot(aes(x = R_Me, y = Re)) + # aes()関数はggplot()関数の中にも代入可能
+  geom_point() +  # geom_point()関数と次のgeom_smooth()関数で共通のaes()関数を受け取る
+  geom_smooth(method = "lm", color = "black") +
+  labs(x = "Excess Return of Market Portfolio", y = "Excess Return of Small Size Portfolio") + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+CAPM_results <- list(NA) # 推定結果を保存するために空のリストを準備
+
+for(i in 1:10){
+  
+  CAPM_results[[i]] <- ME_sorted_portfolio %>% 
+    filter(ME_rank10 == i) %>%
+    lm(Re ~ R_Me, data = .) %>%
+    tidy() %>% 
+    mutate(ME_rank10 = i) %>% # 推定対象のポートフォリオ名を保存
+    select(ME_rank10, everything()) # ME_rank10を第一列に移動
+  
+}
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+CAPM_results <- do.call(rbind, CAPM_results) # do.call()関数を用いて複数のデータフレームから構成されるリストを一つのデータフレームに統合
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_sorted_portfolio_splitted <- split(ME_sorted_portfolio, ME_sorted_portfolio$ME_rank10) # 元データをME_rank10の値に応じて十個のデータフレームに分割
+
+estimate_CAPM <- function(return_data) { # リターン・データを受け取り, CAPMの推定結果をデータフレームで返す関数を準備
+  lm_results <- lm(Re ~ R_Me, data = return_data)
+  tidied_lm_results <- tidy(lm_results)
+}
+
+CAPM_results_by_lapply <- lapply(ME_sorted_portfolio_splitted, estimate_CAPM) # lapply()関数は第一引数にリスト, 第二引数に関数を取る
+# lapply()関数の返り値はリストなので，一つのデータフレームにまとめたい場合はdo.call()関数を用いる
+```
+
+**コードch06_21とコードch06_22は，R言語特有のものであるため割愛**
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_sorted_portfolio %>%
+  group_by(ME_rank10) %>%
+  nest() %>% # nest()関数を用いて各グループを要素とするメタ・データフレームを作成
+  mutate(CAPM_regression = map(data, ~ lm(Re ~ R_Me, data = .)), # map()関数を用いて各グループを線形回帰
+         CAPM_summary = map(CAPM_regression, tidy)) %>% # tidy()関数を用いて線形回帰の結果を整理
+  select(-c(data, CAPM_regression)) %>% # 線形回帰の結果のみを抽出
+  unnest(cols = CAPM_summary) %>% # nest()関数による畳み込みを解除
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+CAPM_results %>% 
+  filter(term == "(Intercept)") %>% # 定数項に関する推定結果のみを抽出
+  mutate(ME_rank10 = as.factor(ME_rank10)) %>% # ME_rank10を整数型からファクター型に
+  ggplot() +
+  geom_col(aes(x = ME_rank10, y = estimate)) + # 横軸をME_rank10, 縦軸をCAPM_alphaとする棒グラフ
+  geom_hline(yintercept = 0) + 
+  labs(x = "ME Rank", y = "CAPM alpha") + 
+  scale_y_continuous(limits = c(-0.003, 0.013)) +
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+CAPM_results %>% 
+  filter(term == "(Intercept)") %>% # 定数項に関する推定結果のみを抽出
+  rename(CAPM_alpha = estimate, p_value = p.value) %>% # 列名を変更
+  mutate(significance = cut(p_value, 
+                            breaks = c(0, 0.01, 0.05, 0.1, 1), 
+                            labels = c("***", "**", "*", ""), 
+                            include.lowest = TRUE)) %>% # 統計的に有意な結果を*で強調
+  select(ME_rank10, CAPM_alpha, p_value, significance) # 出力したい列を指定
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_cross_sectional_return <- CAPM_results %>% 
+  filter(term == "R_Me") %>% # R_Meの係数に関する推定結果のみを抽出
+  rename(CAPM_beta = estimate) %>% # 推定値をestimateからCAPM_betaに名称変更
+  select(ME_rank10, CAPM_beta) %>%
+  mutate(ME_rank10 = as.factor(ME_rank10)) %>% # ME_rank10を整数型からファクター型に
+  full_join(ME_cross_sectional_return, ., by = "ME_rank10") # 超過リターンのデータと結合
+
+mean_R_Me <- mean(factor_data$R_Me) # 市場ポートフォリオの実現超過リターンにより証券市場線の傾きを推定
+
+ggplot(ME_cross_sectional_return) +
+  geom_point(aes(x = CAPM_beta, y = mean_Re)) +
+  geom_abline(intercept = 0, slope = mean_R_Me) +
+  labs(x = "Market beta", y = "Mean Excess Return") + 
+  scale_x_continuous(limits = c(0, 1.2), expand = c(0, 0)) + 
+  scale_y_continuous(limits = c(0, 0.02)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>% 
+  mutate(lagged_ME = replace(lagged_ME, is.na(lagged_BEME), NA)) %>% # lagged_BEMEが欠損している場合は欠損扱いに
+  group_by(year) %>% 
+  mutate(ME_rank2 = as.factor(ntile(lagged_ME, 2))) %>% 
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data %>% 
+  group_by(year) %>% 
+  mutate(BEME_percent_rank = percent_rank(lagged_BEME)) %>% # 年度ごとに簿価時価比率のパーセンタイル順位を計算
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>%
+  group_by(year) %>% 
+  mutate(BEME_percent_rank = percent_rank(lagged_BEME)) %>% # 年度ごとに簿価時価比率のパーセンタイル順位を計算
+  ungroup() %>%
+  mutate(BEME_rank3 = cut(BEME_percent_rank, 
+                          breaks = c(0, 0.3, 0.7, 1), 
+                          labels = c(1, 2, 3),
+                          include.lowest = TRUE)) # BEME_percent_rankの値に応じて1から3までBEME_rank3の値を定義
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>%
+  mutate(FF_portfolio_type = interaction(ME_rank2, BEME_rank3)) # ME_rank2とBEME_rank3の組合せで, ファクター型の変数FF_portfolio_typeを定義
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>%
+  mutate(FF_portfolio_type = fct_recode(FF_portfolio_type, 
+                                        SL = "1.1",
+                                        BL = "2.1",
+                                        SN = "1.2",
+                                        BN = "2.2",
+                                        SH = "1.3",
+                                        BH = "2.3")) # FF_portfolio_typeの水準を変更
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data %>% 
+  group_by(ME_rank2, BEME_rank3) %>% # ME_rank2とBEME_rank3のペアでグループ化
+  summarize(FF_portfolio_type = FF_portfolio_type[1],
+            mean_BEME = mean(lagged_BEME),
+            mean_ME = mean(lagged_ME),
+            mean_N_stocks = n() / length(unique(year))) %>%
+  ungroup() %>%
+  drop_na() # 欠損データを削除
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+annual_data <- annual_data %>%
+  group_by(year, FF_portfolio_type) %>% # yearとFF_portfolio_typeのペアでグループ化
+  mutate(w = lagged_ME  / sum(lagged_ME, na.rm = TRUE)) %>% # 各ポートフォリオ内で時価総額加重の保有比率を計算
+  ungroup()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+FF_portfolio <- annual_data %>%
+  select(year, firm_ID, FF_portfolio_type, ME_rank2, BEME_rank3, w) %>%
+  full_join(monthly_data, by = c("year", "firm_ID")) %>% # 今までに準備したデータと月次データを結合
+  group_by(month_ID, FF_portfolio_type) %>% # month_IDとFF_portfolio_typeでグループ化
+  summarize(ME_rank2 = ME_rank2[1],
+            BEME_rank3 = BEME_rank3[1],
+            R = sum(w * R, na.rm = TRUE), # 各ポートフォリオの月次リターンを計算
+            R_F = R_F[1]) %>%
+  ungroup() %>%
+  drop_na() # 欠損データを削除
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+FF_portfolio_mean_return <- FF_portfolio %>%
+  mutate(Re = R - R_F) %>%
+  group_by(FF_portfolio_type) %>% # FF_portfolio_typeでグループ化
+  summarize(ME_rank2 = ME_rank2[1],
+            BEME_rank3 = BEME_rank3[1],
+            mean_Re = mean(Re)) # 各ポートフォリオの超過リターンの平均値を計算
+
+ggplot(FF_portfolio_mean_return) + 
+  geom_col(aes(x = BEME_rank3, y = mean_Re, fill = ME_rank2), position = "dodge") + # x軸をBEME_rank3, y軸をmean_Reに, ME_rank2のサブグループで色分け
+  scale_fill_grey() + # 棒グラフの色をモノトーンに
+  labs(x = "BE/ME Rank", y = "Mean Monthly Excess Return", fill = "ME Rank") + 
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ggplot(FF_portfolio_mean_return) + 
+  geom_col(aes(x = BEME_rank3, y = mean_Re, fill = ME_rank2), position = "dodge") + 
+  scale_fill_grey() +
+  geom_text(aes(x = BEME_rank3, y = mean_Re, group = ME_rank2, label = FF_portfolio_type), # (x, y)座標を指定して各ポートフォリオの名前をグラフに挿入
+            vjust = -0.5, # 棒グラフが重ならないよう文字ラベルを上にずらす
+            position = position_dodge(width = 0.9)) + # ME_rank2のサブグループで文字ラベルが左右にずれるよう調整
+  labs(x = "BE/ME Rank", y = "Mean Monthly Excess Return", fill = "ME Rank") + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 0.015)) + # 文字ラベルがはみ出ないようy軸の範囲を指定
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+initial_point <- tibble(month_ID = c(12, 12), # 累積リターンの起点を定義
+                            cumulative_gross_R = c(1, 1), 
+                            FF_portfolio_type = c("BL", "SH"))
+
+FF_portfolio_cumulative_return <- FF_portfolio %>% 
+  group_by(FF_portfolio_type) %>% # FF_portfolio_typeでグループ化
+  mutate(cumulative_gross_R = cumprod(1 + R)) %>% # グロス・リターンを累積
+  ungroup() %>% 
+  filter(FF_portfolio_type %in% c("BL", "SH")) %>%
+  select(month_ID, cumulative_gross_R, FF_portfolio_type) %>%
+  rbind(initial_point, .) # initial_pointを第一行に挿入
+
+ggplot(FF_portfolio_cumulative_return) +
+  geom_line(aes(x = month_ID, y = cumulative_gross_R, linetype = FF_portfolio_type)) + 
+  scale_linetype_manual(values = c("longdash", "solid")) +
+  geom_hline(yintercept = 1, linetype = "dotted") + 
+  labs(x = "Month ID", y = "Cumulative Gross Return", linetype = "") +
+  scale_x_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+FF_portfolio <- FF_portfolio %>%
+  pivot_wider(id_cols = month_ID, names_from = FF_portfolio_type, values_from = R) # FF_portfolio_typeの値に基づく列を作成し, 縦長から横長のデータに変換
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+factor_data <- FF_portfolio %>%
+  mutate(SMB = (SH + SN + SL) / 3 - (BH + BN + BL) / 3, # SMBとHMLを計算
+         HML = (SH + BH) / 2 - (SL + BL) / 2) %>%
+  select(month_ID, SMB, HML) %>%
+  full_join(factor_data, by = "month_ID") %>% # 3ファクターの実現値をfactor_dataに集約
+  select(-c("SMB", "HML"), c("SMB", "HML")) # SMBとHMLを最後列に移動
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+ME_sorted_portfolio <- ME_sorted_portfolio %>%
+  select(-c(R_Me, R_M)) %>%
+  full_join(factor_data, by = "month_ID") # 3ファクターの実現値をME_sorted_portfolioに追加
+
+FF3_results <- list(NA)  # 推定結果を保存するために空のリストを準備
+
+for(i in 1:10) {
+  FF3_results[[i]] <- ME_sorted_portfolio %>% 
+    filter(ME_rank10 == i) %>%
+    lm(Re ~ R_Me + SMB + HML, data = .) %>% # 3ファクターの実現値を独立変数として重回帰
+    tidy() %>% 
+    mutate(ME_rank10 = i) %>% # 推定対象のポートフォリオ名を保存
+    select(ME_rank10, everything()) # ME_rank10を第一列に移動
+}
+
+FF3_results <- do.call(rbind, FF3_results) # do.call()関数を用いて複数のデータフレームから構成されるリストを一つのデータフレームに統合
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+FF3_results %>% 
+  filter(term == "(Intercept)") %>% # 定数項に関する推定結果のみを抽出
+  mutate(ME_rank10 = as.factor(ME_rank10)) %>% # ME_rank10を整数型からファクター型に
+  ggplot() +
+  geom_col(aes(x = ME_rank10, y = estimate)) + # 横軸をME_rank10, 縦軸をFF3_alphaとする棒グラフ
+  geom_hline(yintercept = 0) + 
+  labs(x = "ME Rank", y = "FF3 alpha") + 
+  scale_y_continuous(limits = c(-0.003, 0.013)) +
+  theme_classic()
+```
+
+**データフレームfactor_dataはコードch06_11に記載の理由によりRとPythonとで微妙に異なるため，コードch06_42のデータ保存は割愛**
+
+```{r}
+#| message: false
+#| warning: false
+
+FF3_results %>% 
+  filter(term == "(Intercept)") %>% # 定数項に関する推定結果のみを抽出
+  rename(FF3_alpha = estimate, p_value = p.value) %>% # 列名を変更
+  mutate(significance = cut(p_value,
+                            breaks = c(0, 0.01, 0.05, 0.1, 1), 
+                            labels = c("***", "**", "*", ""), 
+                            include.lowest = TRUE)) %>% # 統計的に有意な結果を*で強調
+  select(ME_rank10, FF3_alpha, p_value, significance) # 出力したい列を指定
+```
+

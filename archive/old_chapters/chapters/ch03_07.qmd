@@ -1,0 +1,10 @@
+# Chapter 03
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_07: 割引率と現在価値の関係を描画
+
+PV <- 100 / (1 + R)
+plot(PV)
+```

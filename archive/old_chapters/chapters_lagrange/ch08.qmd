@@ -1,0 +1,207 @@
+# 第8章 イベント・スタディ
+
+### 8.3 決算発表のイベント・スタディを例にしたRでの実践
+
+#### 8.3.1 イベントの特定
+
+```{r}
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(broom)
+
+return_data <- read_csv("ch08_return_data.csv")
+market_return_data <- read_csv("ch08_market_return_data.csv")
+event_data <- read_csv("ch08_event_data.csv")
+
+head(return_data) # 各データの冒頭を確認
+head(market_return_data)
+head(event_data)
+```
+
+#### 8.3.2 グループ分けの方法 
+
+```{r}
+#| message: false
+#| warning: false
+
+event_data <- event_data %>%
+  mutate(event_ID = 1:nrow(event_data), # イベントIDを付与
+         forecast_innovation = (earnings_forecast - realized_earnings) / lagged_ME, # 予想利益サプライズを計算
+         year = as.integer(substr(event_date, 1, 4))) %>% # 日付データから年度を抽出
+  group_by(year) %>%
+  mutate(event_strength = as.factor(ntile(forecast_innovation, 5))) %>% # 各年度ごとにイベントの強弱を5段階に区分
+  ungroup() 
+```
+
+#### 8.3.3 相対日次の設定
+
+```{r}
+#| message: false
+#| warning: false
+
+N_days <- nrow(market_return_data) # データに含まれる日数をカウント
+N_firms <- length(unique(return_data$firm_ID)) # 企業の固有数をカウント
+N_events <- nrow(event_data) # イベント数をカウント
+
+N1 <- 100 # モデルの推定期間
+N2 <- 30 # イベント前の分析期間
+N3 <- 30 # イベント後の分析期間
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+market_return_data$date_ID <- 1:N_days # 各営業日に日付IDを順番に付与
+
+data_ID_table <- market_return_data %>% 
+  select(date, date_ID) # 各営業日と日付IDを紐付けるデータテーブルを作成
+
+return_data <- return_data %>% 
+  full_join(data_ID_table, by = "date") # リターン・データに日付IDを付与
+  
+event_data <- event_data %>% # イベント・データに日付IDを付与
+  left_join(data_ID_table, by = c("event_date" = "date")) %>%  # event_dataとdata_ID_tableでキー列の名前が異なる点に注意
+  select(event_ID, date_ID, firm_ID, event_strength) %>% # 不要な列を削除
+  rename(event_date_ID = date_ID) # 後のステップで列名の重複を避けるために列名を変更
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+return_data <- return_data %>% 
+  select(-date) %>% # date列が重複するので削除
+  full_join(market_return_data, by = "date_ID") # 市場ポートフォリオのリターンと結合
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+full_sample_data <- tibble(event_ID = sort(rep(1:N_events, N1 + N2 + N3 + 1)),
+                                relative_days = rep(-(N1 + N2):N3, N_events)) # イベント・データとリターン・データを結合する上で骨格となるデータフレームを作成
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+full_sample_data <- full_sample_data %>% 
+  full_join(event_data, by = "event_ID") %>% # イベント・データと結合
+  mutate(date_ID = event_date_ID + relative_days + 1) %>% # event_date_IDとrelative_daysからdate_IDを逆算（取引時間終了後の決算発表を仮定して1日足す）
+  left_join(return_data, by = c("firm_ID", "date_ID")) %>% # リターン・データと結合
+  select(event_ID, event_strength, relative_days, R, R_M)
+```
+
+#### 8.3.4 異常リターンの算定 
+
+```{r}
+#| message: false
+#| warning: false
+
+estimation_window_data <- full_sample_data %>% 
+  filter(relative_days < -N2)  # 推定期間のデータのみ抽出
+
+market_model_results <- list(NA) # 推定結果を保存するために空のリストを準備
+
+for (i in 1:N_events) {
+  
+  lm_results <- estimation_window_data %>% 
+    filter(event_ID == i) %>%
+    lm(R ~ R_M, data = .)  # マーケット・モデルの推定
+  
+  tidied_lm_results <- lm_results %>%
+    tidy() %>% 
+    mutate(event_ID = i) %>% # 推定対象のイベントIDを保存  
+    select(event_ID, everything()) # event_IDを第一列に移動
+  
+  tidied_lm_results$sigma_AR <- glance(lm_results)$sigma # マーケット・モデルの推定により得られた残差の標準誤差を抽出してsigma_ARと保存
+  
+  market_model_results[[i]] <- tidied_lm_results # リストの一要素として推定結果を保存     
+
+}
+
+market_model_results <- do.call(rbind, market_model_results) # do.call()関数を用いて複数のデータフレームから構成されるリストを一つのデータフレームに統合
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+full_sample_data <- market_model_results %>% 
+  pivot_wider(id_cols = c("event_ID", "sigma_AR"), names_from = "term", values_from = "estimate") %>% # term列の値に応じて新しく列を定義
+  rename(alpha = "(Intercept)", beta = R_M) %>% # 列名を変更
+  full_join(full_sample_data, by = "event_ID") %>% # full_sample_dataと結合
+  select(-c("alpha", "beta", "sigma_AR"), c("alpha", "beta", "sigma_AR")) # alpha，beta，sigma_ARを最終列に移動
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+event_window_data <- full_sample_data %>% 
+  filter(relative_days >= -N2) %>% # イベント期間のデータを抽出
+  mutate(R_normal = alpha + beta * R_M,
+         AR = R - R_normal) %>%
+  group_by(event_ID) %>% 
+  mutate(CAR = cumsum(AR)) %>%
+  ungroup() 
+```
+
+#### 8.3.5 異常リターンの集計と結果の解釈 
+
+```{r}
+#| message: false
+#| warning: false
+
+mean_CAR_by_event_strength <- event_window_data %>%
+  group_by(relative_days, event_strength) %>%
+  summarize(mean_CAR = mean(CAR)) # CARの平均値を計算
+
+ggplot(mean_CAR_by_event_strength) +
+  geom_line(aes(x = relative_days, y = mean_CAR, linetype = event_strength)) + # event_strengthごとに線の種類を変更
+  scale_linetype_manual(values = c("dotted", "dotdash", "dashed", "longdash", "solid")) +
+  annotate("rect", xmin = -1, xmax = 0, ymin = -Inf, ymax = Inf, alpha = 0.1) + # イベント発生期間を灰色で強調
+  labs(x = "Relative Days", y = "Mean CAR", linetype = "Event Strength") + 
+  scale_x_continuous(expand = c(0.02, 0)) + # y軸と折れ線グラフの左端の空白を指定
+  scale_y_continuous(labels = scales::label_percent()) + # y軸をパーセント表示に
+  theme_classic()
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+output_table <- event_window_data %>%
+  filter(event_strength == 5) %>% # イベント強度が最も強いグループを抽出
+  group_by(relative_days) %>%
+  summarize(mean_AR = mean(AR), 
+            mean_CAR = mean(CAR), 
+            sigma_mean_AR = sqrt(sum(sigma_AR^2)) / n()) # ARとCARの平均値，及び平均ARの日次標準偏差を推定
+```
+
+```{r}
+#| message: false
+#| warning: false
+
+output_table <- output_table %>%
+  mutate(t_value = mean_AR / sigma_mean_AR, # t値を計算
+         p_value = (1 - pnorm(abs(t_value))) * 2) %>% # 対応するp値を計算
+  mutate(significance = cut(p_value, 
+                            breaks = c(0, 0.01, 0.05, 0.1, 1), 
+                            labels = c("***", "**", "*", ""), 
+                            include.lowest = TRUE)) %>% # 統計的に有意な結果を*で強調
+  select(relative_days, mean_AR, t_value, p_value, significance, mean_CAR) %>% # 列の順序を変更
+  mutate(mean_AR = round(mean_AR, 5) * 100, 
+         t_value = round(t_value, 2), 
+         p_value = round(p_value, 2), 
+         mean_CAR = round(mean_CAR, 5) * 100) # 各列で表示する桁数を指定
+```
+
+```{r}
+# R code not found for this Python cell
+```
+

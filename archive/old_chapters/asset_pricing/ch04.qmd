@@ -1,0 +1,7 @@
+# Chapter 4: Asset Pricing
+
+This chapter contains asset pricing examples.
+
+```{r}
+library(tidyverse)
+```

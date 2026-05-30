@@ -1,0 +1,40 @@
+project:
+  type: book
+
+book:
+  title: "LagrangeFinance"
+  subtitle: >
+    Empirical Accounting, Finance and
+    Financial Mathematics with tidyverse in R
+  author: "Eiichi Horigome"
+  chapters:
+    - index.qmd
+    - part0_foundations/ch01_r_basics.qmd
+    - part0_foundations/ch02_tidyverse.qmd
+    - part0_foundations/ch03_financial_data_structures.qmd
+    - part1_empirical/ch04_financial_data.qmd
+    - part1_empirical/ch05_stock_data_time_series.qmd
+    - part1_empirical/ch06_factor_models.qmd
+    - part1_empirical/ch07_asset_pricing.qmd
+    - part1_empirical/ch08_event_study.qmd
+    - part2_financial_math/ch09_time_value_of_money.qmd
+    - part2_financial_math/ch10_fixed_income.qmd
+    - part2_financial_math/ch11_interest_rate_swaps.qmd
+    - part2_financial_math/ch12_credit_risk_cds.qmd
+    - part3_quantive_riemann/ch13_yield_curves_no_arbitrage.qmd
+    - part3_quantive_riemann/ch14_hull_white.qmd
+    - part3_quantive_riemann/ch15_cross_currency.qmd
+    - part3_quantive_riemann/ch16_structured_products.qmd
+    - part3_quantive_riemann/ch17_prdc.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-fold: false
+    number-sections: false
+
+execute:
+  eval: false
+  warning: false
+  message: false

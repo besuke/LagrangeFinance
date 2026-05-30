@@ -1,0 +1,678 @@
+# Chapter 04
+
+
+## ch04_01
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_01: tidyverseの読み込み
+
+library(tidyverse)
+```
+
+## ch04_02
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_02: CSVファイルの読み込み
+
+financial_data <- read_csv("ch04_financial_data.csv")
+
+nrow(financial_data) # 行数の確認
+## [1] 7920
+
+head(financial_data) # 冒頭N行を確認するにはhead(financial_data, N)とする
+```
+
+## ch04_03
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_03: firm_ID列とindustry_ID列をファクター型に変換
+
+financial_data$firm_ID <- as.factor(financial_data$firm_ID)
+financial_data$industry_ID <- as.factor(financial_data$industry_ID)
+
+class(financial_data$firm_ID)
+## [1] "factor"
+
+class(financial_data$industry_ID)
+## [1] "factor"
+```
+
+## ch04_04
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_04: read_csv()関数を用いるとdate列が最初から日付型に
+
+daily_stock_return <- read_csv("ch03_daily_stock_return.csv")
+class(daily_stock_return$date)
+
+## [1] "Date"
+```
+
+## ch04_05
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_05: 要約統計量の表示
+
+summary(financial_data)
+```
+
+## ch04_06
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_06: year列の固有要素を抽出
+
+unique(financial_data$year)
+
+## [1] 2015 2016 2017 2018 2019 2020
+```
+
+## ch04_07
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_07: firm_ID，及びindustry_ID列の固有要素数をカウント
+
+length(unique(financial_data$firm_ID))
+## [1] 1515
+
+length(unique(financial_data$industry_ID))
+## [1] 10
+```
+
+## ch04_08
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_08: 各行の欠損の有無を判定
+
+head(complete.cases(financial_data)) # head()関数を用いて冒頭6行の結果のみ表示
+
+## [1] FALSE  TRUE  TRUE  TRUE  TRUE  TRUE
+```
+
+## ch04_09
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_09: 欠損のない行の総数をカウント
+
+sum(complete.cases(financial_data)) # TRUE/FALSEを1/0に変換して足し合わせる
+
+## [1] 7919
+```
+
+## ch04_10
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_10: 欠損行を削除
+
+nrow(drop_na(financial_data)) # 欠損行を削除した上で行数をカウント
+## [1] 7919
+
+financial_data <- drop_na(financial_data) # 欠損行を削除した上でデータを上書き
+```
+
+## ch04_11
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_11: 2015年度のデータのみ抽出 (1)
+
+financial_data_2015 <- financial_data[financial_data$year == 2015, ] # 行番号に論理値ベクトルを代入
+```
+
+## ch04_12
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_12: 2015年度のデータのみ抽出 (2)
+
+financial_data_2015 <- subset(financial_data, year == 2015) # subset()関数の第二引数に条件式を代入
+```
+
+## ch04_13
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_13: 2015年度のデータのみ抽出 (3)
+
+financial_data_2015 <- financial_data %>% filter(year == 2015) # tidyverseのdplyrを用いた書き方
+```
+
+## ch04_14
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_14: 2015年度のデータのみ抽出 (4)
+
+financial_data_2015 <- filter(financial_data, year == 2015) # パイプ演算子%>%は第一引数への代入と同じ意味
+```
+
+## ch04_15
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_15: 2015年度の売上高をヒストグラムに図示
+
+ggplot(financial_data_2015) + # 引数名のdataは省略可能
+  geom_histogram(aes(x = sales)) + # ヒストグラムを描くにはgeom_histogram()関数を用いる
+  scale_y_continuous(expand = c(0,0)) + # x軸とヒストグラムの間のスペースを消す
+  theme_classic() # グラフの全体的な体裁を設定
+```
+
+## ch04_16
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_16: 桁区切りのカンマをx軸の目盛りで表示
+
+install.packages("scales") # scalesパッケージをインストール
+
+ggplot(financial_data_2015) +
+  geom_histogram(aes(x = sales)) +
+  scale_x_continuous(labels = scales::label_comma()) + # scalesパッケージのlabel_comma()関数を利用
+  scale_y_continuous(expand = c(0,0)) + 
+  theme_classic()
+```
+
+## ch04_17
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_17: 売上高の自然対数を取ってヒストグラムで可視化
+
+ggplot(financial_data_2015) + 
+  geom_histogram(aes(x = log(sales))) + # 事前にデータを加工せずともaes()関数内で自然対数が取れる
+  scale_y_continuous(expand = c(0,0)) + 
+  theme_classic()
+```
+
+## ch04_18
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_18: パイプ演算子%>%が便利な理由
+
+financial_data$sales %>% 
+  log() %>% # この時点でlog(financial_data$sales)を計算
+  median()
+## [1] 10.6074
+
+median(log(financial_data$sales))
+## [1] 10.6074
+```
+
+## ch04_19
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_19: 各年度の上場企業数のカウント (1)
+
+year_set <- sort(unique(financial_data$year)) # year列の固有要素を抽出して昇順に並び替え
+N_firms_by_year <- rep(NA, length(year_set)) # 結果を保存するための空ベクトルを準備
+
+for (i in seq_along(year_set)) {
+  year_i <- year_set[i] # i番目の年度を抽出
+  N_firms_by_year[i] <- sum(financial_data$year == year_i) # i番目の年度のデータをカウント
+}
+
+print(N_firms_by_year) # 結果の表示
+
+## [1] 1265 1293 1319 1323 1356 1363
+```
+
+## ch04_20
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_20: ベクトルの名前付け
+
+names(N_firms_by_year) <- year_set # 各要素の名前として年度名を代入
+print(N_firms_by_year)
+
+## 2015 2016 2017 2018 2019 2020 
+## 1265 1293 1319 1323 1356 1363 
+```
+
+## ch04_21
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_21: 各年度の上場企業数のカウント (2)
+
+N_firms_by_year <- tapply(financial_data$firm_ID, financial_data$year, length) # tapply()関数は第一引数に元データ, 第二引数にグループ分けに用いる変数, 第三引数に適用したい関数を取る
+print(N_firms_by_year)
+
+## 2015 2016 2017 2018 2019 2020 
+## 1265 1293 1319 1323 1356 1363 
+```
+
+## ch04_22
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_22: 各年度の上場企業数のカウント (3)
+
+N_firms_by_year <- financial_data %>% 
+  group_by(year) %>% # group_by()関数を用いてyearごとにグループ化
+  summarize(N_firms = n()) # 各グループごとにデータ数をカウント
+
+## # A tibble: 6 x 2
+##    year N_firms
+##   <dbl>   <int>
+## 1  2015    1265
+## 2  2016    1293
+## 3  2017    1319
+## 4  2018    1323
+## 5  2019    1356
+## 6  2020    1363
+```
+
+## ch04_23
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_23: group_by()関数を用いたグループ化
+
+financial_data %>% group_by(year) # group_by(financial_data, year)と書いても同じ
+```
+
+## ch04_24
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_24: summarize()関数を用いた平均値の計算
+
+financial_data %>% summarize(mean_sales = mean(sales)) # summarize(financial_data, mean_sales = mean(sales))と書いても同じ
+
+# A tibble: 1 x 1
+## mean_sales
+## <dbl>
+##   1    1520.647 （本文165頁では左記のように記していますが，正しくは以下の通りです）
+##   1    166027.
+```
+
+## ch04_25
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_25: 上場企業数の推移を折れ線グラフで可視化
+
+ggplot(N_firms_by_year) + 
+  geom_line(aes(x = year, y = N_firms)) + # 折れ線グラフを描くにはgeom_line()関数を用いる
+  labs(x = "Year", y = "Number of Firms") + # 両軸のラベルを設定
+  theme_classic() # グラフ全体の体裁を設定  
+```
+
+## ch04_26
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_26: 株主資本の計算 (1)
+
+financial_data$BE <- (financial_data$OA - financial_data$OL) - (financial_data$FO - financial_data$FA) # 新しくBE列を定義
+```
+
+## ch04_27
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_27: 株主資本の計算 (2)
+
+financial_data <- financial_data %>%
+  mutate(BE = (OA - OL) - (FO - FA)) # mutate(financial_data, BE = (OA - OL) - (FO - FA))と書いても同じ
+```
+
+## ch04_28
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_28: lag()関数を用いて前期の株主資本を取得 (1)
+
+head(lag(financial_data$BE)) # head()関数で冒頭6行の結果のみ表示
+
+## [1]       NA 10013.82 10426.33 10842.01 11074.95 11593.58
+```
+
+## ch04_29
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_29: lag()関数を用いて前期の株主資本を取得 (2)
+
+financial_data <- financial_data %>%
+  group_by(firm_ID) %>% # firm_IDごとにグループ化
+  mutate(lagged_BE = lag(BE)) %>% # lag()関数をfirm_IDごとに適用
+  ungroup() # グループ化を解除
+
+head(financial_data$lagged_BE) # head()関数で冒頭6行のlagged_BEを表示
+
+## [1]       NA 10013.82 10426.33 10842.01 11074.95       NA
+```
+
+## ch04_30
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_30: ROEの計算とヒストグラムによる可視化
+
+financial_data <- financial_data %>%
+  mutate(ROE = X / lagged_BE) # mutate(financial_data, ROE = X / lagged_BE)と書いても同じ
+
+ggplot(financial_data) + 
+  geom_histogram(aes(x = ROE)) +
+  scale_x_continuous(limits = c(-0.1, 0.5)) + # 表示するx軸の範囲を(-0.1, 0.5)に限定
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+## ch04_31
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_31: 産業別のROE平均値を計算
+
+financial_data %>% 
+  group_by(industry_ID) %>% # industry_IDごとにグループ化
+  summarize(mean_ROE = mean(ROE, na.rm = TRUE)) # 欠損値を除いてROEの平均値を計算
+```
+
+## ch04_32
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_32: 産業別のROE平均値を棒グラフで可視化
+
+financial_data %>%
+  group_by(industry_ID) %>%
+  summarize(mean_ROE = mean(ROE, na.rm = TRUE)) %>%
+  ggplot() + # パイプ演算子%>%を用いて, 産業別のROE平均値をggplot()関数に引き渡す
+  geom_col(aes(x = industry_ID, y = mean_ROE)) + # 棒グラフを描くにはgeom_col()関数を用いる
+  labs(x = "Industry ID", y = "Industry Average ROE") + 
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+## ch04_33
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_33: 最終年度のデータのみを抽出
+
+financial_data %>% 
+  filter(year == 2020)
+```
+
+## ch04_34
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_34: 最終年度に関してfirm_ID・industry_ID・ROEの各列を抽出
+
+financial_data %>% 
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) # 特定の列のみを抽出するにはselect()関数を用いる
+```
+
+## ch04_35
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_35: 産業別に各企業をROEで順序付け (1)
+
+financial_data %>%
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>% # industry_IDでグループ化
+  mutate(ROE_rank = rank(ROE)) %>% # 順序付けにはrank()関数を用いる
+  ungroup()
+```
+
+## ch04_36
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_36: 産業別に各企業をROEで順序付け (2)
+
+financial_data %>%
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>%
+  mutate(ROE_rank = rank(desc(ROE))) %>% # 降順で順序付けするにはdesc()関数を用いる
+  ungroup()
+```
+
+## ch04_37
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_37: 産業別に各企業をROEで順序付け (3)
+
+financial_data %>% 
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>%
+  mutate(ROE_rank = rank(desc(ROE))) %>%
+  ungroup() %>%
+  arrange(industry_ID, ROE_rank) # 元データを特定の変数の値に基づき並び替えるにはarrange()関数を用いる
+```
+
+## ch04_38
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_38: 各産業でROEが最も高い企業のみを抽出 (1)
+
+financial_data %>% 
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>%
+  mutate(ROE_rank = rank(desc(ROE))) %>%
+  ungroup() %>%
+  filter(ROE_rank == 1) %>% # ROEが最も高い企業のみ抽出
+  select(industry_ID, firm_ID, ROE) # ROE_rank列を省略した上で，industry_IDを左端に
+```
+
+## ch04_39
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_39: 各産業でROEが最も高い企業のみを抽出 (2)
+
+ROE_rank_data <- financial_data %>% # 中間変数としてROE_rank_dataを定義
+  filter(year == 2020) %>% 
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>%
+  mutate(ROE_rank = rank(desc(ROE))) %>%
+  ungroup()
+
+ROE_rank_data %>%
+  filter(ROE_rank == 1) %>%
+  select(industry_ID, firm_ID, ROE)
+```
+
+## ch04_40
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_40: 上級デュポン・モデルによるROEの分析
+
+financial_data_DuPont <- financial_data %>% 
+  group_by(firm_ID) %>%
+  mutate(NOA = OA - OL,
+         RNOA = OX / lag(NOA),
+         PM = OX / sales,
+         ATO = sales / lag(NOA),
+         NFO = FO - FA,
+         lagged_FLEV = lag(NFO) / lagged_BE,
+         NBC = NFE / lag(NFO),
+         ROE_DuPont = RNOA + lagged_FLEV * (RNOA - NBC)) %>% # 上級デュポン・モデルに基づき計算したROE
+  ungroup()
+```
+
+## ch04_41
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_41: ROEの計算方法の比較
+
+all.equal(financial_data_DuPont$ROE, financial_data_DuPont$ROE_DuPont)
+
+## [1] "Mean relative difference: 4.396878e-06"
+```
+
+## ch04_42
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_42: 箱ひげ図を用いたPMの可視化
+
+financial_data_DuPont %>% 
+  filter(year == 2020,
+         industry_ID %in% 2:6) %>% # industry_IDが2から6のデータを抽出
+  ggplot() +
+  geom_boxplot(aes(x = industry_ID, y = PM)) + # 箱ひげ図を描くにはgeom_boxplot()関数を用いる
+  labs(x = "Industry ID") + 
+  theme_classic()
+```
+
+## ch04_43
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_43: ATOとPMのトレードオフの可視化
+
+financial_data_DuPont %>% 
+  group_by(industry_ID) %>% 
+  summarize(industry_median_PM = median(PM, na.rm = TRUE), # 欠損値を除いた上でPMとATOの産業別中央値を計算
+            industry_median_ATO = median(ATO, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_point(aes(x = industry_median_ATO, y = industry_median_PM)) +
+  labs(x = "Industry Median ATO", y = "Industry Median PM") +
+  theme_classic()
+```
+
+## ch04_44
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_44: ATOとPMが反比例するグラフを追加
+
+median_RNOA <- median(financial_data_DuPont$RNOA, na.rm = TRUE) # 欠損値を除く全データに関してRNOAの中央値を計算
+
+financial_data_DuPont %>% 
+  group_by(industry_ID) %>% 
+  summarize(industry_median_PM = median(PM, na.rm = TRUE),
+            industry_median_ATO = median(ATO, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_point(aes(x = industry_median_ATO, y = industry_median_PM)) +
+  labs(x = "Industry Median ATO", y = "Industry Median PM") +
+  theme_classic() + 
+  stat_function(fun = function(x) median_RNOA / x, linetype = "longdash") # グラフに関数を書き込むにはstat_function()関数を用いる
+```
+
+## ch04_45
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_45: データの保存
+
+write_csv(financial_data, "ch04_output.csv") # 基本パッケージのwrite.csv()関数に対応
+```

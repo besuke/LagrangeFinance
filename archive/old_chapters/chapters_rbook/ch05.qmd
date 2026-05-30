@@ -1,0 +1,451 @@
+# 第5章 株式データの取得と可視化
+
+## 5.1 Rを利用した株式データ分析入門
+
+### 5.1.2 株価データのダウンロードと読み込み
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+stock_data <- read_csv("ch05_stock_data.csv")
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+print(stock_data)
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data %>% 
+  filter(firm_ID == 1 & month_ID %in% 27:30)
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data %>% 
+  filter(firm_ID == 74 & month_ID %in% 29:32)
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data <- stock_data %>% 
+  mutate(ME = stock_price * shares_outstanding)
+```
+
+## 5.2 時価総額とリターンの計算
+
+### 5.2.1 時価総額の計算とヒストグラムによる可視化
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+library(scales)
+
+ggplot(stock_data) +
+  geom_histogram(aes(x = ME)) +
+  labs(x = "Market Equity", y = "Count") + 
+  scale_x_continuous(limits = c(0, quantile(stock_data$ME, 0.95)), # x軸の上限を95%点に設定
+                     labels = label_comma(scale = 1e-6)) + # 単位を100万円にした上で桁区切りのカンマを追加
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data %>% 
+  group_by(firm_ID) %>% # firm_IDに関してグループ化
+  mutate(lagged_stock_price = lag(stock_price)) %>% 
+  ungroup()
+```
+
+### 5.2.2 トータル・リターンと超過リターンの計算
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data <- stock_data %>% 
+  group_by(firm_ID) %>% 
+  mutate(lagged_stock_price = lag(stock_price)) %>% 
+  ungroup() %>% 
+  mutate(R = ((stock_price + DPS) * adjustment_coefficient - lagged_stock_price) / lagged_stock_price) # (5.1)式に従って月次リターンを計算
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data <- stock_data %>%
+  mutate(Re = R - R_F) # 月次超過リターンを計算
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+summary(stock_data$R)
+
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+## -0.3803 -0.0406  0.0103  0.0159  0.0648  0.5150    1515 
+```
+
+### 5.2.3 株式データの探索的データ分析
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+sd(stock_data$R, na.rm = TRUE) # na.rm = TRUEを忘れると計算結果はNAに
+
+var(stock_data$R, na.rm = TRUE)
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+skewness <- function(x) (1 / length(x)) * sum(((x - mean(x)) / sd(x))^3) # 歪度を計算する関数の定義
+
+skewness(na.omit(stock_data$R)) # 欠損値を削除した上で代入
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+kurtosis <- function(x) (1 / length(x)) * sum(((x - mean(x)) / sd(x))^4) # 尖度を計算する関数の定義
+
+kurtosis(na.omit(stock_data$R)) # 欠損値を削除した上で代入
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+ggplot(stock_data) + 
+  geom_histogram(aes(x = R)) + 
+  labs(x = "Monthly Stock Return", y = "Count") + 
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_classic()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+annual_stock_data <- stock_data %>% 
+  group_by(firm_ID, year) %>% # firm_IDとyearのペアでグループ化
+  summarize(R = prod(1 + R) - 1, # バイ・アンド・ホールドの年次リターン
+            R_F = prod(1 + R_F) - 1) %>%
+  mutate(Re = R - R_F) %>%
+  select(firm_ID, year, R, Re, R_F) %>%
+  ungroup()
+```
+
+## 5.3 リターンの累積
+
+### 5.3.2 年次リターンの計算
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data %>% 
+  group_by(firm_ID, year) %>% 
+  summarize(simple_cumulative_R = sum(R)) %>% # 元本が一定となるよう毎月リバランスした場合の年次リターン
+  ungroup()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data <- read_csv("ch04_output.csv")
+
+nrow(financial_data) # 年次財務データの行数
+
+nrow(annual_stock_data) # 年次リターン・データの行数
+
+nrow(stock_data) # 月次リターン・データの行数
+```
+
+## 5.4 株式データと財務データを組み合わせた分析
+
+### 5.4.1 二つのデータセットの結合
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+annual_data <- annual_stock_data %>%
+  full_join(financial_data, by = c("firm_ID", "year")) # firm_IDとyearのペアをキーとして設定
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+annual_data <- annual_stock_data %>% 
+  full_join(financial_data) # キーを省略した場合, 列名が同じ変数がキーに
+
+## Joining, by = c("firm_ID", "year")
+```
+
+**コードch05_19は，R言語特有のものであるため割愛**
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+monthly_data  <- stock_data %>%
+  full_join(financial_data, by = c("firm_ID", "year"))
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+A <- tibble(firm_ID = c(1, 2), stock_price = c(120, 500)) # データセットの作成
+B <- tibble(firm_ID = c(1, 3), DPS = c(5, 10))
+
+full_join(A, B, by = "firm_ID") # A %>% full_join(B, by = "firm_ID")と書いても同じ
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+inner_join(A, B, by = "firm_ID")
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+left_join(A, B, by = "firm_ID")
+right_join(A, B, by = "firm_ID")
+```
+
+### 5.4.2 結合後データの探索的データ分析とバブルチャートによる可視化
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+annual_data <- stock_data %>% 
+  filter(month == 12) %>% # 12月のデータのみを抽出
+  select(year, firm_ID, ME) %>% # 追加したい列のみ選択
+  full_join(annual_data, ., by = c("year", "firm_ID")) %>% # 年次データと結合
+  mutate(ME = ME / 1e6) # 時価総額の単位を百万円に
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+annual_data %>% 
+  filter(year == 2015,
+         firm_ID %in% 2:20, # firm_IDが2から20のデータを抽出
+         X > 0) %>% # 対数を取るため当期純利益（X）が正のデータのみ抽出
+  ggplot() + 
+  geom_point(aes(x = log(sales), y = log(X), size = ME), alpha = 0.4) + # バブルチャートを描くにはsize引数を指定
+  scale_size(range = c(1, 20), name = "Market Equity") + # range引数でバブルの最小・最大面積を指定
+  scale_x_continuous(limits = c(8, 14)) + # 両軸の範囲を指定
+  scale_y_continuous(limits = c(2, 11)) +
+  theme_classic()
+```
+
+## 5.5 統計的推論入門
+
+### 5.5.1 リターン・データに関する仮定
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data %>%
+  filter(firm_ID == 1) %>% # firm_IDが1の企業のデータのみ抽出
+  ggplot() + 
+  geom_line(aes(x = month_ID, y = Re)) + # x軸にmonth_ID, y軸に月次超過リターンを表示
+  labs(x = "Month ID", y = "Firm 1's Monthly Excess Return") + 
+  scale_x_continuous(expand = c(0.01, 0)) + # 折れ線グラフとy軸の間の空白を指定
+  theme_classic()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data %>%
+  filter(firm_ID == 1) %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Re)) + 
+  labs(x = "Firm 1's Monthly Excess Return", y = "Count") +
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+### 5.5.2 推定量と推定値の違い
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+stock_data %>% 
+  filter(firm_ID == 1) %>% 
+  select(Re) %>%
+  unlist() %>% # データフレームからベクトルに変換
+  mean(na.rm = TRUE) # 第一引数は月次超過リターンのベクトル
+
+```
+
+### 5.5.3 $t$値の計算
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+Re_firm_ID_1 <- stock_data %>%
+  filter(firm_ID == 1) %>% # firm_IDが1の企業のみ抽出
+  select(Re) %>% # 月次超過リターンのみ抽出
+  drop_na() %>% # 欠損値を削除
+  unlist() # データフレームからベクトルに変換
+
+mu0 <- 0 # 帰無仮説を期待値0と設定
+n <- length(Re_firm_ID_1) # 標本サイズ
+
+t_value <- (mean(Re_firm_ID_1) - mu0) / sqrt(var(Re_firm_ID_1) / n) # 定義に従ってt値を計算
+
+```
+
+### 5.5.4 統計的検定の考え方
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+t.test(Re_firm_ID_1) # t.test()関数で第二引数以降を省略
+```
+
+## 5.6 線形回帰入門
+
+### 5.6.1 線形回帰の概要
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+lm_sample_data <- annual_data %>% 
+  group_by(firm_ID) %>%
+  mutate(lagged_BEME = lagged_BE / lag(ME)) %>% # 企業ごとに前年度の簿価時価比率を計算
+  ungroup() %>%
+  filter(year == 2016, # firm_IDが1から10までの企業の2016年のデータを抽出
+         firm_ID <= 10) %>%
+  select(firm_ID, year, Re, lagged_BEME) %>% # 必要な列のみ抽出
+  drop_na() # 欠損データを削除 
+
+ggplot(lm_sample_data) + 
+  geom_point(aes(x = lagged_BEME, y = Re)) + # x軸に簿価時価比率, y軸に超過リターン
+  labs(x = "BE/ME at the End of Year t", y = "Excess Return for Year t + 1") + 
+  theme_classic()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+ggplot(lm_sample_data) + 
+  geom_point(aes(x = lagged_BEME, y = Re)) + 
+  geom_smooth(aes(x = lagged_BEME, y = Re), method = "lm", se = FALSE, color = "black") + # 回帰直線を追加するにはgeom_smooth()関数を用いる
+  labs(x = "BE/ME at the End of Year t", y = "Excess Return for Year t + 1") + 
+  theme_classic()
+```
+
+**コードch05_33からコードch05_36は，R言語特有のものであるため割愛**
+
+### 5.6.2 最小二乗推定量
+
+### 5.6.3 線形回帰モデルの解釈
+
+### 5.6.4 対数回帰モデル
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+lm_results <- lm(Re ~ lagged_BEME, data = lm_sample_data) # ~の左に従属変数, 右に独立変数を記す
+names(lm_results)
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+print(lm_results$coefficients)
+
+## (Intercept) lagged_BEME 
+## 0.05513385  0.07552921 
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+install.packages("broom")
+library(broom)
+
+tidy(lm_results)
+```
+

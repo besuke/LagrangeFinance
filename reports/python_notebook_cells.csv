@@ -1,0 +1,275 @@
+chapter,notebook,cell_id,cell_type,first_line
+ch03,ch03.ipynb,1,markdown,## 第3章 Rの導入
+ch03,ch03.ipynb,2,code,# ch03_01: 無リスク金利の値を格納する変数Rを作成
+ch03,ch03.ipynb,3,markdown,#### 3.1.2 ベクトル変数の定義
+ch03,ch03.ipynb,4,code,# ch03_02: 2次元の無リスク金利ベクトルを作成
+ch03,ch03.ipynb,5,code,# ch03_03: 11次元の無リスク金利ベクトルを作成
+ch03,ch03.ipynb,6,code,# ch03_04: ベクトルの要素へのアクセス
+ch03,ch03.ipynb,7,code,# ch03_05: 1年後の確実な100万円の現在価値
+ch03,ch03.ipynb,8,code,# ch03_06: 次元が一致するベクトル同士の割り算
+ch03,ch03.ipynb,9,markdown,#### 3.1.3 基本パッケージによる作図
+ch03,ch03.ipynb,10,code,# ch03_07: 割引率と現在価値の関係を描画
+ch03,ch03.ipynb,11,code,# ch03_08: 割引率と現在価値の関係を表した図の見栄えを改善
+ch03,ch03.ipynb,12,code,# ch03_09: 割引率と現在価値の関係を表した図をPNG形式で出力
+ch03,ch03.ipynb,13,code,# ch03_10: 3行2列の行列の作成
+ch03,ch03.ipynb,14,code,# ch03_11: 文字を要素とする行列の作成
+ch03,ch03.ipynb,15,code,# ch03_12: リストの作成
+ch03,ch03.ipynb,16,code,# ch03_13: データフレームの作成
+ch03,ch03.ipynb,17,markdown,### 3.2 for文の使い方
+ch03,ch03.ipynb,18,code,# ch03_14: 割引率を0.1とする場合のプロジェクトXのNPVの計算
+ch03,ch03.ipynb,19,markdown,#### 3.2.2 for文を用いたNPVの計算
+ch03,ch03.ipynb,20,code,# ch03_15: for文を用いたプロジェクトXのNPVの計算 (1)
+ch03,ch03.ipynb,21,code,# ch03_16: for文を用いたプロジェクトXのNPVの計算 (2)
+ch03,ch03.ipynb,22,code,# ch03_17: NPVに基づく投資判断
+ch03,ch03.ipynb,23,markdown,#### 3.2.3 NPVと割引率の関係の可視化
+ch03,ch03.ipynb,24,code,# ch03_18: 異なる割引率に対してプロジェクトXのNPVを計算した上で折れ線グラフに可視化
+ch03,ch03.ipynb,25,code,# ch03_19: ベクトル化によるNPVの計算
+ch03,ch03.ipynb,26,markdown,### 3.3 独自関数の定義の仕方
+ch03,ch03.ipynb,27,code,# ch03_20: 任意の割引率に対して1年後に受け取る100万円の現在価値を計算する独自関数
+ch03,ch03.ipynb,28,markdown,**コードch03_21は，R言語特有のものであるため割愛**
+ch03,ch03.ipynb,29,markdown,#### 3.3.2 現在価値を計算する関数の機能拡張
+ch03,ch03.ipynb,30,code,# ch03_22: 二つの割引率に対して現在価値を計算できるようcalculate_PV()を拡張
+ch03,ch03.ipynb,31,code,# ch03_23: 任意の割引率とキャッシュフローに対して現在価値を計算できるようcalculate_PV()を拡張
+ch03,ch03.ipynb,32,code,# ch03_24: コメントが詳細で分かりやすいコードの例
+ch03,ch03.ipynb,33,code,# ch03_25: 関数内でグローバル変数の変更を試みた例
+ch03,ch03.ipynb,34,markdown,### 3.4 演習:IRRの計算
+ch03,ch03.ipynb,35,code,# ch03_26: poly.polyroots()に基づく3次方程式の数値解
+ch03,ch03.ipynb,36,code,# ch03_27: 数値解の中から実数解を目視で選んでIRRを計算
+ch03,ch03.ipynb,37,markdown,#### 3.4.3 実数解の抽出
+ch03,ch03.ipynb,38,code,# ch03_28: imagメソッドを用いて虚部のみ抽出
+ch03,ch03.ipynb,39,code,# ch03_29: 等価演算子==を用いて実数解かどうかを判定
+ch03,ch03.ipynb,40,markdown,**コードch03_30は，R言語特有のものであるため割愛**
+ch03,ch03.ipynb,41,code,# ch03_31: 数値解の中から実数解を機械的に抽出
+ch03,ch03.ipynb,42,markdown,#### 3.4.4 IRRを計算する独自関数の定義
+ch03,ch03.ipynb,43,code,# ch03_32: 任意のCFに対してIRRを計算するcalculate_IRR()関数を定義
+ch03,ch03.ipynb,44,code,# ch03_33: calculate_IRR()関数の実行例
+ch03,ch03.ipynb,45,code,# ch03_34: calculate_IRR()関数の完成版（エラーメッセージ付き）
+ch03,ch03.ipynb,46,code,# ch03_35: エラーメッセージが表示される例
+ch03,ch03.ipynb,47,markdown,### 3.5 データフレーム入門
+ch03,ch03.ipynb,48,code,# ch03_36: CSVファイルの読み込み
+ch03,ch03.ipynb,49,code,# ch03_37: データフレームの冒頭を確認
+ch03,ch03.ipynb,50,code,# ch03_38: データフレームの行数を確認
+ch03,ch03.ipynb,51,code,# ch03_39: データフレームの内部構造を確認
+ch03,ch03.ipynb,52,code,# ch03_40: 日次リターンの平均値を計算
+ch03,ch03.ipynb,53,code,# ch03_41: 日次リターンの標準偏差と相関を計算
+ch03,ch03.ipynb,54,code,# ch03_42: 最も日次リターンが低い日付を抽出
+ch03,ch03.ipynb,55,code,# ch03_43: 日次リターンがプラスである日付のみを抽出
+ch03,ch03.ipynb,56,code,# ch03_44: データフレームにおける列の作成・書き換え・削除
+ch03,ch03.ipynb,57,code,# ch03_45: データフレームをCSVファイルに出力
+ch03,ch03.ipynb,58,markdown,### 3.6 ファクター型と日付型
+ch03,ch03.ipynb,59,code,# ch03_46: industry列を文字型として定義
+ch03,ch03.ipynb,60,code,# ch03_47: industry列をカテゴリ型に変換
+ch03,ch03.ipynb,61,markdown,#### 3.6.2 日付型入門
+ch03,ch03.ipynb,62,code,# ch03_48: date列を文字型として定義
+ch03,ch03.ipynb,63,code,# ch03_49: date列を日時型に変換
+ch03,ch03.ipynb,64,code,# ch03_50: 日時型の変数に対する足し算の例
+ch03,ch03.ipynb,65,markdown,### 3.7 外部パッケージの使い方
+ch03,ch03.ipynb,66,markdown,**ch03_50-ch03_53は，Rのtidyverseパッケージの導入に関するコードのため割愛**
+ch03,ch03.ipynb,67,code,# ch03_54: 異なる初期投資額に対して内部収益率をそれぞれ計算
+ch03,ch03.ipynb,68,code,#### 3.7.3 matplotlibによる作図
+ch03,ch03.ipynb,69,code,# ch03_55: 初期投資額と内部収益率の関係を描画
+ch03,ch03.ipynb,70,code,# ch03_56: 折れ線グラフの上に点グラフを追加
+ch03,ch03.ipynb,71,code,# ch03_57: 図の見栄えを改善
+ch03,ch03.ipynb,72,code,# ch03_58: 初期投資額が100の点を強調
+ch03,ch03.ipynb,73,code,# 以上のコードについて，動作確認をした実行環境の表示
+ch04,ch04.ipynb,1,markdown,## 第4章 財務データの取得と可視化
+ch04,ch04.ipynb,2,code,# ch04_01: ライブラリの読み込み
+ch04,ch04.ipynb,3,markdown,#### 4.2.2 財務データの読み込み
+ch04,ch04.ipynb,4,code,# ch04_02: CSVファイルの読み込み
+ch04,ch04.ipynb,5,code,# ch04_03: firm_ID列とindustry_ID列をカテゴリ型に変換
+ch04,ch04.ipynb,6,markdown,**コードch04_04は，R言語特有のものであるため割愛**
+ch04,ch04.ipynb,7,markdown,### 4.3 探索的データ分析
+ch04,ch04.ipynb,8,code,# ch04_05: 要約統計量の表示
+ch04,ch04.ipynb,9,code,# ch04_06: year列の固有要素を抽出
+ch04,ch04.ipynb,10,code,# ch04_07: firm_ID，及びindustry_ID列の固有要素数をカウント
+ch04,ch04.ipynb,11,markdown,#### 4.3.2 欠損データの処理
+ch04,ch04.ipynb,12,code,# ch04_08: 各行の欠損の有無を判定
+ch04,ch04.ipynb,13,code,# ch04_09: 欠損のない行の総数をカウント
+ch04,ch04.ipynb,14,code,# ch04_10: 欠損行を削除
+ch04,ch04.ipynb,15,markdown,### 4.4 データの抽出とヒストグラムによる可視化
+ch04,ch04.ipynb,16,code,# ch04_11: 2015年度のデータのみ抽出
+ch04,ch04.ipynb,17,markdown,**コードch04_12からコードch04_14は，R言語上での代替的な方法を説明しているため割愛**
+ch04,ch04.ipynb,18,markdown,#### 4.4.2 ヒストグラムによる売上高の可視化
+ch04,ch04.ipynb,19,code,# ch04_15: 2015年度の売上高をヒストグラムに図示
+ch04,ch04.ipynb,20,code,# ch04_16: 桁区切りのカンマをx軸の目盛りで表示
+ch04,ch04.ipynb,21,code,# ch04_17: 売上高の自然対数を取ってヒストグラムで可視化
+ch04,ch04.ipynb,22,code,# ch04_18: Pythonでの対数売上高の中央値の計算例
+ch04,ch04.ipynb,23,markdown,### 4.5 データの集計と折れ線グラフによる可視化
+ch04,ch04.ipynb,24,code,# ch04_19: 各年度の上場企業数のカウント (1) - NumPyベース
+ch04,ch04.ipynb,25,code,# ch04_20: year列を追加しつつ，データフレームへと変換
+ch04,ch04.ipynb,26,code,# ch04_21: 各年度の上場企業数のカウント (2) - pandasベース
+ch04,ch04.ipynb,27,markdown,**コードch04_22とch04_23は，R言語特有のものであるため割愛**
+ch04,ch04.ipynb,28,code,# ch04_24: Pythonでの平均値の計算例
+ch04,ch04.ipynb,29,markdown,#### 4.5.4 折れ線グラフによる上場企業数の可視化
+ch04,ch04.ipynb,30,code,# ch04_25: 上場企業数の推移を折れ線グラフで可視化
+ch04,ch04.ipynb,31,markdown,### 4.6 変数の作成とヒストグラムによる可視化
+ch04,ch04.ipynb,32,code,# ch04_26: 株主資本の計算 (1)
+ch04,ch04.ipynb,33,markdown,**コードch04_27は，R言語特有のものであるため割愛**
+ch04,ch04.ipynb,34,markdown,#### 4.6.2 ラグの取り方
+ch04,ch04.ipynb,35,code,# ch04_28: shift()関数を用いて前期の株主資本を取得 (1)
+ch04,ch04.ipynb,36,code,# ch04_29: shift()関数を用いて前期の株主資本を取得 (2)
+ch04,ch04.ipynb,37,markdown,#### 4.6.3 ROEの計算とヒストグラムによる可視化
+ch04,ch04.ipynb,38,code,# ch04_30: ROEの計算とヒストグラムによる可視化
+ch04,ch04.ipynb,39,markdown,### 4.7 グループごとの集計とランク付け
+ch04,ch04.ipynb,40,code,# ch04_31: 産業別のROE平均値を計算
+ch04,ch04.ipynb,41,code,# ch04_32: 産業別のROE平均値を棒グラフで可視化
+ch04,ch04.ipynb,42,markdown,#### 4.7.2 産業内でのROEのランク付け
+ch04,ch04.ipynb,43,code,# ch04_33: 最終年度のデータのみを抽出
+ch04,ch04.ipynb,44,code,# ch04_34: 最終年度に関してfirm_ID・industry_ID・ROEの各列を抽出
+ch04,ch04.ipynb,45,code,# ch04_35: 産業別に各企業をROEで順序付け (1)
+ch04,ch04.ipynb,46,code,# ch04_36: 産業別に各企業をROEで順序付け (2)
+ch04,ch04.ipynb,47,code,# ch04_37: 産業別に各企業をROEで順序付け (3)
+ch04,ch04.ipynb,48,code,# ch04_38: 各産業でROEが最も高い企業のみを抽出 (1)
+ch04,ch04.ipynb,49,markdown,**コードch04_39は，上記のコードch04_33-ch04_38までの流れとほとんど同じため割愛**
+ch04,ch04.ipynb,50,markdown,### 4.8 上級デュポン・モデルによるROEの分析とその可視化
+ch04,ch04.ipynb,51,code,# ch04_40: 上級デュポン・モデルによるROEの分析
+ch04,ch04.ipynb,52,markdown,**コードch04_41は，R言語特有のものであるため割愛**
+ch04,ch04.ipynb,53,code,# ch04_42: 箱ひげ図を用いたPMの可視化
+ch04,ch04.ipynb,54,code,# ch04_43: ATOとPMのトレードオフの可視化
+ch04,ch04.ipynb,55,code,# ch04_44: ATOとPMが反比例するグラフを追加
+ch04,ch04.ipynb,56,code,# ch04_45: データの保存
+ch04,ch04.ipynb,57,code,# 以上のコードについて，動作確認をした実行環境の表示
+ch05,ch05.ipynb,1,markdown,## 第5章 株式データの取得と可視化
+ch05,ch05.ipynb,2,code,# 本章で利用する以下のライブラリ・モジュールを読み込む
+ch05,ch05.ipynb,3,code,# ch05_01: 株式データの読み込み
+ch05,ch05.ipynb,4,code,# ch05_02: 株式データの目視
+ch05,ch05.ipynb,5,code,# ch05_03: 配当支払いや発行済株式数変化の例
+ch05,ch05.ipynb,6,code,# ch05_04: 調整係数が1以外の値を取る例
+ch05,ch05.ipynb,7,markdown,### 5.2 時価総額とリターンの計算
+ch05,ch05.ipynb,8,code,# ch05_05: 時価総額の追加
+ch05,ch05.ipynb,9,code,# ch05_06: 時価総額の分布をヒストグラムで可視化
+ch05,ch05.ipynb,10,markdown,#### 5.2.2 トータル・リターンと超過リターンの計算
+ch05,ch05.ipynb,11,code,# ch05_07: 前月の株価を追加
+ch05,ch05.ipynb,12,code,# ch05_08: 月次リターンの追加
+ch05,ch05.ipynb,13,code,# ch05_09: 月次超過リターンの追加
+ch05,ch05.ipynb,14,markdown,#### 5.2.3 株式データの探索的データ分析
+ch05,ch05.ipynb,15,code,# ch05_10: 月次リターンの要約統計量を確認
+ch05,ch05.ipynb,16,code,# ch05_11: 月次リターンの標準偏差と分散を計算
+ch05,ch05.ipynb,17,code,# ch05_12: 月次リターンの歪度を計算
+ch05,ch05.ipynb,18,code,# ch05_13: 月次リターンの歪度を計算
+ch05,ch05.ipynb,19,code,# ch05_14: 月次リターンの分布をヒストグラムで可視化
+ch05,ch05.ipynb,20,markdown,### 5.3 リターンの累積
+ch05,ch05.ipynb,21,code,# ch05_15: 月次リターンを累積して年次リターンを計算 (1)
+ch05,ch05.ipynb,22,code,# ch05_16: 月次リターンを累積して年次リターンを計算 (2)
+ch05,ch05.ipynb,23,markdown,### 5.4 株式データと財務データを組み合わせた分析
+ch05,ch05.ipynb,24,code,# ch05_17: 財務データと株式データの行数を確認
+ch05,ch05.ipynb,25,code,# ch05_18: 年次リターン・データと財務データの結合 (1)
+ch05,ch05.ipynb,26,markdown,**コードch05_19は，R言語特有のものであるため割愛**
+ch05,ch05.ipynb,27,code,# ch05_20: 月次リターン・データと財務データの結合
+ch05,ch05.ipynb,28,code,# ch05_21: full_join()関数による欠損値の処理
+ch05,ch05.ipynb,29,code,# ch05_22: inner_join()関数による欠損値の処理
+ch05,ch05.ipynb,30,code,# ch05_23: left_join()関数，及びright_join()関数による欠損値の処理
+ch05,ch05.ipynb,31,markdown,#### 5.4.2 結合後データの探索的データ分析とバブルチャートによる可視化
+ch05,ch05.ipynb,32,code,# ch05_24: 年度末の時価総額を年次データに追加
+ch05,ch05.ipynb,33,code,# ch05_25: 売上高・当期純利益・時価総額をバブルチャートで可視化
+ch05,ch05.ipynb,34,markdown,### 5.5 統計的推論入門
+ch05,ch05.ipynb,35,code,# ch05_26: firm_IDが1の企業の月次超過リターンを折れ線グラフで可視化
+ch05,ch05.ipynb,36,code,# ch05_27: firm_IDが1の企業の月次超過リターンをヒストグラムで可視化
+ch05,ch05.ipynb,37,markdown,#### 5.5.2 推定量と推定値の違い
+ch05,ch05.ipynb,38,code,# ch05_28: firm_IDが1の企業の平均月次超過リターンを計算
+ch05,ch05.ipynb,39,markdown,#### 5.5.3 $t$値の計算
+ch05,ch05.ipynb,40,code,# ch05_29: 月次超過リターンの期待値に関するt検定 (1)
+ch05,ch05.ipynb,41,markdown,#### 5.5.4 統計的検定の考え方
+ch05,ch05.ipynb,42,code,# ch05_30: 月次超過リターンの期待値に関するt検定 (2)
+ch05,ch05.ipynb,43,markdown,### 5.6 線形回帰入門
+ch05,ch05.ipynb,44,code,# ch05_31: 簿価時価比率と株式リターンの関係を可視化
+ch05,ch05.ipynb,45,code,# ch05_32: 簿価時価比率と株式リターンの散布図に回帰直線を追加
+ch05,ch05.ipynb,46,markdown,**コードch05_33からコードch05_36は，R言語特有のものであるため割愛**
+ch05,ch05.ipynb,47,markdown,#### 5.6.2 最小二乗推定量
+ch05,ch05.ipynb,48,markdown,#### 5.6.3 線形回帰モデルの解釈
+ch05,ch05.ipynb,49,markdown,#### 5.6.4 対数回帰モデル
+ch05,ch05.ipynb,50,code,# ch05_37: 線形・対数モデルによる推定
+ch05,ch05.ipynb,51,code,# ch05_38: データの保存
+ch05,ch05.ipynb,52,code,# 以上のコードについて，動作確認をした実行環境の表示
+ch06,ch06.ipynb,1,markdown,## 第6章 ファクター・モデルの導入
+ch06,ch06.ipynb,2,code,import pandas as pd
+ch06,ch06.ipynb,3,code,# ch06_01: データの読み込み
+ch06,ch06.ipynb,4,code,# ch06_02: 前年度の時価総額を追加
+ch06,ch06.ipynb,5,code,# ch06_03: 市場ポートフォリオ作成のための保有比率の計算
+ch06,ch06.ipynb,6,code,# ch06_04: 保有比率の欠損値を0で置き換え
+ch06,ch06.ipynb,7,code,# ch06_05: 各年度の保有比率の合計が1になっていることを確認
+ch06,ch06.ipynb,8,code,# ch06_06: 月次データに保有比率のデータを追加
+ch06,ch06.ipynb,9,code,# ch06_07: 市場ポートフォリオの月次リターンを計算
+ch06,ch06.ipynb,10,code,# ch06_08: 市場ポートフォリオの月次超過リターンをヒストグラムで可視化
+ch06,ch06.ipynb,11,code,# ch06_09: 市場ポートフォリオの累積リターンの可視化 (1)
+ch06,ch06.ipynb,12,code,# ch06_10: 市場ポートフォリオの累積リターンの可視化 (2)
+ch06,ch06.ipynb,13,markdown,#### 6.1.2 ポートフォリオ・ソート
+ch06,ch06.ipynb,14,code,# ch06_11: 前年度末の時価総額に基づくポートフォリオ・ソート (1)
+ch06,ch06.ipynb,15,code,# ch06_12: 各ポートフォリオに属する企業数を確認
+ch06,ch06.ipynb,16,code,# ch06_13: 前年度末の時価総額に基づくポートフォリオ・ソート (2)
+ch06,ch06.ipynb,17,code,# ch06_14: 各ポートフォリオの平均超過リターンを可視化
+ch06,ch06.ipynb,18,code,# ch06_15a: 簿価時価比率に基づくポートフォリオ・ソート（等加重の場合）
+ch06,ch06.ipynb,19,code,# ch06_15b: 簿価時価比率に基づくポートフォリオ・ソート（時価総額加重の場合）
+ch06,ch06.ipynb,20,markdown,### 6.2 CAPMの実証的な検証
+ch06,ch06.ipynb,21,code,# ch06_16: 市場ポートフォリオの超過リターンを追加
+ch06,ch06.ipynb,22,code,# ch06_17: 時系列回帰 (1)
+ch06,ch06.ipynb,23,code,# ch06_18: 時系列回帰 (2)
+ch06,ch06.ipynb,24,code,# ch06_19: CAPMの実証的な検証 (1)
+ch06,ch06.ipynb,25,code,# ch06_20: CAPMの実証的な検証 (2)
+ch06,ch06.ipynb,26,markdown,**コードch06_21とコードch06_22は，R言語特有のものであるため割愛**
+ch06,ch06.ipynb,27,code,# ch06_23: CAPMアルファの可視化
+ch06,ch06.ipynb,28,code,# ch06_24: CAPMアルファの統計的な有意性を評価
+ch06,ch06.ipynb,29,code,# ch06_25: 証券市場線の推定
+ch06,ch06.ipynb,30,code,# ch06_26: 前年度の時価総額に基づくランク付け
+ch06,ch06.ipynb,31,code,# ch06_27: 簿価時価比率に基づくランク付け (1)
+ch06,ch06.ipynb,32,code,# ch06_28: 簿価時価比率に基づくランク付け (2)
+ch06,ch06.ipynb,33,code,# ch06_29: 6 Size-BE/MEポートフォリオへの分類 (1)
+ch06,ch06.ipynb,34,code,# ch06_30: 6 Size-BE/MEポートフォリオへの分類 (2)
+ch06,ch06.ipynb,35,code,# ch06_31: 6 Size-BE/MEポートフォリオへの分類 (3)
+ch06,ch06.ipynb,36,code,# ch06_32: 6 Size-BE/MEポートフォリオの構築 (1)
+ch06,ch06.ipynb,37,code,# ch06_33: 6 Size-BE/MEポートフォリオの構築 (2)
+ch06,ch06.ipynb,38,code,# ch06_34: 6 Size-BE/MEポートフォリオのリターンの可視化 (1)
+ch06,ch06.ipynb,39,code,# ch06_35: 6 Size-BE/MEポートフォリオのリターンの可視化 (2)
+ch06,ch06.ipynb,40,code,# ch06_36: 6 Size-BE/MEポートフォリオのリターンの可視化 (3)
+ch06,ch06.ipynb,41,code,# ch06_37: SMBとHMLの構築 (1)
+ch06,ch06.ipynb,42,code,# ch06_38: SMBとHMLの構築 (2)
+ch06,ch06.ipynb,43,code,# ch06_39: FF3モデルの推定
+ch06,ch06.ipynb,44,code,# ch06_40: FF3アルファの可視化
+ch06,ch06.ipynb,45,code,# ch06_41: FF3アルファの統計的な有意性を評価
+ch06,ch06.ipynb,46,markdown,**データフレームfactor_dataはコードch06_11に記載の理由によりRとPythonとで微妙に異なるため，コードch06_42のデータ保存は割愛**
+ch06,ch06.ipynb,47,code,# 以上のコードについて，動作確認をした実行環境の表示
+ch07,ch07.ipynb,1,markdown,## 第7章 ファクター・モデルの応用
+ch07,ch07.ipynb,2,code,# ch07_01: 外部パッケージの読み込みとデータの準備
+ch07,ch07.ipynb,3,code,# ch07_02: FF3モデルの推定 (1)
+ch07,ch07.ipynb,4,code,# ch07_03: FF3モデルの推定 (2)
+ch07,ch07.ipynb,5,code,# ch07_04: ファクター・リスクプレミアムの計算
+ch07,ch07.ipynb,6,code,# ch07_05: Fama-Frenchの3ファクター・モデルに基づいて株式資本コストを推定
+ch07,ch07.ipynb,7,code,# ch07_06: 株式資本コストの推定値をヒストグラムで可視化
+ch07,ch07.ipynb,8,code,# ch07_07: 時価総額別に株式資本コストの推定値を可視化
+ch07,ch07.ipynb,9,markdown,#### 7.1.3 株式資本コストの応用:潜在配当成長率の推定
+ch07,ch07.ipynb,10,code,# ch07_08: 配当利回りの計算
+ch07,ch07.ipynb,11,code,# ch07_09: 潜在配当成長率の推定
+ch07,ch07.ipynb,12,markdown,### 7.2 平均分散ポートフォリオの構築
+ch07,ch07.ipynb,13,code,# ch07_10: ファクターの分散共分散行列の推定
+ch07,ch07.ipynb,14,code,# ch07_11: 投資対象企業の選定
+ch07,ch07.ipynb,15,code,# ch07_12: 誤差項の分散共分散行列の推定
+ch07,ch07.ipynb,16,code,# ch07_13: リターンの分散共分散行列を準備
+ch07,ch07.ipynb,17,code,# ch07_14: 期待リターンのベクトルを準備
+ch07,ch07.ipynb,18,markdown,#### 7.2.3 平均分散ポートフォリオの計算
+ch07,ch07.ipynb,19,code,# ch07_15: cvxoptパッケージのインストール
+ch07,ch07.ipynb,20,code,# ch07_16: qp()関数を利用した平均分散ポートフォリオの計算 (1)
+ch07,ch07.ipynb,21,code,# ch07_17: qp()関数を利用した平均分散ポートフォリオの計算 (2)
+ch07,ch07.ipynb,22,code,# ch07_18: qp()関数を利用した平均分散ポートフォリオの計算 (3)
+ch07,ch07.ipynb,23,markdown,#### 7.2.4 平均分散フロンティアの描画
+ch07,ch07.ipynb,24,code,# ch07_19: 平均分散ポートフォリオの描画 (1)
+ch07,ch07.ipynb,25,code,# ch07_20: 平均分散ポートフォリオの描画 (2)
+ch07,ch07.ipynb,26,code,# 以上のコードについて，動作確認をした実行環境の表示
+ch08,ch08.ipynb,1,markdown,## 第8章 イベント・スタディ
+ch08,ch08.ipynb,2,code,# ch08_01: 外部パッケージとデータの読み込み
+ch08,ch08.ipynb,3,markdown,#### 8.3.2 グループ分けの方法
+ch08,ch08.ipynb,4,code,# ch08_02: イベントIDを付与した上で予想利益サプライズを計算
+ch08,ch08.ipynb,5,markdown,#### 8.3.3 相対日次の設定
+ch08,ch08.ipynb,6,code,# ch08_03: パラメータの準備
+ch08,ch08.ipynb,7,code,# ch08_04: 日付IDの付与
+ch08,ch08.ipynb,8,code,# ch08_05: 各データセットを統合して単一のデータフレームに (1)
+ch08,ch08.ipynb,9,code,# ch08_06: 各データセットを統合して単一のデータフレームに (2)
+ch08,ch08.ipynb,10,code,# ch08_07: 各データセットを統合して単一のデータフレームに (3)
+ch08,ch08.ipynb,11,markdown,#### 8.3.4 異常リターンの算定
+ch08,ch08.ipynb,12,code,# ch08_08: マーケット・モデルの推定 (1)
+ch08,ch08.ipynb,13,code,# ch08_09: マーケット・モデルの推定 (2)
+ch08,ch08.ipynb,14,code,# ch08_10: 累積異常リターン（CAR）の計算
+ch08,ch08.ipynb,15,markdown,#### 8.3.5 異常リターンの集計と結果の解釈
+ch08,ch08.ipynb,16,code,# ch08_11: イベントの強弱に応じて平均CARの推移を可視化
+ch08,ch08.ipynb,17,code,# ch08_12: ARを利用した統計的検定 (1)
+ch08,ch08.ipynb,18,code,# ch08_13: ARを利用した統計的検定 (2)
+ch08,ch08.ipynb,19,code,# 以上のコードについて，動作確認をした実行環境の表示

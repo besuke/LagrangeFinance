@@ -1,0 +1,12 @@
+# Chapter 03
+
+```{r}
+#| message: false
+#| warning: false
+# ch03_01: 無リスク金利の値を格納する変数Rを作成
+
+R <- 0.1
+print(R) 
+
+## [1] 0.1
+```

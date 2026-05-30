@@ -1,0 +1,451 @@
+# 第4章 財務データの取得と可視化
+
+## 4.2 Rを利用した財務データ分析入門
+
+### 4.2.1 tidyverseパッケージの概要
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+library(tidyverse)
+```
+
+### 4.2.2 財務データの読み込み
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data <- read_csv("ch04_financial_data.csv")
+
+nrow(financial_data) # 行数の確認
+
+head(financial_data) # 冒頭N行を確認するにはhead(financial_data, N)とする
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data$firm_ID <- as.factor(financial_data$firm_ID)
+financial_data$industry_ID <- as.factor(financial_data$industry_ID)
+
+class(financial_data$firm_ID)
+
+class(financial_data$industry_ID)
+```
+
+**コードch04_04は，R言語特有のものであるため割愛**
+
+## 4.3 探索的データ分析
+
+### 4.3.1 データセットの概要確認
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+daily_stock_return <- read_csv("ch03_daily_stock_return.csv")
+class(daily_stock_return$date)
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+summary(financial_data)
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+unique(financial_data$year)
+
+```
+
+### 4.3.2 欠損データの処理
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+length(unique(financial_data$firm_ID))
+
+length(unique(financial_data$industry_ID))
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+head(complete.cases(financial_data)) # head()関数を用いて冒頭6行の結果のみ表示
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+sum(complete.cases(financial_data)) # TRUE/FALSEを1/0に変換して足し合わせる
+
+```
+
+## 4.4 データの抽出とヒストグラムによる可視化
+
+### 4.4.1 条件に合うデータの抽出方法
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+nrow(drop_na(financial_data)) # 欠損行を削除した上で行数をカウント
+
+financial_data <- drop_na(financial_data) # 欠損行を削除した上でデータを上書き
+```
+
+**コードch04_12からコードch04_14は，R言語上での代替的な方法を説明しているため割愛**
+
+### 4.4.2 ヒストグラムによる売上高の可視化
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data_2015 <- financial_data[financial_data$year == 2015, ] # 行番号に論理値ベクトルを代入
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data_2015 <- subset(financial_data, year == 2015) # subset()関数の第二引数に条件式を代入
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data_2015 <- financial_data %>% filter(year == 2015) # tidyverseのdplyrを用いた書き方
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data_2015 <- filter(financial_data, year == 2015) # パイプ演算子%>%は第一引数への代入と同じ意味
+```
+
+## 4.5 データの集計と折れ線グラフによる可視化
+
+### 4.5.1 for文を用いた集計
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+ggplot(financial_data_2015) + # 引数名のdataは省略可能
+  geom_histogram(aes(x = sales)) + # ヒストグラムを描くにはgeom_histogram()関数を用いる
+  scale_y_continuous(expand = c(0,0)) + # x軸とヒストグラムの間のスペースを消す
+  theme_classic() # グラフの全体的な体裁を設定
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+install.packages("scales") # scalesパッケージをインストール
+
+ggplot(financial_data_2015) +
+  geom_histogram(aes(x = sales)) +
+  scale_x_continuous(labels = scales::label_comma()) + # scalesパッケージのlabel_comma()関数を利用
+  scale_y_continuous(expand = c(0,0)) + 
+  theme_classic()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+ggplot(financial_data_2015) + 
+  geom_histogram(aes(x = log(sales))) + # 事前にデータを加工せずともaes()関数内で自然対数が取れる
+  scale_y_continuous(expand = c(0,0)) + 
+  theme_classic()
+```
+
+**コードch04_22とch04_23は，R言語特有のものであるため割愛**
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data$sales %>% 
+  log() %>% # この時点でlog(financial_data$sales)を計算
+  median()
+
+median(log(financial_data$sales))
+```
+
+### 4.5.4 折れ線グラフによる上場企業数の可視化
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+year_set <- sort(unique(financial_data$year)) # year列の固有要素を抽出して昇順に並び替え
+N_firms_by_year <- rep(NA, length(year_set)) # 結果を保存するための空ベクトルを準備
+
+for (i in seq_along(year_set)) {
+  year_i <- year_set[i] # i番目の年度を抽出
+  N_firms_by_year[i] <- sum(financial_data$year == year_i) # i番目の年度のデータをカウント
+}
+
+print(N_firms_by_year) # 結果の表示
+
+```
+
+## 4.6 変数の作成とヒストグラムによる可視化
+
+### 4.6.1 新しい系列の追加
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+names(N_firms_by_year) <- year_set # 各要素の名前として年度名を代入
+print(N_firms_by_year)
+
+```
+
+**コードch04_27は，R言語特有のものであるため割愛**
+
+### 4.6.2 ラグの取り方
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+N_firms_by_year <- tapply(financial_data$firm_ID, financial_data$year, length) # tapply()関数は第一引数に元データ, 第二引数にグループ分けに用いる変数, 第三引数に適用したい関数を取る
+print(N_firms_by_year)
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+N_firms_by_year <- financial_data %>% 
+  group_by(year) %>% # group_by()関数を用いてyearごとにグループ化
+  summarize(N_firms = n()) # 各グループごとにデータ数をカウント
+
+```
+
+### 4.6.3 ROEの計算とヒストグラムによる可視化
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>% group_by(year) # group_by(financial_data, year)と書いても同じ
+```
+
+## 4.7 グループごとの集計とランク付け
+
+### 4.7.1 産業ごとのROE平均値と棒グラフによる可視化
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>% summarize(mean_sales = mean(sales)) # summarize(financial_data, mean_sales = mean(sales))と書いても同じ
+
+# A tibble: 1 x 1
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+ggplot(N_firms_by_year) + 
+  geom_line(aes(x = year, y = N_firms)) + # 折れ線グラフを描くにはgeom_line()関数を用いる
+  labs(x = "Year", y = "Number of Firms") + # 両軸のラベルを設定
+  theme_classic() # グラフ全体の体裁を設定  
+```
+
+### 4.7.2 産業内でのROEのランク付け
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data$BE <- (financial_data$OA - financial_data$OL) - (financial_data$FO - financial_data$FA) # 新しくBE列を定義
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data <- financial_data %>%
+  mutate(BE = (OA - OL) - (FO - FA)) # mutate(financial_data, BE = (OA - OL) - (FO - FA))と書いても同じ
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+head(lag(financial_data$BE)) # head()関数で冒頭6行の結果のみ表示
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data <- financial_data %>%
+  group_by(firm_ID) %>% # firm_IDごとにグループ化
+  mutate(lagged_BE = lag(BE)) %>% # lag()関数をfirm_IDごとに適用
+  ungroup() # グループ化を解除
+
+head(financial_data$lagged_BE) # head()関数で冒頭6行のlagged_BEを表示
+
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data <- financial_data %>%
+  mutate(ROE = X / lagged_BE) # mutate(financial_data, ROE = X / lagged_BE)と書いても同じ
+
+ggplot(financial_data) + 
+  geom_histogram(aes(x = ROE)) +
+  scale_x_continuous(limits = c(-0.1, 0.5)) + # 表示するx軸の範囲を(-0.1, 0.5)に限定
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>% 
+  group_by(industry_ID) %>% # industry_IDごとにグループ化
+  summarize(mean_ROE = mean(ROE, na.rm = TRUE)) # 欠損値を除いてROEの平均値を計算
+```
+
+**コードch04_39は，上記のコードch04_33-ch04_38までの流れとほとんど同じため割愛**
+
+
+## 4.8 上級デュポン・モデルによるROEの分析とその可視化
+
+### 4.8.1 分析用のデータセットの作成
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>%
+  group_by(industry_ID) %>%
+  summarize(mean_ROE = mean(ROE, na.rm = TRUE)) %>%
+  ggplot() + # パイプ演算子%>%を用いて, 産業別のROE平均値をggplot()関数に引き渡す
+  geom_col(aes(x = industry_ID, y = mean_ROE)) + # 棒グラフを描くにはgeom_col()関数を用いる
+  labs(x = "Industry ID", y = "Industry Average ROE") + 
+  scale_y_continuous(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+**コードch04_41は，R言語特有のものであるため割愛**
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>% 
+  filter(year == 2020)
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>% 
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) # 特定の列のみを抽出するにはselect()関数を用いる
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>%
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>% # industry_IDでグループ化
+  mutate(ROE_rank = rank(ROE)) %>% # 順序付けにはrank()関数を用いる
+  ungroup()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>%
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>%
+  mutate(ROE_rank = rank(desc(ROE))) %>% # 降順で順序付けするにはdesc()関数を用いる
+  ungroup()
+```
+
+```{r}
+#| eval: false
+#| message: false
+#| warning: false
+
+financial_data %>% 
+  filter(year == 2020) %>%
+  select(firm_ID, industry_ID, ROE) %>%
+  group_by(industry_ID) %>%
+  mutate(ROE_rank = rank(desc(ROE))) %>%
+  ungroup() %>%
+  arrange(industry_ID, ROE_rank) # 元データを特定の変数の値に基づき並び替えるにはarrange()関数を用いる
+```
+

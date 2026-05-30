@@ -1,0 +1,370 @@
+# Chapter 07
+
+
+## ch07_01
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_01: 外部パッケージの読み込みとデータの準備
+
+library(tidyverse)
+library(broom)
+
+monthly_data <- read_csv("ch05_output1.csv")
+annual_data  <- read_csv("ch05_output2.csv")
+factor_data <- read_csv("ch06_output.csv")
+
+monthly_data <- monthly_data %>% 
+  group_by(firm_ID) %>% # firm_IDでグループ化
+  mutate(is_public_2020 = (max(month_ID) == 72), # 2020年の年末時点で上場しているかフラグ付け
+         N_observations = n()) %>% # 各firm_IDのデータ数をカウント
+  ungroup() %>% 
+  filter(is_public_2020 == TRUE, # 2020年の年末時点で上場しているfirm_IDを抽出
+         N_observations >= 36) %>% # 36ヶ月以上のデータがあるfirm_IDを抽出
+  select(-N_observations) # N_observations列を削除
+
+annual_data <- monthly_data %>% # monthly_dataに含まれるyearとfirm_IDのペアを抽出
+  select(year, firm_ID) %>% 
+  unique() %>%
+  left_join(annual_data, by = c("year", "firm_ID")) # annual_dataとmonthly_dataでyearとfirm_IDのペアを整合的に
+```
+
+## ch07_02
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_02: FF3モデルの推定 (1)
+
+firm_ID_set <- unique(monthly_data$firm_ID) # firm_IDの固有要素を抽出
+N_firms <- length(firm_ID_set) # firm_ID_setの要素数をカウント
+
+monthly_data <- monthly_data %>% 
+  select(-R_F) %>% # R_Fはmonthly_dataとfactor_dataで重複するので削除
+  full_join(factor_data, by = "month_ID")
+
+FF3_results <- list(NA) # 推定結果を保存するために空のリストを準備
+
+for (i in 1:N_firms) {
+  
+  FF3_results[[i]] <- monthly_data %>% 
+    filter(firm_ID == firm_ID_set[i]) %>%
+    lm(Re ~ 0 + R_Me + SMB + HML, data = .) %>% # 冒頭に"0 +"を追加して定数項をゼロに
+    tidy() %>% 
+    mutate(firm_ID = firm_ID_set[i]) %>% # 推定対象のfirm_IDを保存
+    select(firm_ID, everything())
+    
+}
+
+FF3_results <- do.call(rbind, FF3_results) # do.call()関数を用いて複数のデータフレームから構成されるリストを一つのデータフレームに統合
+```
+
+## ch07_03
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_03: FF3モデルの推定 (2)
+
+FF3_loadings <- FF3_results %>% 
+  pivot_wider(id_cols = "firm_ID", names_from = "term", values_from = "estimate") %>% # term列の値に応じて新しく列を定義
+  rename(beta_M = R_Me, beta_SMB = SMB, beta_HML = HML) # 列名を変更
+```
+
+## ch07_04
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_04: ファクター・リスクプレミアムの計算
+
+factor_risk_premium <- apply(factor_data[ , 4:6], 2, mean) * 12 # 12を掛けて年次プレミアムに換算
+
+##       R_Me        SMB        HML 
+## 0.04800514 0.07858358 0.08328208 
+```
+
+## ch07_05
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_05: Fama-Frenchの3ファクター・モデルに基づいて株式資本コストを推定
+
+expected_R_FF3 <- as.matrix(FF3_loadings[ , 2:4]) %*% factor_risk_premium # Fama-Frenchの3ファクター・モデルに基づいて期待リターンを計算
+
+FF3_cost_of_capital <- tibble(firm_ID = FF3_loadings$firm_ID, cost_of_capital = as.vector(expected_R_FF3)) # 行列からデータフレームに変換してfirm_ID列を追加
+```
+
+## ch07_06
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_06: 株式資本コストの推定値をヒストグラムで可視化
+
+ggplot(FF3_cost_of_capital) + 
+  geom_histogram(aes(x = cost_of_capital)) + 
+  labs(x = "FF3 Cost of Capital", y = "Count") +
+  scale_y_discrete(expand = c(0, 0)) + 
+  theme_classic()
+```
+
+## ch07_07
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_07: 時価総額別に株式資本コストの推定値を可視化
+
+annual_data_2020 <- annual_data %>%
+  group_by(firm_ID) %>% # 企業ごとに時価総額を計算
+  mutate(lagged_ME = lag(ME)) %>% 
+  ungroup() %>%
+  filter(year == 2020) %>% # 2020年のデータのみ抽出
+  mutate(ME_rank2 = as.factor(ntile(lagged_ME, 2)), # 時価総額に基づき二分割
+         ME_rank2 = fct_recode(ME_rank2,
+                                     Small = "1",
+                                     Large = "2")) %>% 
+  full_join(FF3_cost_of_capital, by = "firm_ID") %>% # 株式資本コストの推定値を追加
+  drop_na() # 欠損値を削除
+
+ggplot(annual_data_2020) +
+  geom_density(aes(x = cost_of_capital, group = ME_rank2, linetype = ME_rank2)) + # 密度関数を描くにはgeom_density()関数を用いる
+  labs(x = "FF3 Cost of Capital", y = "Estimated Density", linetype = "Firm Type")  + 
+  scale_y_continuous(expand = c(0, 0), breaks = NULL) + # break引数で目盛り線を非表示に指定
+  theme_classic()
+```
+
+## ch07_08
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_08: 配当利回りの計算
+
+dividend_yield_2020 <- monthly_data %>% 
+  filter(year == 2020) %>%
+  group_by(firm_ID) %>% # firm_IDでグループ化
+  summarize(annual_dividend = sum(DPS * shares_outstanding), # 各月の配当支払総額を合計
+            latest_ME = ME[which.max(month_ID)]) %>%  # 最新の時価総額を保存
+  mutate(dividend_yield = annual_dividend / latest_ME) %>% # 配当利回りの実績値を計算
+  filter(dividend_yield > 0) # 無配の企業を落とす
+```
+
+## ch07_09
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_09: 潜在配当成長率の推定
+
+dividend_yield_2020 %>% 
+  left_join(FF3_cost_of_capital, by = "firm_ID") %>% # 株式資本コストの推定値を追加
+  mutate(implied_dividend_growth = (cost_of_capital - dividend_yield) / (1 + dividend_yield)) # 配当割引モデルから潜在配当成長率を逆算
+```
+
+## ch07_10
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_10: ファクターの分散共分散行列の推定
+
+Sigma_FF3 <- 12 * cov(factor_data[ , 4:6]) # 12を掛けて年次データに換算
+
+##              R_Me          SMB          HML
+## R_Me  0.020685969 -0.003901607  0.001529890
+## SMB  -0.003901607  0.006268377 -0.001886351
+## HML   0.001529890 -0.001886351  0.003915638
+```
+
+## ch07_11
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_11: 投資対象企業の選定
+
+N_portfolio_firms <- 100 # 投資対象の企業を100社に限定
+
+investment_universe <-  annual_data %>% 
+  filter(year == 2020) %>% # 2020年度のデータを抽出
+  filter(rank(desc(ME)) <= N_portfolio_firms) %>% # その中で時価総額が上位100社の銘柄を抽出
+  select(firm_ID) %>% 
+  unlist() # データフレームからベクトルに変換
+
+names(investment_universe) <- NULL # firm_IDという列名を消去
+
+## [1]   33  101  155  …（中略）…  1454 1473 1499
+```
+
+## ch07_12
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_12: 誤差項の分散共分散行列の推定
+
+Sigma_epsilon <- monthly_data %>%
+  filter(firm_ID %in% investment_universe) %>% # 投資対象に含まれるデータのみを抽出
+  left_join(FF3_loadings, by = "firm_ID") %>%
+  mutate(R_FF3 = R_F + beta_M * R_Me + beta_SMB * SMB + beta_HML * HML, # ファクターの実現値からFama-Frenchの3ファクター・モデルに基づくリターンを計算
+         epsilon = R - R_FF3) %>% # 実際のリターンとの違いから誤差項を推定
+  group_by(firm_ID) %>% 
+  summarize(epsilon_variance = 12 * var(epsilon, na.rm = TRUE)) %>% # firm_IDごとに誤差項の分散を推定
+  select(epsilon_variance) %>% 
+  unlist() %>% # データフレームからベクトルに変換
+  diag() # ベクトルから対角行列を作成
+```
+
+## ch07_13
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_13: リターンの分散共分散行列を準備
+
+beta <- FF3_loadings %>%
+  filter(firm_ID %in% investment_universe) %>% # 投資対象に含まれるデータのみを抽出
+  select(-firm_ID) %>% # ファクター・ローディングのみを抽出
+  as.matrix() # データフレームから行列に変換
+
+Sigma <- beta %*% Sigma_FF3 %*% t(beta) + Sigma_epsilon # 分解式に基づいて分散共分散行列を計算
+```
+
+## ch07_14
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_14: 期待リターンのベクトルを準備
+
+mu <- FF3_cost_of_capital %>% # 7.1.2節の推定結果をそのまま利用
+  filter(firm_ID %in% investment_universe) %>% # 投資対象に含まれるデータのみを抽出
+  select(-firm_ID) %>%
+  unlist() # データフレームからベクトルに変換
+
+names(mu) <- NULL # cost_of_capitalという列名を消去
+
+##   [1]  0.203791678 -0.001750860  0.071846430  …（中略）…  0.088872719  0.153100331  0.361662758
+```
+
+## ch07_15
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_15: quadprogパッケージのインストール
+
+install.packages("quadprog") # quadprogはquadratic programming（二次計画法）の略
+```
+
+## ch07_16
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_16: solve.QP()関数を利用した平均分散ポートフォリオの計算 (1)
+
+library(quadprog) # quadprogの読み込み
+
+target_return <- 0.1 # 目標期待リターンを0.1に設定
+
+Dmat <- Sigma # 分散共分散行列
+dvec <- rep(0, N_portfolio_firms) # 対応項無し
+Amat <- cbind(mu, rep(1, N_portfolio_firms)) # 目標期待リターン，及び保有比率の係数
+bvec <- c(target_return, 1) # 目標期待リターン，及び保有比率の合計値
+
+MV_portfolio <- solve.QP(Dmat, dvec, Amat, bvec, meq = 2) # 等号制約の数をmeq引数で表す
+```
+
+## ch07_17
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_17: solve.QP()関数を利用した平均分散ポートフォリオの計算 (2)
+
+str(MV_portfolio) # solve.QP()関数の返り値の構造を確認
+```
+
+## ch07_18
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_18: solve.QP()関数を利用した平均分散ポートフォリオの計算 (3)
+
+optimal_weight <- MV_portfolio$solution # 最適保有比率を保存
+print(optimal_weight[1:10]) # 最初の10社のみ表示
+## [1]  0.0580726666  0.0245486385  0.0121478107 -0.0270912773  0.0123755582 -0.1703321035  0.0118779871  0.0128634656  0.0517985612 -0.0111403267
+
+minimized_risk <- sqrt(2 * MV_portfolio$value) # 平均分散ポートフォリオのリスクを保存して表示
+print(minimized_risk)
+## [1] 0.08371003
+```
+
+## ch07_19
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_19: 平均分散ポートフォリオの描画 (1)
+
+target_return <- seq(-0.1, 0.4, length = 100) # -0.1から0.4の範囲を離散化して目標期待リターンを100次元のベクトルで準備
+N_points <- length(target_return) # target_returnの次元100をN_pointsと定義
+
+optimal_weight <- matrix(NA, nrow = N_points, ncol = N_portfolio_firms) # 各目標期待リターンに対して最適保有比率を保存する空行列を準備
+minimized_risk <- rep(NA, N_points) # 同様に平均分散ポートフォリオのリスクを保存する空ベクトルを準備
+
+for (i in 1:N_points) { # 平均分散ポートフォリオの計算を100回繰り返す
+  bvec <- c(target_return[i], 1)
+  MV_portfolio <- solve.QP(Dmat, dvec, Amat, bvec, meq = 2)
+  optimal_weight[i, ] <- MV_portfolio$solution # 結果の保存
+  minimized_risk[i] <- sqrt(2 * MV_portfolio$value)
+}
+
+print(optimal_weight[N_points, 1:10]) # target_return = 0.4のときの最適保有比率（最初の10社のみ）
+## [1]  0.102911702  0.020711220  0.001801566 -0.046204100  0.016718819 -0.444390843  0.023600316  0.021858155  0.096069270 -0.004657669
+
+print(minimized_risk[N_points]) # target_return = 0.4のときの平均分散ポートフォリオのリスク
+## [1] 0.2148099
+```
+
+## ch07_20
+
+
+```{r}
+#| message: false
+#| warning: false
+# ch07_20: 平均分散ポートフォリオの描画 (2)
+
+MV_frontier <- tibble(target_return, minimized_risk)
+
+ggplot(MV_frontier) + 
+  geom_line(aes(x = target_return, y = minimized_risk)) + # x軸にtarget_return, y軸にminimized_riskを指定
+  coord_flip() + # 縦軸と横軸をひっくり返すのにcoord_flip()関数を用いる
+  labs(x = "Expected Return", y = "Risk") + 
+  theme_classic()
+```

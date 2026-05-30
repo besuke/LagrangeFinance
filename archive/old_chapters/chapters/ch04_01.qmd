@@ -1,0 +1,9 @@
+# Chapter 04
+
+```{r}
+#| message: false
+#| warning: false
+# ch04_01: tidyverseの読み込み
+
+library(tidyverse)
+```
