@@ -1,1 +1,0 @@
-# Ch05 Stock Data and Time Series

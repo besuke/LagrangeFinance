@@ -38,7 +38,7 @@ format:
     number-sections: false
 
 execute:
-  eval: false
+  eval: true
   echo: true
   warning: false
   message: false

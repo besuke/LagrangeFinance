@@ -1,7 +1,7 @@
 ---
-title: "第3章 RFRスワップとマルチカーブ"
+title: "第9章 OISスワップとマルチカーブ"
 subtitle: "QuantLib_tidy + QuantLib(SWIG for R) による再実装"
-author: "Arisa"
+author: "Eiichi Horigome"
 format:
   html:
     toc: true
@@ -39,7 +39,7 @@ lang: ja
 
 ## 前提
 
-- `devtools::load_all(".")` 済み、または package install 済み
+- `# devtools::load_all(".")  # disabled for Quarto book` 済み、または package install 済み
 - `qlr_ir_build_ois_curve_envs()`, `qlr_trade_ois_swap_py()`, `qlr_swap_*` が利用可能
 - QuantLib SWIG build 側で OIS / Tibor / SOFR helper が利用可能
 
@@ -58,7 +58,7 @@ suppressPackageStartupMessages({
   library(tidyverse)
 })
 
-devtools::load_all(".")
+# devtools::load_all(".")  # disabled for Quarto book
 ```
 
 ## 0. helpers

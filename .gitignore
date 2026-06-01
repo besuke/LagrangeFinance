@@ -5,3 +5,7 @@ _book/
 .RData
 .DS_Store
 renv/library/
+sources/
+
+/.quarto/
+**/*.quarto_ipynb

@@ -1,7 +1,7 @@
 ---
-title: "第4章 Bonds"
+title: "Ch07 Fixed Income"
 subtitle: "QuantiveRiemann + QuantLib(SWIG for R) による再実装"
-author: "Arisa"
+author: "Eiichi Horigome"
 format:
   html:
     toc: true
@@ -47,7 +47,7 @@ lang: ja
 
 ## 前提
 
-- `devtools::load_all(".")` 済み、または package install 済み
+- `# devtools::load_all(".")  # disabled for Quarto book` 済み、または package install 済み
 - `utility.R`, `wrapper_lib.R`, `bond.R` の関数が使える
 - QuantLib SWIG build で Bond / OIS / AssetSwap まわりが利用可能
 
@@ -66,7 +66,7 @@ suppressPackageStartupMessages({
   library(tidyverse)
 })
 
-devtools::load_all(".")
+# devtools::load_all(".")  # disabled for Quarto book
 ```
 
 ## 1. Enums / calendars / counters

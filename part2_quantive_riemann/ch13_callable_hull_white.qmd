@@ -1,4 +1,4 @@
-# Ch14 Hull-White Models
+# 第13章 Callable BondとHull–Whiteモデル
 
 ```{r}
 #| eval: false
@@ -51,7 +51,7 @@ suppressPackageStartupMessages({
   library(purrr)
   library(tibble)
   library(ggplot2)
-  devtools::load_all(".")
+  # devtools::load_all(".")  # disabled for Quarto book
 })
 
 # ------------------------------------------------------------

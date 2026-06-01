@@ -1,0 +1,3 @@
+# Ch01 R Basics and tidyverse
+
+R basics, dplyr, tidyr, stringr, lubridate, purrr, ggplot2.

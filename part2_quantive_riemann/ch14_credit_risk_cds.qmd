@@ -1,4 +1,4 @@
-# Ch12 Credit Risk and CDS
+# 第14章 信用リスクとCDS
 
 ```{r}
 #| eval: false
@@ -27,7 +27,7 @@ suppressPackageStartupMessages({
   library(dplyr)
   library(purrr)
   library(tibble)
-  devtools::load_all(".")
+  # devtools::load_all(".")  # disabled for Quarto book
 })
 
 # ------------------------------------------------------------

@@ -1,17 +1,6 @@
-# Ch17 PRDC: Power Reverse Dual Currency Notes
+# 第15章 エキゾチック・デリバティブ：PRDC
 
-PRDC（Power Reverse Dual Currency）ノートは、為替レートと金利の両方に依存する構造債である。
-
-この章では、QuantiveRiemannで作成したPRDC評価コードを、LagrangeFinanceのQuartoコンテンツとして整理する。
-
-## 17.1 PRDCの基本構造
-
-PRDCは一般に、外貨金利、円金利、為替レートの3つのリスク要因に依存する。
-
-典型的なクーポンは次のような形を持つ。
-
-```text
-Coupon = max(0, α × FX - β)
+```{r}
 #| eval: false
 #| message: false
 #| warning: false
