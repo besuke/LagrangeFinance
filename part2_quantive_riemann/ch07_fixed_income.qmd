@@ -91,11 +91,11 @@ freq_semiannual <- Frequency_Semiannual_get()
 評価日は 2022-08-19、約定から 2 営業日後を settlement date とする。
 
 ```{r fixed-rate-bond-setup}
-trade_date <- qlr_date("2022-08-19")
+trade_date <- QuantLibGauss::qlg_date("2022-08-19")
 settlement_days <- 2L
 
-effective_date <- qlr_date("2022-07-28")
-maturity_date <- qlr_date("2025-07-28")
+effective_date <- QuantLibGauss::qlg_date("2022-07-28")
+maturity_date <- QuantLibGauss::qlg_date("2025-07-28")
 
 face_amount <- 100
 coupon_rate <- 0.00370
@@ -109,7 +109,7 @@ settlement_date <- qlr_advance_days(
   n_days = settlement_days
 )
 
-bond_res <- qlr_fixed_rate_bond(
+bond_res <- QuantLibGauss::qlg_fixed_rate_bond(
   trade_date = trade_date,
   settlement_days = settlement_days,
   effective_date = effective_date,
@@ -280,11 +280,11 @@ cat(
 
 ```{r macaulay-duration-hand}
 macaulay_hand <- bond_cf_tbl_flat |>
-  dplyr::filter(!is.na(pv), pay_date > qlr_iso(settlement_date)) |>
+  dplyr::filter(!is.na(pv), pay_date > QuantLibGauss::qlg_iso(settlement_date)) |>
   dplyr::mutate(
     year_fraction = purrr::map_dbl(
       pay_date,
-      ~ dc_30$yearFraction(settlement_date, qlr_date(.x))
+      ~ dc_30$yearFraction(settlement_date, QuantLibGauss::qlg_date(.x))
     )
   ) |>
   dplyr::summarise(value = sum(year_fraction * pv) / dirty_price_from_yield) |>
@@ -313,7 +313,7 @@ qlr_show_tbl(
 
 ```{r tona-curve-builder}
 make_tona_curve <- function(curve_data, trade_date = "2022-08-19") {
-  trade_date_ql <- qlr_date(trade_date)
+  trade_date_ql <- QuantLibGauss::qlg_date(trade_date)
   qlr_set_eval_date(trade_date_ql)
 
   tona_curve_handle <- RelinkableYieldTermStructureHandle()
@@ -470,7 +470,7 @@ cat(
 TONA curve に対して、clean price 97.0 を再現する z-spread を求める。
 
 ```{r z-spread}
-z_spread_value <- qlr_bond_zspread(
+z_spread_value <- QuantLibGauss::qlg_bond_zspread(
   bond = bond_obj,
   clean_price = 97.0,
   curve = tona_bundle$curve,
@@ -531,7 +531,7 @@ bond_cf_tbl_tona <- qlr_bond_cashflow_table_ql(
 
 yr_frac_vec <- purrr::map_dbl(
   bond_cf_tbl_tona$pay_date,
-  ~ dc_a365$yearFraction(settlement_date, qlr_date(.x))
+  ~ dc_a365$yearFraction(settlement_date, QuantLibGauss::qlg_date(.x))
 )
 
 tenor_flow <- diff(c(0, yr_frac_vec))

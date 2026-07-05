@@ -60,16 +60,16 @@ make_schedule_tbl <- function(schedule_obj) {
   tibble(
     schedule_date = purrr::map_chr(
       seq_len(schedule_obj$size()),
-      ~ qlr_iso(qlr_schedule_date_at_local(schedule_obj, .x))
+      ~ QuantLibGauss::qlg_iso(qlr_schedule_date_at_local(schedule_obj, .x))
     )
   )
 }
 
 mid_date_between <- function(dt1, dt2) {
-  d1 <- as.Date(qlr_iso(dt1))
-  d2 <- as.Date(qlr_iso(dt2))
+  d1 <- as.Date(QuantLibGauss::qlg_iso(dt1))
+  d2 <- as.Date(QuantLibGauss::qlg_iso(dt2))
   mid_r <- d1 + floor(as.numeric(d2 - d1) / 2)
-  qlr_date(format(mid_r, "%Y-%m-%d"))
+  QuantLibGauss::qlg_date(format(mid_r, "%Y-%m-%d"))
 }
 
 cds_buyer_side <- function() {
@@ -117,8 +117,8 @@ make_cds_cashflow_tbl_from_schedule <- function(
     pay_date[[i]] <- sch_dates[[i]]
     coupon[i] <- coupon_rate
 
-    acc_start_r <- as.Date(qlr_iso(accrual_start[[i]]))
-    acc_end_r <- as.Date(qlr_iso(accrual_end[[i]]))
+    acc_start_r <- as.Date(QuantLibGauss::qlg_iso(accrual_start[[i]]))
+    acc_end_r <- as.Date(QuantLibGauss::qlg_iso(accrual_end[[i]]))
     day_count_days <- as.numeric(acc_end_r - acc_start_r)
 
     days[i] <- day_count_days
@@ -129,7 +129,7 @@ make_cds_cashflow_tbl_from_schedule <- function(
   DF <- rep(NA_real_, n_rows)
   Q <- rep(NA_real_, n_rows)
 
-  trade_date_r <- as.Date(qlr_iso(trade_date))
+  trade_date_r <- as.Date(QuantLibGauss::qlg_iso(trade_date))
 
   for (i in seq_len(n_rows)) {
     dt_i <- accrual_end[[i]]
@@ -138,7 +138,7 @@ make_cds_cashflow_tbl_from_schedule <- function(
       DF[i] <- 1.0
       Q[i] <- 1.0
     } else {
-      dt_i_r <- as.Date(qlr_iso(dt_i))
+      dt_i_r <- as.Date(QuantLibGauss::qlg_iso(dt_i))
 
       if (dt_i_r <= trade_date_r) {
         DF[i] <- 1.0
@@ -172,7 +172,7 @@ make_cds_cashflow_tbl_from_schedule <- function(
 
   safe_iso <- function(x) {
     if (is.null(x)) return(NA_character_)
-    qlr_iso(x)
+    QuantLibGauss::qlg_iso(x)
   }
 
   tibble(
@@ -196,10 +196,10 @@ make_cds_cashflow_tbl_from_schedule <- function(
 # 1. Part 1: flat discount / flat hazard CDS
 # ------------------------------------------------------------
 
-trade_date <- qlr_date("2022-09-19")
+trade_date <- QuantLibGauss::qlg_date("2022-09-19")
 qlr_set_eval_date(trade_date)
 
-maturity_date <- qlr_date("2023-09-20")
+maturity_date <- QuantLibGauss::qlg_date("2023-09-20")
 notional <- 10000000
 rf_rate <- 0.10
 cds_quote <- 1.30 / 100
@@ -393,7 +393,7 @@ cat("\nchapter10 CDS part 1 completed successfully.\n")
 # 2. Part 2: 5Y CDS with TONA curve and ISDA engine
 # ------------------------------------------------------------
 
-trade_date_2 <- qlr_date("2022-08-19")
+trade_date_2 <- QuantLibGauss::qlg_date("2022-08-19")
 qlr_set_eval_date(trade_date_2)
 
 cds_tenor_2 <- qlr_period_years(5)
@@ -406,9 +406,9 @@ buy_protection_2 <- cds_buyer_side()
 calendar_jp <- WeekendsOnly()
 
 jpn_holidays <- c(
-  qlr_date("2024-03-20"), qlr_date("2025-03-20"), qlr_date("2026-03-20"),
-  qlr_date("2027-03-22"), qlr_date("2026-09-21"), qlr_date("2026-09-22"),
-  qlr_date("2026-09-23")
+  QuantLibGauss::qlg_date("2024-03-20"), QuantLibGauss::qlg_date("2025-03-20"), QuantLibGauss::qlg_date("2026-03-20"),
+  QuantLibGauss::qlg_date("2027-03-22"), QuantLibGauss::qlg_date("2026-09-21"), QuantLibGauss::qlg_date("2026-09-22"),
+  QuantLibGauss::qlg_date("2026-09-23")
 )
 
 purrr::walk(
@@ -512,7 +512,7 @@ hazard_curve_handle_2 <- DefaultProbabilityTermStructureHandle(hazard_curve_2)
 curve_check_tbl_2 <- tibble(
   metric = c("maturity_date", "hazard_rate"),
   value = c(NA_real_, hazard_rate_2),
-  text = c(qlr_iso(maturity_date_2), NA_character_)
+  text = c(QuantLibGauss::qlg_iso(maturity_date_2), NA_character_)
 )
 
 qlr_show_tbl(

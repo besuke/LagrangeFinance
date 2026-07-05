@@ -86,7 +86,7 @@ cf_prc <- bond_obj$cleanPrice(
   dc_act_act_bond,
   cmpd_compounded,
   freq_semiannual,
-  qlr_date("2023-07-06")
+  QuantLibGauss::qlg_date("2023-07-06")
 )
 
 cat(
@@ -99,7 +99,7 @@ cat(
 # 4. Yield 3.70% -> price
 # ------------------------------------------------------------
 
-trade_date <- qlr_date("2023-04-20")
+trade_date <- QuantLibGauss::qlg_date("2023-04-20")
 bond_yield <- 3.7 / 100
 futures_price <- 109 + 10 / 32
 
@@ -130,7 +130,7 @@ i_rate_obj <- InterestRate(
 
 qlr_show_tbl(
   tibble::tibble(
-    settle_date = qlr_iso(settle_date),
+    settle_date = QuantLibGauss::qlg_iso(settle_date),
     bond_yield = bond_yield,
     accrued_amount = accrued_amount,
     clean_price = clean_price
@@ -142,13 +142,13 @@ qlr_show_tbl(
 bond_cf_tbl <- qlr_bond_cashflow_table_ql(bond_obj) |>
   dplyr::mutate(
     pay_date_r = as.Date(pay_date),
-    settle_date_r = as.Date(qlr_iso(settle_date)),
+    settle_date_r = as.Date(QuantLibGauss::qlg_iso(settle_date)),
     discount_factor = dplyr::if_else(
       pay_date_r >= settle_date_r,
       purrr::map_dbl(
         pay_date,
         ~ tryCatch(
-          i_rate_obj$discountFactor(settle_date, qlr_date(.x)),
+          i_rate_obj$discountFactor(settle_date, QuantLibGauss::qlg_date(.x)),
           error = function(e) NA_real_
         )
       ),
@@ -182,9 +182,9 @@ qlr_show_tbl(
 # 5. Accrued interest hand calculation
 # ------------------------------------------------------------
 
-mar31 <- qlr_date("2023-03-31")
-apr21 <- qlr_date("2023-04-21")
-sep30 <- qlr_date("2023-09-30")
+mar31 <- QuantLibGauss::qlg_date("2023-03-31")
+apr21 <- QuantLibGauss::qlg_date("2023-04-21")
+sep30 <- QuantLibGauss::qlg_date("2023-09-30")
 
 days_to_apr21 <- dc_act_act_bond$dayCount(mar31, apr21)
 days_coupon_period <- dc_act_act_bond$dayCount(mar31, sep30)
@@ -231,7 +231,7 @@ gross_basis_tbl <- purrr::pmap_dfr(
 
 cat(
   "Futures price:", qlr_fmt_num(futures_price, 6),
-  ", spot settlement date:", qlr_iso(settle_date),
+  ", spot settlement date:", QuantLibGauss::qlg_iso(settle_date),
   "\n"
 )
 
@@ -247,7 +247,7 @@ qlr_show_tbl(
 # ------------------------------------------------------------
 
 repo_rate <- 5.10 / 100
-repo_end_date <- qlr_date("2023-07-06")
+repo_end_date <- QuantLibGauss::qlg_date("2023-07-06")
 repo_year_frac <- dc_act_360$yearFraction(settle_date, repo_end_date)
 repo_days <- dc_act_360$dayCount(settle_date, repo_end_date)
 
@@ -276,7 +276,7 @@ net_basis_tbl <- purrr::pmap_dfr(
 
 cat(
   "Repo rate:", fmt_pct(repo_rate),
-  ", repo end date:", qlr_iso(repo_end_date),
+  ", repo end date:", QuantLibGauss::qlg_iso(repo_end_date),
   ", repo days:", repo_days,
   ", repo year fraction:", qlr_fmt_num(repo_year_frac, 4),
   "\n"

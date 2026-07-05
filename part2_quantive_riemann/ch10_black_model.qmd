@@ -84,8 +84,8 @@ fmt_pct <- function(x, digits = 4) {
 # 1. Black calculator
 # ------------------------------------------------------------
 
-trade_date <- qlr_date("2023-07-21")
-maturity_date <- qlr_date("2023-08-26")
+trade_date <- QuantLibGauss::qlg_date("2023-07-21")
+maturity_date <- QuantLibGauss::qlg_date("2023-08-26")
 option_type_call <- Option_Call_get()
 
 dc_a365 <- Actual365Fixed()
@@ -513,7 +513,7 @@ qlr_show_tbl(
 # 7. BSM European / American option pricing
 # ------------------------------------------------------------
 
-trade_date_bsm <- qlr_date("2024-03-01")
+trade_date_bsm <- QuantLibGauss::qlg_date("2024-03-01")
 qlr_set_eval_date(trade_date_bsm)
 
 calendar_nl <- TARGET()
@@ -635,7 +635,7 @@ qlr_show_tbl(
 # 8. Sobol paths
 # ------------------------------------------------------------
 
-trade_date_sobol <- qlr_date("2024-03-01")
+trade_date_sobol <- QuantLibGauss::qlg_date("2024-03-01")
 qlr_set_eval_date(trade_date_sobol)
 
 maturity_year_sobol <- 1

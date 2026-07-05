@@ -15,14 +15,14 @@ suppressPackageStartupMessages({
 # 0. small helpers
 # ------------------------------------------------------------
 
-qlr_date <- function(x) {
+QuantLibGauss::qlg_date <- function(x) {
   if (inherits(x, "Date")) {
     x <- format(x, "%Y-%m-%d")
   }
   DateParser_parseISO(as.character(x))
 }
 
-qlr_iso <- function(x) {
+QuantLibGauss::qlg_iso <- function(x) {
   tryCatch(Date_ISO(x), error = function(e) as.character(x))
 }
 
@@ -240,7 +240,7 @@ make_mc_pricer_prdc <- function(
 
     coupon_dates <- map_chr(
       coupon_cash_flows,
-      ~ qlr_iso(.x$date())
+      ~ QuantLibGauss::qlg_iso(.x$date())
     )
 
     coupon_pvs <- map_dbl(

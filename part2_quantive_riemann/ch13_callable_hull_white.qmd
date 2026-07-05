@@ -77,7 +77,7 @@ make_schedule_tbl <- function(schedule_obj) {
   tibble(
     schedule_date = map_chr(
       seq_len(schedule_obj$size()),
-      ~ qlr_iso(qlr_schedule_date_at_local(schedule_obj, .x))
+      ~ QuantLibGauss::qlg_iso(qlr_schedule_date_at_local(schedule_obj, .x))
     )
   )
 }
@@ -211,7 +211,7 @@ safe_callable_schedule <- function(call_dates, call_price_clean = 100) {
 # 2. Part 3 first: JPY Tibor-like curve build
 # ------------------------------------------------------------
 
-trade_date_calib <- qlr_date("2022-08-19")
+trade_date_calib <- QuantLibGauss::qlg_date("2022-08-19")
 calendar_jp <- Japan()
 dc_a365 <- Actual365Fixed()
 
@@ -311,9 +311,9 @@ qlr_show_tbl(
 # 3. Part 1: bullet / callable / bermudan
 # ------------------------------------------------------------
 
-trade_date <- qlr_date("2024-04-15")
-issue_date <- qlr_date("2024-04-17")
-maturity_date <- qlr_date("2029-04-17")
+trade_date <- QuantLibGauss::qlg_date("2024-04-15")
+issue_date <- QuantLibGauss::qlg_date("2024-04-17")
+maturity_date <- QuantLibGauss::qlg_date("2029-04-17")
 qlr_set_eval_date(trade_date)
 
 coupon_rate <- 0.03
@@ -388,7 +388,7 @@ hw_sigma <- 0.01
 n_step_tree <- 12L * 5L
 
 flat_curve_obj <- safe_flat_curve(
-  reference_date = qlr_date("2024-04-17"),
+  reference_date = QuantLibGauss::qlg_date("2024-04-17"),
   rate = market_yield,
   day_counter = day_counter_bond,
   compounding = "Compounded"
@@ -724,8 +724,8 @@ qlr_set_eval_date(trade_date_calib)
 
 # 5.1 One-helper setup: first build 1Yx5Y underlying and ATM strike
 
-swap_effective_date <- qlr_date("2023-08-23")
-swap_maturity_date <- qlr_date("2028-08-23")
+swap_effective_date <- QuantLibGauss::qlg_date("2023-08-23")
+swap_maturity_date <- QuantLibGauss::qlg_date("2028-08-23")
 exercise_date <- calendar_jp$advance(trade_date_calib, 1L, "Years")
 maturity_tenor <- qlr_period_years(5L)
 
@@ -867,9 +867,9 @@ qlr_show_tbl(
 )
 
 helper_detail_tbl_1 <- tibble(
-  expiry_date = qlr_iso(exercise_date),
-  swap_effective_date = qlr_iso(swap_effective_date),
-  swap_maturity_date = qlr_iso(swap_maturity_date),
+  expiry_date = QuantLibGauss::qlg_iso(exercise_date),
+  swap_effective_date = QuantLibGauss::qlg_iso(swap_effective_date),
+  swap_maturity_date = QuantLibGauss::qlg_iso(swap_maturity_date),
   coupon_rate = forward_swap_rate_1y5y,
   strike = forward_swap_rate_1y5y,
   market_normal_vol = 36.06 / 10000,
@@ -939,9 +939,9 @@ multi_swap_input_tbl <- purrr::map_dfr(
       swap_effective_obj = list(swap_effective_i),
       swap_maturity_obj = list(swap_maturity_i),
       fixed_schedule_obj = list(fixed_schedule_i),
-      expiry_date = qlr_iso(expiry_date_i),
-      swap_effective_date = qlr_iso(swap_effective_i),
-      swap_maturity_date = qlr_iso(swap_maturity_i),
+      expiry_date = QuantLibGauss::qlg_iso(expiry_date_i),
+      swap_effective_date = QuantLibGauss::qlg_iso(swap_effective_i),
+      swap_maturity_date = QuantLibGauss::qlg_iso(swap_maturity_i),
       annuity = annuity_i,
       fair_rate = fair_rate_i,
       market_normal_vol = vol_data_multi$normal_vol[i]
@@ -1100,8 +1100,8 @@ aa_hand <- 0.03
 sigma_hand <- 0.39609 / 100
 expr_date_hand <- calendar_jp$advance(trade_date_calib, 1L, "Years")
 
-swap_effective_hand <- qlr_date("2023-08-23")
-swap_maturity_hand <- qlr_date("2028-08-23")
+swap_effective_hand <- QuantLibGauss::qlg_date("2023-08-23")
+swap_maturity_hand <- QuantLibGauss::qlg_date("2028-08-23")
 
 fix_schedule_hand <- Schedule(
   swap_effective_hand,
@@ -1125,7 +1125,7 @@ qlr_show_tbl(
 curve_ref_date <- jpy_curve_obj$referenceDate()
 
 cf_year_tbl <- tibble(
-  schedule_date = map_chr(fix_dates_hand, qlr_iso),
+  schedule_date = map_chr(fix_dates_hand, QuantLibGauss::qlg_iso),
   cf_year = map_dbl(fix_dates_hand, ~ dc_a365$yearFraction(curve_ref_date, .x)),
   now_df = map_dbl(fix_dates_hand, ~ jpy_curve_obj$discount(.x))
 ) |>

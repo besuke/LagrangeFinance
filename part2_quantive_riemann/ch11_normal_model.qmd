@@ -61,7 +61,7 @@ qlr_curve_table <- function(curve_obj, n = 12, extrapolate = TRUE) {
   }
 
   ref_date <- tryCatch(
-    as.Date(qlr_iso(curve_obj$referenceDate())),
+    as.Date(QuantLibGauss::qlg_iso(curve_obj$referenceDate())),
     error = function(e) as.Date(NA)
   )
 
@@ -84,7 +84,7 @@ make_schedule_tbl <- function(schedule_obj) {
   tibble(
     schedule_date = map_chr(
       seq_len(schedule_obj$size()),
-      ~ qlr_iso(qlr_schedule_date_at(schedule_obj, .x))
+      ~ QuantLibGauss::qlg_iso(qlr_schedule_date_at(schedule_obj, .x))
     )
   )
 }
@@ -300,8 +300,8 @@ normal_vol_from_price <- function(
 # 1. Normal model for futures option
 # ------------------------------------------------------------
 
-trade_date <- qlr_date("2023-09-26")
-maturity_date <- qlr_date("2023-12-15")
+trade_date <- QuantLibGauss::qlg_date("2023-09-26")
+maturity_date <- QuantLibGauss::qlg_date("2023-12-15")
 qlr_set_eval_date(trade_date)
 
 option_sign <- -1
@@ -471,7 +471,7 @@ make_schedule_tbl <- function(schedule_obj) {
   tibble::tibble(
     schedule_date = purrr::map_chr(
       seq_len(schedule_obj$size()),
-      ~ qlr_iso(qlr_schedule_date_at_local(schedule_obj, .x))
+      ~ QuantLibGauss::qlg_iso(qlr_schedule_date_at_local(schedule_obj, .x))
     )
   )
 }
@@ -486,7 +486,7 @@ schedule_date_vec <- function(schedule_obj) {
 # 4. Term SOFR style curve for cap pricing
 # ------------------------------------------------------------
 
-qlr_set_eval_date(qlr_date("2023-09-26"))
+qlr_set_eval_date(QuantLibGauss::qlg_date("2023-09-26"))
 
 term_sofr_3m <- 5.38558 / 100
 term_sofr_basis_data <- tibble::tribble(
@@ -591,8 +591,8 @@ qlr_show_tbl(
 # 5. Cap pricing under Bachelier
 # ------------------------------------------------------------
 
-cap_effective_date <- qlr_date("2023-09-28")
-cap_maturity_date <- qlr_date("2024-09-28")
+cap_effective_date <- QuantLibGauss::qlg_date("2023-09-28")
+cap_maturity_date <- QuantLibGauss::qlg_date("2024-09-28")
 cap_strike <- 0.05
 notional <- 10000000
 cap_vol <- 0.88 / 100
@@ -657,10 +657,10 @@ cap_coupon_tbl <- tibble(
       coupon,
       ~ dc_a365$yearFraction(trade_date, FloatingRateCoupon_fixingDate(.x))
     ),
-    fixing_date = map_chr(coupon, ~ qlr_iso(FloatingRateCoupon_fixingDate(.x))),
-    accrual_start = map_chr(coupon, ~ qlr_iso(Coupon_accrualStartDate(.x))),
-    accrual_end = map_chr(coupon, ~ qlr_iso(Coupon_accrualEndDate(.x))),
-    pay_date = map_chr(coupon, ~ qlr_iso(CashFlow_date(.x))),
+    fixing_date = map_chr(coupon, ~ QuantLibGauss::qlg_iso(FloatingRateCoupon_fixingDate(.x))),
+    accrual_start = map_chr(coupon, ~ QuantLibGauss::qlg_iso(Coupon_accrualStartDate(.x))),
+    accrual_end = map_chr(coupon, ~ QuantLibGauss::qlg_iso(Coupon_accrualEndDate(.x))),
+    pay_date = map_chr(coupon, ~ QuantLibGauss::qlg_iso(CashFlow_date(.x))),
     days = map_dbl(
       coupon,
       ~ dc_a360$dayCount(Coupon_accrualStartDate(.x), Coupon_accrualEndDate(.x))
@@ -688,8 +688,8 @@ qlr_show_tbl(
 # 6. Forward swap annuity and forward swap rate
 # ------------------------------------------------------------
 
-swap_effective_date <- qlr_date("2024-09-30")
-swap_maturity_date <- qlr_date("2026-09-30")
+swap_effective_date <- QuantLibGauss::qlg_date("2024-09-30")
+swap_maturity_date <- QuantLibGauss::qlg_date("2026-09-30")
 
 fixed_schedule <- Schedule(
   swap_effective_date,
@@ -707,7 +707,7 @@ fixed_dfs <- map_dbl(fixed_dates, ~ sofr_bundle$curve$discount(.x))
 
 qlr_show_tbl(
   tibble(
-    schedule_date = map_chr(fixed_dates, qlr_iso),
+    schedule_date = map_chr(fixed_dates, QuantLibGauss::qlg_iso),
     discount_factor = fixed_dfs
   ),
   "Underlying swap fixed schedule / DFs",
@@ -741,7 +741,7 @@ qlr_show_tbl(
 # 7. Bachelier swaption pricing
 # ------------------------------------------------------------
 
-exercise_date <- qlr_date("2024-09-26")
+exercise_date <- QuantLibGauss::qlg_date("2024-09-26")
 swaption_vol <- 1.35 / 100
 swaption_notional <- 10000000
 
@@ -844,7 +844,7 @@ normal_calc_fn <- make_normal_calculator(
 forward_up <- forward_rate * 1.01
 vol_up <- vol + 0.01
 
-trade_date_plus_1 <- qlr_date("2023-09-27")
+trade_date_plus_1 <- QuantLibGauss::qlg_date("2023-09-27")
 maturity_1d <- dc_a365$yearFraction(trade_date_plus_1, maturity_date)
 discount_factor_1d <- exp(-risk_free_rate * maturity_1d)
 

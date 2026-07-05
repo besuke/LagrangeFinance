@@ -88,7 +88,7 @@ curve_tbl <- function(curve_obj, n = 200, extrapolate = TRUE) {
     TermStructure_enableExtrapolation(curve_obj)
   }
 
-  ref_date_r <- as.Date(qlr_iso(curve_obj$referenceDate()))
+  ref_date_r <- as.Date(QuantLibGauss::qlg_iso(curve_obj$referenceDate()))
   max_t <- curve_obj$maxTime()
   times <- seq(0, max_t, length.out = n)
 
@@ -131,7 +131,7 @@ make_business_dates_tbl <- function(start_date, end_date, calendar_obj) {
       accrual_date_chr = as.character(accrual_date),
       is_business_day = purrr::map_lgl(
         accrual_date_chr,
-        ~ !Calendar_isHoliday(calendar_obj, qlr_date(.x))
+        ~ !Calendar_isHoliday(calendar_obj, QuantLibGauss::qlg_date(.x))
       )
     ) |>
     filter(is_business_day) |>
@@ -187,8 +187,8 @@ qlr_show_tbl(
 
 qlr_show_tbl(
   tibble(
-    reference_date = qlr_iso(tona_curve$referenceDate()),
-    discount_2022_08_23 = tona_curve$discount(qlr_date("2022-08-23"))
+    reference_date = QuantLibGauss::qlg_iso(tona_curve$referenceDate()),
+    discount_2022_08_23 = tona_curve$discount(QuantLibGauss::qlg_date("2022-08-23"))
   ),
   "TONA curve quick checks",
   n = 20
@@ -269,7 +269,7 @@ qlr_ir_show_swap_summary(
   title = "JPY short OIS summary"
 )
 
-jpy_ois_fixed_cf_tbl <- qlr_swap_fixed_leg_table(
+jpy_ois_fixed_cf_tbl <- QuantLibGauss::qlg_swap_fixed_leg_table(
   jpy_ois_short$swap,
   pedagogical_tona_curve
 )
@@ -286,9 +286,9 @@ qlr_show_tbl(jpy_ois_float_cf_tbl, "TONA floating leg cashflows", n = 10)
 ### Fair rate の手計算チェック
 
 ```{r jpy-fair-rate-check}
-jpy_eff_df <- pedagogical_tona_curve$discount(qlr_date("2022-08-23"))
-jpy_mat_df <- pedagogical_tona_curve$discount(qlr_date("2022-08-30"))
-jpy_annuity <- (7 / 365) * pedagogical_tona_curve$discount(qlr_date("2022-09-01"))
+jpy_eff_df <- pedagogical_tona_curve$discount(QuantLibGauss::qlg_date("2022-08-23"))
+jpy_mat_df <- pedagogical_tona_curve$discount(QuantLibGauss::qlg_date("2022-08-30"))
+jpy_annuity <- (7 / 365) * pedagogical_tona_curve$discount(QuantLibGauss::qlg_date("2022-09-01"))
 jpy_swap_rate_hc <- (jpy_eff_df - jpy_mat_df) / jpy_annuity
 
 qlr_show_tbl(
@@ -468,8 +468,8 @@ sofr_float_cf_tbl <- qlr_swap_float_leg_table(
 qlr_show_tbl(sofr_float_cf_tbl, "SOFR floating leg cashflows", n = 20)
 
 if (nrow(sofr_float_cf_tbl) >= 2) {
-  eff_df <- sofr_curve_env$curve$discount(qlr_date(sofr_float_cf_tbl$accrual_end[1]))
-  mat_df <- sofr_curve_env$curve$discount(qlr_date(sofr_float_cf_tbl$accrual_end[2]))
+  eff_df <- sofr_curve_env$curve$discount(QuantLibGauss::qlg_date(sofr_float_cf_tbl$accrual_end[1]))
+  mat_df <- sofr_curve_env$curve$discount(QuantLibGauss::qlg_date(sofr_float_cf_tbl$accrual_end[2]))
   annuity <- (364 / 360) * mat_df
   fwd_swap_rate <- (eff_df - mat_df) / annuity
 
@@ -728,8 +728,8 @@ qlr_show_tbl(curve_tbl(f_curve), "Forward curve", n = 10)
 ### Two-curve forward rate
 
 ```{r two-curve-forward-rate}
-fwd_dt_1 <- qlr_date("2022-08-04")
-fwd_dt_2 <- qlr_date("2023-08-04")
+fwd_dt_1 <- QuantLibGauss::qlg_date("2022-08-04")
+fwd_dt_2 <- QuantLibGauss::qlg_date("2023-08-04")
 
 fwd_ix_1x2 <- f_curve$forwardRate(
   fwd_dt_1,
