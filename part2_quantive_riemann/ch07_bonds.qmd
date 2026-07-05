@@ -129,7 +129,7 @@ bond_schedule <- bond_res$schedule
 bond_obj <- bond_res$bond
 
 qlr_show_tbl(
-  qlr_schedule_dates(bond_schedule),
+  QuantLibGauss::qlg_schedule_dates(bond_schedule),
   "Bond schedule",
   n = 20
 )

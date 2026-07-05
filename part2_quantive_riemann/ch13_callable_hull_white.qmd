@@ -58,7 +58,7 @@ suppressPackageStartupMessages({
 # 1. local helpers
 # ------------------------------------------------------------
 
-qlr_schedule_date_at_local <- function(schedule_obj, i_one_based) {
+QuantLibGauss::qlg_schedule_date_at_local <- function(schedule_obj, i_one_based) {
   idx0 <- as.integer(i_one_based - 1L)
 
   out <- tryCatch(schedule_obj$date(idx0), error = function(e) NULL)
@@ -77,7 +77,7 @@ make_schedule_tbl <- function(schedule_obj) {
   tibble(
     schedule_date = map_chr(
       seq_len(schedule_obj$size()),
-      ~ QuantLibGauss::qlg_iso(qlr_schedule_date_at_local(schedule_obj, .x))
+      ~ QuantLibGauss::qlg_iso(QuantLibGauss::qlg_schedule_date_at_local(schedule_obj, .x))
     )
   )
 }
@@ -85,7 +85,7 @@ make_schedule_tbl <- function(schedule_obj) {
 schedule_date_vec <- function(schedule_obj) {
   map(
     seq_len(schedule_obj$size()),
-    ~ qlr_schedule_date_at_local(schedule_obj, .x)
+    ~ QuantLibGauss::qlg_schedule_date_at_local(schedule_obj, .x)
   )
 }
 

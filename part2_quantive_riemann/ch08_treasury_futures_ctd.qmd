@@ -76,7 +76,7 @@ bond_bundle <- qlr_us_treasury_bond(
 bond_obj <- bond_bundle$bond
 
 qlr_show_tbl(
-  qlr_schedule_dates(bond_bundle$schedule),
+  QuantLibGauss::qlg_schedule_dates(bond_bundle$schedule),
   "US Treasury bond schedule",
   n = 20
 )
