@@ -122,7 +122,7 @@ bond_res <- QuantLibGauss::qlg_fixed_rate_bond(
 bond_schedule <- bond_res$schedule
 bond_obj <- bond_res$bond
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   QuantLibGauss::qlg_schedule_dates(bond_schedule),
   "Bond schedule",
   n = 20
@@ -164,7 +164,7 @@ price_tbl <- QuantLibGauss::qlg_bond_price_measures(
   schedule = bond_schedule
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   price_tbl,
   "Yield -> price summary",
   n = 20
@@ -196,7 +196,7 @@ risk_tbl <- QuantLibGauss::qlg_bond_risk_measures(
   frequency = freq_semiannual
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   risk_tbl,
   "Bond risk measures",
   n = 20
@@ -229,7 +229,7 @@ handcalc_tbl <- QuantLibGauss::qlg_bond_risk_handcalc(
   frequency = freq_semiannual
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   handcalc_tbl,
   "Hand calculations",
   n = 20
@@ -257,7 +257,7 @@ bond_cf_tbl_flat <- QuantLibGauss::qlg_bond_cashflow_table(
   curve = flat_yield_handle
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   bond_cf_tbl_flat,
   "Bond cashflow table (flat yield discounting)",
   n = 20
@@ -293,7 +293,7 @@ cat(
 bond_cf_2025_tbl <- bond_cf_tbl_flat |>
   dplyr::filter(as.Date(pay_date) >= as.Date("2025-01-01"))
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   bond_cf_2025_tbl,
   "Bond cashflows from 2025 onward",
   n = 20
@@ -393,8 +393,8 @@ tona_bundle <- make_tona_curve(
   trade_date = "2022-08-19"
 )
 
-lfg_show_tbl(tona_bundle$quote_tbl, "TONA input quotes")
-lfg_show_tbl(lfg_curve_tbl(tona_bundle$curve), "TONA curve table")
+QuantLibGauss::qlg_show_tbl(tona_bundle$quote_tbl, "TONA input quotes")
+QuantLibGauss::qlg_show_tbl(QuantLibGauss::qlg_curve_tbl(tona_bundle$curve), "TONA curve table")
 ```
 
 ### I-spread の簡易確認
@@ -402,7 +402,7 @@ lfg_show_tbl(lfg_curve_tbl(tona_bundle$curve), "TONA curve table")
 満期時点に対応する TONA zero rate を補間し、bond yield との差を見る。
 
 ```{r i-spread-check}
-curve_proxy_tbl <- lfg_curve_tbl(tona_bundle$curve, n = 500)
+curve_proxy_tbl <- QuantLibGauss::qlg_curve_tbl(tona_bundle$curve, n = 500)
 
 mat_time <- dc_a365$yearFraction(
   tona_bundle$curve$referenceDate(),
@@ -499,7 +499,7 @@ bond_cf_tbl_spread <- QuantLibGauss::qlg_bond_cashflow_table(
   curve = z_spread_price_res$spread_curve_handle
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   bond_cf_tbl_spread,
   "Bond cashflow table (TONA + z-spread)",
   n = 20
@@ -545,7 +545,7 @@ as_spread_result_tbl <- as_spread_input_tbl |>
     as_spread = (discount_price - target_dirty_price) / annuity
   )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble::tibble(
     metric = c("tona_discount_price", "tona_annuity"),
     value = c(tona_discount_price, tona_annuity)
@@ -554,7 +554,7 @@ lfg_show_tbl(
   n = 20
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   as_spread_result_tbl,
   "AS spread scenarios",
   n = 20
@@ -616,7 +616,7 @@ asset_swap_tbl_display <- asset_swap_tbl |>
     })
   )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   asset_swap_tbl_display,
   "AssetSwap result",
   n = 20

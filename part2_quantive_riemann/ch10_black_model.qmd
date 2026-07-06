@@ -38,40 +38,6 @@ fmt_pct <- function(x, digits = 4) {
   sprintf(paste0("%.", digits, "f%%"), 100 * x)
 }
 
-.lfg_path_value_at <- function(path_obj, i_zero_based) {
-  out <- tryCatch(path_obj$value(i_zero_based), error = function(e) NULL)
-  if (!is.null(out)) {
-    return(as.numeric(out))
-  }
-
-  out <- tryCatch(path_obj$get(i_zero_based), error = function(e) NULL)
-  if (!is.null(out)) {
-    return(as.numeric(out))
-  }
-
-  out <- tryCatch(path_obj[[i_zero_based + 1]][[1]], error = function(e) NULL)
-  if (!is.null(out)) {
-    return(as.numeric(out))
-  }
-
-  stop("Unable to access path value at index ", i_zero_based)
-}
-
-.lfg_path_tbl <- function(path_obj, path_id = 1L) {
-  n_point <- tryCatch(path_obj$length(), error = function(e) NULL)
-
-  if (is.null(n_point) || is.na(n_point) || n_point <= 1L) {
-    stop("Unable to determine path length correctly")
-  }
-
-  tibble::tibble(
-    path_id = path_id,
-    step = seq_len(n_point) - 1L,
-    time = purrr::map_dbl(seq_len(n_point) - 1L, ~ path_obj$time(.x)),
-    price = purrr::map_dbl(seq_len(n_point) - 1L, ~ .lfg_path_value_at(path_obj, .x))
-  )
-}
-
 # ------------------------------------------------------------
 # 1. Black calculator
 # ------------------------------------------------------------
@@ -119,7 +85,7 @@ black_calc_tbl <- tibble::tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   black_calc_tbl,
   "Black calculator summary",
   n = 20
@@ -176,7 +142,7 @@ black_process_tbl <- tibble::tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   black_process_tbl,
   "Black process analytic European summary",
   n = 20
@@ -210,7 +176,7 @@ mc_terminal_tbl <- purrr::map_dfr(
 
     tibble::tibble(
       path_id = i,
-      terminal_price = .lfg_path_value_at(one_path, n_point - 1L)
+      terminal_price = QuantLibGauss::qlg_path_value_at(one_path, n_point - 1L)
     )
   }
 ) |>
@@ -228,7 +194,7 @@ mc_euro_tbl <- tibble::tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   mc_euro_tbl,
   "Monte Carlo European summary",
   n = 20
@@ -250,7 +216,7 @@ uniform_seq_tbl <- tibble::tibble(
   uniform_value = as.numeric(uniform_seq_rng$nextSequence()$value())
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   uniform_seq_tbl,
   "Uniform sequence RNG values",
   n = 20
@@ -265,7 +231,7 @@ gaussian_seq_tbl <- tibble::tibble(
   gaussian_value = as.numeric(gaussian_seq_rng_demo$nextSequence()$value())
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   gaussian_seq_tbl,
   "Gaussian sequence RNG values",
   n = 20
@@ -295,11 +261,11 @@ mc_path_tbl <- purrr::map_dfr(
   seq_len(n_path_plot),
   function(i) {
     one_path <- path_generator$`next`()$value()
-    .lfg_path_tbl(one_path, path_id = i)
+    QuantLibGauss::qlg_path_tbl(one_path, path_id = i)
   }
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   mc_path_tbl,
   "Monte Carlo path table",
   n = 10
@@ -379,11 +345,11 @@ mc_path_tbl <- purrr::map_dfr(
   seq_len(n_path_plot),
   function(i) {
     one_path <- path_generator$`next`()$value()
-    .lfg_path_tbl(one_path, path_id = i)
+    QuantLibGauss::qlg_path_tbl(one_path, path_id = i)
   }
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   mc_path_tbl,
   "Monte Carlo path table",
   n = 10
@@ -468,7 +434,7 @@ for (i in seq_len(n_path_small)) {
 }
 
 one_path_small <- path_list_small[[1]]
-one_path_tbl <- .lfg_path_tbl(one_path_small, path_id = 1L)
+one_path_tbl <- QuantLibGauss::qlg_path_tbl(one_path_small, path_id = 1L)
 
 time_grid <- one_path_tbl$time
 dt_vec <- diff(time_grid)
@@ -495,7 +461,7 @@ hand_path_tbl <- tibble::tibble(
   hand_price = price_path_hand
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   hand_path_tbl,
   "One-path hand check",
   n = 20
@@ -576,7 +542,7 @@ euro_compare_tbl <- tibble::tibble(
   npv = c(euro_crr_3, euro_analytic, euro_crr_250)
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   euro_compare_tbl,
   "European put comparison",
   n = 20
@@ -617,7 +583,7 @@ american_compare_tbl <- tibble::tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   american_compare_tbl,
   "American put comparison",
   n = 20
@@ -696,11 +662,11 @@ sobol_path_tbl <- purrr::map_dfr(
   seq_len(n_path_sobol),
   function(i) {
     one_path <- sobol_path_generator$`next`()$value()
-    .lfg_path_tbl(one_path, path_id = i)
+    QuantLibGauss::qlg_path_tbl(one_path, path_id = i)
   }
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   sobol_path_tbl,
   "Sobol path table",
   n = 20
@@ -750,7 +716,7 @@ step_df <- col_df[1]
 
 mtrx_cf <- pmax(strike_price_sobol - mtrx_pt, 0)
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble::as_tibble(mtrx_cf),
   "Initial exercise-value matrix",
   n = 20
@@ -790,7 +756,7 @@ purrr::walk(
   }
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble::as_tibble(mtrx_cf),
   "Exercise-value matrix after backward induction",
   n = 20
@@ -809,7 +775,7 @@ lsm_tbl <- tibble::tibble(
   value = lsm_npv
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   lsm_tbl,
   "Longstaff-Schwartz hand calculation",
   n = 20

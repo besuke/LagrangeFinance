@@ -222,7 +222,7 @@ cds_schedule_1 <- Schedule(
   FALSE
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   make_schedule_tbl(cds_schedule_1),
   "CDS schedule (flat example)",
   n = 20
@@ -255,7 +255,7 @@ curve_check_tbl_1 <- tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   curve_check_tbl_1,
   "Flat curve / hazard check",
   n = 20
@@ -302,7 +302,7 @@ cds_summary_tbl_1 <- tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   cds_summary_tbl_1,
   "CDS summary (MidPoint, flat curves)",
   n = 20
@@ -324,7 +324,7 @@ implied_hazard_rate_zero_npv_1 <- cds_npv0_obj_1$impliedHazardRate(
   recovery_rate
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble(
     metric = c("quoted_spread", "implied_hazard_rate_zero_npv"),
     value = c(cds_quote, implied_hazard_rate_zero_npv_1)
@@ -343,7 +343,7 @@ df_cds_1 <- make_cds_cashflow_tbl_from_schedule(
   notional = notional
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   df_cds_1,
   "CDS cash-flow table (flat example)",
   n = 20
@@ -379,7 +379,7 @@ hand_check_tbl_1 <- tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   hand_check_tbl_1,
   "Hand check (flat example)",
   n = 20
@@ -431,7 +431,7 @@ cds_schedule_2 <- Schedule(
   FALSE
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   make_schedule_tbl(cds_schedule_2),
   "CDS schedule (5Y Sony-like example)",
   n = 30
@@ -457,7 +457,7 @@ tona_quotes <- tibble::tribble(
   ) |>
   dplyr::select(as_of_date, currency, instrument, kind, tenor, rate)
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tona_quotes,
   "TONA input quotes",
   n = 20
@@ -513,7 +513,7 @@ curve_check_tbl_2 <- tibble(
   text = c(QuantLibGauss::qlg_iso(maturity_date_2), NA_character_)
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   curve_check_tbl_2,
   "Maturity / hazard check (5Y example)",
   n = 20
@@ -584,7 +584,7 @@ cds_summary_tbl_2 <- tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   cds_summary_tbl_2,
   "CDS summary (ISDA, 5Y example)",
   n = 30
@@ -600,7 +600,7 @@ df_cds_2 <- make_cds_cashflow_tbl_from_schedule(
   notional = notional_2
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   df_cds_2,
   "CDS cash-flow table (5Y example)",
   n = 30
@@ -645,7 +645,7 @@ hand_check_tbl_2 <- tibble(
   )
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   hand_check_tbl_2,
   "Hand check (5Y example)",
   n = 20

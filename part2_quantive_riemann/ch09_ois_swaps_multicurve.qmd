@@ -159,7 +159,7 @@ tona_quotes <- tibble::tribble(
   as.Date(trade_date_tona), "JPY", "TONA", "ois", "7Y", 0.0019146
 )
 
-lfg_show_tbl(tona_quotes, "TONA market quotes", n = 20)
+QuantLibGauss::qlg_show_tbl(tona_quotes, "TONA market quotes", n = 20)
 ```
 
 ```{r build-tona-curve}
@@ -172,14 +172,14 @@ tona_curve_envs <- QuantLibGauss::qlg_ir_build_ois_curve_envs(
 tona_curve_env <- tona_curve_envs[["JPY::TONA"]]
 tona_curve <- tona_curve_env$curve
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   curve_tbl(tona_curve) |>
     transmute(date = curve_date, tonaDF = discount, zeroRT = zero),
   "TONA curve table",
   n = 12
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble(
     reference_date = QuantLibGauss::qlg_iso(tona_curve$referenceDate()),
     discount_2022_08_23 = tona_curve$discount(QuantLibGauss::qlg_date("2022-08-23"))
@@ -225,7 +225,7 @@ tona_shift_index <- OvernightIndex(
   tona_shift_curve_handle
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   curve_tbl(tona_shift_curve) |>
     transmute(date = curve_date, shftRT = zero, DF = discount),
   "Shifted TONA curve (+5%)",
@@ -273,8 +273,8 @@ jpy_ois_float_cf_tbl <- QuantLibGauss::qlg_swap_floating_leg_table(
   pedagogical_tona_curve
 )
 
-lfg_show_tbl(jpy_ois_fixed_cf_tbl, "TONA fixed leg cashflows", n = 10)
-lfg_show_tbl(jpy_ois_float_cf_tbl, "TONA floating leg cashflows", n = 10)
+QuantLibGauss::qlg_show_tbl(jpy_ois_fixed_cf_tbl, "TONA fixed leg cashflows", n = 10)
+QuantLibGauss::qlg_show_tbl(jpy_ois_float_cf_tbl, "TONA floating leg cashflows", n = 10)
 ```
 
 ### Fair rate の手計算チェック
@@ -285,7 +285,7 @@ jpy_mat_df <- pedagogical_tona_curve$discount(QuantLibGauss::qlg_date("2022-08-3
 jpy_annuity <- (7 / 365) * pedagogical_tona_curve$discount(QuantLibGauss::qlg_date("2022-09-01"))
 jpy_swap_rate_hc <- (jpy_eff_df - jpy_mat_df) / jpy_annuity
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble(
     effDF = jpy_eff_df,
     matDF = jpy_mat_df,
@@ -331,7 +331,7 @@ jpy_daily_float_cf_tbl <- QuantLibGauss::qlg_ois_daily_forward_table(
   notional = 10000000
 )
 
-lfg_show_tbl(jpy_daily_float_cf_tbl, "TONA daily forward leg", n = 20)
+QuantLibGauss::qlg_show_tbl(jpy_daily_float_cf_tbl, "TONA daily forward leg", n = 20)
 
 if (nrow(jpy_daily_float_cf_tbl) >= 6) {
   aug29_fwd <- (
@@ -404,7 +404,7 @@ jpy_fixing_diag_tbl <- QuantLibGauss::qlg_ir_fixing_table(
   index = jpy_ois_short$index
 )
 
-lfg_show_tbl(jpy_fixing_diag_tbl, "TONA daily fixing decomposition", n = 20)
+QuantLibGauss::qlg_show_tbl(jpy_fixing_diag_tbl, "TONA daily fixing decomposition", n = 20)
 ```
 
 ## 6. SOFR OIS curve and swap
@@ -435,7 +435,7 @@ sofr_curve_envs <- QuantLibGauss::qlg_ir_build_ois_curve_envs(
 sofr_curve_env <- sofr_curve_envs[["USD::SOFR"]]
 sofr_curve <- sofr_curve_env$curve
 
-lfg_show_tbl(curve_tbl(sofr_curve), "SOFR curve table", n = 12)
+QuantLibGauss::qlg_show_tbl(curve_tbl(sofr_curve), "SOFR curve table", n = 12)
 ```
 
 ```{r sofr-ois-swap}
@@ -459,7 +459,7 @@ sofr_float_cf_tbl <- QuantLibGauss::qlg_swap_floating_leg_table(
   sofr_curve_env$curve
 )
 
-lfg_show_tbl(sofr_float_cf_tbl, "SOFR floating leg cashflows", n = 20)
+QuantLibGauss::qlg_show_tbl(sofr_float_cf_tbl, "SOFR floating leg cashflows", n = 20)
 
 if (nrow(sofr_float_cf_tbl) >= 2) {
   eff_df <- sofr_curve_env$curve$discount(QuantLibGauss::qlg_date(sofr_float_cf_tbl$accrual_end[1]))
@@ -552,12 +552,12 @@ term_sofr_bundle <- tryCatch(
 )
 
 if (is.null(term_sofr_bundle)) {
-  lfg_show_tbl(
+  QuantLibGauss::qlg_show_tbl(
     tibble(note = "Term SOFR basis helper depends on SWIG build; skipped"),
     "Term SOFR basis curve"
   )
 } else {
-  lfg_show_tbl(
+  QuantLibGauss::qlg_show_tbl(
     curve_tbl(term_sofr_bundle$curve),
     "Term SOFR basis curve",
     n = 12
@@ -616,7 +616,7 @@ s_curve <- PiecewiseLogLinearDiscount(
 RelinkableYieldTermStructureHandle_linkTo(s_curve_handle, s_curve)
 TermStructure_enableExtrapolation(s_curve)
 
-lfg_show_tbl(curve_tbl(s_curve), "Single/forecast curve", n = 10)
+QuantLibGauss::qlg_show_tbl(curve_tbl(s_curve), "Single/forecast curve", n = 10)
 ```
 
 ```{r single-curve-valuation}
@@ -641,7 +641,7 @@ Instrument_setPricingEngine(
   DiscountingSwapEngine(s_curve_handle)
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble(npv_single_curve = single_swap$NPV()),
   "Single-curve valuation",
   n = 20
@@ -681,7 +681,7 @@ d_curve <- PiecewiseLogLinearDiscount(
 RelinkableYieldTermStructureHandle_linkTo(d_curve_handle, d_curve)
 TermStructure_enableExtrapolation(d_curve)
 
-lfg_show_tbl(curve_tbl(d_curve), "Discount curve", n = 10)
+QuantLibGauss::qlg_show_tbl(curve_tbl(d_curve), "Discount curve", n = 10)
 ```
 
 ### Forward curve
@@ -716,7 +716,7 @@ f_curve <- PiecewiseLogLinearDiscount(
 RelinkableYieldTermStructureHandle_linkTo(f_curve_handle, f_curve)
 TermStructure_enableExtrapolation(f_curve)
 
-lfg_show_tbl(curve_tbl(f_curve), "Forward curve", n = 10)
+QuantLibGauss::qlg_show_tbl(curve_tbl(f_curve), "Forward curve", n = 10)
 ```
 
 ### Two-curve forward rate
@@ -732,7 +732,7 @@ fwd_ix_1x2 <- f_curve$forwardRate(
   Compounding_Simple_get()
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble(
     forward_1x2 = fwd_ix_1x2$rate()
   ),
@@ -765,7 +765,7 @@ Instrument_setPricingEngine(
   DiscountingSwapEngine(d_curve_handle)
 )
 
-lfg_show_tbl(
+QuantLibGauss::qlg_show_tbl(
   tibble(
     npv_two_curve = two_curve_swap$NPV(),
     fixed_leg_npv = two_curve_swap$legNPV(0),
