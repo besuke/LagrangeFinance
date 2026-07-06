@@ -28,15 +28,7 @@
 # 0. setup
 # ------------------------------------------------------------
 
-.libPaths()
-.libPaths(c(
-  "/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library",
-  .libPaths()
-))
-.libPaths()
 
-library(QuantLib)
-# devtools::load_all(".")  # disabled for Quarto book
 
 # ------------------------------------------------------------
 # 1. local formatting helper
@@ -63,7 +55,7 @@ settlement_days_t1 <- 1L
 # 3. US Treasury bond helper example
 # ------------------------------------------------------------
 
-bond_bundle <- qlr_us_treasury_bond(
+bond_bundle <- QuantLibGauss::qlg_us_treasury_bond(
   effective_date = "2022-09-30",
   maturity_date = "2027-09-30",
   coupon_rate_pct = 4.125,
@@ -75,7 +67,7 @@ bond_bundle <- qlr_us_treasury_bond(
 
 bond_obj <- bond_bundle$bond
 
-qlr_show_tbl(
+lfg_show_tbl(
   QuantLibGauss::qlg_schedule_dates(bond_bundle$schedule),
   "US Treasury bond schedule",
   n = 20
@@ -91,7 +83,7 @@ cf_prc <- bond_obj$cleanPrice(
 
 cat(
   "Yield 6%, settle 2023-07-06 clean price:",
-  qlr_fmt_num(cf_prc, 4),
+  lfg_fmt_num(cf_prc, 4),
   "\n"
 )
 
@@ -103,9 +95,9 @@ trade_date <- QuantLibGauss::qlg_date("2023-04-20")
 bond_yield <- 3.7 / 100
 futures_price <- 109 + 10 / 32
 
-qlr_set_eval_date(trade_date)
+QuantLibGauss::qlg_set_eval_date(trade_date)
 
-settle_date <- qlr_advance_days(
+settle_date <- QuantLibGauss::qlg_advance_days(
   calendar_obj = cal_us_gov,
   date_obj = trade_date,
   n_days = settlement_days_t1
@@ -128,7 +120,7 @@ i_rate_obj <- InterestRate(
   freq_semiannual
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   tibble::tibble(
     settle_date = QuantLibGauss::qlg_iso(settle_date),
     bond_yield = bond_yield,
@@ -139,7 +131,7 @@ qlr_show_tbl(
   n = 20
 )
 
-bond_cf_tbl <- qlr_bond_cashflow_table_ql(bond_obj) |>
+bond_cf_tbl <- QuantLibGauss::qlg_bond_cashflow_table(bond_obj) |>
   dplyr::mutate(
     pay_date_r = as.Date(pay_date),
     settle_date_r = as.Date(QuantLibGauss::qlg_iso(settle_date)),
@@ -166,13 +158,13 @@ bond_cf_tbl <- qlr_bond_cashflow_table_ql(bond_obj) |>
     pv,
     cashflow_type
   )
-tmp_cf <- qlr_bond_cashflow_table_ql(bond_obj)
+tmp_cf <- QuantLibGauss::qlg_bond_cashflow_table(bond_obj)
 
 tmp_cf
 
 str(tmp_cf)
 
-qlr_show_tbl(
+lfg_show_tbl(
   bond_cf_tbl,
   "Bond cashflow table (top rows)",
   n = 3
@@ -190,7 +182,7 @@ days_to_apr21 <- dc_act_act_bond$dayCount(mar31, apr21)
 days_coupon_period <- dc_act_act_bond$dayCount(mar31, sep30)
 accrued_interest_hand <- 4.125 / 2 * days_to_apr21 / days_coupon_period
 
-qlr_show_tbl(
+lfg_show_tbl(
   tibble::tibble(
     days_to_apr21 = days_to_apr21,
     days_coupon_period = days_coupon_period,
@@ -213,7 +205,7 @@ deliverable_tbl <- tibble::tribble(
 
 gross_basis_tbl <- purrr::pmap_dfr(
   deliverable_tbl,
-  ~ qlr_bond_futures_gross_basis_row(
+  ~ QuantLibGauss::qlg_bond_futures_gross_basis_row(
     issue_date = ..1,
     maturity_date = ..2,
     coupon_rate_pct = ..3,
@@ -230,12 +222,12 @@ gross_basis_tbl <- purrr::pmap_dfr(
 )
 
 cat(
-  "Futures price:", qlr_fmt_num(futures_price, 6),
+  "Futures price:", lfg_fmt_num(futures_price, 6),
   ", spot settlement date:", QuantLibGauss::qlg_iso(settle_date),
   "\n"
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   gross_basis_tbl |>
     dplyr::select(-bond_obj),
   "Gross basis table",
@@ -259,7 +251,7 @@ net_basis_tbl <- purrr::pmap_dfr(
     dirty_price = gross_basis_tbl$dirty_price,
     gross_basis = gross_basis_tbl$gross_basis
   ),
-  ~ qlr_bond_futures_net_basis_row(
+  ~ QuantLibGauss::qlg_bond_futures_net_basis_row(
     bond_obj = ..1,
     conversion_factor = ..2,
     clean_price = ..3,
@@ -278,11 +270,11 @@ cat(
   "Repo rate:", fmt_pct(repo_rate),
   ", repo end date:", QuantLibGauss::qlg_iso(repo_end_date),
   ", repo days:", repo_days,
-  ", repo year fraction:", qlr_fmt_num(repo_year_frac, 4),
+  ", repo year fraction:", lfg_fmt_num(repo_year_frac, 4),
   "\n"
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   net_basis_tbl,
   "Net basis table",
   n = 20
@@ -302,7 +294,7 @@ basket_summary_tbl <- gross_basis_tbl |>
     ctd_proxy = rank(net_basis, ties.method = "first") == 1
   ) |>
   dplyr::arrange(net_basis)
-qlr_show_tbl(
+lfg_show_tbl(
   basket_summary_tbl,
   "Deliverable basket summary",
   n = 20

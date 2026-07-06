@@ -19,21 +19,13 @@
 # 0. setup
 # ------------------------------------------------------------
 
-.libPaths()
-.libPaths(c(
-  "/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library",
-  .libPaths()
-))
-.libPaths()
 
 suppressPackageStartupMessages({
-  library(QuantLib)
   library(ggplot2)
   library(dplyr)
   library(purrr)
   library(tidyr)
   library(tibble)
-  # devtools::load_all(".")  # disabled for Quarto book
 })
 
 # ------------------------------------------------------------
@@ -211,7 +203,7 @@ black_calibration_tbl <- tibble(
   value = c(par_black[1], beta_black, par_black[2], par_black[3], fit_black$value)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   black_calibration_tbl,
   "Black SABR calibration summary",
   n = 20
@@ -223,7 +215,7 @@ black_smile_tbl <- tibble(
   sabr_vol = calc_vol_black
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   black_smile_tbl,
   "Black SABR smile table",
   n = 20
@@ -391,7 +383,7 @@ normal_calibration_tbl <- tibble(
   value = c(par_normal[1], beta_normal, par_normal[2], par_normal[3], fit_normal$value)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   normal_calibration_tbl,
   "Shifted SABR normal calibration summary",
   n = 20
@@ -403,7 +395,7 @@ normal_smile_tbl <- tibble(
   sabr_vol = calc_vol_normal
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   normal_smile_tbl,
   "Shifted SABR normal smile table",
   n = 20
@@ -451,7 +443,7 @@ otm_check_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   otm_check_tbl,
   "Shifted SABR OTM check",
   n = 20
@@ -495,13 +487,13 @@ jac_history_tbl <- jac_history_tbl |>
   mutate(iteration = row_number()) |>
   select(iteration, everything())
 
-qlr_show_tbl(
+lfg_show_tbl(
   slice_head(jac_history_tbl, n = 10),
   "Jacobian history (top rows)",
   n = 20
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   slice_tail(jac_history_tbl, n = 5),
   "Jacobian history (last rows)",
   n = 20

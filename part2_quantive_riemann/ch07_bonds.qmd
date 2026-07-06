@@ -56,17 +56,11 @@ lang: ja
 # 0. setup
 # ============================================================
 
-.libPaths(c(
-  "/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library",
-  .libPaths()
-))
 
 suppressPackageStartupMessages({
-  library(QuantLib)
   library(tidyverse)
 })
 
-# devtools::load_all(".")  # disabled for Quarto book
 ```
 
 ## 1. Enums / calendars / counters
@@ -101,9 +95,9 @@ face_amount <- 100
 coupon_rate <- 0.00370
 clean_price_input <- 97.0
 
-qlr_set_eval_date(trade_date)
+QuantLibGauss::qlg_set_eval_date(trade_date)
 
-settlement_date <- qlr_advance_days(
+settlement_date <- QuantLibGauss::qlg_advance_days(
   calendar_obj = jp_calendar,
   date_obj = trade_date,
   n_days = settlement_days
@@ -117,7 +111,7 @@ bond_res <- QuantLibGauss::qlg_fixed_rate_bond(
   face_amount = face_amount,
   coupon_rate = coupon_rate,
   calendar = jp_calendar,
-  schedule_frequency = qlr_period_months(6),
+  schedule_frequency = QuantLibGauss::qlg_period_months(6),
   accrual_day_counter = dc_30,
   payment_convention = "Unadjusted",
   maturity_convention = "Unadjusted",
@@ -128,7 +122,7 @@ bond_res <- QuantLibGauss::qlg_fixed_rate_bond(
 bond_schedule <- bond_res$schedule
 bond_obj <- bond_res$bond
 
-qlr_show_tbl(
+lfg_show_tbl(
   QuantLibGauss::qlg_schedule_dates(bond_schedule),
   "Bond schedule",
   n = 20
@@ -140,7 +134,7 @@ qlr_show_tbl(
 clean price 97.0 から、債券利回りを逆算する。
 
 ```{r clean-price-to-yield}
-price_to_yield <- qlr_bond_yield_from_clean_price(
+price_to_yield <- QuantLibGauss::qlg_bond_yield_from_clean_price(
   bond = bond_obj,
   clean_price = clean_price_input,
   day_counter = dc_30,
@@ -160,7 +154,7 @@ cat(
 求めた yield を使って、clean price と dirty price を再計算する。
 
 ```{r yield-to-price}
-price_tbl <- qlr_bond_price_measures(
+price_tbl <- QuantLibGauss::qlg_bond_price_measures(
   bond = bond_obj,
   yield = price_to_yield,
   day_counter = dc_30,
@@ -170,7 +164,7 @@ price_tbl <- qlr_bond_price_measures(
   schedule = bond_schedule
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   price_tbl,
   "Yield -> price summary",
   n = 20
@@ -194,7 +188,7 @@ accrued_amount <- get_metric_value(price_tbl, "accrued_amount")
 Duration、BPV、Convexity などのリスク指標を確認する。
 
 ```{r risk-measures}
-risk_tbl <- qlr_bond_risk_measures(
+risk_tbl <- QuantLibGauss::qlg_bond_risk_measures(
   bond = bond_obj,
   yield = price_to_yield,
   day_counter = dc_30,
@@ -202,7 +196,7 @@ risk_tbl <- qlr_bond_risk_measures(
   frequency = freq_semiannual
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   risk_tbl,
   "Bond risk measures",
   n = 20
@@ -224,7 +218,7 @@ convexity_value <- risk_tbl |>
 QuantLib の計算結果に対して、手計算ベースの確認を行う。
 
 ```{r hand-calculation-checks}
-handcalc_tbl <- qlr_bond_risk_handcalc(
+handcalc_tbl <- QuantLibGauss::qlg_bond_risk_handcalc(
   bond = bond_obj,
   yield = price_to_yield,
   dirty_price = dirty_price_from_yield,
@@ -235,7 +229,7 @@ handcalc_tbl <- qlr_bond_risk_handcalc(
   frequency = freq_semiannual
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   handcalc_tbl,
   "Hand calculations",
   n = 20
@@ -247,7 +241,7 @@ qlr_show_tbl(
 flat yield curve を作り、そのカーブで債券キャッシュフローを割り引く。
 
 ```{r cashflow-table-flat-yield}
-flat_yield_handle <- qlr_bond_flat_forward_handle(
+flat_yield_handle <- QuantLibGauss::qlg_bond_flat_forward_handle(
   settlement_date = settlement_date,
   rate = price_to_yield,
   day_counter = dc_30,
@@ -258,12 +252,12 @@ flat_yield_handle <- qlr_bond_flat_forward_handle(
 flat_engine <- DiscountingBondEngine(flat_yield_handle)
 Instrument_setPricingEngine(bond_obj, flat_engine)
 
-bond_cf_tbl_flat <- qlr_bond_cashflow_table_ql(
+bond_cf_tbl_flat <- QuantLibGauss::qlg_bond_cashflow_table(
   bond = bond_obj,
   curve = flat_yield_handle
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   bond_cf_tbl_flat,
   "Bond cashflow table (flat yield discounting)",
   n = 20
@@ -299,7 +293,7 @@ cat(
 bond_cf_2025_tbl <- bond_cf_tbl_flat |>
   dplyr::filter(as.Date(pay_date) >= as.Date("2025-01-01"))
 
-qlr_show_tbl(
+lfg_show_tbl(
   bond_cf_2025_tbl,
   "Bond cashflows from 2025 onward",
   n = 20
@@ -314,7 +308,7 @@ qlr_show_tbl(
 ```{r tona-curve-builder}
 make_tona_curve <- function(curve_data, trade_date = "2022-08-19") {
   trade_date_ql <- QuantLibGauss::qlg_date(trade_date)
-  qlr_set_eval_date(trade_date_ql)
+  QuantLibGauss::qlg_set_eval_date(trade_date_ql)
 
   tona_curve_handle <- RelinkableYieldTermStructureHandle()
 
@@ -345,7 +339,7 @@ make_tona_curve <- function(curve_data, trade_date = "2022-08-19") {
       return(
         OISRateHelper(
           2,
-          qlr_period(tenor),
+          QuantLibGauss::qlg_period(tenor),
           QuoteHandle(SimpleQuote(rate_pct / 100)),
           tona_index
         )
@@ -399,8 +393,8 @@ tona_bundle <- make_tona_curve(
   trade_date = "2022-08-19"
 )
 
-qlr_show_tbl(tona_bundle$quote_tbl, "TONA input quotes")
-qlr_show_tbl(qlr_curve_tbl(tona_bundle$curve), "TONA curve table")
+lfg_show_tbl(tona_bundle$quote_tbl, "TONA input quotes")
+lfg_show_tbl(lfg_curve_tbl(tona_bundle$curve), "TONA curve table")
 ```
 
 ### I-spread の簡易確認
@@ -408,7 +402,7 @@ qlr_show_tbl(qlr_curve_tbl(tona_bundle$curve), "TONA curve table")
 満期時点に対応する TONA zero rate を補間し、bond yield との差を見る。
 
 ```{r i-spread-check}
-curve_proxy_tbl <- qlr_curve_tbl(tona_bundle$curve, n = 500)
+curve_proxy_tbl <- lfg_curve_tbl(tona_bundle$curve, n = 500)
 
 mat_time <- dc_a365$yearFraction(
   tona_bundle$curve$referenceDate(),
@@ -438,7 +432,7 @@ cat(
 同じ債券を、flat forward と TONA curve でそれぞれ評価する。
 
 ```{r discounting-flat-tona}
-flat_forward_price <- qlr_bond_npv_with_flat_yield(
+flat_forward_price <- QuantLibGauss::qlg_bond_npv_with_flat_yield(
   bond = bond_obj,
   settlement_date = settlement_date,
   rate = 0.01418713,
@@ -453,7 +447,7 @@ cat(
   "\n"
 )
 
-tona_discount_price <- qlr_bond_npv_with_curve(
+tona_discount_price <- QuantLibGauss::qlg_bond_npv_with_curve(
   bond = bond_obj,
   curve_handle = tona_bundle$curve_handle
 )
@@ -485,7 +479,7 @@ cat(
   "\n"
 )
 
-z_spread_price_res <- qlr_bond_npv_with_zspread(
+z_spread_price_res <- QuantLibGauss::qlg_bond_npv_with_zspread(
   bond = bond_obj,
   base_curve_handle = tona_bundle$curve_handle,
   z_spread = z_spread_value,
@@ -500,12 +494,12 @@ cat(
   "\n"
 )
 
-bond_cf_tbl_spread <- qlr_bond_cashflow_table_ql(
+bond_cf_tbl_spread <- QuantLibGauss::qlg_bond_cashflow_table(
   bond = bond_obj,
   curve = z_spread_price_res$spread_curve_handle
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   bond_cf_tbl_spread,
   "Bond cashflow table (TONA + z-spread)",
   n = 20
@@ -523,7 +517,7 @@ cat(
 Asset swap spread の理解のために、簡易的に TONA discount price と annuity から AS spread を計算する。
 
 ```{r as-spread-scenarios}
-bond_cf_tbl_tona <- qlr_bond_cashflow_table_ql(
+bond_cf_tbl_tona <- QuantLibGauss::qlg_bond_cashflow_table(
   bond = bond_obj,
   curve = tona_bundle$curve_handle
 ) |>
@@ -551,7 +545,7 @@ as_spread_result_tbl <- as_spread_input_tbl |>
     as_spread = (discount_price - target_dirty_price) / annuity
   )
 
-qlr_show_tbl(
+lfg_show_tbl(
   tibble::tibble(
     metric = c("tona_discount_price", "tona_annuity"),
     value = c(tona_discount_price, tona_annuity)
@@ -560,7 +554,7 @@ qlr_show_tbl(
   n = 20
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   as_spread_result_tbl,
   "AS spread scenarios",
   n = 20
@@ -579,13 +573,13 @@ pay_fixed_rate <- TRUE
 is_par_asset_swap <- TRUE
 
 tibor6m_for_asw <- Tibor(
-  qlr_period_months(6),
+  QuantLibGauss::qlg_period_months(6),
   tona_bundle$curve_handle
 )
 ```
 
 ```{r asset-swap-analysis}
-asset_swap_tbl <- qlr_asset_swap_analysis(
+asset_swap_tbl <- QuantLibGauss::qlg_asset_swap_analysis(
   bond = bond_obj,
   clean_price = clean_price_asw,
   ibor_index = tibor6m_for_asw,
@@ -593,7 +587,7 @@ asset_swap_tbl <- qlr_asset_swap_analysis(
   settlement_date = settlement_date,
   maturity_date = maturity_date,
   calendar = jp_calendar,
-  floating_schedule_frequency = qlr_period_years(1),
+  floating_schedule_frequency = QuantLibGauss::qlg_period_years(1),
   payment_convention = "Unadjusted",
   date_generation = "Backward",
   end_of_month = FALSE,
@@ -622,7 +616,7 @@ asset_swap_tbl_display <- asset_swap_tbl |>
     })
   )
 
-qlr_show_tbl(
+lfg_show_tbl(
   asset_swap_tbl_display,
   "AssetSwap result",
   n = 20

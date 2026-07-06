@@ -38,20 +38,12 @@
 # 0. setup
 # ------------------------------------------------------------
 
-.libPaths()
-.libPaths(c(
-  "/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library",
-  .libPaths()
-))
-.libPaths()
 
 suppressPackageStartupMessages({
-  library(QuantLib)
   library(dplyr)
   library(purrr)
   library(tibble)
   library(ggplot2)
-  # devtools::load_all(".")  # disabled for Quarto book
 })
 
 # ------------------------------------------------------------
@@ -232,13 +224,13 @@ jpy_curve_quotes <- tibble::tribble(
 ) |>
   mutate(rate = rate_pct / 100)
 
-qlr_show_tbl(
+lfg_show_tbl(
   jpy_curve_quotes,
   "JPY Tibor-like input quotes",
   n = 20
 )
 
-qlr_set_eval_date(trade_date_calib)
+QuantLibGauss::qlg_set_eval_date(trade_date_calib)
 
 jpy_curve_helpers <- RateHelperVector()
 
@@ -250,7 +242,7 @@ RateHelperVector_append(
         filter(kind == "depo", tenor == "6m") |>
         pull(rate)
     )),
-    qlr_period_months(6),
+    QuantLibGauss::qlg_period_months(6),
     2L,
     calendar_jp,
     "ModifiedFollowing",
@@ -269,12 +261,12 @@ purrr::walk(
       jpy_curve_helpers,
       SwapRateHelper(
         QuoteHandle(SimpleQuote(swap_rows$rate[i])),
-        qlr_period(swap_rows$tenor[i]),
+        QuantLibGauss::qlg_period(swap_rows$tenor[i]),
         calendar_jp,
         Frequency_Semiannual_get(),
         "ModifiedFollowing",
         dc_a365,
-        JPYLibor(qlr_period_months(6))
+        JPYLibor(QuantLibGauss::qlg_period_months(6))
       )
     )
   }
@@ -291,7 +283,7 @@ TermStructure_enableExtrapolation(jpy_curve_obj)
 jpy_curve_handle <- YieldTermStructureHandle(jpy_curve_obj)
 
 jpy_index <- JPYLibor(
-  qlr_period_months(6),
+  QuantLibGauss::qlg_period_months(6),
   jpy_curve_handle
 )
 
@@ -301,7 +293,7 @@ curve_check_tbl <- tibble(
   zero = map_dbl(seq(0.5, 10, by = 0.5), ~ -log(jpy_curve_obj$discount(.x)) / .x)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   curve_check_tbl,
   "JPY Tibor-like curve check",
   n = 20
@@ -314,7 +306,7 @@ qlr_show_tbl(
 trade_date <- QuantLibGauss::qlg_date("2024-04-15")
 issue_date <- QuantLibGauss::qlg_date("2024-04-17")
 maturity_date <- QuantLibGauss::qlg_date("2029-04-17")
-qlr_set_eval_date(trade_date)
+QuantLibGauss::qlg_set_eval_date(trade_date)
 
 coupon_rate <- 0.03
 market_yield <- 0.03
@@ -332,7 +324,7 @@ freq_semiannual <- Frequency_Semiannual_get()
 schedule_bond <- Schedule(
   issue_date,
   maturity_date,
-  qlr_period_months(6),
+  QuantLibGauss::qlg_period_months(6),
   calendar_obj,
   "Unadjusted",
   "Unadjusted",
@@ -340,7 +332,7 @@ schedule_bond <- Schedule(
   FALSE
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   make_schedule_tbl(schedule_bond),
   "Bullet bond schedule",
   n = 20
@@ -375,7 +367,7 @@ bullet_summary_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   bullet_summary_tbl,
   "Bullet bond summary",
   n = 20
@@ -398,7 +390,7 @@ flat_curve_handle <- YieldTermStructureHandle(flat_curve_obj)
 
 float_index <- Libor(
   "ffIX",
-  qlr_period_months(6),
+  QuantLibGauss::qlg_period_months(6),
   settlement_days,
   JPYCurrency(),
   calendar_obj,
@@ -422,7 +414,7 @@ hw_tbl <- tibble(
   value = c(hw_a, hw_sigma, n_step_tree)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   hw_tbl,
   "Hull-White parameters",
   n = 20
@@ -475,7 +467,7 @@ callable_summary_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   callable_summary_tbl,
   "Callable bond summary",
   n = 20
@@ -521,7 +513,7 @@ swaption_summary_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   swaption_summary_tbl,
   "Bermudan swaption summary",
   n = 20
@@ -540,7 +532,7 @@ comparison_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   comparison_tbl,
   "Callable bond vs Bermudan swaption comparison",
   n = 20
@@ -599,7 +591,7 @@ vasicek_tbl <- bind_rows(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   vasicek_tbl,
   "Vasicek curve table",
   n = 20
@@ -691,7 +683,7 @@ hw_curve_tbl <- bind_rows(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   hw_curve_tbl,
   "Hull-White curve table",
   n = 20
@@ -720,19 +712,19 @@ cat("\nchapter09 callable / hull-white rewrite part2 completed successfully.\n")
 # 5. Part 3: Hull-White calibration and swaption checks
 # ------------------------------------------------------------
 
-qlr_set_eval_date(trade_date_calib)
+QuantLibGauss::qlg_set_eval_date(trade_date_calib)
 
 # 5.1 One-helper setup: first build 1Yx5Y underlying and ATM strike
 
 swap_effective_date <- QuantLibGauss::qlg_date("2023-08-23")
 swap_maturity_date <- QuantLibGauss::qlg_date("2028-08-23")
 exercise_date <- calendar_jp$advance(trade_date_calib, 1L, "Years")
-maturity_tenor <- qlr_period_years(5L)
+maturity_tenor <- QuantLibGauss::qlg_period_years(5L)
 
 fixed_schedule_1y5y <- Schedule(
   swap_effective_date,
   swap_maturity_date,
-  qlr_period_months(6),
+  QuantLibGauss::qlg_period_months(6),
   calendar_jp,
   "ModifiedFollowing",
   "ModifiedFollowing",
@@ -761,7 +753,7 @@ forward_swap_tbl <- tibble(
   value = c(annuity_1y5y, forward_swap_rate_1y5y)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   forward_swap_tbl,
   "1Yx5Y forward swap summary",
   n = 20
@@ -785,7 +777,7 @@ helper_1 <- SwaptionHelper(
   maturity_tenor,
   QuoteHandle(SimpleQuote(36.06 / 10000)),
   jpy_index,
-  qlr_period_months(6),
+  QuantLibGauss::qlg_period_months(6),
   dc_a365,
   dc_a365,
   jpy_curve_handle,
@@ -816,7 +808,7 @@ hw_one_helper_tbl <- tibble(
   value = c(hw_param_1[1], hw_param_1[2])
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   hw_one_helper_tbl,
   "Hull-White one-helper calibration",
   n = 20
@@ -860,7 +852,7 @@ engine_compare_tbl <- tibble(
   npv = c(npv_jam, npv_tree, npv_normal)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   engine_compare_tbl,
   "1Yx5Y swaption engine comparison",
   n = 20
@@ -877,7 +869,7 @@ helper_detail_tbl_1 <- tibble(
   hw_price = npv_jam
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   helper_detail_tbl_1,
   "1Yx5Y helper detail",
   n = 20
@@ -910,7 +902,7 @@ multi_swap_input_tbl <- purrr::map_dfr(
     fixed_schedule_i <- Schedule(
       swap_effective_i,
       swap_maturity_i,
-      qlr_period_months(6),
+      QuantLibGauss::qlg_period_months(6),
       calendar_jp,
       "ModifiedFollowing",
       "ModifiedFollowing",
@@ -964,10 +956,10 @@ helper_list_multi <- purrr::map(
   function(i) {
     helper_i <- SwaptionHelper(
       multi_swap_input_tbl$expiry_date_obj[[i]],
-      qlr_period_years(vol_data_multi$swap_tenor_year[i]),
+      QuantLibGauss::qlg_period_years(vol_data_multi$swap_tenor_year[i]),
       QuoteHandle(SimpleQuote(multi_swap_input_tbl$market_normal_vol[i])),
       jpy_index,
-      qlr_period_months(6),
+      QuantLibGauss::qlg_period_months(6),
       dc_a365,
       dc_a365,
       jpy_curve_handle,
@@ -1000,7 +992,7 @@ hw_multi_tbl <- tibble(
   value = c(hw_param_multi[1], hw_param_multi[2])
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   hw_multi_tbl,
   "Hull-White multi-helper calibration",
   n = 20
@@ -1054,7 +1046,7 @@ helper_detail_multi_tbl <- purrr::map_dfr(
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   helper_detail_multi_tbl,
   "Multi-helper detail",
   n = 20
@@ -1082,7 +1074,7 @@ bermudan_multi_tbl <- tibble(
   value = c(bermudan_swaption_1y5y$NPV())
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   bermudan_multi_tbl,
   "Bermudan swaption under calibrated Hull-White",
   n = 20
@@ -1094,7 +1086,7 @@ cat("\nchapter09 callable / hull-white rewrite part3 completed successfully.\n")
 # 6. Part 4A: one-step tree hand calculation
 # ------------------------------------------------------------
 
-qlr_set_eval_date(trade_date_calib)
+QuantLibGauss::qlg_set_eval_date(trade_date_calib)
 
 aa_hand <- 0.03
 sigma_hand <- 0.39609 / 100
@@ -1106,7 +1098,7 @@ swap_maturity_hand <- QuantLibGauss::qlg_date("2028-08-23")
 fix_schedule_hand <- Schedule(
   swap_effective_hand,
   swap_maturity_hand,
-  qlr_period_months(6),
+  QuantLibGauss::qlg_period_months(6),
   calendar_jp,
   "ModifiedFollowing",
   "ModifiedFollowing",
@@ -1116,7 +1108,7 @@ fix_schedule_hand <- Schedule(
 
 fix_dates_hand <- schedule_date_vec(fix_schedule_hand)
 
-qlr_show_tbl(
+lfg_show_tbl(
   make_schedule_tbl(fix_schedule_hand),
   "1Yx5Y fixed schedule for hand calculation",
   n = 20
@@ -1139,7 +1131,7 @@ cf_year_tbl <- tibble(
     )
   )
 
-qlr_show_tbl(
+lfg_show_tbl(
   cf_year_tbl,
   "Cashflow dates / year fractions / discount factors",
   n = 20
@@ -1153,7 +1145,7 @@ forward_swap_hand_tbl <- tibble(
   value = c(annuity_hand, coupon_rate_hand)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   forward_swap_hand_tbl,
   "Forward swap summary for hand calculation",
   n = 20
@@ -1194,7 +1186,7 @@ one_step_state_tbl <- tibble(
   probability = x1_prob
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   one_step_state_tbl,
   "One-step x states (raw)",
   n = 20
@@ -1220,7 +1212,7 @@ x1_df_raw_tbl <- purrr::imap_dfr(
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   x1_df_raw_tbl,
   "Node discount factors (raw x)",
   n = 30
@@ -1257,7 +1249,7 @@ one_step_raw_tbl <- tibble(
   exercise_df = expr_df_raw
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   one_step_raw_tbl,
   "One-step swaption decomposition (raw x)",
   n = 20
@@ -1268,7 +1260,7 @@ one_step_raw_summary_tbl <- tibble(
   value = c(dT_hand, dX_hand, coupon_rate_hand, swaption_npv_raw)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   one_step_raw_summary_tbl,
   "One-step hand calculation summary (raw x)",
   n = 20
@@ -1312,7 +1304,7 @@ one_step_adj_tbl <- tibble(
   itm_rate_after_floor = itm_rate_adj_pos
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   one_step_adj_tbl,
   "One-step swaption decomposition (forward-drift adjusted x)",
   n = 20
@@ -1331,7 +1323,7 @@ one_step_adj_summary_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   one_step_adj_summary_tbl,
   "One-step hand calculation summary (forward-drift adjusted x)",
   n = 20
@@ -1354,7 +1346,7 @@ part3_vs_hand_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   part3_vs_hand_tbl,
   "Part 3 vs Part 4A comparison",
   n = 20
@@ -1366,7 +1358,7 @@ cat("\nchapter09 callable / hull-white rewrite part4A completed successfully.\n"
 # 7. Part 4B: tree-step convergence vs hand calculation
 # ------------------------------------------------------------
 
-qlr_set_eval_date(trade_date_calib)
+QuantLibGauss::qlg_set_eval_date(trade_date_calib)
 
 tree_step_grid <- c(1L, 2L, 3L, 6L, 12L, 24L, 60L, 120L, 240L, 1000L)
 
@@ -1384,7 +1376,7 @@ tree_convergence_tbl <- purrr::map_dfr(
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   tree_convergence_tbl,
   "Tree convergence table",
   n = 20
@@ -1431,7 +1423,7 @@ part4b_compare_tbl <- bind_rows(
     diff_vs_jam = npv - npv_jam
   )
 
-qlr_show_tbl(
+lfg_show_tbl(
   part4b_compare_tbl,
   "Part 4B comparison: hand vs tree vs analytic",
   n = 30
@@ -1460,7 +1452,7 @@ part4b_summary_tbl <- tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   part4b_summary_tbl,
   "Part 4B summary diagnostics",
   n = 20
@@ -1531,7 +1523,7 @@ cat("\nchapter09 callable / hull-white rewrite part4B completed successfully.\n"
 # Part 5: Hull-White path simulation for 10Y zero rate
 # ------------------------------------------------------------
 
-qlr_set_eval_date(trade_date_calib)
+QuantLibGauss::qlg_set_eval_date(trade_date_calib)
 
 # ------------------------------------------------------------
 # 5.1 parameters
@@ -1616,7 +1608,7 @@ x_path_tbl <- tibble(
   x_t = as.vector(x_path_mat)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   x_path_tbl,
   "Hull-White state variable paths",
   n = 40
@@ -1666,7 +1658,7 @@ zero_10y_tbl <- purrr::map_dfr(
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   zero_10y_tbl,
   "10Y zero-rate paths",
   n = 40
@@ -1703,7 +1695,7 @@ zero_10y_summary_tbl <- zero_10y_tbl |>
     .groups = "drop"
   )
 
-qlr_show_tbl(
+lfg_show_tbl(
   zero_10y_summary_tbl,
   "10Y zero-rate path summary",
   n = 40

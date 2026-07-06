@@ -5,7 +5,6 @@
 #| message: false
 #| warning: false
 suppressPackageStartupMessages({
-  library(QuantLib)
   library(tibble)
   library(dplyr)
   library(purrr)

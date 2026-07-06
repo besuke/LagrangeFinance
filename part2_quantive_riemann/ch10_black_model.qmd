@@ -27,16 +27,8 @@
 # 0. setup
 # ------------------------------------------------------------
 
-.libPaths()
-.libPaths(c(
-  "/Library/Frameworks/R.framework/Versions/4.5-arm64/Resources/library",
-  .libPaths()
-))
-.libPaths()
 
-library(QuantLib)
 library(ggplot2)
-# devtools::load_all(".")  # disabled for Quarto book
 
 # ------------------------------------------------------------
 # 0. local helpers
@@ -46,7 +38,7 @@ fmt_pct <- function(x, digits = 4) {
   sprintf(paste0("%.", digits, "f%%"), 100 * x)
 }
 
-.qlr_path_value_at <- function(path_obj, i_zero_based) {
+.lfg_path_value_at <- function(path_obj, i_zero_based) {
   out <- tryCatch(path_obj$value(i_zero_based), error = function(e) NULL)
   if (!is.null(out)) {
     return(as.numeric(out))
@@ -65,7 +57,7 @@ fmt_pct <- function(x, digits = 4) {
   stop("Unable to access path value at index ", i_zero_based)
 }
 
-.qlr_path_tbl <- function(path_obj, path_id = 1L) {
+.lfg_path_tbl <- function(path_obj, path_id = 1L) {
   n_point <- tryCatch(path_obj$length(), error = function(e) NULL)
 
   if (is.null(n_point) || is.na(n_point) || n_point <= 1L) {
@@ -76,7 +68,7 @@ fmt_pct <- function(x, digits = 4) {
     path_id = path_id,
     step = seq_len(n_point) - 1L,
     time = purrr::map_dbl(seq_len(n_point) - 1L, ~ path_obj$time(.x)),
-    price = purrr::map_dbl(seq_len(n_point) - 1L, ~ .qlr_path_value_at(path_obj, .x))
+    price = purrr::map_dbl(seq_len(n_point) - 1L, ~ .lfg_path_value_at(path_obj, .x))
   )
 }
 
@@ -89,7 +81,7 @@ maturity_date <- QuantLibGauss::qlg_date("2023-08-26")
 option_type_call <- Option_Call_get()
 
 dc_a365 <- Actual365Fixed()
-qlr_set_eval_date(trade_date)
+QuantLibGauss::qlg_set_eval_date(trade_date)
 
 spot_price <- 107 + 6.75 / 32
 strike_price <- 107.5
@@ -127,7 +119,7 @@ black_calc_tbl <- tibble::tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   black_calc_tbl,
   "Black calculator summary",
   n = 20
@@ -184,7 +176,7 @@ black_process_tbl <- tibble::tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   black_process_tbl,
   "Black process analytic European summary",
   n = 20
@@ -218,7 +210,7 @@ mc_terminal_tbl <- purrr::map_dfr(
 
     tibble::tibble(
       path_id = i,
-      terminal_price = .qlr_path_value_at(one_path, n_point - 1L)
+      terminal_price = .lfg_path_value_at(one_path, n_point - 1L)
     )
   }
 ) |>
@@ -236,7 +228,7 @@ mc_euro_tbl <- tibble::tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   mc_euro_tbl,
   "Monte Carlo European summary",
   n = 20
@@ -258,7 +250,7 @@ uniform_seq_tbl <- tibble::tibble(
   uniform_value = as.numeric(uniform_seq_rng$nextSequence()$value())
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   uniform_seq_tbl,
   "Uniform sequence RNG values",
   n = 20
@@ -273,7 +265,7 @@ gaussian_seq_tbl <- tibble::tibble(
   gaussian_value = as.numeric(gaussian_seq_rng_demo$nextSequence()$value())
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   gaussian_seq_tbl,
   "Gaussian sequence RNG values",
   n = 20
@@ -303,11 +295,11 @@ mc_path_tbl <- purrr::map_dfr(
   seq_len(n_path_plot),
   function(i) {
     one_path <- path_generator$`next`()$value()
-    .qlr_path_tbl(one_path, path_id = i)
+    .lfg_path_tbl(one_path, path_id = i)
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   mc_path_tbl,
   "Monte Carlo path table",
   n = 10
@@ -387,11 +379,11 @@ mc_path_tbl <- purrr::map_dfr(
   seq_len(n_path_plot),
   function(i) {
     one_path <- path_generator$`next`()$value()
-    .qlr_path_tbl(one_path, path_id = i)
+    .lfg_path_tbl(one_path, path_id = i)
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   mc_path_tbl,
   "Monte Carlo path table",
   n = 10
@@ -476,7 +468,7 @@ for (i in seq_len(n_path_small)) {
 }
 
 one_path_small <- path_list_small[[1]]
-one_path_tbl <- .qlr_path_tbl(one_path_small, path_id = 1L)
+one_path_tbl <- .lfg_path_tbl(one_path_small, path_id = 1L)
 
 time_grid <- one_path_tbl$time
 dt_vec <- diff(time_grid)
@@ -503,7 +495,7 @@ hand_path_tbl <- tibble::tibble(
   hand_price = price_path_hand
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   hand_path_tbl,
   "One-path hand check",
   n = 20
@@ -514,7 +506,7 @@ qlr_show_tbl(
 # ------------------------------------------------------------
 
 trade_date_bsm <- QuantLibGauss::qlg_date("2024-03-01")
-qlr_set_eval_date(trade_date_bsm)
+QuantLibGauss::qlg_set_eval_date(trade_date_bsm)
 
 calendar_nl <- TARGET()
 maturity_date_bsm <- calendar_nl$advance(trade_date_bsm, 1L, "Years")
@@ -584,7 +576,7 @@ euro_compare_tbl <- tibble::tibble(
   npv = c(euro_crr_3, euro_analytic, euro_crr_250)
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   euro_compare_tbl,
   "European put comparison",
   n = 20
@@ -625,7 +617,7 @@ american_compare_tbl <- tibble::tibble(
   )
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   american_compare_tbl,
   "American put comparison",
   n = 20
@@ -636,7 +628,7 @@ qlr_show_tbl(
 # ------------------------------------------------------------
 
 trade_date_sobol <- QuantLibGauss::qlg_date("2024-03-01")
-qlr_set_eval_date(trade_date_sobol)
+QuantLibGauss::qlg_set_eval_date(trade_date_sobol)
 
 maturity_year_sobol <- 1
 maturity_date_sobol <- calendar_nl$advance(trade_date_sobol, maturity_year_sobol, "Years")
@@ -704,11 +696,11 @@ sobol_path_tbl <- purrr::map_dfr(
   seq_len(n_path_sobol),
   function(i) {
     one_path <- sobol_path_generator$`next`()$value()
-    .qlr_path_tbl(one_path, path_id = i)
+    .lfg_path_tbl(one_path, path_id = i)
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   sobol_path_tbl,
   "Sobol path table",
   n = 20
@@ -758,7 +750,7 @@ step_df <- col_df[1]
 
 mtrx_cf <- pmax(strike_price_sobol - mtrx_pt, 0)
 
-qlr_show_tbl(
+lfg_show_tbl(
   tibble::as_tibble(mtrx_cf),
   "Initial exercise-value matrix",
   n = 20
@@ -798,7 +790,7 @@ purrr::walk(
   }
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   tibble::as_tibble(mtrx_cf),
   "Exercise-value matrix after backward induction",
   n = 20
@@ -817,7 +809,7 @@ lsm_tbl <- tibble::tibble(
   value = lsm_npv
 )
 
-qlr_show_tbl(
+lfg_show_tbl(
   lsm_tbl,
   "Longstaff-Schwartz hand calculation",
   n = 20
