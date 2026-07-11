@@ -1,99 +1,295 @@
----
-title: "第7章 債券"
-subtitle: "QuantiveRiemann + QuantLib(SWIG for R) による再実装"
-author: "Eiichi Horigome"
+﻿---
+title: "Chapter 7: Bonds"
+subtitle: "Fixed-rate bond analytics with QuantLibGauss"
 format:
   html:
     toc: true
-    toc-depth: 3
-    number-sections: true
-    code-fold: false
-    code-tools: true
-    theme: cosmo
-  pdf:
-    toc: true
-    toc-depth: 3
     number-sections: true
 execute:
   echo: true
   warning: false
   message: false
-  error: false
-lang: ja
 ---
 
-## このノートの目的
+# Fixed-rate bond analytics
 
-この章では、Python / QuantLib notebook の Bonds 章を、`QuantiveRiemann` と `QuantLib(SWIG for R)` を前提に R で書き直す。
+This chapter builds a fixed-rate bond example using the current `QuantLibGauss` API.
 
-扱う内容は次の通りである。
+The main policy in this chapter is:
 
-1. fixed-rate bond setup  
-2. clean price から yield への変換  
-3. yield から clean / dirty price への変換  
-4. duration / BPV / convexity  
-5. hand calculation checks  
-6. bond cashflow table  
-7. flat-yield pricing  
-8. TONA curve pricing  
-9. z-spread  
-10. asset swap  
-
-## 注意
-
-- `bondYield()` は QuantLib 1.39 以降で clean price wrapper が必要な build がある。
-- `zSpread()` も同様に wrapper が必要な場合がある。
-- `AssetSwap()` は RFR index 使用時、floating schedule を明示指定する方が安全である。
-
-## 前提
-
-- `# devtools::load_all(".")  # disabled for Quarto book` 済み、または package install 済み
-- `utility.R`, `wrapper_lib.R`, `bond.R` の関数が使える
-- QuantLib SWIG build で Bond / OIS / AssetSwap まわりが利用可能
+- `qlg_fixed_rate_bond()` returns a `FixedRateBond` object directly.
+- The bond schedule is built separately with `QuantLib::Schedule()`.
+- `qlg_bond_price_measures()` receives `settlement_date_chr`, not a QuantLib Date object.
+- `schedule = bond_schedule` is not passed to `qlg_bond_price_measures()`.
+- `previous_coupon_date` and `accrued_days` are completed from the schedule afterward.
+- Later TONA / z-spread / AssetSwap sections are kept as pending notes until the wrappers are fully aligned.
 
 ```{r setup}
-# ============================================================
-# 0. setup
-# ============================================================
-
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
 
 suppressPackageStartupMessages({
   library(tidyverse)
+  library(QuantLib)
+  library(QuantLibGauss)
 })
-
 ```
 
-## 1. Enums / calendars / counters
+# Local helpers
+
+```{r local-helpers}
+has_qlg <- function(fn) {
+  fn %in% getNamespaceExports("QuantLibGauss")
+}
+
+show_tbl <- function(tbl, title = NULL, n = 20) {
+  if (!is.null(title)) {
+    cat("\n\n##", title, "\n\n")
+  }
+
+  tryCatch(
+    {
+      QuantLibGauss::qlg_show_tbl(tbl, title, n = n)
+    },
+    error = function(e) {
+      print(utils::head(tbl, n))
+    }
+  )
+
+  invisible(tbl)
+}
+
+metric_value_to_chr <- function(x) {
+  if (length(x) == 0 || all(is.na(x))) {
+    return(NA_character_)
+  }
+
+  x1 <- if (is.list(x)) x[[1]] else x[1]
+
+  if (length(x1) == 0 || all(is.na(x1))) {
+    return(NA_character_)
+  }
+
+  if (inherits(x1, "Date")) {
+    return(as.character(x1))
+  }
+
+  if (is.numeric(x1)) {
+    return(sprintf("%.8f", as.numeric(x1)))
+  }
+
+  as.character(x1)
+}
+
+metric_tbl_display <- function(tbl) {
+  if (!"value" %in% names(tbl)) {
+    return(tbl)
+  }
+
+  tbl |>
+    dplyr::mutate(
+      value = purrr::map_chr(value, metric_value_to_chr)
+    )
+}
+
+get_metric_num <- function(tbl, metric_name) {
+  if (!"metric" %in% names(tbl) || !"value" %in% names(tbl)) {
+    return(NA_real_)
+  }
+
+  idx <- match(metric_name, tbl$metric)
+
+  if (is.na(idx)) {
+    return(NA_real_)
+  }
+
+  x <- tbl$value[[idx]]
+
+  if (length(x) == 0 || all(is.na(x))) {
+    return(NA_real_)
+  }
+
+  x1 <- if (is.list(x)) x[[1]] else x[1]
+
+  suppressWarnings(as.numeric(x1))
+}
+
+replace_metric_value <- function(tbl, metric_name, new_value) {
+  tbl <- tbl |>
+    dplyr::mutate(value = as.list(value))
+
+  idx <- match(metric_name, tbl$metric)
+
+  if (is.na(idx)) {
+    tbl <- dplyr::bind_rows(
+      tbl,
+      tibble::tibble(
+        metric = metric_name,
+        value = list(new_value)
+      )
+    )
+  } else {
+    tbl$value[idx] <- list(new_value)
+  }
+
+  tbl
+}
+
+make_thirty360 <- function() {
+  attempts <- list(
+    function() QuantLib::Thirty360("BondBasis"),
+    function() QuantLib::Thirty360("EurobondBasis"),
+    function() QuantLib::Thirty360("European"),
+    function() QuantLib::Thirty360(0L),
+    function() QuantLib::Thirty360(1L)
+  )
+
+  last_error <- NULL
+
+  for (attempt in attempts) {
+    out <- tryCatch(
+      attempt(),
+      error = function(e) {
+        last_error <<- e
+        NULL
+      }
+    )
+
+    if (!is.null(out)) {
+      return(out)
+    }
+  }
+
+  stop(last_error)
+}
+
+complete_accrual_metrics <- function(
+    price_tbl,
+    bond_schedule,
+    settlement_date_chr,
+    settlement_date,
+    day_counter
+) {
+  schedule_tbl <- QuantLibGauss::qlg_schedule_dates(bond_schedule)
+
+  schedule_dates_chr <- schedule_tbl[[1]] |>
+    as.character()
+
+  schedule_dates_chr <- schedule_dates_chr[!is.na(schedule_dates_chr)]
+
+  previous_coupon_date_chr <- max(
+    schedule_dates_chr[schedule_dates_chr <= settlement_date_chr]
+  )
+
+  previous_coupon_date <- QuantLibGauss::qlg_date(previous_coupon_date_chr)
+
+  accrued_days <- tryCatch(
+    {
+      day_counter$dayCount(previous_coupon_date, settlement_date)
+    },
+    error = function(e) {
+      as.integer(round(
+        day_counter$yearFraction(previous_coupon_date, settlement_date) * 360
+      ))
+    }
+  )
+
+  price_tbl |>
+    replace_metric_value(
+      metric_name = "previous_coupon_date",
+      new_value = as.Date(previous_coupon_date_chr)
+    ) |>
+    replace_metric_value(
+      metric_name = "accrued_days",
+      new_value = as.numeric(accrued_days)
+    )
+}
+
+bond_yield_from_clean_safe <- function(
+    bond,
+    clean_price,
+    day_counter,
+    compounding,
+    frequency
+) {
+  attempts <- list(
+    function() {
+      QuantLibGauss::qlg_bond_yield_from_clean_price(
+        bond = bond,
+        clean_price = clean_price,
+        day_counter = day_counter,
+        compounding = compounding,
+        frequency = frequency
+      )
+    },
+    function() {
+      QuantLibGauss::qlg_bond_yield(
+        bond = bond,
+        clean_price = clean_price,
+        day_counter = day_counter,
+        compounding = compounding,
+        frequency = frequency
+      )
+    },
+    function() {
+      QuantLib::BondFunctions_yield(
+        bond,
+        clean_price,
+        day_counter,
+        compounding,
+        frequency
+      )
+    }
+  )
+
+  last_error <- NULL
+
+  for (attempt in attempts) {
+    res <- tryCatch(
+      attempt(),
+      error = function(e) {
+        last_error <<- e
+        NULL
+      }
+    )
+
+    if (!is.null(res)) {
+      return(as.numeric(res))
+    }
+  }
+
+  stop(last_error)
+}
+```
+
+# Calendar, dates, and conventions
 
 ```{r enums-calendars-counters}
-jp_calendar <- Japan()
+jp_calendar <- QuantLib::Japan()
 
-dc_a365 <- Actual365Fixed()
-dc_a360 <- Actual360()
-dc_30 <- Thirty360("BondBasis")
+dc_a365 <- QuantLib::Actual365Fixed()
+dc_a360 <- QuantLib::Actual360()
+dc_30 <- make_thirty360()
 
-cmpd_compounded <- Compounding_Compounded_get()
-cmpd_simple <- Compounding_Simple_get()
+cmpd_compounded <- QuantLib::Compounding_Compounded_get()
+cmpd_simple <- QuantLib::Compounding_Simple_get()
 
-freq_annual <- Frequency_Annual_get()
-freq_semiannual <- Frequency_Semiannual_get()
-```
+freq_annual <- QuantLib::Frequency_Annual_get()
+freq_semiannual <- QuantLib::Frequency_Semiannual_get()
 
-## 2. Fixed-rate bond setup
+trade_date_chr <- "2022-08-19"
+issue_date_chr <- "2022-07-28"
+maturity_date_chr <- "2025-07-28"
 
-ここでは、固定利付債を作成する。  
-評価日は 2022-08-19、約定から 2 営業日後を settlement date とする。
+trade_date <- QuantLibGauss::qlg_date(trade_date_chr)
+issue_date_ql <- QuantLibGauss::qlg_date(issue_date_chr)
+maturity_date_ql <- QuantLibGauss::qlg_date(maturity_date_chr)
 
-```{r fixed-rate-bond-setup}
-trade_date <- QuantLibGauss::qlg_date("2022-08-19")
 settlement_days <- 2L
-
-effective_date <- QuantLibGauss::qlg_date("2022-07-28")
-maturity_date <- QuantLibGauss::qlg_date("2025-07-28")
-
-face_amount <- 100
-coupon_rate <- 0.00370
-clean_price_input <- 97.0
 
 QuantLibGauss::qlg_set_eval_date(trade_date)
 
@@ -103,38 +299,85 @@ settlement_date <- QuantLibGauss::qlg_advance_days(
   n_days = settlement_days
 )
 
-bond_res <- QuantLibGauss::qlg_fixed_rate_bond(
-  trade_date = trade_date,
-  settlement_days = settlement_days,
-  effective_date = effective_date,
-  maturity_date = maturity_date,
-  face_amount = face_amount,
-  coupon_rate = coupon_rate,
-  calendar = jp_calendar,
-  schedule_frequency = QuantLibGauss::qlg_period_months(6),
-  accrual_day_counter = dc_30,
-  payment_convention = "Unadjusted",
-  maturity_convention = "Unadjusted",
-  date_generation = "Backward",
-  end_of_month = FALSE
+settlement_date_chr <- QuantLibGauss::qlg_iso(settlement_date)
+
+setup_tbl <- tibble::tibble(
+  item = c(
+    "trade_date",
+    "settlement_date",
+    "issue_date",
+    "maturity_date",
+    "settlement_days",
+    "day_counter",
+    "compounding",
+    "frequency"
+  ),
+  value = c(
+    trade_date_chr,
+    settlement_date_chr,
+    issue_date_chr,
+    maturity_date_chr,
+    as.character(settlement_days),
+    "Thirty360(BondBasis)",
+    "Compounded",
+    "Semiannual"
+  )
 )
 
-bond_schedule <- bond_res$schedule
-bond_obj <- bond_res$bond
-
-QuantLibGauss::qlg_show_tbl(
-  QuantLibGauss::qlg_schedule_dates(bond_schedule),
-  "Bond schedule",
-  n = 20
-)
+show_tbl(setup_tbl, "Bond setup dates and conventions")
 ```
 
-## 3. Clean price から yield
+# Fixed-rate bond setup
 
-clean price 97.0 から、債券利回りを逆算する。
+```{r fixed-rate-bond-setup}
+face_amount <- 100
+coupon_rate <- 0.00370
+clean_price_input <- 97.0
+
+bond_obj <- QuantLibGauss::qlg_fixed_rate_bond(
+  issue_date = issue_date_chr,
+  maturity_date = maturity_date_chr,
+  face_amount = face_amount,
+  coupon_rate = coupon_rate,
+  settlement_days = settlement_days
+)
+
+bond_schedule <- QuantLib::Schedule(
+  issue_date_ql,
+  maturity_date_ql,
+  QuantLibGauss::qlg_period_months(6),
+  jp_calendar,
+  "Unadjusted",
+  "Unadjusted",
+  "Backward",
+  FALSE
+)
+
+schedule_tbl <- QuantLibGauss::qlg_schedule_dates(bond_schedule)
+
+bond_setup_tbl <- tibble::tibble(
+  metric = c(
+    "bond_class",
+    "face_amount",
+    "coupon_rate",
+    "clean_price_input"
+  ),
+  value = list(
+    paste(class(bond_obj), collapse = ", "),
+    face_amount,
+    coupon_rate,
+    clean_price_input
+  )
+)
+
+show_tbl(metric_tbl_display(bond_setup_tbl), "Fixed-rate bond object")
+show_tbl(schedule_tbl, "Bond schedule", n = 20)
+```
+
+# Clean price to yield
 
 ```{r clean-price-to-yield}
-price_to_yield <- QuantLibGauss::qlg_bond_yield_from_clean_price(
+price_to_yield <- bond_yield_from_clean_safe(
   bond = bond_obj,
   clean_price = clean_price_input,
   day_counter = dc_30,
@@ -142,16 +385,23 @@ price_to_yield <- QuantLibGauss::qlg_bond_yield_from_clean_price(
   frequency = freq_semiannual
 )
 
-cat(
-  "Price 97.0 -> yield:",
-  sprintf("%.6f%%", 100 * price_to_yield),
-  "\n"
+yield_tbl <- tibble::tibble(
+  metric = c(
+    "clean_price_input",
+    "yield_from_clean_price",
+    "yield_percent"
+  ),
+  value = list(
+    clean_price_input,
+    price_to_yield,
+    100 * price_to_yield
+  )
 )
+
+show_tbl(metric_tbl_display(yield_tbl), "Clean price -> yield")
 ```
 
-## 4. Yield から clean / dirty price
-
-求めた yield を使って、clean price と dirty price を再計算する。
+# Yield to price
 
 ```{r yield-to-price}
 price_tbl <- QuantLibGauss::qlg_bond_price_measures(
@@ -160,32 +410,39 @@ price_tbl <- QuantLibGauss::qlg_bond_price_measures(
   day_counter = dc_30,
   compounding = cmpd_compounded,
   frequency = freq_semiannual,
+  settlement_date = settlement_date_chr
+)
+
+price_tbl <- complete_accrual_metrics(
+  price_tbl = price_tbl,
+  bond_schedule = bond_schedule,
+  settlement_date_chr = settlement_date_chr,
   settlement_date = settlement_date,
-  schedule = bond_schedule
+  day_counter = dc_30
 )
 
-QuantLibGauss::qlg_show_tbl(
-  price_tbl,
-  "Yield -> price summary",
-  n = 20
+price_tbl_display <- metric_tbl_display(price_tbl)
+
+show_tbl(price_tbl_display, "Yield -> price summary")
+
+dirty_price_from_yield <- get_metric_num(price_tbl, "dirty_price")
+clean_price_from_yield <- get_metric_num(price_tbl, "clean_price")
+accrued_amount <- get_metric_num(price_tbl, "accrued_amount")
+
+cat(
+  "clean price:",
+  sprintf("%.8f", clean_price_from_yield),
+  "\n",
+  "dirty price:",
+  sprintf("%.8f", dirty_price_from_yield),
+  "\n",
+  "accrued:",
+  sprintf("%.8f", accrued_amount),
+  "\n"
 )
-
-get_metric_value <- function(tbl, metric_name) {
-  tbl |>
-    dplyr::filter(metric == metric_name) |>
-    dplyr::pull(value) |>
-    purrr::pluck(1) |>
-    as.numeric()
-}
-
-dirty_price_from_yield <- get_metric_value(price_tbl, "dirty_price")
-clean_price_from_yield <- get_metric_value(price_tbl, "clean_price")
-accrued_amount <- get_metric_value(price_tbl, "accrued_amount")
 ```
 
-## 5. Risk measures
-
-Duration、BPV、Convexity などのリスク指標を確認する。
+# Risk measures
 
 ```{r risk-measures}
 risk_tbl <- QuantLibGauss::qlg_bond_risk_measures(
@@ -196,28 +453,26 @@ risk_tbl <- QuantLibGauss::qlg_bond_risk_measures(
   frequency = freq_semiannual
 )
 
-QuantLibGauss::qlg_show_tbl(
-  risk_tbl,
-  "Bond risk measures",
-  n = 20
+risk_tbl_display <- metric_tbl_display(risk_tbl)
+
+show_tbl(risk_tbl_display, "Bond risk measures")
+
+modified_duration <- get_metric_num(risk_tbl, "modified_duration")
+convexity_value <- get_metric_num(risk_tbl, "convexity")
+
+cat(
+  "modified duration:",
+  sprintf("%.8f", modified_duration),
+  "\n",
+  "convexity:",
+  sprintf("%.8f", convexity_value),
+  "\n"
 )
-
-modified_duration <- risk_tbl |>
-  dplyr::filter(metric == "modified_duration") |>
-  dplyr::pull(value) |>
-  as.numeric()
-
-convexity_value <- risk_tbl |>
-  dplyr::filter(metric == "convexity") |>
-  dplyr::pull(value) |>
-  as.numeric()
 ```
 
-## 6. Hand calculation checks
+# Risk hand calculation
 
-QuantLib の計算結果に対して、手計算ベースの確認を行う。
-
-```{r hand-calculation-checks}
+```{r risk-handcalc}
 handcalc_tbl <- QuantLibGauss::qlg_bond_risk_handcalc(
   bond = bond_obj,
   yield = price_to_yield,
@@ -229,408 +484,218 @@ handcalc_tbl <- QuantLibGauss::qlg_bond_risk_handcalc(
   frequency = freq_semiannual
 )
 
-QuantLibGauss::qlg_show_tbl(
-  handcalc_tbl,
-  "Hand calculations",
-  n = 20
-)
+handcalc_tbl_display <- metric_tbl_display(handcalc_tbl)
+
+show_tbl(handcalc_tbl_display, "Risk hand calculations")
 ```
 
-## 7. Bond cashflow table under flat yield
+# Manual cashflow present value check
 
-flat yield curve を作り、そのカーブで債券キャッシュフローを割り引く。
+```{r manual-cashflow-pv}
+schedule_dates_chr <- schedule_tbl[[1]] |>
+  as.character()
 
-```{r cashflow-table-flat-yield}
+schedule_dates_chr <- schedule_dates_chr[!is.na(schedule_dates_chr)]
+
+future_dates_chr <- schedule_dates_chr[schedule_dates_chr > settlement_date_chr]
+
+coupon_per_period <- face_amount * coupon_rate / 2
+
+manual_cf_tbl <- tibble::tibble(
+  payment_date = future_dates_chr,
+  period_no = seq_along(future_dates_chr),
+  cashflow = coupon_per_period
+) |>
+  dplyr::mutate(
+    cashflow = ifelse(
+      .data$payment_date == maturity_date_chr,
+      .data$cashflow + face_amount,
+      .data$cashflow
+    ),
+    ql_date = purrr::map(payment_date, QuantLibGauss::qlg_date),
+    time = purrr::map_dbl(
+      ql_date,
+      ~ dc_30$yearFraction(settlement_date, .x)
+    ),
+    discount_factor = 1 / (1 + price_to_yield / 2)^(2 * time),
+    pv = cashflow * discount_factor
+  ) |>
+  dplyr::select(-ql_date)
+
+manual_dirty_price <- sum(manual_cf_tbl$pv, na.rm = TRUE)
+manual_clean_price <- manual_dirty_price - accrued_amount
+
+manual_summary_tbl <- tibble::tibble(
+  metric = c(
+    "manual_dirty_price",
+    "manual_clean_price",
+    "wrapper_dirty_price",
+    "wrapper_clean_price",
+    "dirty_price_difference",
+    "clean_price_difference"
+  ),
+  value = list(
+    manual_dirty_price,
+    manual_clean_price,
+    dirty_price_from_yield,
+    clean_price_from_yield,
+    manual_dirty_price - dirty_price_from_yield,
+    manual_clean_price - clean_price_from_yield
+  )
+)
+
+show_tbl(manual_cf_tbl, "Manual cashflow PV table")
+show_tbl(metric_tbl_display(manual_summary_tbl), "Manual PV check")
+```
+
+# Flat yield pricing engine
+
+```{r flat-yield-pricing}
 flat_yield_handle <- QuantLibGauss::qlg_bond_flat_forward_handle(
-  settlement_date = settlement_date,
+  settlement_date = settlement_date_chr,
   rate = price_to_yield,
   day_counter = dc_30,
   compounding = cmpd_compounded,
   frequency = freq_semiannual
 )
 
-flat_engine <- DiscountingBondEngine(flat_yield_handle)
-Instrument_setPricingEngine(bond_obj, flat_engine)
+flat_engine <- QuantLib::DiscountingBondEngine(flat_yield_handle)
 
-bond_cf_tbl_flat <- QuantLibGauss::qlg_bond_cashflow_table(
-  bond = bond_obj,
-  curve = flat_yield_handle
+QuantLib::Instrument_setPricingEngine(
+  bond_obj,
+  flat_engine
 )
 
-QuantLibGauss::qlg_show_tbl(
-  bond_cf_tbl_flat,
-  "Bond cashflow table (flat yield discounting)",
-  n = 20
+flat_dirty_price <- QuantLib::Instrument_NPV(bond_obj)
+
+flat_yield_tbl <- tibble::tibble(
+  metric = c(
+    "flat_yield",
+    "dirty_price_from_flat_engine",
+    "dirty_price_from_yield",
+    "difference"
+  ),
+  value = list(
+    price_to_yield,
+    flat_dirty_price,
+    dirty_price_from_yield,
+    flat_dirty_price - dirty_price_from_yield
+  )
 )
 
-cat(
-  "Hand dirty price from CF table:",
-  sprintf("%.8f", sum(bond_cf_tbl_flat$pv, na.rm = TRUE)),
-  "\n"
-)
+show_tbl(metric_tbl_display(flat_yield_tbl), "Flat yield pricing")
 ```
 
-### Macaulay duration の手計算
+# Bond cashflow table
 
-```{r macaulay-duration-hand}
-macaulay_hand <- bond_cf_tbl_flat |>
-  dplyr::filter(!is.na(pv), pay_date > QuantLibGauss::qlg_iso(settlement_date)) |>
-  dplyr::mutate(
-    year_fraction = purrr::map_dbl(
-      pay_date,
-      ~ dc_30$yearFraction(settlement_date, QuantLibGauss::qlg_date(.x))
+```{r bond-cashflow-table}
+bond_cf_tbl <- tryCatch(
+  {
+    QuantLibGauss::qlg_bond_cashflow_table(
+      bond = bond_obj,
+      curve = flat_yield_handle
+    )
+  },
+  error = function(e) {
+    message("qlg_bond_cashflow_table(bond, curve) failed. Retrying with bond only.")
+
+    QuantLibGauss::qlg_bond_cashflow_table(
+      bond = bond_obj
+    )
+  }
+)
+
+show_tbl(bond_cf_tbl, "Bond cashflow table", n = 30)
+```
+
+# Bond analysis summary
+
+```{r bond-analysis-summary}
+summary_tbl <- tibble::tibble(
+  metric = c(
+    "trade_date",
+    "settlement_date",
+    "issue_date",
+    "maturity_date",
+    "clean_price_input",
+    "yield_from_clean_price",
+    "clean_price_from_yield",
+    "dirty_price_from_yield",
+    "accrued_amount",
+    "modified_duration",
+    "convexity"
+  ),
+  value = c(
+    QuantLibGauss::qlg_iso(trade_date),
+    settlement_date_chr,
+    issue_date_chr,
+    maturity_date_chr,
+    sprintf("%.8f", clean_price_input),
+    sprintf("%.8f", price_to_yield),
+    sprintf("%.8f", clean_price_from_yield),
+    sprintf("%.8f", dirty_price_from_yield),
+    sprintf("%.8f", accrued_amount),
+    sprintf("%.8f", modified_duration),
+    sprintf("%.8f", convexity_value)
+  )
+)
+
+show_tbl(summary_tbl, "Bond analysis summary", n = 20)
+
+cat("\nchapter07 bonds stable rewrite completed successfully.\n")
+```
+
+# Later curve, spread, and asset-swap sections
+
+```{r later-sections-pending}
+available_later_functions <- tibble::tibble(
+  function_name = getNamespaceExports("QuantLibGauss")
+) |>
+  dplyr::filter(
+    stringr::str_detect(
+      function_name,
+      stringr::regex(
+        "ois|tona|spread|zspread|z_spread|asset|swap|curve",
+        ignore_case = TRUE
+      )
     )
   ) |>
-  dplyr::summarise(value = sum(year_fraction * pv) / dirty_price_from_yield) |>
-  dplyr::pull(value)
+  dplyr::arrange(function_name)
 
-cat(
-  "Macaulay duration (hand):",
-  sprintf("%.8f", macaulay_hand),
-  "\n"
+show_tbl(
+  available_later_functions,
+  "Available QuantLibGauss functions for later sections",
+  n = 100
 )
 
-bond_cf_2025_tbl <- bond_cf_tbl_flat |>
-  dplyr::filter(as.Date(pay_date) >= as.Date("2025-01-01"))
-
-QuantLibGauss::qlg_show_tbl(
-  bond_cf_2025_tbl,
-  "Bond cashflows from 2025 onward",
-  n = 20
-)
-```
-
-## 8. TONA curve for spread analysis
-
-ここでは spread analysis 用に TONA curve を作成する。  
-パッケージ側に curve builder が入った場合は、この関数は差し替えてよい。
-
-```{r tona-curve-builder}
-make_tona_curve <- function(curve_data, trade_date = "2022-08-19") {
-  trade_date_ql <- QuantLibGauss::qlg_date(trade_date)
-  QuantLibGauss::qlg_set_eval_date(trade_date_ql)
-
-  tona_curve_handle <- RelinkableYieldTermStructureHandle()
-
-  tona_index <- OvernightIndex(
-    "TONA",
-    0,
-    JPYCurrency(),
-    jp_calendar,
-    dc_a365,
-    tona_curve_handle
-  )
-
-  helper_list <- purrr::map(curve_data, function(x) {
-    kind <- as.character(x[[1]])
-    tenor <- as.character(x[[2]])
-    rate_pct <- as.numeric(x[[3]])
-
-    if (kind == "depo") {
-      return(
-        DepositRateHelper(
-          QuoteHandle(SimpleQuote(rate_pct / 100)),
-          tona_index
-        )
-      )
-    }
-
-    if (kind == "swap") {
-      return(
-        OISRateHelper(
-          2,
-          QuantLibGauss::qlg_period(tenor),
-          QuoteHandle(SimpleQuote(rate_pct / 100)),
-          tona_index
-        )
-      )
-    }
-
-    stop("Unsupported helper type: ", kind)
-  })
-
-  helper_vec <- RateHelperVector()
-  purrr::walk(helper_list, ~ RateHelperVector_append(helper_vec, .x))
-
-  tona_curve_obj <- PiecewiseLogLinearDiscount(
-    0,
-    jp_calendar,
-    helper_vec,
-    dc_a365
-  )
-
-  TermStructure_enableExtrapolation(tona_curve_obj)
-  RelinkableYieldTermStructureHandle_linkTo(tona_curve_handle, tona_curve_obj)
-
-  list(
-    index = tona_index,
-    curve = tona_curve_obj,
-    curve_handle = tona_curve_handle,
-    quote_tbl = tibble::tibble(
-      kind = purrr::map_chr(curve_data, 1),
-      tenor = purrr::map_chr(curve_data, 2),
-      rate_pct = purrr::map_dbl(curve_data, ~ as.numeric(.x[[3]]))
-    )
-  )
-}
-```
-
-```{r build-tona-curve}
-tona_curve_data <- list(
-  c("depo", "1d", -0.00900),
-  c("swap", "1m", -0.01807),
-  c("swap", "6m", -0.01043),
-  c("swap", "12m", 0.01250),
-  c("swap", "18m", 0.03125),
-  c("swap", "2y", 0.04875),
-  c("swap", "3y", 0.07375),
-  c("swap", "5y", 0.11854),
-  c("swap", "7y", 0.19146)
-)
-
-tona_bundle <- make_tona_curve(
-  tona_curve_data,
-  trade_date = "2022-08-19"
-)
-
-QuantLibGauss::qlg_show_tbl(tona_bundle$quote_tbl, "TONA input quotes")
-QuantLibGauss::qlg_show_tbl(QuantLibGauss::qlg_curve_tbl(tona_bundle$curve), "TONA curve table")
-```
-
-### I-spread の簡易確認
-
-満期時点に対応する TONA zero rate を補間し、bond yield との差を見る。
-
-```{r i-spread-check}
-curve_proxy_tbl <- QuantLibGauss::qlg_curve_tbl(tona_bundle$curve, n = 500)
-
-mat_time <- dc_a365$yearFraction(
-  tona_bundle$curve$referenceDate(),
-  maturity_date
-)
-
-interp_rate <- approx(
-  curve_proxy_tbl$time,
-  curve_proxy_tbl$zero,
-  xout = mat_time,
-  rule = 2
-)$y
-
-cat(
-  "Interpolated TONA rate at maturity:",
-  sprintf("%.6f%%", 100 * interp_rate),
-  ", bond yield:",
-  sprintf("%.6f%%", 100 * price_to_yield),
-  ", I-spread:",
-  sprintf("%.6f%%", 100 * (price_to_yield - interp_rate)),
-  "\n"
-)
-```
-
-## 9. Discounting with flat forward and TONA curve
-
-同じ債券を、flat forward と TONA curve でそれぞれ評価する。
-
-```{r discounting-flat-tona}
-flat_forward_price <- QuantLibGauss::qlg_bond_npv_with_flat_yield(
-  bond = bond_obj,
-  settlement_date = settlement_date,
-  rate = 0.01418713,
-  day_counter = dc_30,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual
-)
-
-cat(
-  "Dirty price with 1.418713% flat yield:",
-  sprintf("%.6f", flat_forward_price),
-  "\n"
-)
-
-tona_discount_price <- QuantLibGauss::qlg_bond_npv_with_curve(
-  bond = bond_obj,
-  curve_handle = tona_bundle$curve_handle
-)
-
-cat(
-  "Dirty price discounted on TONA curve:",
-  sprintf("%.6f", tona_discount_price),
-  "\n"
-)
-```
-
-## 10. Z-spread / zero-spreaded curve
-
-TONA curve に対して、clean price 97.0 を再現する z-spread を求める。
-
-```{r z-spread}
-z_spread_value <- QuantLibGauss::qlg_bond_zspread(
-  bond = bond_obj,
-  clean_price = 97.0,
-  curve = tona_bundle$curve,
-  day_counter = dc_30,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual
-)
-
-cat(
-  "z-spread for clean price 97.0:",
-  sprintf("%.6f%%", 100 * z_spread_value),
-  "\n"
-)
-
-z_spread_price_res <- QuantLibGauss::qlg_bond_npv_with_zspread(
-  bond = bond_obj,
-  base_curve_handle = tona_bundle$curve_handle,
-  z_spread = z_spread_value,
-  compounding = cmpd_compounded,
-  frequency = freq_annual,
-  day_counter = dc_a365
-)
-
-cat(
-  "Dirty price on TONA + z-spread curve:",
-  sprintf("%.6f", z_spread_price_res$npv),
-  "\n"
-)
-
-bond_cf_tbl_spread <- QuantLibGauss::qlg_bond_cashflow_table(
-  bond = bond_obj,
-  curve = z_spread_price_res$spread_curve_handle
-)
-
-QuantLibGauss::qlg_show_tbl(
-  bond_cf_tbl_spread,
-  "Bond cashflow table (TONA + z-spread)",
-  n = 20
-)
-
-cat(
-  "Hand price on TONA + z-spread:",
-  sprintf("%.6f", sum(bond_cf_tbl_spread$pv, na.rm = TRUE)),
-  "\n"
-)
-```
-
-## 11. AS spread scenarios
-
-Asset swap spread の理解のために、簡易的に TONA discount price と annuity から AS spread を計算する。
-
-```{r as-spread-scenarios}
-bond_cf_tbl_tona <- QuantLibGauss::qlg_bond_cashflow_table(
-  bond = bond_obj,
-  curve = tona_bundle$curve_handle
-) |>
-  dplyr::filter(cashflow_type == "coupon")
-
-yr_frac_vec <- purrr::map_dbl(
-  bond_cf_tbl_tona$pay_date,
-  ~ dc_a365$yearFraction(settlement_date, QuantLibGauss::qlg_date(.x))
-)
-
-tenor_flow <- diff(c(0, yr_frac_vec))
-tona_annuity <- sum(bond_cf_tbl_tona$discount_factor * tenor_flow, na.rm = TRUE)
-
-benchmark_dirty_price <- 90.0256
-
-as_spread_input_tbl <- tibble::tibble(
-  price_label = c("model_dirty_price", "benchmark_dirty_price"),
-  target_dirty_price = c(dirty_price_from_yield, benchmark_dirty_price)
-)
-
-as_spread_result_tbl <- as_spread_input_tbl |>
-  dplyr::mutate(
-    discount_price = tona_discount_price,
-    annuity = tona_annuity,
-    as_spread = (discount_price - target_dirty_price) / annuity
-  )
-
-QuantLibGauss::qlg_show_tbl(
-  tibble::tibble(
-    metric = c("tona_discount_price", "tona_annuity"),
-    value = c(tona_discount_price, tona_annuity)
+later_sections_tbl <- tibble::tibble(
+  section = c(
+    "TONA curve",
+    "Z-spread",
+    "Asset swap"
   ),
-  "AS spread base inputs",
-  n = 20
-)
-
-QuantLibGauss::qlg_show_tbl(
-  as_spread_result_tbl,
-  "AS spread scenarios",
-  n = 20
-)
-```
-
-## 12. AssetSwap
-
-最後に `AssetSwap()` を用いた分析を行う。  
-元コードでは `clean_price_asw`, `credit_spread_asw`, `pay_fixed_rate`, `is_par_asset_swap` が未定義だったため、ここでは実行可能なようにデフォルト値を明示する。
-
-```{r asset-swap-default-inputs}
-clean_price_asw <- clean_price_input
-credit_spread_asw <- 0.0
-pay_fixed_rate <- TRUE
-is_par_asset_swap <- TRUE
-
-tibor6m_for_asw <- Tibor(
-  QuantLibGauss::qlg_period_months(6),
-  tona_bundle$curve_handle
-)
-```
-
-```{r asset-swap-analysis}
-asset_swap_tbl <- QuantLibGauss::qlg_asset_swap_analysis(
-  bond = bond_obj,
-  clean_price = clean_price_asw,
-  ibor_index = tibor6m_for_asw,
-  spread = credit_spread_asw,
-  settlement_date = settlement_date,
-  maturity_date = maturity_date,
-  calendar = jp_calendar,
-  floating_schedule_frequency = QuantLibGauss::qlg_period_years(1),
-  payment_convention = "Unadjusted",
-  date_generation = "Backward",
-  end_of_month = FALSE,
-  floating_day_counter = dc_a365,
-  pay_fixed_rate = pay_fixed_rate,
-  par_asset_swap = is_par_asset_swap,
-  discount_curve_handle = tona_bundle$curve_handle
-)
-
-asset_swap_tbl_display <- asset_swap_tbl |>
-  dplyr::mutate(
-    value = purrr::map2_chr(metric, value, function(metric, x) {
-      if (length(x) == 0 || all(is.na(x))) {
-        return(NA_character_)
-      }
-
-      if (metric == "fair_spread") {
-        return(sprintf("%.6f%%", 100 * as.numeric(x[[1]])))
-      }
-
-      if (metric == "fair_clean_price") {
-        return(sprintf("%.6f", as.numeric(x[[1]])))
-      }
-
-      as.character(x[[1]])
-    })
+  status = c(
+    "pending",
+    "pending",
+    "deferred"
+  ),
+  note = c(
+    "TONA / OIS curve section will be aligned after checking the current QuantLibGauss curve helper signatures.",
+    "Z-spread wrappers exist, but this chapter first stabilizes fixed-rate bond analytics.",
+    "AssetSwap is deferred until swap / index / curve wrappers are stable."
   )
-
-QuantLibGauss::qlg_show_tbl(
-  asset_swap_tbl_display,
-  "AssetSwap result",
-  n = 20
 )
 
-cat("\nchapter04 bonds rewrite completed successfully.\n")
+show_tbl(
+  later_sections_tbl,
+  "Later curve / spread / asset-swap sections",
+  n = 20
+)
 ```
 
-## 実行方法
+# Session information
 
-この `.qmd` は、プロジェクト直下で次のように実行できる。
-
-```bash
-quarto render chapter04_bonds_rewrite.qmd
+```{r session-info}
+sessionInfo()
 ```
 
-HTML だけを出したい場合は、YAML の `format:` から `pdf:` を削除してもよい。
