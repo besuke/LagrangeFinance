@@ -1,787 +1,479 @@
-# 第10章 Blackモデル
+# 第8章 国債先物とCTD
 
-```{r}
-#| eval: false
+```{r chapter08-treasury-futures}
 #| message: false
 #| warning: false
+
 # ============================================================
-# chapter06_black_model_rewrite.R
+# Chapter 08: Treasury Futures and CTD
 # ------------------------------------------------------------
-# 第6章 Blackモデル
-# Python / QuantLib notebook を、
-# 「QuantiveRiemann + QuantLib(SWIG for R)」前提で書き直した版。
+# 国債先物とCTD分析
 #
 # 内容:
-# 1. Black calculator
-# 2. Black process + analytic European pricing
-# 3. Monte Carlo European pricing (hand-made)
-# 4. RNG / path generator checks
-# 5. Monte Carlo paths with ggplot2
-# 6. Hand check of one MC path
-# 7. BSM European / American option pricing
-# 8. Sobol paths
-# 9. Longstaff-Schwartz style hand calculation
+# 1. US Treasury bond setup
+# 2. Price from yield
+# 3. Accrued interest hand calculation
+# 4. Deliverable basket and gross basis
+# 5. Net basis, carry, and implied repo
+# 6. Deliverable basket summary and CTD proxy
+#
+# 前提:
+# - QuantLibGauss がインストール済み
+# - QuantLib SWIG版が利用可能
 # ============================================================
 
 # ------------------------------------------------------------
-# 0. setup
+# 0. Setup
 # ------------------------------------------------------------
 
-
-library(ggplot2)
+library(QuantLib)
 
 # ------------------------------------------------------------
-# 0. local helpers
+# 1. Local formatting helper
 # ------------------------------------------------------------
 
 fmt_pct <- function(x, digits = 4) {
-  sprintf(paste0("%.", digits, "f%%"), 100 * x)
+  sprintf(
+    paste0("%.", digits, "f%%"),
+    100 * x
+  )
 }
 
 # ------------------------------------------------------------
-# 1. Black calculator
+# 2. Calendars, day counters, and enums
 # ------------------------------------------------------------
 
-trade_date <- QuantLibGauss::qlg_date("2023-07-21")
-maturity_date <- QuantLibGauss::qlg_date("2023-08-26")
-option_type_call <- Option_Call_get()
+cal_us_gov <- UnitedStates("GovernmentBond")
 
-dc_a365 <- Actual365Fixed()
-QuantLibGauss::qlg_set_eval_date(trade_date)
+dc_act_act_bond <- ActualActual("Bond")
+dc_act_360 <- Actual360()
 
-spot_price <- 107 + 6.75 / 32
-strike_price <- 107.5
-vol <- 0.052
-risk_free_rate <- 0.05
+cmpd_compounded <- Compounding_Compounded_get()
+freq_semiannual <- Frequency_Semiannual_get()
 
-maturity_year_fraction <- dc_a365$yearFraction(trade_date, maturity_date)
+settlement_days_t1 <- 1L
 
-discount_curve <- FlatForward(
-  trade_date,
-  risk_free_rate,
-  dc_a365,
-  "Continuous"
+# ------------------------------------------------------------
+# 3. US Treasury bond example
+# ------------------------------------------------------------
+
+bond_bundle <- QuantLibGauss::qlg_us_treasury_bond(
+  effective_date = "2022-09-30",
+  maturity_date = "2027-09-30",
+  coupon_rate_pct = 4.125,
+  face_amount = 100,
+  settlement_days = settlement_days_t1,
+  calendar = cal_us_gov,
+  day_counter = dc_act_act_bond
 )
 
-payoff <- PlainVanillaPayoff(option_type_call, strike_price)
-std_dev <- vol * sqrt(maturity_year_fraction)
+bond_obj <- bond_bundle$bond
 
-black_calc <- BlackCalculator(
-  payoff,
-  spot_price,
-  std_dev,
-  discount_curve$discount(maturity_date)
+QuantLibGauss::qlg_show_tbl(
+  QuantLibGauss::qlg_schedule_dates(
+    bond_bundle$schedule
+  ),
+  "US Treasury bond schedule",
+  n = 20
 )
 
-black_calc_tbl <- tibble::tibble(
-  metric = c("npv", "delta", "gamma", "vega", "theta", "theta_per_day"),
-  value = c(
-    black_calc$value(),
-    black_calc$delta(spot_price),
-    black_calc$gamma(spot_price),
-    black_calc$vega(maturity_year_fraction),
-    black_calc$theta(spot_price, maturity_year_fraction),
-    black_calc$thetaPerDay(spot_price, maturity_year_fraction)
-  )
+cf_prc <- bond_obj$cleanPrice(
+  6 / 100,
+  dc_act_act_bond,
+  cmpd_compounded,
+  freq_semiannual,
+  QuantLibGauss::qlg_date("2023-07-06")
+)
+
+cat(
+  "Yield 6%, settle 2023-07-06 clean price:",
+  QuantLibGauss::qlg_fmt_num(cf_prc, 4),
+  "\n"
+)
+
+# ------------------------------------------------------------
+# 4. Yield 3.70% to price
+# ------------------------------------------------------------
+
+trade_date <- QuantLibGauss::qlg_date("2023-04-20")
+
+bond_yield <- 3.70 / 100
+futures_price <- 109 + 10 / 32
+
+QuantLibGauss::qlg_set_eval_date(
+  trade_date
+)
+
+settle_date <- QuantLibGauss::qlg_advance_days(
+  calendar_obj = cal_us_gov,
+  date_obj = trade_date,
+  n_days = settlement_days_t1
+)
+
+accrued_amount <- bond_obj$accruedAmount(
+  settle_date
+)
+
+clean_price <- bond_obj$cleanPrice(
+  bond_yield,
+  dc_act_act_bond,
+  cmpd_compounded,
+  freq_semiannual,
+  settle_date
+)
+
+dirty_price <- clean_price + accrued_amount
+
+i_rate_obj <- InterestRate(
+  bond_yield,
+  dc_act_act_bond,
+  cmpd_compounded,
+  freq_semiannual
 )
 
 QuantLibGauss::qlg_show_tbl(
-  black_calc_tbl,
-  "Black calculator summary",
+  tibble::tibble(
+    trade_date = QuantLibGauss::qlg_iso(
+      trade_date
+    ),
+    settle_date = QuantLibGauss::qlg_iso(
+      settle_date
+    ),
+    bond_yield = bond_yield,
+    accrued_amount = accrued_amount,
+    clean_price = clean_price,
+    dirty_price = dirty_price
+  ),
+  "Bond price from yield",
   n = 20
 )
 
 # ------------------------------------------------------------
-# 2. Black process + analytic European pricing
+# 5. Bond cashflow present-value table
 # ------------------------------------------------------------
 
-spot_handle <- QuoteHandle(SimpleQuote(spot_price))
-
-rf_curve_obj <- FlatForward(
-  trade_date,
-  risk_free_rate,
-  dc_a365,
-  "Continuous"
-)
-rf_curve_handle <- YieldTermStructureHandle(rf_curve_obj)
-
-vol_obj <- BlackConstantVol(
-  trade_date,
-  NullCalendar(),
-  vol,
-  dc_a365
-)
-vol_handle <- BlackVolTermStructureHandle(vol_obj)
-
-black_process <- BlackProcess(
-  spot_handle,
-  rf_curve_handle,
-  vol_handle
+settle_date_r <- as.Date(
+  QuantLibGauss::qlg_iso(settle_date)
 )
 
-analytic_engine <- AnalyticEuropeanEngine(black_process)
-
-euro_option <- VanillaOption(
-  payoff,
-  EuropeanExercise(maturity_date)
-)
-
-euro_option$setPricingEngine(analytic_engine)
-
-npv_begin <- euro_option$NPV()
-
-black_process_tbl <- tibble::tibble(
-  metric = c("npv", "delta", "gamma", "vega", "theta_per_day", "implied_vol"),
-  value = c(
-    euro_option$NPV(),
-    euro_option$delta(),
-    euro_option$gamma(),
-    euro_option$vega(),
-    euro_option$thetaPerDay(),
-    euro_option$impliedVolatility(npv_begin, black_process)
-  )
-)
-
-QuantLibGauss::qlg_show_tbl(
-  black_process_tbl,
-  "Black process analytic European summary",
-  n = 20
-)
-
-# ------------------------------------------------------------
-# 3. Monte Carlo European pricing (hand-made for Black process)
-# ------------------------------------------------------------
-
-n_step_mc <- 3L
-n_path_mc <- 100000L
-seed_mc <- 1L
-
-uniform_rng_mc <- UniformRandomGenerator(seed_mc)
-uniform_seq_rng_mc <- UniformRandomSequenceGenerator(n_step_mc, uniform_rng_mc)
-gaussian_seq_rng_mc <- GaussianRandomSequenceGenerator(uniform_seq_rng_mc)
-
-path_generator_mc <- GaussianPathGenerator(
-  black_process,
-  maturity_year_fraction,
-  n_step_mc,
-  gaussian_seq_rng_mc,
-  FALSE
-)
-
-mc_terminal_tbl <- purrr::map_dfr(
-  seq_len(n_path_mc),
-  function(i) {
-    one_path <- path_generator_mc$`next`()$value()
-    n_point <- one_path$length()
-
-    tibble::tibble(
-      path_id = i,
-      terminal_price = QuantLibGauss::qlg_path_value_at(one_path, n_point - 1L)
-    )
-  }
+bond_cf_tbl <- QuantLibGauss::qlg_bond_cashflow_table(
+  bond_obj
 ) |>
   dplyr::mutate(
-    payoff = pmax(terminal_price - strike_price, 0)
+    pay_date_r = as.Date(
+      as.character(pay_date)
+    ),
+    discount_factor = dplyr::if_else(
+      pay_date_r >= settle_date_r,
+      purrr::map_dbl(
+        as.character(pay_date),
+        function(x) {
+          tryCatch(
+            i_rate_obj$discountFactor(
+              settle_date,
+              QuantLibGauss::qlg_date(x)
+            ),
+            error = function(e) {
+              NA_real_
+            }
+          )
+        }
+      ),
+      NA_real_
+    ),
+    pv = amount * discount_factor
+  ) |>
+  dplyr::select(
+    pay_date,
+    coupon_rate,
+    accrual_start,
+    accrual_end,
+    amount,
+    discount_factor,
+    pv,
+    cashflow_type
   )
 
-mc_npv <- mean(mc_terminal_tbl$payoff) * rf_curve_obj$discount(maturity_date)
-
-mc_euro_tbl <- tibble::tibble(
-  metric = c("analytic_npv", "mc_npv"),
-  value = c(
-    npv_begin,
-    mc_npv
-  )
-)
-
 QuantLibGauss::qlg_show_tbl(
-  mc_euro_tbl,
-  "Monte Carlo European summary",
-  n = 20
-)
-
-euro_option$setPricingEngine(analytic_engine)
-
-# ------------------------------------------------------------
-# 4. RNG / path generator checks
-# ------------------------------------------------------------
-
-uniform_seq_rng <- UniformRandomSequenceGenerator(
-  3,
-  UniformRandomGenerator(1)
-)
-
-uniform_seq_tbl <- tibble::tibble(
-  draw = 1:3,
-  uniform_value = as.numeric(uniform_seq_rng$nextSequence()$value())
-)
-
-QuantLibGauss::qlg_show_tbl(
-  uniform_seq_tbl,
-  "Uniform sequence RNG values",
-  n = 20
-)
-
-gaussian_seq_rng_demo <- GaussianRandomSequenceGenerator(
-  UniformRandomSequenceGenerator(3, UniformRandomGenerator(1))
-)
-
-gaussian_seq_tbl <- tibble::tibble(
-  draw = 1:3,
-  gaussian_value = as.numeric(gaussian_seq_rng_demo$nextSequence()$value())
-)
-
-QuantLibGauss::qlg_show_tbl(
-  gaussian_seq_tbl,
-  "Gaussian sequence RNG values",
-  n = 20
-)
-# ------------------------------------------------------------
-# 5. Monte Carlo paths with ggplot2
-# ------------------------------------------------------------
-
-maturity_year_plot <- 3
-n_step_path <- 12L          # 3年 × 4 = 12 steps
-n_path_plot <- 120L
-seed_path <- 1L
-
-uniform_rng_path <- UniformRandomGenerator(seed_path)
-uniform_seq_rng_path <- UniformRandomSequenceGenerator(n_step_path, uniform_rng_path)
-gaussian_seq_rng_path <- GaussianRandomSequenceGenerator(uniform_seq_rng_path)
-
-path_generator <- GaussianPathGenerator(
-  black_process,
-  maturity_year_plot,
-  n_step_path,
-  gaussian_seq_rng_path,
-  FALSE
-)
-
-mc_path_tbl <- purrr::map_dfr(
-  seq_len(n_path_plot),
-  function(i) {
-    one_path <- path_generator$`next`()$value()
-    QuantLibGauss::qlg_path_tbl(one_path, path_id = i)
-  }
-)
-
-QuantLibGauss::qlg_show_tbl(
-  mc_path_tbl,
-  "Monte Carlo path table",
-  n = 10
-)
-
-mc_path_plot <- ggplot2::ggplot(
-  mc_path_tbl,
-  ggplot2::aes(
-    x = time,
-    y = price,
-    group = path_id,
-    color = factor(path_id)
-  )
-) +
-  ggplot2::geom_line(
-    alpha = 0.55,
-    linewidth = 0.45
-  ) +
-  ggplot2::scale_color_viridis_d(
-    option = "C",
-    guide = "none"
-  ) +
-  ggplot2::scale_x_continuous(
-    breaks = seq(0, 3, by = 0.25)
-  ) +
-  ggplot2::labs(
-    title = "Black model Monte Carlo paths",
-    x = "Year",
-    y = "Futures price"
-  ) +
-  ggplot2::theme_minimal()
-
-print(mc_path_plot)
-
-terminal_tbl <- mc_path_tbl |>
-  dplyr::group_by(path_id) |>
-  dplyr::slice_tail(n = 1) |>
-  dplyr::ungroup()
-
-terminal_hist_plot <- ggplot2::ggplot(
-  terminal_tbl,
-  ggplot2::aes(x = price)
-) +
-  ggplot2::geom_histogram(
-    bins = 24,
-    fill = "deepskyblue3",
-    color = "white",
-    linewidth = 0.35
-  ) +
-  ggplot2::labs(
-    title = "Terminal futures price distribution",
-    x = "Terminal futures price",
-    y = "Count"
-  ) +
-  ggplot2::theme_minimal()
-
-print(terminal_hist_plot)
-
-maturity_year_plot <- 3
-n_step_path <- 12L          # 3年 × 4 = 12 steps
-n_path_plot <- 1200L
-seed_path <- 1L
-
-uniform_rng_path <- UniformRandomGenerator(seed_path)
-uniform_seq_rng_path <- UniformRandomSequenceGenerator(n_step_path, uniform_rng_path)
-gaussian_seq_rng_path <- GaussianRandomSequenceGenerator(uniform_seq_rng_path)
-
-path_generator <- GaussianPathGenerator(
-  black_process,
-  maturity_year_plot,
-  n_step_path,
-  gaussian_seq_rng_path,
-  FALSE
-)
-
-mc_path_tbl <- purrr::map_dfr(
-  seq_len(n_path_plot),
-  function(i) {
-    one_path <- path_generator$`next`()$value()
-    QuantLibGauss::qlg_path_tbl(one_path, path_id = i)
-  }
-)
-
-QuantLibGauss::qlg_show_tbl(
-  mc_path_tbl,
-  "Monte Carlo path table",
-  n = 10
-)
-
-mc_path_plot <- ggplot2::ggplot(
-  mc_path_tbl,
-  ggplot2::aes(
-    x = time,
-    y = price,
-    group = path_id,
-    color = factor(path_id)
-  )
-) +
-  ggplot2::geom_line(
-    alpha = 0.55,
-    linewidth = 0.45
-  ) +
-  ggplot2::scale_color_viridis_d(
-    option = "C",
-    guide = "none"
-  ) +
-  ggplot2::scale_x_continuous(
-    breaks = seq(0, 3, by = 0.25)
-  ) +
-  ggplot2::labs(
-    title = "Black model Monte Carlo paths",
-    x = "Year",
-    y = "Futures price"
-  ) +
-  ggplot2::theme_minimal()
-
-print(mc_path_plot)
-
-terminal_tbl <- mc_path_tbl |>
-  dplyr::group_by(path_id) |>
-  dplyr::slice_tail(n = 1) |>
-  dplyr::ungroup()
-
-terminal_hist_plot <- ggplot2::ggplot(
-  terminal_tbl,
-  ggplot2::aes(x = price)
-) +
-  ggplot2::geom_histogram(
-    bins = 24,
-    fill = "deepskyblue3",
-    color = "white",
-    linewidth = 0.35
-  ) +
-  ggplot2::labs(
-    title = "Terminal futures price distribution",
-    x = "Terminal futures price",
-    y = "Count"
-  ) +
-  ggplot2::theme_minimal()
-
-print(terminal_hist_plot)
-# ------------------------------------------------------------
-# 6. Hand check of one MC path
-# ------------------------------------------------------------
-
-n_step_small <- 3L
-n_path_small <- 10L
-seed_small <- 1L
-
-uniform_rng_small <- UniformRandomGenerator(seed_small)
-uniform_seq_rng_small <- UniformRandomSequenceGenerator(n_step_small, uniform_rng_small)
-gaussian_seq_rng_small <- GaussianRandomSequenceGenerator(uniform_seq_rng_small)
-
-path_generator_small <- GaussianPathGenerator(
-  black_process,
-  maturity_year_fraction,
-  n_step_small,
-  gaussian_seq_rng_small,
-  FALSE
-)
-
-path_list_small <- vector("list", n_path_small)
-
-for (i in seq_len(n_path_small)) {
-  path_list_small[[i]] <- path_generator_small$`next`()$value()
-}
-
-one_path_small <- path_list_small[[1]]
-one_path_tbl <- QuantLibGauss::qlg_path_tbl(one_path_small, path_id = 1L)
-
-time_grid <- one_path_tbl$time
-dt_vec <- diff(time_grid)
-
-gaussian_seq_rng_check <- GaussianRandomSequenceGenerator(
-  UniformRandomSequenceGenerator(n_step_small, UniformRandomGenerator(seed_small))
-)
-
-d_w <- as.numeric(gaussian_seq_rng_check$nextSequence()$value())
-
-price_path_hand <- numeric(length(d_w) + 1L)
-price_path_hand[1] <- spot_price
-
-exp_part <- exp(-0.5 * vol^2 * dt_vec + vol * sqrt(dt_vec) * d_w)
-
-for (i in seq_along(exp_part)) {
-  price_path_hand[i + 1L] <- price_path_hand[i] * exp_part[i]
-}
-
-hand_path_tbl <- tibble::tibble(
-  step = seq_along(price_path_hand) - 1L,
-  time = time_grid,
-  generated_price = one_path_tbl$price,
-  hand_price = price_path_hand
-)
-
-QuantLibGauss::qlg_show_tbl(
-  hand_path_tbl,
-  "One-path hand check",
+  bond_cf_tbl,
+  "Bond cashflow present-value table",
   n = 20
 )
 
 # ------------------------------------------------------------
-# 7. BSM European / American option pricing
+# 6. Accrued interest hand calculation
 # ------------------------------------------------------------
 
-trade_date_bsm <- QuantLibGauss::qlg_date("2024-03-01")
-QuantLibGauss::qlg_set_eval_date(trade_date_bsm)
-
-calendar_nl <- TARGET()
-maturity_date_bsm <- calendar_nl$advance(trade_date_bsm, 1L, "Years")
-
-spot_price_bsm <- 100
-strike_price_bsm <- 100
-vol_bsm <- 0.20
-risk_free_rate_bsm <- 0.05
-dividend_rate_bsm <- 0.0
-option_type_put <- Option_Put_get()
-
-spot_handle_bsm <- QuoteHandle(SimpleQuote(spot_price_bsm))
-
-rf_curve_bsm <- FlatForward(
-  trade_date_bsm,
-  risk_free_rate_bsm,
-  dc_a365,
-  "Continuous"
-)
-rf_handle_bsm <- YieldTermStructureHandle(rf_curve_bsm)
-
-div_curve_bsm <- FlatForward(
-  trade_date_bsm,
-  dividend_rate_bsm,
-  dc_a365,
-  "Continuous"
-)
-div_handle_bsm <- YieldTermStructureHandle(div_curve_bsm)
-
-vol_obj_bsm <- BlackConstantVol(
-  trade_date_bsm,
-  calendar_nl,
-  vol_bsm,
-  dc_a365
-)
-vol_handle_bsm <- BlackVolTermStructureHandle(vol_obj_bsm)
-
-bsm_process <- BlackScholesMertonProcess(
-  spot_handle_bsm,
-  div_handle_bsm,
-  rf_handle_bsm,
-  vol_handle_bsm
+previous_coupon_date <- QuantLibGauss::qlg_date(
+  "2023-03-31"
 )
 
-payoff_put <- PlainVanillaPayoff(option_type_put, strike_price_bsm)
-
-# European put
-euro_option_bsm <- VanillaOption(
-  payoff_put,
-  EuropeanExercise(maturity_date_bsm)
+spot_settlement_date <- QuantLibGauss::qlg_date(
+  "2023-04-21"
 )
 
-crr_engine_3 <- BinomialCRRVanillaEngine(bsm_process, 3L)
-euro_option_bsm$setPricingEngine(crr_engine_3)
-euro_crr_3 <- euro_option_bsm$NPV()
-
-analytic_engine_bsm <- AnalyticEuropeanEngine(bsm_process)
-euro_option_bsm$setPricingEngine(analytic_engine_bsm)
-euro_analytic <- euro_option_bsm$NPV()
-
-crr_engine_250 <- BinomialCRRVanillaEngine(bsm_process, 250L)
-euro_option_bsm$setPricingEngine(crr_engine_250)
-euro_crr_250 <- euro_option_bsm$NPV()
-
-euro_compare_tbl <- tibble::tibble(
-  method = c("crr_3", "analytic", "crr_250"),
-  npv = c(euro_crr_3, euro_analytic, euro_crr_250)
+next_coupon_date <- QuantLibGauss::qlg_date(
+  "2023-09-30"
 )
+
+accrued_days_hand <- dc_act_act_bond$dayCount(
+  previous_coupon_date,
+  spot_settlement_date
+)
+
+coupon_period_days <- dc_act_act_bond$dayCount(
+  previous_coupon_date,
+  next_coupon_date
+)
+
+coupon_amount_semiannual <- 4.125 / 2
+
+accrued_interest_hand <-
+  coupon_amount_semiannual *
+  accrued_days_hand /
+  coupon_period_days
 
 QuantLibGauss::qlg_show_tbl(
-  euro_compare_tbl,
-  "European put comparison",
-  n = 20
-)
-
-# American put
-american_option_bsm <- VanillaOption(
-  payoff_put,
-  AmericanExercise(trade_date_bsm, maturity_date_bsm)
-)
-
-american_option_bsm$setPricingEngine(crr_engine_3)
-am_tree_3 <- american_option_bsm$NPV()
-
-baw_engine <- BaroneAdesiWhaleyApproximationEngine(bsm_process)
-american_option_bsm$setPricingEngine(baw_engine)
-am_baw <- american_option_bsm$NPV()
-
-bjs_engine <- BjerksundStenslandApproximationEngine(bsm_process)
-american_option_bsm$setPricingEngine(bjs_engine)
-am_bjs <- american_option_bsm$NPV()
-
-american_option_bsm$setPricingEngine(crr_engine_250)
-am_tree_250 <- american_option_bsm$NPV()
-
-american_compare_tbl <- tibble::tibble(
-  method = c(
-    "tree_3",
-    "barone_adesi_whaley",
-    "bjerksund_stensland",
-    "tree_250"
+  tibble::tibble(
+    previous_coupon_date =
+      QuantLibGauss::qlg_iso(
+        previous_coupon_date
+      ),
+    settlement_date =
+      QuantLibGauss::qlg_iso(
+        spot_settlement_date
+      ),
+    next_coupon_date =
+      QuantLibGauss::qlg_iso(
+        next_coupon_date
+      ),
+    accrued_days = accrued_days_hand,
+    coupon_period_days = coupon_period_days,
+    coupon_amount = coupon_amount_semiannual,
+    accrued_interest_hand =
+      accrued_interest_hand,
+    accrued_amount_quantlib =
+      accrued_amount
   ),
-  npv = c(
-    am_tree_3,
-    am_baw,
-    am_bjs,
-    am_tree_250
+  "Accrued interest hand calculation",
+  n = 20
+)
+
+# ------------------------------------------------------------
+# 7. Deliverable basket and gross basis
+# ------------------------------------------------------------
+
+deliverable_tbl <- tibble::tribble(
+  ~issue_date,
+  ~maturity_date,
+  ~coupon_rate_pct,
+  ~conversion_factor,
+  ~market_yield_pct,
+  "2022-09-30",
+  "2027-09-30",
+  4.125,
+  0.9305,
+  3.70,
+  "2022-08-31",
+  "2027-08-31",
+  3.125,
+  0.8953,
+  3.69,
+  "2023-01-31",
+  "2028-01-31",
+  3.500,
+  0.9011,
+  3.65
+)
+
+gross_basis_tbl <- purrr::pmap_dfr(
+  deliverable_tbl,
+  function(
+    issue_date,
+    maturity_date,
+    coupon_rate_pct,
+    conversion_factor,
+    market_yield_pct
+  ) {
+    QuantLibGauss::qlg_bond_futures_gross_basis_row(
+      issue_date = issue_date,
+      maturity_date = maturity_date,
+      coupon_rate_pct = coupon_rate_pct,
+      conversion_factor = conversion_factor,
+      market_yield_pct = market_yield_pct,
+      settlement_date = settle_date,
+      futures_price = futures_price,
+      settlement_days = settlement_days_t1,
+      calendar = cal_us_gov,
+      day_counter = dc_act_act_bond,
+      compounding = cmpd_compounded,
+      frequency = freq_semiannual
+    )
+  }
+)
+
+cat(
+  "Futures price:",
+  QuantLibGauss::qlg_fmt_num(
+    futures_price,
+    6
+  ),
+  ", spot settlement date:",
+  QuantLibGauss::qlg_iso(
+    settle_date
+  ),
+  "\n"
+)
+
+QuantLibGauss::qlg_show_tbl(
+  gross_basis_tbl |>
+    dplyr::select(
+      -dplyr::any_of("bond_obj")
+    ),
+  "Gross basis table",
+  n = 20
+)
+
+# ------------------------------------------------------------
+# 8. Net basis, carry, and implied repo
+# ------------------------------------------------------------
+
+repo_rate <- 5.10 / 100
+
+repo_end_date <- QuantLibGauss::qlg_date(
+  "2023-07-06"
+)
+
+repo_year_frac <- dc_act_360$yearFraction(
+  settle_date,
+  repo_end_date
+)
+
+repo_days <- dc_act_360$dayCount(
+  settle_date,
+  repo_end_date
+)
+
+net_basis_tbl <- purrr::pmap_dfr(
+  list(
+    bond_obj =
+      gross_basis_tbl$bond_obj,
+    conversion_factor =
+      gross_basis_tbl$conversion_factor,
+    clean_price =
+      gross_basis_tbl$clean_price,
+    dirty_price =
+      gross_basis_tbl$dirty_price,
+    gross_basis =
+      gross_basis_tbl$gross_basis
+  ),
+  function(
+    bond_obj,
+    conversion_factor,
+    clean_price,
+    dirty_price,
+    gross_basis
+  ) {
+    QuantLibGauss::qlg_bond_futures_net_basis_row(
+      bond_obj = bond_obj,
+      conversion_factor = conversion_factor,
+      clean_price = clean_price,
+      dirty_price = dirty_price,
+      gross_basis = gross_basis,
+      settlement_date = settle_date,
+      repo_end_date = repo_end_date,
+      repo_rate = repo_rate,
+      repo_day_counter = dc_act_360,
+      carry_day_counter = dc_act_360,
+      futures_price = futures_price
+    )
+  }
+)
+
+cat(
+  "Repo rate:",
+  fmt_pct(repo_rate),
+  ", repo end date:",
+  QuantLibGauss::qlg_iso(
+    repo_end_date
+  ),
+  ", repo days:",
+  repo_days,
+  ", repo year fraction:",
+  QuantLibGauss::qlg_fmt_num(
+    repo_year_frac,
+    6
+  ),
+  "\n"
+)
+
+QuantLibGauss::qlg_show_tbl(
+  net_basis_tbl |>
+    dplyr::select(
+      -dplyr::any_of("bond_obj")
+    ),
+  "Net basis table",
+  n = 20
+)
+
+# ------------------------------------------------------------
+# 9. Combined deliverable basket and CTD proxy
+# ------------------------------------------------------------
+
+gross_basis_display_tbl <- gross_basis_tbl |>
+  dplyr::select(
+    -dplyr::any_of("bond_obj")
   )
+
+duplicate_net_cols <- intersect(
+  names(net_basis_tbl),
+  names(gross_basis_display_tbl)
 )
 
-QuantLibGauss::qlg_show_tbl(
-  american_compare_tbl,
-  "American put comparison",
-  n = 20
-)
+net_basis_additional_tbl <- net_basis_tbl |>
+  dplyr::select(
+    -dplyr::any_of(
+      c(
+        "bond_obj",
+        duplicate_net_cols
+      )
+    )
+  )
 
-# ------------------------------------------------------------
-# 8. Sobol paths
-# ------------------------------------------------------------
-
-trade_date_sobol <- QuantLibGauss::qlg_date("2024-03-01")
-QuantLibGauss::qlg_set_eval_date(trade_date_sobol)
-
-maturity_year_sobol <- 1
-maturity_date_sobol <- calendar_nl$advance(trade_date_sobol, maturity_year_sobol, "Years")
-
-spot_price_sobol <- 100
-strike_price_sobol <- 100
-vol_sobol <- 0.20
-risk_free_rate_sobol <- 0.05
-dividend_rate_sobol <- 0.0
-n_step_sobol <- 3L
-n_path_sobol <- 8L
-seed_sobol <- 1L
-
-spot_handle_sobol <- QuoteHandle(SimpleQuote(spot_price_sobol))
-
-rf_curve_sobol <- FlatForward(
-  trade_date_sobol,
-  risk_free_rate_sobol,
-  dc_a365,
-  "Continuous"
-)
-rf_handle_sobol <- YieldTermStructureHandle(rf_curve_sobol)
-
-div_curve_sobol <- FlatForward(
-  trade_date_sobol,
-  dividend_rate_sobol,
-  dc_a365,
-  "Continuous"
-)
-div_handle_sobol <- YieldTermStructureHandle(div_curve_sobol)
-
-vol_obj_sobol <- BlackConstantVol(
-  trade_date_sobol,
-  calendar_nl,
-  vol_sobol,
-  dc_a365
-)
-vol_handle_sobol <- BlackVolTermStructureHandle(vol_obj_sobol)
-
-bsm_process_sobol <- BlackScholesMertonProcess(
-  spot_handle_sobol,
-  div_handle_sobol,
-  rf_handle_sobol,
-  vol_handle_sobol
-)
-
-uniform_ld_seq_rng <- UniformLowDiscrepancySequenceGenerator(
-  n_step_sobol,
-  seed_sobol
-)
-
-gaussian_ld_seq_rng <- GaussianLowDiscrepancySequenceGenerator(
-  uniform_ld_seq_rng
-)
-
-sobol_path_generator <- GaussianSobolPathGenerator(
-  bsm_process_sobol,
-  maturity_year_sobol,
-  n_step_sobol,
-  gaussian_ld_seq_rng,
-  FALSE
-)
-
-sobol_path_tbl <- purrr::map_dfr(
-  seq_len(n_path_sobol),
-  function(i) {
-    one_path <- sobol_path_generator$`next`()$value()
-    QuantLibGauss::qlg_path_tbl(one_path, path_id = i)
-  }
-)
-
-QuantLibGauss::qlg_show_tbl(
-  sobol_path_tbl,
-  "Sobol path table",
-  n = 20
-)
-
-sobol_path_plot <- ggplot2::ggplot(
-  sobol_path_tbl,
-  ggplot2::aes(x = time, y = price, group = path_id)
-) +
-  ggplot2::geom_line(alpha = 0.6, linewidth = 0.45) +
-  ggplot2::labs(
-    title = "BSM Sobol paths",
-    x = "Year",
-    y = "Stock price"
-  ) +
-  ggplot2::theme_minimal()
-
-print(sobol_path_plot)
-# ------------------------------------------------------------
-# 9. Longstaff-Schwartz style hand calculation
-# ------------------------------------------------------------
-
-mtrx_pt <- sobol_path_tbl |>
-  dplyr::select(path_id, step, price) |>
-  tidyr::pivot_wider(
-    names_from = step,
-    values_from = price
-  ) |>
-  dplyr::arrange(path_id) |>
-  dplyr::select(-path_id) |>
+basket_summary_tbl <- dplyr::bind_cols(
+  gross_basis_display_tbl,
+  net_basis_additional_tbl
+) |>
   dplyr::mutate(
-    dplyr::across(dplyr::everything(), as.numeric)
+    ctd_proxy =
+      dplyr::row_number() ==
+      which.min(net_basis)
   ) |>
-  as.matrix()
-
-time_grid_lsm <- sobol_path_tbl |>
-  dplyr::filter(path_id == 1) |>
-  dplyr::arrange(step) |>
-  dplyr::pull(time)
-
-col_df <- purrr::map_dbl(
-  time_grid_lsm[-1],
-  ~ rf_curve_sobol$discount(.x)
-)
-
-step_df <- col_df[1]
-
-mtrx_cf <- pmax(strike_price_sobol - mtrx_pt, 0)
+  dplyr::arrange(
+    net_basis
+  )
 
 QuantLibGauss::qlg_show_tbl(
-  tibble::as_tibble(mtrx_cf),
-  "Initial exercise-value matrix",
+  basket_summary_tbl,
+  "Deliverable basket summary",
   n = 20
 )
 
-purrr::walk(
-  seq(from = n_step_sobol - 1L, to = 1L, by = -1L),
-  function(ss) {
-    x_prc <- mtrx_pt[, ss + 1L]
-    x_exe <- mtrx_cf[, ss + 1L]
+# ------------------------------------------------------------
+# 10. CTD proxy result
+# ------------------------------------------------------------
 
-    itm_id <- which(x_exe > 0)
-    y_exe <- rep(0, n_path_sobol)
-
-    purrr::walk(
-      ss:(n_step_sobol - 1L),
-      function(ii) {
-        y_exe <<- y_exe + mtrx_cf[, ii + 2L] * step_df^(ii + 1L - ss)
-      }
-    )
-
-    if (length(itm_id) >= 3) {
-      x_itm <- x_prc[itm_id]
-      y_itm <- y_exe[itm_id]
-
-      coef <- stats::lm(y_itm ~ poly(x_itm, 2, raw = TRUE)) |>
-        stats::coef()
-
-      cont_value <- coef[1] + coef[2] * x_prc + coef[3] * x_prc^2
-      cont_value <- ifelse(cont_value < 0, 0, cont_value)
-
-      exe_id <- x_exe > cont_value
-
-      mtrx_cf[exe_id, (ss + 2L):(n_step_sobol + 1L)] <<- 0
-      mtrx_cf[!exe_id, ss + 1L] <<- 0
-    }
-  }
-)
+ctd_proxy_tbl <- basket_summary_tbl |>
+  dplyr::filter(
+    ctd_proxy
+  )
 
 QuantLibGauss::qlg_show_tbl(
-  tibble::as_tibble(mtrx_cf),
-  "Exercise-value matrix after backward induction",
+  ctd_proxy_tbl,
+  "CTD proxy based on minimum net basis",
   n = 20
 )
 
-lsm_npv <- sum(
-  mtrx_cf[, -1, drop = FALSE] *
-    matrix(
-      rep(col_df, each = n_path_sobol),
-      nrow = n_path_sobol
-    )
-) / n_path_sobol
-
-lsm_tbl <- tibble::tibble(
-  metric = "lsm_hand_npv",
-  value = lsm_npv
+cat(
+  "\nChapter 08 treasury futures and CTD completed successfully.\n"
 )
-
-QuantLibGauss::qlg_show_tbl(
-  lsm_tbl,
-  "Longstaff-Schwartz hand calculation",
-  n = 20
-)
-
-cat("\nchapter06 black model rewrite completed successfully.\n")
-
-
-```

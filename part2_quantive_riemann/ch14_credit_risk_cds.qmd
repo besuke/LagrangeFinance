@@ -1,221 +1,741 @@
 # 第14章 信用リスクとCDS
 
-```{r}
-#| eval: false
+この章では、信用リスクの基本概念とCredit Default Swap（CDS）の評価方法を確認する。
+
+CDSは、参照企業などに信用事由が発生した場合に、プロテクションの売り手から買い手へ損失補償が支払われる契約である。
+
+プロテクションの買い手は、契約期間中に定期的なプレミアムを支払う。したがってCDSは、次の二つのレグから構成される。
+
+[
+\text{CDS value}
+================
+
+\text{Default leg}
++
+\text{Premium leg}
+]
+
+プロテクション買い手から見た場合、
+
+* Default leg：正の価値
+* Premium leg：負の価値
+
+となる。
+
+この章では、以下を扱う。
+
+1. フラット割引率とフラットHazard Rate
+2. MidPoint CDS engine
+3. CDS Premium legとDefault leg
+4. Survival probabilityとDefault probability
+5. CDSキャッシュフロー表
+6. CDS評価の手計算
+7. TONA割引カーブ
+8. ISDA CDS engine
+9. Fair spreadとFair upfront
+10. MidPoint近似とISDA評価の比較
+
+```{r chapter14-setup}
 #| message: false
 #| warning: false
+
 # ============================================================
-# chapter10_cds_rewrite.R
+# Chapter 14: Credit Risk and CDS
 # ------------------------------------------------------------
-# 第10章 CDS pricing
+# QuantLibGauss + QuantLib SWIG for R
 #
-# Part 1
-# 1. Flat discount / flat hazard CDS
-# 2. MidPoint engine pricing
-# 3. Cash-flow table
-# 4. Hand check of coupon leg / default leg / fair spread
+# Part 1:
+# 1. Flat discount curve
+# 2. Flat hazard curve
+# 3. MidPoint CDS pricing
+# 4. CDS cash-flow decomposition
+# 5. Hand calculation
 #
-# Part 2
-# 5. 5Y CDS with TONA discount curve
-# 6. ISDA engine pricing
-# 7. Cash-flow table
-# 8. Hand check (midpoint-style approximation vs ISDA result)
+# Part 2:
+# 6. TONA discount curve
+# 7. ISDA CDS pricing
+# 8. Fair spread and fair upfront
+# 9. MidPoint-style hand approximation
+#
+# 前提:
+# - QuantLibGauss がインストール済み
+# - QuantLib SWIG版が利用可能
 # ============================================================
+
+library(QuantLib)
 
 suppressPackageStartupMessages({
   library(dplyr)
   library(purrr)
   library(tibble)
 })
+```
 
-# ------------------------------------------------------------
-# 0. local helpers
-# ------------------------------------------------------------
+# Part 1　フラットカーブによるCDS評価
 
-QuantLibGauss::qlg_schedule_date_at_local <- function(schedule_obj, i_one_based) {
-  idx0 <- as.integer(i_one_based - 1L)
+## 1. 共通ヘルパー
 
-  out <- tryCatch(schedule_obj$date(idx0), error = function(e) NULL)
-  if (!is.null(out)) return(out)
+この章で使用するSchedule、CDS side、日付およびキャッシュフロー表のローカルヘルパーを定義する。
 
-  out <- tryCatch(schedule_obj$get(idx0), error = function(e) NULL)
-  if (!is.null(out)) return(out)
+将来的には、これらをGaussQuant側へ移し、`_GQL`サフィックスを持つ公開関数として利用する予定である。
 
-  out <- tryCatch(schedule_obj[[i_one_based]][[1]], error = function(e) NULL)
-  if (!is.null(out)) return(out)
+```{r chapter14-local-helpers}
+schedule_date_at_local <- function(
+  schedule_obj,
+  i_one_based
+) {
+  index_zero_based <-
+    as.integer(
+      i_one_based - 1L
+    )
 
-  stop("Unable to access schedule date at index ", i_one_based)
-}
+  result <- tryCatch(
+    schedule_obj$date(
+      index_zero_based
+    ),
+    error = function(e) {
+      NULL
+    }
+  )
 
-schedule_date_vec <- function(schedule_obj) {
-  purrr::map(
-    seq_len(schedule_obj$size()),
-    ~ QuantLibGauss::qlg_schedule_date_at_local(schedule_obj, .x)
+  if (!is.null(result)) {
+    return(result)
+  }
+
+  result <- tryCatch(
+    schedule_obj$get(
+      index_zero_based
+    ),
+    error = function(e) {
+      NULL
+    }
+  )
+
+  if (!is.null(result)) {
+    return(result)
+  }
+
+  result <- tryCatch(
+    schedule_obj[
+      [i_one_based]
+    ][[1]],
+    error = function(e) {
+      NULL
+    }
+  )
+
+  if (!is.null(result)) {
+    return(result)
+  }
+
+  stop(
+    "Unable to access schedule date at index ",
+    i_one_based
   )
 }
 
-make_schedule_tbl <- function(schedule_obj) {
-  tibble(
-    schedule_date = purrr::map_chr(
-      seq_len(schedule_obj$size()),
-      ~ QuantLibGauss::qlg_iso(QuantLibGauss::qlg_schedule_date_at_local(schedule_obj, .x))
+schedule_date_vec_local <- function(
+  schedule_obj
+) {
+  purrr::map(
+    seq_len(
+      schedule_obj$size()
+    ),
+    function(i) {
+      schedule_date_at_local(
+        schedule_obj,
+        i
+      )
+    }
+  )
+}
+
+schedule_table_local <- function(
+  schedule_obj
+) {
+  schedule_dates <-
+    schedule_date_vec_local(
+      schedule_obj
+    )
+
+  tibble::tibble(
+    period =
+      seq_along(
+        schedule_dates
+      ),
+    schedule_date =
+      purrr::map_chr(
+        schedule_dates,
+        QuantLibGauss::qlg_iso
+      )
+  )
+}
+
+mid_date_local <- function(
+  first_date,
+  second_date
+) {
+  first_date_r <- as.Date(
+    QuantLibGauss::qlg_iso(
+      first_date
+    )
+  )
+
+  second_date_r <- as.Date(
+    QuantLibGauss::qlg_iso(
+      second_date
+    )
+  )
+
+  midpoint_r <- first_date_r +
+    floor(
+      as.numeric(
+        second_date_r -
+        first_date_r
+      ) /
+      2
+    )
+
+  QuantLibGauss::qlg_date(
+    format(
+      midpoint_r,
+      "%Y-%m-%d"
     )
   )
 }
 
-mid_date_between <- function(dt1, dt2) {
-  d1 <- as.Date(QuantLibGauss::qlg_iso(dt1))
-  d2 <- as.Date(QuantLibGauss::qlg_iso(dt2))
-  mid_r <- d1 + floor(as.numeric(d2 - d1) / 2)
-  QuantLibGauss::qlg_date(format(mid_r, "%Y-%m-%d"))
-}
-
-cds_buyer_side <- function() {
-  out <- tryCatch(Side_Buyer_get(), error = function(e) NULL)
-  if (!is.null(out)) return(out)
-
-  out <- tryCatch(Protection_Buyer_get(), error = function(e) NULL)
-  if (!is.null(out)) return(out)
-
-  stop("Could not find CDS buyer-side enum in this QuantLib build.")
-}
-
-make_cds_cashflow_tbl_from_schedule <- function(
-    cds_schedule,
-    protection_start_date,
-    coupon_rate,
-    hazard_curve_obj,
-    discount_curve_obj,
-    trade_date,
-    notional
-) {
-  sch_dates <- schedule_date_vec(cds_schedule)
-  n_dates <- length(sch_dates)
-
-  if (n_dates < 2L) {
-    stop("cds_schedule must have at least 2 dates.")
-  }
-
-  n_rows <- n_dates
-  pay_date <- vector("list", n_rows)
-  accrual_start <- vector("list", n_rows)
-  accrual_end <- vector("list", n_rows)
-  coupon <- rep(NA_real_, n_rows)
-  days <- rep(NA_real_, n_rows)
-  YF <- rep(NA_real_, n_rows)
-  amount <- rep(NA_real_, n_rows)
-
-  pay_date[[1]] <- protection_start_date
-  accrual_start[[1]] <- NULL
-  accrual_end[[1]] <- protection_start_date
-
-  for (i in 2:n_rows) {
-    accrual_start[[i]] <- sch_dates[[i - 1L]]
-    accrual_end[[i]] <- sch_dates[[i]]
-    pay_date[[i]] <- sch_dates[[i]]
-    coupon[i] <- coupon_rate
-
-    acc_start_r <- as.Date(QuantLibGauss::qlg_iso(accrual_start[[i]]))
-    acc_end_r <- as.Date(QuantLibGauss::qlg_iso(accrual_end[[i]]))
-    day_count_days <- as.numeric(acc_end_r - acc_start_r)
-
-    days[i] <- day_count_days
-    YF[i] <- day_count_days / 365
-    amount[i] <- notional * coupon_rate * day_count_days / 360
-  }
-
-  DF <- rep(NA_real_, n_rows)
-  Q <- rep(NA_real_, n_rows)
-
-  trade_date_r <- as.Date(QuantLibGauss::qlg_iso(trade_date))
-
-  for (i in seq_len(n_rows)) {
-    dt_i <- accrual_end[[i]]
-
-    if (is.null(dt_i)) {
-      DF[i] <- 1.0
-      Q[i] <- 1.0
-    } else {
-      dt_i_r <- as.Date(QuantLibGauss::qlg_iso(dt_i))
-
-      if (dt_i_r <= trade_date_r) {
-        DF[i] <- 1.0
-        Q[i] <- 1.0
-      } else {
-        DF[i] <- discount_curve_obj$discount(dt_i)
-        Q[i] <- hazard_curve_obj$survivalProbability(dt_i)
-      }
+cds_buyer_side_local <- function() {
+  result <- tryCatch(
+    Side_Buyer_get(),
+    error = function(e) {
+      NULL
     }
+  )
+
+  if (!is.null(result)) {
+    return(result)
   }
 
-  dQ <- c(0, -diff(Q))
-
-  m_date <- vector("list", n_rows)
-  mDF <- rep(NA_real_, n_rows)
-  mQ <- rep(NA_real_, n_rows)
-
-  m_date[[1]] <- NULL
-
-  for (i in 2:n_rows) {
-    dt1 <- pay_date[[i - 1L]]
-    dt2 <- accrual_end[[i]]
-
-    if (!is.null(dt1) && !is.null(dt2)) {
-      md <- mid_date_between(dt1, dt2)
-      m_date[[i]] <- md
-      mDF[i] <- discount_curve_obj$discount(md)
-      mQ[i] <- hazard_curve_obj$survivalProbability(md)
+  result <- tryCatch(
+    Protection_Buyer_get(),
+    error = function(e) {
+      NULL
     }
+  )
+
+  if (!is.null(result)) {
+    return(result)
   }
 
-  safe_iso <- function(x) {
-    if (is.null(x)) return(NA_character_)
-    QuantLibGauss::qlg_iso(x)
-  }
-
-  tibble(
-    payDate = vapply(pay_date, safe_iso, character(1)),
-    coupon = coupon,
-    accStt = vapply(accrual_start, safe_iso, character(1)),
-    accEnd = vapply(accrual_end, safe_iso, character(1)),
-    days = days,
-    YF = YF,
-    amount = amount,
-    DF = DF,
-    Q = Q,
-    dQ = dQ,
-    mDate = vapply(m_date, safe_iso, character(1)),
-    mDF = mDF,
-    mQ = mQ
+  stop(
+    "Could not find a CDS buyer-side enum in this QuantLib build."
   )
 }
 
-# ------------------------------------------------------------
-# 1. Part 1: flat discount / flat hazard CDS
-# ------------------------------------------------------------
+safe_iso_local <- function(
+  date_obj
+) {
+  if (is.null(date_obj)) {
+    return(
+      NA_character_
+    )
+  }
 
-trade_date <- QuantLibGauss::qlg_date("2022-09-19")
-QuantLibGauss::qlg_set_eval_date(trade_date)
+  QuantLibGauss::qlg_iso(
+    date_obj
+  )
+}
+```
 
-maturity_date <- QuantLibGauss::qlg_date("2023-09-20")
-notional <- 10000000
-rf_rate <- 0.10
-cds_quote <- 1.30 / 100
-recovery_rate <- 0.40
-buy_protection <- cds_buyer_side()
+## 2. CDSキャッシュフロー表
 
-coupon_100bp <- 0.01
-hazard_rate_input <- cds_quote / (1 - recovery_rate)
+Schedule、Hazard curve、Discount curveから、Premium legおよびDefault legの手計算に必要な表を作成する。
 
-calendar_wk <- WeekendsOnly()
-dc_a365 <- Actual365Fixed()
-dc_a360 <- Actual360()
+主な列は次のとおりである。
 
-cds_schedule_1 <- Schedule(
-  trade_date + 1L,
-  maturity_date,
-  QuantLibGauss::qlg_period_months(3),
-  calendar_wk,
+* `payment_date`：Premium支払日
+* `accrual_start`：利息計算開始日
+* `accrual_end`：利息計算終了日
+* `accrual_days`：利息計算日数
+* `coupon_amount`：Premium支払額
+* `discount_factor`：割引係数
+* `survival_probability`：生存確率
+* `default_probability`：期間中のデフォルト確率
+* `midpoint_discount_factor`：期間中点の割引係数
+* `midpoint_survival_probability`：期間中点の生存確率
+
+```{r chapter14-cds-cashflow-helper}
+cds_cashflow_table_local <- function(
+  cds_schedule,
+  protection_start_date,
+  coupon_rate,
+  hazard_curve_obj,
+  discount_curve_obj,
+  trade_date,
+  notional
+) {
+  schedule_dates <-
+    schedule_date_vec_local(
+      cds_schedule
+    )
+
+  number_of_dates <-
+    length(
+      schedule_dates
+    )
+
+  if (
+    number_of_dates <
+    2L
+  ) {
+    stop(
+      "cds_schedule must contain at least two dates."
+    )
+  }
+
+  payment_dates <-
+    vector(
+      "list",
+      number_of_dates
+    )
+
+  accrual_start_dates <-
+    vector(
+      "list",
+      number_of_dates
+    )
+
+  accrual_end_dates <-
+    vector(
+      "list",
+      number_of_dates
+    )
+
+  coupon_rates <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  accrual_days <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  accrual_year_fraction_365 <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  coupon_amounts <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  payment_dates[[1]] <-
+    protection_start_date
+
+  accrual_start_dates[[1]] <-
+    NULL
+
+  accrual_end_dates[[1]] <-
+    protection_start_date
+
+  if (
+    number_of_dates >=
+    2L
+  ) {
+    for (
+      i in 2:
+        number_of_dates
+    ) {
+      accrual_start_dates[[i]] <-
+        schedule_dates[[i - 1L]]
+
+      accrual_end_dates[[i]] <-
+        schedule_dates[[i]]
+
+      payment_dates[[i]] <-
+        schedule_dates[[i]]
+
+      coupon_rates[i] <-
+        coupon_rate
+
+      accrual_start_r <- as.Date(
+        QuantLibGauss::qlg_iso(
+          accrual_start_dates[[i]]
+        )
+      )
+
+      accrual_end_r <- as.Date(
+        QuantLibGauss::qlg_iso(
+          accrual_end_dates[[i]]
+        )
+      )
+
+      day_count_value <- as.numeric(
+        accrual_end_r -
+        accrual_start_r
+      )
+
+      accrual_days[i] <-
+        day_count_value
+
+      accrual_year_fraction_365[i] <-
+        day_count_value /
+        365
+
+      coupon_amounts[i] <-
+        notional *
+        coupon_rate *
+        day_count_value /
+        360
+    }
+  }
+
+  discount_factors <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  survival_probabilities <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  trade_date_r <- as.Date(
+    QuantLibGauss::qlg_iso(
+      trade_date
+    )
+  )
+
+  for (
+    i in seq_len(
+      number_of_dates
+    )
+  ) {
+    accrual_end_date_i <-
+      accrual_end_dates[[i]]
+
+    if (
+      is.null(
+        accrual_end_date_i
+      )
+    ) {
+      discount_factors[i] <-
+        1
+
+      survival_probabilities[i] <-
+        1
+
+      next
+    }
+
+    accrual_end_date_r <- as.Date(
+      QuantLibGauss::qlg_iso(
+        accrual_end_date_i
+      )
+    )
+
+    if (
+      accrual_end_date_r <=
+      trade_date_r
+    ) {
+      discount_factors[i] <-
+        1
+
+      survival_probabilities[i] <-
+        1
+    } else {
+      discount_factors[i] <-
+        discount_curve_obj$discount(
+          accrual_end_date_i
+        )
+
+      survival_probabilities[i] <-
+        hazard_curve_obj$
+          survivalProbability(
+            accrual_end_date_i
+          )
+    }
+  }
+
+  default_probabilities <- c(
+    0,
+    -diff(
+      survival_probabilities
+    )
+  )
+
+  midpoint_dates <-
+    vector(
+      "list",
+      number_of_dates
+    )
+
+  midpoint_discount_factors <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  midpoint_survival_probabilities <-
+    rep(
+      NA_real_,
+      number_of_dates
+    )
+
+  midpoint_dates[[1]] <-
+    NULL
+
+  if (
+    number_of_dates >=
+    2L
+  ) {
+    for (
+      i in 2:
+        number_of_dates
+    ) {
+      first_date_i <-
+        payment_dates[[i - 1L]]
+
+      second_date_i <-
+        accrual_end_dates[[i]]
+
+      if (
+        is.null(
+          first_date_i
+        ) ||
+        is.null(
+          second_date_i
+        )
+      ) {
+        next
+      }
+
+      midpoint_date_i <- mid_date_local(
+        first_date =
+          first_date_i,
+        second_date =
+          second_date_i
+      )
+
+      midpoint_dates[[i]] <-
+        midpoint_date_i
+
+      midpoint_discount_factors[i] <-
+        discount_curve_obj$discount(
+          midpoint_date_i
+        )
+
+      midpoint_survival_probabilities[i] <-
+        hazard_curve_obj$
+          survivalProbability(
+            midpoint_date_i
+          )
+    }
+  }
+
+  tibble::tibble(
+    payment_date =
+      vapply(
+        payment_dates,
+        safe_iso_local,
+        character(1)
+      ),
+    coupon_rate =
+      coupon_rates,
+    accrual_start =
+      vapply(
+        accrual_start_dates,
+        safe_iso_local,
+        character(1)
+      ),
+    accrual_end =
+      vapply(
+        accrual_end_dates,
+        safe_iso_local,
+        character(1)
+      ),
+    accrual_days =
+      accrual_days,
+    accrual_year_fraction_365 =
+      accrual_year_fraction_365,
+    coupon_amount =
+      coupon_amounts,
+    discount_factor =
+      discount_factors,
+    survival_probability =
+      survival_probabilities,
+    default_probability =
+      default_probabilities,
+    midpoint_date =
+      vapply(
+        midpoint_dates,
+        safe_iso_local,
+        character(1)
+      ),
+    midpoint_discount_factor =
+      midpoint_discount_factors,
+    midpoint_survival_probability =
+      midpoint_survival_probabilities
+  )
+}
+```
+
+## 3. CDS契約条件
+
+1年物CDSを考える。
+
+* 評価日：2022年9月19日
+* 満期：2023年9月20日
+* Notional：10,000,000
+* Risk-free rate：10％
+* CDS market spread：130bp
+* Recovery rate：40％
+* 契約Coupon：100bp
+
+この例では、割引率とHazard Rateを一定とする。
+
+```{r chapter14-flat-cds-inputs}
+flat_cds_input_tbl <- tibble::tribble(
+  ~input,                   ~value,
+  "trade_date",              "2022-09-19",
+  "maturity_date",           "2023-09-20",
+  "notional",                 10000000,
+  "risk_free_rate",           0.10,
+  "market_spread",            0.0130,
+  "contract_coupon",          0.0100,
+  "recovery_rate",            0.40
+)
+
+trade_date_flat <-
+  QuantLibGauss::qlg_date(
+    flat_cds_input_tbl$value[
+      flat_cds_input_tbl$input ==
+        "trade_date"
+    ]
+  )
+
+maturity_date_flat <-
+  QuantLibGauss::qlg_date(
+    flat_cds_input_tbl$value[
+      flat_cds_input_tbl$input ==
+        "maturity_date"
+    ]
+  )
+
+notional_flat <-
+  flat_cds_input_tbl$value[
+    flat_cds_input_tbl$input ==
+      "notional"
+  ] |>
+  as.numeric()
+
+risk_free_rate_flat <-
+  flat_cds_input_tbl$value[
+    flat_cds_input_tbl$input ==
+      "risk_free_rate"
+  ] |>
+  as.numeric()
+
+market_spread_flat <-
+  flat_cds_input_tbl$value[
+    flat_cds_input_tbl$input ==
+      "market_spread"
+  ] |>
+  as.numeric()
+
+contract_coupon_flat <-
+  flat_cds_input_tbl$value[
+    flat_cds_input_tbl$input ==
+      "contract_coupon"
+  ] |>
+  as.numeric()
+
+recovery_rate_flat <-
+  flat_cds_input_tbl$value[
+    flat_cds_input_tbl$input ==
+      "recovery_rate"
+  ] |>
+  as.numeric()
+
+QuantLibGauss::qlg_set_eval_date(
+  trade_date_flat
+)
+
+cds_buyer_side <-
+  cds_buyer_side_local()
+
+weekend_calendar <-
+  WeekendsOnly()
+
+actual_365 <-
+  Actual365Fixed()
+
+actual_360 <-
+  Actual360()
+
+QuantLibGauss::qlg_show_tbl(
+  flat_cds_input_tbl,
+  "Flat CDS input assumptions",
+  n = 20
+)
+```
+
+## 4. Hazard Rateの近似
+
+Recovery Rateを(R)、CDS spreadを(s)とすると、フラットHazard Rateの簡単な近似は、
+
+[
+\lambda
+\approx
+\frac{s}{1-R}
+]
+
+である。
+
+```{r chapter14-hazard-approximation}
+hazard_rate_approximation <-
+  market_spread_flat /
+  (
+    1 -
+    recovery_rate_flat
+  )
+
+hazard_approximation_tbl <- tibble::tribble(
+  ~metric,                  ~value,
+  "market_spread",           market_spread_flat,
+  "recovery_rate",           recovery_rate_flat,
+  "loss_given_default",      1 - recovery_rate_flat,
+  "hazard_rate_approx",      hazard_rate_approximation
+)
+
+QuantLibGauss::qlg_show_tbl(
+  hazard_approximation_tbl,
+  "Flat hazard-rate approximation",
+  n = 20
+)
+```
+
+## 5. CDS Schedule
+
+CDS Premiumは四半期ごとに支払う。
+
+```{r chapter14-flat-cds-schedule}
+cds_schedule_flat <- Schedule(
+  trade_date_flat +
+    1L,
+  maturity_date_flat,
+  QuantLibGauss::qlg_period_months(
+    3
+  ),
+  weekend_calendar,
   "Following",
   "Unadjusted",
   "Forward",
@@ -223,208 +743,609 @@ cds_schedule_1 <- Schedule(
 )
 
 QuantLibGauss::qlg_show_tbl(
-  make_schedule_tbl(cds_schedule_1),
-  "CDS schedule (flat example)",
+  schedule_table_local(
+    cds_schedule_flat
+  ),
+  "CDS schedule: flat-curve example",
   n = 20
 )
+```
 
-discount_curve_1 <- FlatForward(
-  trade_date,
-  QuoteHandle(SimpleQuote(rf_rate)),
-  dc_a365
-)
-discount_curve_handle_1 <- YieldTermStructureHandle(discount_curve_1)
+## 6. フラット割引カーブとHazard Curve
 
-hazard_curve_1 <- FlatHazardRate(
-  trade_date,
-  QuoteHandle(SimpleQuote(hazard_rate_input)),
-  dc_a365
-)
-hazard_curve_handle_1 <- DefaultProbabilityTermStructureHandle(hazard_curve_1)
-
-curve_check_tbl_1 <- tibble(
-  metric = c(
-    "discount_factor_at_maturity",
-    "survival_probability_at_maturity",
-    "hazard_rate_at_maturity"
+```{r chapter14-flat-curves}
+discount_curve_flat <- FlatForward(
+  trade_date_flat,
+  QuoteHandle(
+    SimpleQuote(
+      risk_free_rate_flat
+    )
   ),
-  value = c(
-    discount_curve_1$discount(maturity_date),
-    hazard_curve_1$survivalProbability(maturity_date),
-    hazard_curve_1$hazardRate(maturity_date)
+  actual_365
+)
+
+discount_curve_handle_flat <-
+  YieldTermStructureHandle(
+    discount_curve_flat
+  )
+
+hazard_curve_flat <- FlatHazardRate(
+  trade_date_flat,
+  QuoteHandle(
+    SimpleQuote(
+      hazard_rate_approximation
+    )
+  ),
+  actual_365
+)
+
+hazard_curve_handle_flat <-
+  DefaultProbabilityTermStructureHandle(
+    hazard_curve_flat
+  )
+
+flat_curve_check_tbl <- tibble::tribble(
+  ~metric,                              ~value,
+  "discount_factor_at_maturity",
+  discount_curve_flat$discount(
+    maturity_date_flat
+  ),
+  "survival_probability_at_maturity",
+  hazard_curve_flat$survivalProbability(
+    maturity_date_flat
+  ),
+  "default_probability_to_maturity",
+  1 -
+  hazard_curve_flat$survivalProbability(
+    maturity_date_flat
+  ),
+  "hazard_rate_at_maturity",
+  hazard_curve_flat$hazardRate(
+    maturity_date_flat
   )
 )
 
 QuantLibGauss::qlg_show_tbl(
-  curve_check_tbl_1,
-  "Flat curve / hazard check",
+  flat_curve_check_tbl,
+  "Flat discount and hazard-curve check",
   n = 20
 )
+```
 
-cds_obj_1 <- CreditDefaultSwap(
-  buy_protection,
-  notional,
-  coupon_100bp,
-  cds_schedule_1,
+## 7. MidPoint CDS Engine
+
+100bp CouponのCDSを作成し、MidPoint engineで評価する。
+
+MidPoint法では、各期間内に発生するデフォルトを期間中点に代表させて近似する。
+
+```{r chapter14-midpoint-cds}
+cds_flat <- CreditDefaultSwap(
+  cds_buyer_side,
+  notional_flat,
+  contract_coupon_flat,
+  cds_schedule_flat,
   "Following",
-  dc_a360
+  actual_360
 )
 
-mid_engine_1 <- MidPointCdsEngine(
-  hazard_curve_handle_1,
-  recovery_rate,
-  discount_curve_handle_1
+midpoint_engine_flat <- MidPointCdsEngine(
+  hazard_curve_handle_flat,
+  recovery_rate_flat,
+  discount_curve_handle_flat
 )
 
-cds_obj_1$setPricingEngine(mid_engine_1)
-
-implied_hazard_rate_1 <- cds_obj_1$impliedHazardRate(
-  cds_obj_1$NPV(),
-  discount_curve_handle_1,
-  dc_a365,
-  recovery_rate
+cds_flat$setPricingEngine(
+  midpoint_engine_flat
 )
 
-cds_summary_tbl_1 <- tibble(
-  metric = c(
-    "coupon_leg_npv",
-    "default_leg_npv",
-    "npv",
-    "implied_hazard_rate",
-    "fair_spread"
-  ),
-  value = c(
-    cds_obj_1$couponLegNPV(),
-    cds_obj_1$defaultLegNPV(),
-    cds_obj_1$NPV(),
-    implied_hazard_rate_1,
-    cds_obj_1$fairSpread()
+implied_hazard_rate_flat <-
+  cds_flat$impliedHazardRate(
+    cds_flat$NPV(),
+    discount_curve_handle_flat,
+    actual_365,
+    recovery_rate_flat
   )
+
+cds_flat_summary_tbl <- tibble::tribble(
+  ~metric,                   ~value,
+  "coupon_leg_npv",           cds_flat$couponLegNPV(),
+  "default_leg_npv",          cds_flat$defaultLegNPV(),
+  "cds_npv",                  cds_flat$NPV(),
+  "implied_hazard_rate",      implied_hazard_rate_flat,
+  "fair_spread",              cds_flat$fairSpread()
 )
 
 QuantLibGauss::qlg_show_tbl(
-  cds_summary_tbl_1,
-  "CDS summary (MidPoint, flat curves)",
+  cds_flat_summary_tbl,
+  "CDS summary: MidPoint engine with flat curves",
   n = 20
 )
+```
 
-cds_npv0_obj_1 <- CreditDefaultSwap(
-  buy_protection,
-  notional,
-  cds_quote,
-  cds_schedule_1,
+## 8. CDSの符号
+
+プロテクション買い手から見た場合、
+
+* Premium legは支払いなので負
+* Default legは受取りなので正
+
+となる。
+
+したがって、
+
+[
+NPV
+===
+
+DefaultLegNPV
++
+CouponLegNPV
+]
+
+である。
+
+```{r chapter14-cds-leg-check}
+cds_leg_check_tbl <- tibble::tribble(
+  ~metric,              ~value,
+  "coupon_leg_npv",      cds_flat$couponLegNPV(),
+  "default_leg_npv",     cds_flat$defaultLegNPV(),
+  "sum_of_two_legs",
+  cds_flat$couponLegNPV() +
+    cds_flat$defaultLegNPV(),
+  "reported_npv",        cds_flat$NPV(),
+  "difference",
+  cds_flat$NPV() -
+    (
+      cds_flat$couponLegNPV() +
+      cds_flat$defaultLegNPV()
+    )
+)
+
+QuantLibGauss::qlg_show_tbl(
+  cds_leg_check_tbl,
+  "CDS two-leg NPV check",
+  n = 20
+)
+```
+
+## 9. Zero-NPV CDSからHazard Rateを逆算
+
+次に、市場Spreadである130bpを契約Couponとして設定し、NPVがゼロになるHazard Rateを逆算する。
+
+```{r chapter14-zero-npv-hazard}
+cds_zero_npv_flat <- CreditDefaultSwap(
+  cds_buyer_side,
+  notional_flat,
+  market_spread_flat,
+  cds_schedule_flat,
   "Following",
-  dc_a360
+  actual_360
 )
 
-implied_hazard_rate_zero_npv_1 <- cds_npv0_obj_1$impliedHazardRate(
-  0.0,
-  discount_curve_handle_1,
-  dc_a365,
-  recovery_rate
-)
-
-QuantLibGauss::qlg_show_tbl(
-  tibble(
-    metric = c("quoted_spread", "implied_hazard_rate_zero_npv"),
-    value = c(cds_quote, implied_hazard_rate_zero_npv_1)
-  ),
-  "Implied hazard from zero-NPV CDS",
-  n = 20
-)
-
-df_cds_1 <- make_cds_cashflow_tbl_from_schedule(
-  cds_schedule = cds_schedule_1,
-  protection_start_date = cds_obj_1$protectionStartDate(),
-  coupon_rate = coupon_100bp,
-  hazard_curve_obj = hazard_curve_1,
-  discount_curve_obj = discount_curve_1,
-  trade_date = trade_date,
-  notional = notional
-)
-
-QuantLibGauss::qlg_show_tbl(
-  df_cds_1,
-  "CDS cash-flow table (flat example)",
-  n = 20
-)
-
-hc_coupon_leg_1 <- -(df_cds_1$amount * df_cds_1$DF * df_cds_1$mQ) |>
-  sum(na.rm = TRUE)
-
-hc_default_leg_unit_1 <- (1 - recovery_rate) * (df_cds_1$mDF * df_cds_1$dQ) |>
-  sum(na.rm = TRUE)
-
-hc_npv_1 <- hc_coupon_leg_1 + hc_default_leg_unit_1 * notional
-
-hc_rpv01_1 <- (df_cds_1$YF * df_cds_1$DF * df_cds_1$mQ) |>
-  sum(na.rm = TRUE)
-
-hc_fair_spread_1 <- hc_default_leg_unit_1 / (hc_rpv01_1 * 365 / 360)
-
-hand_check_tbl_1 <- tibble(
-  metric = c(
-    "hc_coupon_leg_npv",
-    "hc_default_leg_npv",
-    "hc_npv",
-    "hc_rpv01",
-    "hc_fair_spread"
-  ),
-  value = c(
-    hc_coupon_leg_1,
-    hc_default_leg_unit_1 * notional,
-    hc_npv_1,
-    hc_rpv01_1,
-    hc_fair_spread_1
+implied_hazard_zero_npv_flat <-
+  cds_zero_npv_flat$impliedHazardRate(
+    0,
+    discount_curve_handle_flat,
+    actual_365,
+    recovery_rate_flat
   )
+
+zero_npv_hazard_tbl <- tibble::tribble(
+  ~metric,                         ~value,
+  "quoted_spread",                  market_spread_flat,
+  "simple_hazard_approximation",    hazard_rate_approximation,
+  "implied_hazard_zero_npv",        implied_hazard_zero_npv_flat,
+  "difference",
+  implied_hazard_zero_npv_flat -
+    hazard_rate_approximation
 )
 
 QuantLibGauss::qlg_show_tbl(
-  hand_check_tbl_1,
-  "Hand check (flat example)",
+  zero_npv_hazard_tbl,
+  "Implied hazard rate from zero-NPV CDS",
+  n = 20
+)
+```
+
+## 10. CDSキャッシュフロー表
+
+```{r chapter14-flat-cds-cashflow-table}
+cds_cashflow_flat_tbl <-
+  cds_cashflow_table_local(
+    cds_schedule =
+      cds_schedule_flat,
+    protection_start_date =
+      cds_flat$protectionStartDate(),
+    coupon_rate =
+      contract_coupon_flat,
+    hazard_curve_obj =
+      hazard_curve_flat,
+    discount_curve_obj =
+      discount_curve_flat,
+    trade_date =
+      trade_date_flat,
+    notional =
+      notional_flat
+  )
+
+QuantLibGauss::qlg_show_tbl(
+  cds_cashflow_flat_tbl,
+  "CDS cash-flow table: flat example",
+  n = 20
+)
+```
+
+## 11. Premium legの手計算
+
+Premium legの現在価値は、おおむね次で求められる。
+
+[
+PV_{\text{premium}}
+===================
+
+-N
+s
+\sum_i
+\alpha_i
+DF(t_i)
+Q(t_i)
+]
+
+ここで、
+
+* (N)：Notional
+* (s)：Coupon rate
+* (\alpha_i)：Accrual year fraction
+* (DF(t_i))：割引係数
+* (Q(t_i))：生存確率
+
+である。
+
+元コードと同様に、期間中点の生存確率を使用する。
+
+```{r chapter14-flat-premium-leg-hand}
+premium_leg_hand_flat <- -sum(
+  cds_cashflow_flat_tbl$
+    coupon_amount *
+  cds_cashflow_flat_tbl$
+    discount_factor *
+  cds_cashflow_flat_tbl$
+    midpoint_survival_probability,
+  na.rm = TRUE
+)
+```
+
+## 12. Default legの手計算
+
+Default legの現在価値は、
+
+[
+PV_{\text{default}}
+===================
+
+N(1-R)
+\sum_i
+DF(m_i)
+\Delta Q_i
+]
+
+で近似する。
+
+ここで、(m_i)は各期間の中点である。
+
+```{r chapter14-flat-default-leg-hand}
+default_leg_per_unit_hand_flat <- (
+  1 -
+  recovery_rate_flat
+) *
+  sum(
+    cds_cashflow_flat_tbl$
+      midpoint_discount_factor *
+    cds_cashflow_flat_tbl$
+      default_probability,
+    na.rm = TRUE
+  )
+
+default_leg_hand_flat <-
+  default_leg_per_unit_hand_flat *
+  notional_flat
+```
+
+## 13. RPV01とFair Spread
+
+Risky PV01は、CDS Couponを1単位支払う場合のPremium legの現在価値に相当する。
+
+[
+RPV01
+=====
+
+\sum_i
+\alpha_i
+DF(t_i)
+Q(t_i)
+]
+
+Fair spreadは、
+
+[
+s_{\text{fair}}
+===============
+
+\frac{
+PV_{\text{default}}/N
+}{
+RPV01
+}
+]
+
+で求められる。
+
+```{r chapter14-flat-fair-spread-hand}
+risky_pv01_hand_flat <- sum(
+  cds_cashflow_flat_tbl$
+    accrual_year_fraction_365 *
+  cds_cashflow_flat_tbl$
+    discount_factor *
+  cds_cashflow_flat_tbl$
+    midpoint_survival_probability,
+  na.rm = TRUE
+)
+
+fair_spread_hand_flat <-
+  default_leg_per_unit_hand_flat /
+  (
+    risky_pv01_hand_flat *
+    365 /
+    360
+  )
+
+cds_npv_hand_flat <-
+  premium_leg_hand_flat +
+  default_leg_hand_flat
+```
+
+## 14. 手計算とQuantLibの比較
+
+```{r chapter14-flat-hand-check}
+flat_hand_check_tbl <- tibble::tribble(
+  ~metric,                         ~hand_value,                    ~quantlib_value,
+  "coupon_leg_npv",                 premium_leg_hand_flat,          cds_flat$couponLegNPV(),
+  "default_leg_npv",                default_leg_hand_flat,          cds_flat$defaultLegNPV(),
+  "cds_npv",                        cds_npv_hand_flat,               cds_flat$NPV(),
+  "fair_spread",                    fair_spread_hand_flat,           cds_flat$fairSpread()
+) |>
+  dplyr::mutate(
+    difference =
+      hand_value -
+      quantlib_value
+  )
+
+QuantLibGauss::qlg_show_tbl(
+  flat_hand_check_tbl,
+  "CDS hand calculation and QuantLib comparison",
   n = 20
 )
 
-cat("\nchapter10 CDS part 1 completed successfully.\n")
-
-# ------------------------------------------------------------
-# 2. Part 2: 5Y CDS with TONA curve and ISDA engine
-# ------------------------------------------------------------
-
-trade_date_2 <- QuantLibGauss::qlg_date("2022-08-19")
-QuantLibGauss::qlg_set_eval_date(trade_date_2)
-
-cds_tenor_2 <- QuantLibGauss::qlg_period_years(5)
-cds_quote_2 <- 30.426 / 10000
-notional_2 <- 10000000
-coupon_100bp_2 <- 0.01
-recovery_rate_2 <- 0.40
-buy_protection_2 <- cds_buyer_side()
-
-calendar_jp <- WeekendsOnly()
-
-jpn_holidays <- c(
-  QuantLibGauss::qlg_date("2024-03-20"), QuantLibGauss::qlg_date("2025-03-20"), QuantLibGauss::qlg_date("2026-03-20"),
-  QuantLibGauss::qlg_date("2027-03-22"), QuantLibGauss::qlg_date("2026-09-21"), QuantLibGauss::qlg_date("2026-09-22"),
-  QuantLibGauss::qlg_date("2026-09-23")
+flat_hand_summary_tbl <- tibble::tribble(
+  ~metric,                      ~value,
+  "risky_pv01",                  risky_pv01_hand_flat,
+  "default_leg_per_unit",        default_leg_per_unit_hand_flat,
+  "hand_fair_spread",            fair_spread_hand_flat,
+  "quantlib_fair_spread",        cds_flat$fairSpread(),
+  "fair_spread_difference",
+  fair_spread_hand_flat -
+    cds_flat$fairSpread()
 )
 
-purrr::walk(
-  jpn_holidays,
-  ~ tryCatch(calendar_jp$addHoliday(.x), error = function(e) NULL)
+QuantLibGauss::qlg_show_tbl(
+  flat_hand_summary_tbl,
+  "CDS flat-example hand-check summary",
+  n = 20
+)
+```
+
+## 15. Part 1のまとめ
+
+このPartでは、フラット割引率とフラットHazard Rateを用いて、CDSの基本的な評価構造を確認した。
+
+CDSの価値は、Premium legとDefault legの差から決まる。
+
+プロテクション買い手にとって、
+
+[
+NPV
+===
+
+## PV_{\text{default}}
+
+PV_{\text{premium payments}}
+]
+
+である。
+
+また、簡単な近似として、
+
+[
+\lambda
+\approx
+\frac{s}{1-R}
+]
+
+が利用できるが、厳密なHazard Rateは支払頻度、割引率、Accrual on default、契約日付などの影響を受ける。
+
+MidPoint engineは、デフォルト発生時点を各期間の中点で近似するため、CDS評価の構造を理解する教育用モデルとして使いやすい。
+
+```{r chapter14-part1-completion}
+cat(
+  "\nChapter 14 Part 1 flat-curve CDS and MidPoint pricing prepared successfully.\n"
 )
 
-maturity_date_2 <- cdsMaturity(
-  trade_date_2,
-  cds_tenor_2,
+# Part 2　TONAカーブとISDA CDS Engine
+
+## 16. 5年物CDSの契約条件
+
+次に、TONA OISカーブを割引カーブとして利用し、5年物CDSをISDA engineで評価する。
+
+この例では、2022年8月19日を取引日とし、CDS market spreadを30.426bpとする。
+
+契約Couponは100bpであるため、契約時点の価値はゼロではなく、Fair upfrontが発生する。
+
+```{r chapter14-isda-cds-inputs}
+isda_cds_input_tbl <- tibble::tribble(
+  ~input,                    ~value,
+  "trade_date",               "2022-08-19",
+  "cds_tenor_years",           5,
+  "market_spread_bp",          30.426,
+  "contract_coupon_bp",        100,
+  "notional",                  10000000,
+  "recovery_rate",             0.40
+)
+
+trade_date_isda <-
+  QuantLibGauss::qlg_date(
+    isda_cds_input_tbl$value[
+      isda_cds_input_tbl$input ==
+        "trade_date"
+    ]
+  )
+
+cds_tenor_isda <-
+  QuantLibGauss::qlg_period_years(
+    isda_cds_input_tbl$value[
+      isda_cds_input_tbl$input ==
+        "cds_tenor_years"
+    ] |>
+      as.integer()
+  )
+
+market_spread_isda <-
+  isda_cds_input_tbl$value[
+    isda_cds_input_tbl$input ==
+      "market_spread_bp"
+  ] |>
+  as.numeric() /
+  10000
+
+contract_coupon_isda <-
+  isda_cds_input_tbl$value[
+    isda_cds_input_tbl$input ==
+      "contract_coupon_bp"
+  ] |>
+  as.numeric() /
+  10000
+
+notional_isda <-
+  isda_cds_input_tbl$value[
+    isda_cds_input_tbl$input ==
+      "notional"
+  ] |>
+  as.numeric()
+
+recovery_rate_isda <-
+  isda_cds_input_tbl$value[
+    isda_cds_input_tbl$input ==
+      "recovery_rate"
+  ] |>
+  as.numeric()
+
+QuantLibGauss::qlg_set_eval_date(
+  trade_date_isda
+)
+
+cds_buyer_side_isda <-
+  cds_buyer_side_local()
+
+QuantLibGauss::qlg_show_tbl(
+  isda_cds_input_tbl,
+  "ISDA CDS input assumptions",
+  n = 20
+)
+```
+
+## 17. CDS2015満期日
+
+標準CDSでは、単純に取引日から5年後を満期とするのではなく、CDS IMM日およびCDS2015ルールに従って満期を決定する。
+
+```{r chapter14-cds2015-maturity}
+maturity_date_isda <- cdsMaturity(
+  trade_date_isda,
+  cds_tenor_isda,
   "CDS2015"
 )
 
-cds_schedule_2 <- Schedule(
-  trade_date_2,
-  maturity_date_2,
-  QuantLibGauss::qlg_period_months(3),
-  calendar_jp,
+cds2015_maturity_tbl <- tibble::tribble(
+  ~metric,          ~value,
+  "trade_date",      QuantLibGauss::qlg_iso(
+                       trade_date_isda
+                     ),
+  "cds_tenor",       "5Y",
+  "maturity_date",   QuantLibGauss::qlg_iso(
+                       maturity_date_isda
+                     )
+)
+
+QuantLibGauss::qlg_show_tbl(
+  cds2015_maturity_tbl,
+  "CDS2015 maturity-date check",
+  n = 20
+)
+```
+
+## 18. CDS用カレンダー
+
+元コードでは、`WeekendsOnly()`へ日本の一部祝日を追加していた。この設定を維持し、明示的な祝日表として管理する。
+
+```{r chapter14-isda-calendar}
+cds_calendar_isda <-
+  WeekendsOnly()
+
+japan_holiday_tbl <- tibble::tribble(
+  ~holiday,
+  "2024-03-20",
+  "2025-03-20",
+  "2026-03-20",
+  "2027-03-22",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23"
+)
+
+japan_holiday_dates <- purrr::map(
+  japan_holiday_tbl$holiday,
+  QuantLibGauss::qlg_date
+)
+
+purrr::walk(
+  japan_holiday_dates,
+  function(holiday_date) {
+    tryCatch(
+      cds_calendar_isda$addHoliday(
+        holiday_date
+      ),
+      error = function(e) {
+        NULL
+      }
+    )
+  }
+)
+
+QuantLibGauss::qlg_show_tbl(
+  japan_holiday_tbl,
+  "Additional CDS calendar holidays",
+  n = 20
+)
+```
+
+## 19. CDS2015 Schedule
+
+```{r chapter14-isda-cds-schedule}
+cds_schedule_isda <- Schedule(
+  trade_date_isda,
+  maturity_date_isda,
+  QuantLibGauss::qlg_period_months(
+    3
+  ),
+  cds_calendar_isda,
   "Following",
   "Unadjusted",
   "CDS2015",
@@ -432,225 +1353,664 @@ cds_schedule_2 <- Schedule(
 )
 
 QuantLibGauss::qlg_show_tbl(
-  make_schedule_tbl(cds_schedule_2),
-  "CDS schedule (5Y Sony-like example)",
+  schedule_table_local(
+    cds_schedule_isda
+  ),
+  "CDS schedule: 5Y CDS2015 example",
   n = 30
 )
+```
 
-tona_quotes <- tibble::tribble(
+## 20. TONA市場データ
+
+TONA OISカーブの構築に利用する市場データを用意する。
+
+固定市場データは`tribble()`で記述する。
+
+```{r chapter14-tona-market-data}
+tona_quote_tbl <- tibble::tribble(
   ~kind,  ~tenor, ~rate_pct,
-  "depo", "1d",   -0.009,
-  "ois",  "1m",   -0.01807,
-  "ois",  "6m",   -0.01043,
-  "ois",  "12m",   0.01250,
-  "ois",  "18m",   0.03125,
-  "ois",  "2y",    0.04875,
-  "ois",  "3y",    0.07375,
-  "ois",  "5y",    0.11854,
-  "ois",  "7y",    0.19146
+  "depo", "1D",   -0.00900,
+  "ois",  "1M",   -0.01807,
+  "ois",  "6M",   -0.01043,
+  "ois",  "12M",   0.01250,
+  "ois",  "18M",   0.03125,
+  "ois",  "2Y",    0.04875,
+  "ois",  "3Y",    0.07375,
+  "ois",  "5Y",    0.11854,
+  "ois",  "7Y",    0.19146
 ) |>
   dplyr::mutate(
-    as_of_date = as.Date("2022-08-19"),
-    currency = "JPY",
-    instrument = "TONA",
-    rate = rate_pct / 100
+    as_of_date =
+      as.Date(
+        "2022-08-19"
+      ),
+    currency =
+      "JPY",
+    instrument =
+      "TONA",
+    rate =
+      rate_pct /
+      100
   ) |>
-  dplyr::select(as_of_date, currency, instrument, kind, tenor, rate)
+  dplyr::select(
+    as_of_date,
+    currency,
+    instrument,
+    kind,
+    tenor,
+    rate
+  )
 
 QuantLibGauss::qlg_show_tbl(
-  tona_quotes,
+  tona_quote_tbl,
   "TONA input quotes",
   n = 20
 )
+```
 
-tona_bundle <- QuantLibGauss::qlg_ir_build_ois_curve_envs(
-  quotes = tona_quotes,
-  trade_date = "2022-08-19",
-  verbose = TRUE
-)[[1]]
+## 21. TONA OISカーブの構築
 
-discount_curve_2 <- tona_bundle$curve
-discount_curve_handle_2 <- tona_bundle$curve_handle
+```{r chapter14-tona-curve-build}
+tona_curve_envs <-
+  QuantLibGauss::qlg_ir_build_ois_curve_envs(
+    quotes =
+      tona_quote_tbl,
+    trade_date =
+      "2022-08-19",
+    verbose =
+      TRUE
+  )
 
-pricing_date_2 <- discount_curve_2$referenceDate()
-QuantLibGauss::qlg_set_eval_date(pricing_date_2)
+tona_curve_env <-
+  tona_curve_envs[
+    ["JPY::TONA"]
+  ]
 
-cds_npv0_obj_2 <- CreditDefaultSwap(
-  buy_protection_2,
-  notional_2,
-  cds_quote_2,
-  cds_schedule_2,
-  "Following",
-  dc_a360,
-  TRUE,
-  TRUE,
-  trade_date_2,
-  FaceValueClaim(),
-  Actual360()
+if (
+  is.null(
+    tona_curve_env
+  )
+) {
+  tona_curve_env <-
+    tona_curve_envs[[1]]
+}
+
+tona_discount_curve <-
+  tona_curve_env$curve
+
+tona_discount_curve_handle <-
+  tona_curve_env$curve_handle
+
+tona_pricing_date <-
+  tona_discount_curve$referenceDate()
+
+QuantLibGauss::qlg_set_eval_date(
+  tona_pricing_date
 )
 
-hazard_rate_2 <- cds_npv0_obj_2$impliedHazardRate(
-  0.0,
-  discount_curve_handle_2,
-  dc_a365,
-  recovery_rate_2,
-  1e-10,
-  "ISDA"
+tona_curve_check_tenor_tbl <- tibble::tribble(
+  ~tenor_year,
+  1,
+  2,
+  3,
+  5,
+  7
 )
 
-hazard_curve_2 <- FlatHazardRate(
-  0L,
-  calendar_jp,
-  QuoteHandle(SimpleQuote(hazard_rate_2)),
-  dc_a365
-)
-
-hazard_curve_handle_2 <- DefaultProbabilityTermStructureHandle(hazard_curve_2)
-
-curve_check_tbl_2 <- tibble(
-  metric = c("maturity_date", "hazard_rate"),
-  value = c(NA_real_, hazard_rate_2),
-  text = c(QuantLibGauss::qlg_iso(maturity_date_2), NA_character_)
-)
+tona_curve_check_tbl <- tona_curve_check_tenor_tbl |>
+  dplyr::mutate(
+    discount_factor =
+      purrr::map_dbl(
+        tenor_year,
+        function(year_value) {
+          tona_discount_curve$discount(
+            year_value
+          )
+        }
+      ),
+    continuous_zero_rate =
+      -log(
+        discount_factor
+      ) /
+      tenor_year
+  )
 
 QuantLibGauss::qlg_show_tbl(
-  curve_check_tbl_2,
-  "Maturity / hazard check (5Y example)",
+  tona_curve_check_tbl,
+  "TONA discount-curve check",
   n = 20
 )
+```
 
-cds_obj_2 <- CreditDefaultSwap(
-  buy_protection_2,
-  notional_2,
-  coupon_100bp_2,
-  cds_schedule_2,
+## 22. Zero-NPV CDSからHazard Rateを逆算
+
+市場Spreadを契約Couponとして利用し、NPVがゼロになるフラットHazard Rateを逆算する。
+
+ISDA方式を指定する。
+
+```{r chapter14-isda-implied-hazard}
+cds_zero_npv_isda <- CreditDefaultSwap(
+  cds_buyer_side_isda,
+  notional_isda,
+  market_spread_isda,
+  cds_schedule_isda,
   "Following",
-  dc_a360,
+  actual_360,
   TRUE,
   TRUE,
-  trade_date_2,
+  trade_date_isda,
   FaceValueClaim(),
   Actual360()
 )
 
-isda_engine_2 <- IsdaCdsEngine(
-  hazard_curve_handle_2,
-  recovery_rate_2,
-  discount_curve_handle_2
-)
+hazard_rate_isda <-
+  cds_zero_npv_isda$impliedHazardRate(
+    0,
+    tona_discount_curve_handle,
+    actual_365,
+    recovery_rate_isda,
+    1e-10,
+    "ISDA"
+  )
 
-cds_obj_2$setPricingEngine(isda_engine_2)
-
-implied_hazard_rate_2 <- cds_obj_2$impliedHazardRate(
-  cds_obj_2$NPV(),
-  discount_curve_handle_2,
-  dc_a365,
-  recovery_rate_2
-)
-
-net_two_leg_2 <- cds_obj_2$couponLegNPV() +
-  cds_obj_2$defaultLegNPV() +
-  cds_obj_2$accrualRebateNPV()
-
-settle_amount_2 <- cds_obj_2$fairUpfront() * notional_2 +
-  cds_obj_2$accrualRebate()$amount() * (-1)
-
-cds_summary_tbl_2 <- tibble(
-  metric = c(
-    "coupon_leg_npv",
-    "accrual_rebate_npv",
-    "default_leg_npv",
-    "npv",
-    "check_sum",
-    "implied_hazard_rate",
-    "fair_spread",
-    "fair_upfront",
-    "upfront_amount",
-    "accrual_rebate_amount",
-    "settle_amount"
+hazard_curve_isda <- FlatHazardRate(
+  0L,
+  cds_calendar_isda,
+  QuoteHandle(
+    SimpleQuote(
+      hazard_rate_isda
+    )
   ),
-  value = c(
-    cds_obj_2$couponLegNPV(),
-    cds_obj_2$accrualRebateNPV(),
-    cds_obj_2$defaultLegNPV(),
-    cds_obj_2$NPV(),
-    net_two_leg_2,
-    implied_hazard_rate_2,
-    cds_obj_2$fairSpread(),
-    cds_obj_2$fairUpfront(),
-    cds_obj_2$fairUpfront() * notional_2,
-    cds_obj_2$accrualRebate()$amount() * (-1),
-    settle_amount_2
+  actual_365
+)
+
+hazard_curve_handle_isda <-
+  DefaultProbabilityTermStructureHandle(
+    hazard_curve_isda
+  )
+
+isda_hazard_check_tbl <- tibble::tribble(
+  ~metric,                             ~value,
+  "market_spread",                      market_spread_isda,
+  "recovery_rate",                      recovery_rate_isda,
+  "implied_hazard_rate",                hazard_rate_isda,
+  "simple_hazard_approximation",
+  market_spread_isda /
+    (
+      1 -
+      recovery_rate_isda
+    ),
+  "survival_probability_at_maturity",
+  hazard_curve_isda$survivalProbability(
+    maturity_date_isda
   )
 )
 
 QuantLibGauss::qlg_show_tbl(
-  cds_summary_tbl_2,
-  "CDS summary (ISDA, 5Y example)",
-  n = 30
+  isda_hazard_check_tbl,
+  "ISDA implied hazard-rate check",
+  n = 20
+)
+```
+
+## 23. ISDA CDS Engine
+
+100bp CouponのCDSを作成し、ISDA engineで評価する。
+
+契約Couponが市場Spreadより高いため、プロテクション買い手にとってPremium legの負担が大きくなり、契約価値は一般に負になる。
+
+その差はFair upfrontとして調整される。
+
+```{r chapter14-isda-engine}
+cds_isda <- CreditDefaultSwap(
+  cds_buyer_side_isda,
+  notional_isda,
+  contract_coupon_isda,
+  cds_schedule_isda,
+  "Following",
+  actual_360,
+  TRUE,
+  TRUE,
+  trade_date_isda,
+  FaceValueClaim(),
+  Actual360()
 )
 
-df_cds_2 <- make_cds_cashflow_tbl_from_schedule(
-  cds_schedule = cds_schedule_2,
-  protection_start_date = cds_obj_2$protectionStartDate(),
-  coupon_rate = coupon_100bp_2,
-  hazard_curve_obj = hazard_curve_2,
-  discount_curve_obj = discount_curve_2,
-  trade_date = pricing_date_2,
-  notional = notional_2
+isda_engine <- IsdaCdsEngine(
+  hazard_curve_handle_isda,
+  recovery_rate_isda,
+  tona_discount_curve_handle
+)
+
+cds_isda$setPricingEngine(
+  isda_engine
+)
+
+implied_hazard_from_priced_cds <-
+  cds_isda$impliedHazardRate(
+    cds_isda$NPV(),
+    tona_discount_curve_handle,
+    actual_365,
+    recovery_rate_isda
+  )
+```
+
+## 24. Accrual rebate
+
+標準CDSでは、契約開始日と前回の標準Coupon日との関係により、Accrual rebateが発生する。
+
+Accrual rebateを含む場合、
+
+[
+NPV
+===
+
+CouponLegNPV
++
+DefaultLegNPV
++
+AccrualRebateNPV
+]
+
+となる。
+
+```{r chapter14-isda-leg-check}
+coupon_leg_npv_isda <-
+  cds_isda$couponLegNPV()
+
+default_leg_npv_isda <-
+  cds_isda$defaultLegNPV()
+
+accrual_rebate_npv_isda <-
+  cds_isda$accrualRebateNPV()
+
+three_component_sum_isda <-
+  coupon_leg_npv_isda +
+  default_leg_npv_isda +
+  accrual_rebate_npv_isda
+
+isda_leg_check_tbl <- tibble::tribble(
+  ~metric,                 ~value,
+  "coupon_leg_npv",         coupon_leg_npv_isda,
+  "default_leg_npv",        default_leg_npv_isda,
+  "accrual_rebate_npv",     accrual_rebate_npv_isda,
+  "three_component_sum",    three_component_sum_isda,
+  "reported_npv",           cds_isda$NPV(),
+  "difference",
+  cds_isda$NPV() -
+    three_component_sum_isda
 )
 
 QuantLibGauss::qlg_show_tbl(
-  df_cds_2,
-  "CDS cash-flow table (5Y example)",
-  n = 30
+  isda_leg_check_tbl,
+  "ISDA CDS three-component NPV check",
+  n = 20
+)
+```
+
+## 25. Fair spreadとFair upfront
+
+Fair spreadは、UpfrontなしでNPVをゼロにするRunning spreadである。
+
+Fair upfrontは、契約Couponを固定したまま、NPVをゼロにするために契約開始時に授受する金額をNotional比率で表したものである。
+
+```{r chapter14-fair-upfront}
+fair_spread_isda <-
+  cds_isda$fairSpread()
+
+fair_upfront_isda <-
+  cds_isda$fairUpfront()
+
+fair_upfront_amount_isda <-
+  fair_upfront_isda *
+  notional_isda
+
+accrual_rebate_amount_isda <-
+  cds_isda$accrualRebate()$
+    amount() *
+  (-1)
+
+settlement_amount_isda <-
+  fair_upfront_amount_isda +
+  accrual_rebate_amount_isda
+
+isda_cds_summary_tbl <- tibble::tribble(
+  ~metric,                         ~value,
+  "coupon_leg_npv",                 coupon_leg_npv_isda,
+  "accrual_rebate_npv",             accrual_rebate_npv_isda,
+  "default_leg_npv",                default_leg_npv_isda,
+  "cds_npv",                        cds_isda$NPV(),
+  "three_component_sum",            three_component_sum_isda,
+  "implied_hazard_rate",            implied_hazard_from_priced_cds,
+  "fair_spread",                    fair_spread_isda,
+  "fair_upfront",                   fair_upfront_isda,
+  "fair_upfront_amount",            fair_upfront_amount_isda,
+  "accrual_rebate_amount",          accrual_rebate_amount_isda,
+  "settlement_amount",              settlement_amount_isda
 )
 
-# midpoint-style approximation for comparison with ISDA engine
-# exact equality is not expected
-hc_coupon_leg_2 <- -(df_cds_2$amount * df_cds_2$DF * df_cds_2$mQ) |>
-  sum(na.rm = TRUE)
+QuantLibGauss::qlg_show_tbl(
+  isda_cds_summary_tbl,
+  "CDS summary: ISDA engine with TONA curve",
+  n = 30
+)
+```
 
-hc_default_leg_unit_2 <- (1 - recovery_rate_2) * (df_cds_2$mDF * df_cds_2$dQ) |>
-  sum(na.rm = TRUE)
+## 26. Fair upfrontの符号
 
-hc_npv_2 <- hc_coupon_leg_2 +
-  hc_default_leg_unit_2 * notional_2 +
-  cds_obj_2$accrualRebateNPV()
+この例では契約Couponが100bpであるのに対し、市場Spreadは約30.426bpである。
 
-hc_rpv01_2 <- ((92 - 61) / 365) * (df_cds_2$DF[2] * df_cds_2$mQ[2]) +
+プロテクション買い手は市場水準より高いPremiumを支払うため、契約開始時に補償を受ける必要がある。
+
+Fair upfrontの符号は、QuantLibにおけるBuyer／Sellerの符号規約と契約設定に依存するため、NPV、Fair upfront、Settlement amountを一緒に確認する。
+
+```{r chapter14-upfront-sign-check}
+upfront_sign_check_tbl <- tibble::tribble(
+  ~metric,                    ~value,
+  "market_spread",             market_spread_isda,
+  "contract_coupon",           contract_coupon_isda,
+  "coupon_minus_market",
+  contract_coupon_isda -
+    market_spread_isda,
+  "cds_npv",                   cds_isda$NPV(),
+  "fair_upfront",              fair_upfront_isda,
+  "fair_upfront_amount",       fair_upfront_amount_isda,
+  "accrual_rebate_amount",     accrual_rebate_amount_isda,
+  "settlement_amount",         settlement_amount_isda
+)
+
+QuantLibGauss::qlg_show_tbl(
+  upfront_sign_check_tbl,
+  "ISDA CDS upfront sign check",
+  n = 20
+)
+```
+
+## 27. CDSキャッシュフロー表
+
+Part 1で定義したローカル関数を利用し、TONA割引カーブとISDA用Hazard Curveに基づくキャッシュフロー表を作成する。
+
+```{r chapter14-isda-cashflow-table}
+cds_cashflow_isda_tbl <-
+  cds_cashflow_table_local(
+    cds_schedule =
+      cds_schedule_isda,
+    protection_start_date =
+      cds_isda$protectionStartDate(),
+    coupon_rate =
+      contract_coupon_isda,
+    hazard_curve_obj =
+      hazard_curve_isda,
+    discount_curve_obj =
+      tona_discount_curve,
+    trade_date =
+      tona_pricing_date,
+    notional =
+      notional_isda
+  )
+
+QuantLibGauss::qlg_show_tbl(
+  cds_cashflow_isda_tbl,
+  "CDS cash-flow table: 5Y ISDA example",
+  n = 30
+)
+```
+
+## 28. MidPoint型Premium leg近似
+
+ISDA engineは、日付規則、Accrual on default、数値積分、曲線補間などをより厳密に扱う。
+
+ここでは比較のため、Part 1と同じMidPoint型の簡易近似を計算する。
+
+厳密一致は期待しない。
+
+```{r chapter14-isda-premium-hand}
+premium_leg_hand_isda <- -sum(
+  cds_cashflow_isda_tbl$
+    coupon_amount *
+  cds_cashflow_isda_tbl$
+    discount_factor *
+  cds_cashflow_isda_tbl$
+    midpoint_survival_probability,
+  na.rm = TRUE
+)
+```
+
+## 29. MidPoint型Default leg近似
+
+```{r chapter14-isda-default-hand}
+default_leg_per_unit_hand_isda <- (
+  1 -
+  recovery_rate_isda
+) *
   sum(
-    df_cds_2$YF[3:nrow(df_cds_2)] *
-      df_cds_2$DF[3:nrow(df_cds_2)] *
-      df_cds_2$mQ[3:nrow(df_cds_2)],
+    cds_cashflow_isda_tbl$
+      midpoint_discount_factor *
+    cds_cashflow_isda_tbl$
+      default_probability,
     na.rm = TRUE
   )
 
-hc_fair_spread_2 <- hc_default_leg_unit_2 / (hc_rpv01_2 * 365 / 360)
+default_leg_hand_isda <-
+  default_leg_per_unit_hand_isda *
+  notional_isda
+```
 
-hand_check_tbl_2 <- tibble(
-  metric = c(
-    "hc_coupon_leg_npv",
-    "hc_default_leg_npv",
-    "hc_npv",
-    "hc_rpv01",
-    "hc_fair_spread"
-  ),
-  value = c(
-    hc_coupon_leg_2,
-    hc_default_leg_unit_2 * notional_2,
-    hc_npv_2,
-    hc_rpv01_2,
-    hc_fair_spread_2
+## 30. Risky PV01の近似
+
+最初のCoupon期間は、標準Coupon日と取引日の関係により通常の四半期期間とは異なる場合がある。
+
+元コードでは最初の有効期間を明示的に調整していた。ここでは日付から実際の年率換算係数を計算する。
+
+```{r chapter14-isda-rpv01-hand}
+valid_cashflow_isda_tbl <- cds_cashflow_isda_tbl |>
+  dplyr::filter(
+    !is.na(
+      accrual_start
+    ),
+    !is.na(
+      accrual_end
+    )
+  ) |>
+  dplyr::mutate(
+    accrual_start_r =
+      as.Date(
+        accrual_start
+      ),
+    accrual_end_r =
+      as.Date(
+        accrual_end
+      ),
+    accrual_year_fraction_360 =
+      as.numeric(
+        accrual_end_r -
+        accrual_start_r
+      ) /
+      360
   )
+
+risky_pv01_hand_isda <- sum(
+  valid_cashflow_isda_tbl$
+    accrual_year_fraction_360 *
+  valid_cashflow_isda_tbl$
+    discount_factor *
+  valid_cashflow_isda_tbl$
+    midpoint_survival_probability,
+  na.rm = TRUE
 )
 
+fair_spread_hand_isda <-
+  default_leg_per_unit_hand_isda /
+  risky_pv01_hand_isda
+```
+
+## 31. MidPoint型NPV近似
+
+Accrual rebateをQuantLibの計算値から加える。
+
+```{r chapter14-isda-npv-hand}
+cds_npv_hand_isda <-
+  premium_leg_hand_isda +
+  default_leg_hand_isda +
+  accrual_rebate_npv_isda
+```
+
+## 32. ISDA engineと手計算近似の比較
+
+```{r chapter14-isda-hand-check}
+isda_hand_check_tbl <- tibble::tribble(
+  ~metric,                 ~hand_value,                  ~isda_value,
+  "coupon_leg_npv",         premium_leg_hand_isda,        coupon_leg_npv_isda,
+  "default_leg_npv",        default_leg_hand_isda,        default_leg_npv_isda,
+  "cds_npv",                cds_npv_hand_isda,            cds_isda$NPV(),
+  "fair_spread",            fair_spread_hand_isda,        fair_spread_isda
+) |>
+  dplyr::mutate(
+    difference =
+      hand_value -
+      isda_value
+  )
+
 QuantLibGauss::qlg_show_tbl(
-  hand_check_tbl_2,
-  "Hand check (5Y example)",
+  isda_hand_check_tbl,
+  "MidPoint-style approximation and ISDA comparison",
   n = 20
 )
 
-cat("\nchapter10 cds rewrite completed successfully.\n")
+isda_hand_summary_tbl <- tibble::tribble(
+  ~metric,                        ~value,
+  "risky_pv01_hand",               risky_pv01_hand_isda,
+  "default_leg_per_unit_hand",     default_leg_per_unit_hand_isda,
+  "hand_fair_spread",              fair_spread_hand_isda,
+  "isda_fair_spread",              fair_spread_isda,
+  "fair_spread_difference",
+  fair_spread_hand_isda -
+    fair_spread_isda,
+  "hand_npv",                      cds_npv_hand_isda,
+  "isda_npv",                      cds_isda$NPV(),
+  "npv_difference",
+  cds_npv_hand_isda -
+    cds_isda$NPV()
+)
+
+QuantLibGauss::qlg_show_tbl(
+  isda_hand_summary_tbl,
+  "ISDA CDS hand-check summary",
+  n = 20
+)
+```
+
+## 33. フラット例とISDA例の比較
+
+```{r chapter14-model-comparison}
+cds_model_comparison_tbl <- tibble::tribble(
+  ~example,          ~engine,      ~maturity,                          ~market_spread,       ~coupon,                 ~hazard_rate,          ~fair_spread,           ~npv,
+  "Flat 1Y",          "MidPoint",    QuantLibGauss::qlg_iso(
+                                      maturity_date_flat
+                                    ),                                 market_spread_flat,    contract_coupon_flat,    implied_hazard_rate_flat, cds_flat$fairSpread(),    cds_flat$NPV(),
+  "TONA 5Y",          "ISDA",        QuantLibGauss::qlg_iso(
+                                      maturity_date_isda
+                                    ),                                 market_spread_isda,    contract_coupon_isda,    hazard_rate_isda,         fair_spread_isda,        cds_isda$NPV()
+)
+
+QuantLibGauss::qlg_show_tbl(
+  cds_model_comparison_tbl,
+  "CDS pricing-model comparison",
+  n = 20
+)
+```
+
+## 34. Part 2のまとめ
+
+このPartでは、TONA OISカーブを割引カーブとして利用し、ISDA CDS engineによる5年物CDSの評価を確認した。
+
+ISDA方式では、次の要素が評価へ影響する。
+
+* CDS2015日付規則
+* 標準Coupon日
+* Accrual on default
+* Accrual rebate
+* Recovery Rate
+* Hazard curve
+* OIS discount curve
+* Fair spread
+* Fair upfront
+
+契約Couponと市場Spreadが異なる場合、CDSは契約開始時点でゼロ価値にならない。その差はFair upfrontによって調整される。
+
+また、MidPoint型の手計算近似はCDSの経済構造を理解するうえで有用だが、ISDA engineとは次の点で異なる。
+
+* デフォルト時点の処理
+* Accrued premiumの処理
+* 日付規則
+* 積分方法
+* 曲線補間
+* 数値精度
+
+したがって、手計算値とISDA engineの結果に差があっても、それだけで実装エラーとは判断できない。
+
+```{r chapter14-part2-completion}
+cat(
+  "\nChapter 14 Part 2 TONA curve and ISDA CDS pricing prepared successfully.\n"
+)
+```
+
+# 第14章のまとめ
+
+この章では、CDS評価を二つの段階で確認した。
+
+Part 1では、フラット割引カーブとフラットHazard Curveを利用し、MidPoint engineによる基本的なCDS評価を行った。
+
+Part 2では、TONA OISカーブとISDA engineを利用し、標準的なCDS評価に必要なFair upfront、Accrual rebate、CDS2015日付規則を確認した。
+
+CDSの基本関係は、
+
+[
+NPV
+===
+
+PV_{\text{default leg}}
++
+PV_{\text{premium leg}}
++
+PV_{\text{accrual rebate}}
+]
+
+である。
+
+また、Fair spreadは、
+
+[
+PV_{\text{default leg}}
++
+PV_{\text{premium leg at fair spread}}
+=0
+]
+
+を満たすSpreadである。
+
+この章で定義した次のローカル関数は、将来GaussQuantへ移す候補である。
+
+```text
+schedule_date_at_GQL()
+schedule_dates_GQL()
+schedule_table_GQL()
+
+cds_buyer_side_GQL()
+cds_cashflow_table_GQL()
+cds_midpoint_table_GQL()
+
+cds_implied_hazard_GQL()
+cds_fair_spread_GQL()
+cds_fair_upfront_GQL()
+cds_summary_GQL()
+```
+
+```{r chapter14-completion}
+cat(
+  "\nChapter 14 Credit Risk and CDS rewrite prepared successfully.\n"
+)
+```
 
 ```

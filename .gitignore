@@ -1,4 +1,4 @@
-.Rhistory
+﻿.Rhistory
 .RData
 .Ruserdata
 .Rproj.user/
@@ -13,5 +13,4 @@ _freeze/
 __pycache__/
 .ipynb_checkpoints/
 .quarto/
-.quarto/
-.quarto/
+**/*.quarto_ipynb

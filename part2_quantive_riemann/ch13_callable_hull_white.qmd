@@ -1,43 +1,51 @@
 # 第13章 Callable BondとHull–Whiteモデル
 
-```{r}
-#| eval: false
+この章では、Callable BondとBermudan Swaptionの関係を、Hull–White 1-factorモデルを利用して確認する。
+
+最初に、オプションを含まない固定利付債を作成する。次に、同じ債券へコール条項を付与してCallable Bondを評価する。さらに、発行体の期限前償還権をBermudan Payer Swaptionとして表現し、次の関係を数値的に確認する。
+
+[
+\text{Callable Bond}
+\approx
+\text{Bullet Bond}
+------------------
+
+\text{Issuer's Call Option}
+]
+
+この章では、以下を扱う。
+
+1. 固定利付Bullet Bond
+2. Hull–Whiteモデルとフラットカーブ
+3. コールスケジュール
+4. Callable BondのTree評価
+5. 対応するBermudan Swaption
+6. Callable Bond価格とBullet Bond−Swaption価値の比較
+7. VasicekモデルとHull–Whiteモデルの期間構造
+8. Hull–Whiteモデルのカリブレーション
+9. Tree stepの収束性
+
+```{r chapter13-setup}
 #| message: false
 #| warning: false
+
 # ============================================================
-# chapter09_callable_hullwhite_rewrite.R
+# Chapter 13: Callable Bond and Hull-White Model
 # ------------------------------------------------------------
-# 第9章 Callable bond / Hull-White / Bermudan swaption
+# QuantLibGauss + QuantLib SWIG for R
 #
-# Part 1
-# 1. 5Y 3% bullet bond
-# 2. Callable bond under Hull-White tree
-# 3. Bermudan swaption under Hull-White tree
-# 4. Compare callable bond price with 100 - swaption value
+# Part 1:
+# 1. Bullet bond
+# 2. Callable bond under a Hull-White tree
+# 3. Bermudan swaption under a Hull-White tree
+# 4. Callable bond and embedded-option comparison
 #
-# Part 2
-# 5. Vasicek curve illustration
-# 6. Hull-White curve illustration
-#
-# Part 3
-# 7. JPY Tibor-like curve build
-# 8. Hull-White one-helper calibration
-# 9. 1Yx5Y swaption engine comparison
-# 10. Hull-White multi-helper calibration
-# 11. Bermudan swaption under calibrated Hull-White
-#
-# Part 4A
-# 12. One-step tree hand calculation
-# 13. Compare hand calc with Part 3 engine outputs
-#
-# Part 4B
-# 14. Tree-step convergence vs hand calculation
+# 前提:
+# - QuantLibGauss がインストール済み
+# - QuantLib SWIG版が利用可能
 # ============================================================
 
-# ------------------------------------------------------------
-# 0. setup
-# ------------------------------------------------------------
-
+library(QuantLib)
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -45,129 +53,255 @@ suppressPackageStartupMessages({
   library(tibble)
   library(ggplot2)
 })
+```
 
-# ------------------------------------------------------------
-# 1. local helpers
-# ------------------------------------------------------------
+## 1. 共通ヘルパー
 
-QuantLibGauss::qlg_schedule_date_at_local <- function(schedule_obj, i_one_based) {
-  idx0 <- as.integer(i_one_based - 1L)
+この章で使用するSWIGオブジェクトへの安全なアクセス関数を定義する。
 
-  out <- tryCatch(schedule_obj$date(idx0), error = function(e) NULL)
-  if (!is.null(out)) return(out)
+将来的には、これらをGaussQuant側の公開関数へ移し、章内のローカルヘルパーを減らす予定である。
 
-  out <- tryCatch(schedule_obj$get(idx0), error = function(e) NULL)
-  if (!is.null(out)) return(out)
-
-  out <- tryCatch(schedule_obj[[i_one_based]][[1]], error = function(e) NULL)
-  if (!is.null(out)) return(out)
-
-  stop("Unable to access schedule date at index ", i_one_based)
-}
-
-make_schedule_tbl <- function(schedule_obj) {
-  tibble(
-    schedule_date = map_chr(
-      seq_len(schedule_obj$size()),
-      ~ QuantLibGauss::qlg_iso(QuantLibGauss::qlg_schedule_date_at_local(schedule_obj, .x))
+```{r chapter13-helpers}
+schedule_date_at_local <- function(
+  schedule_obj,
+  i_one_based
+) {
+  index_zero_based <-
+    as.integer(
+      i_one_based - 1L
     )
+
+  result <- tryCatch(
+    schedule_obj$date(
+      index_zero_based
+    ),
+    error = function(e) {
+      NULL
+    }
+  )
+
+  if (!is.null(result)) {
+    return(result)
+  }
+
+  result <- tryCatch(
+    schedule_obj$get(
+      index_zero_based
+    ),
+    error = function(e) {
+      NULL
+    }
+  )
+
+  if (!is.null(result)) {
+    return(result)
+  }
+
+  result <- tryCatch(
+    schedule_obj[
+      [i_one_based]
+    ][[1]],
+    error = function(e) {
+      NULL
+    }
+  )
+
+  if (!is.null(result)) {
+    return(result)
+  }
+
+  stop(
+    "Unable to access schedule date at index ",
+    i_one_based
   )
 }
 
-schedule_date_vec <- function(schedule_obj) {
-  map(
-    seq_len(schedule_obj$size()),
-    ~ QuantLibGauss::qlg_schedule_date_at_local(schedule_obj, .x)
+schedule_date_vec_local <- function(
+  schedule_obj
+) {
+  purrr::map(
+    seq_len(
+      schedule_obj$size()
+    ),
+    function(i) {
+      schedule_date_at_local(
+        schedule_obj,
+        i
+      )
+    }
   )
 }
 
-ql_date_vector <- function(date_list) {
-  dv <- DateVector()
+schedule_table_local <- function(
+  schedule_obj
+) {
+  schedule_dates <-
+    schedule_date_vec_local(
+      schedule_obj
+    )
+
+  tibble::tibble(
+    period =
+      seq_along(
+        schedule_dates
+      ),
+    schedule_date =
+      purrr::map_chr(
+        schedule_dates,
+        QuantLibGauss::qlg_iso
+      )
+  )
+}
+
+date_vector_local <- function(
+  date_list
+) {
+  date_vector <-
+    DateVector()
 
   purrr::walk(
     date_list,
-    function(dd) {
-      DateVector_append(dv, dd)
+    function(date_obj) {
+      DateVector_append(
+        date_vector,
+        date_obj
+      )
     }
   )
 
-  dv
+  date_vector
 }
 
-make_swaption_helper_vector <- function(helper_list) {
-  vec <- CalibrationHelperVector()
-
-  purrr::walk(
-    helper_list,
-    function(hh) {
-      CalibrationHelperVector_append(vec, hh)
+instrument_npv_safe <- function(
+  instrument_obj
+) {
+  tryCatch(
+    instrument_obj$NPV(),
+    error = function(e) {
+      NA_real_
     }
   )
-
-  vec
 }
 
 bond_clean_price_from_yield_safe <- function(
-    bond_obj,
-    yld,
-    day_counter,
-    compounding,
-    frequency,
-    settlement_date = NULL
+  bond_obj,
+  yield_rate,
+  day_counter,
+  compounding,
+  frequency,
+  settlement_date = NULL
 ) {
   if (is.null(settlement_date)) {
-    tryCatch(
-      bond_obj$cleanPrice(yld, day_counter, compounding, frequency),
+    result <- tryCatch(
+      bond_obj$cleanPrice(
+        yield_rate,
+        day_counter,
+        compounding,
+        frequency
+      ),
       error = function(e) {
-        tryCatch(
-          bond_obj$cleanPrice(
-            yld,
-            day_counter,
-            compounding,
-            frequency,
-            bond_obj$settlementDate()
-          ),
-          error = function(e2) NA_real_
-        )
+        NULL
       }
     )
-  } else {
-    tryCatch(
-      bond_obj$cleanPrice(yld, day_counter, compounding, frequency, settlement_date),
-      error = function(e) NA_real_
-    )
+
+    if (!is.null(result)) {
+      return(result)
+    }
+
+    settlement_date <-
+      tryCatch(
+        bond_obj$settlementDate(),
+        error = function(e) {
+          NULL
+        }
+      )
   }
+
+  if (is.null(settlement_date)) {
+    return(NA_real_)
+  }
+
+  tryCatch(
+    bond_obj$cleanPrice(
+      yield_rate,
+      day_counter,
+      compounding,
+      frequency,
+      settlement_date
+    ),
+    error = function(e) {
+      NA_real_
+    }
+  )
 }
 
-safe_npv <- function(obj) {
-  tryCatch(obj$NPV(), error = function(e) NA_real_)
-}
+callable_bond_clean_price_safe <- function(
+  callable_bond_obj
+) {
+  result <- tryCatch(
+    callable_bond_obj$cleanPrice(),
+    error = function(e) {
+      NULL
+    }
+  )
 
-safe_clean_price <- function(obj) {
-  out <- tryCatch(obj$cleanPrice(), error = function(e) NULL)
-  if (!is.null(out)) return(out)
+  if (!is.null(result)) {
+    return(result)
+  }
 
-  out <- tryCatch(obj$NPV(), error = function(e) NULL)
-  if (!is.null(out)) return(out)
+  result <- tryCatch(
+    callable_bond_obj$settlementValue(),
+    error = function(e) {
+      NULL
+    }
+  )
 
-  out <- tryCatch(obj$dirtyPrice(), error = function(e) NULL)
-  if (!is.null(out)) return(out)
+  if (!is.null(result)) {
+    return(result)
+  }
 
-  out <- tryCatch(obj$settlementValue(), error = function(e) NULL)
-  if (!is.null(out)) return(out)
+  result <- tryCatch(
+    callable_bond_obj$NPV(),
+    error = function(e) {
+      NULL
+    }
+  )
+
+  if (!is.null(result)) {
+    return(result)
+  }
 
   NA_real_
 }
 
-safe_dirty_price <- function(obj) {
-  tryCatch(obj$dirtyPrice(), error = function(e) NA_real_)
+callable_bond_dirty_price_safe <- function(
+  callable_bond_obj
+) {
+  tryCatch(
+    callable_bond_obj$dirtyPrice(),
+    error = function(e) {
+      NA_real_
+    }
+  )
 }
 
-safe_settlement_value <- function(obj) {
-  tryCatch(obj$settlementValue(), error = function(e) NA_real_)
+callable_bond_settlement_value_safe <- function(
+  callable_bond_obj
+) {
+  tryCatch(
+    callable_bond_obj$settlementValue(),
+    error = function(e) {
+      NA_real_
+    }
+  )
 }
 
-safe_flat_curve <- function(reference_date, rate, day_counter, compounding = "Compounded") {
+flat_curve_local <- function(
+  reference_date,
+  rate,
+  day_counter,
+  compounding = "Compounded"
+) {
   FlatForward(
     reference_date,
     rate,
@@ -176,8 +310,12 @@ safe_flat_curve <- function(reference_date, rate, day_counter, compounding = "Co
   )
 }
 
-safe_callable_schedule <- function(call_dates, call_price_clean = 100) {
-  call_schedule <- CallabilitySchedule()
+callability_schedule_local <- function(
+  call_dates,
+  call_price_clean = 100
+) {
+  callability_schedule <-
+    CallabilitySchedule()
 
   call_price <- BondPrice(
     call_price_clean,
@@ -186,185 +324,181 @@ safe_callable_schedule <- function(call_dates, call_price_clean = 100) {
 
   purrr::walk(
     call_dates,
-    function(dd) {
+    function(call_date) {
       callability_obj <- Callability(
         call_price,
         Callability_Call_get(),
-        dd
+        call_date
       )
-      CallabilitySchedule_append(call_schedule, callability_obj)
+
+      CallabilitySchedule_append(
+        callability_schedule,
+        callability_obj
+      )
     }
   )
 
-  call_schedule
+  callability_schedule
 }
+```
 
-# ------------------------------------------------------------
-# 2. Part 3 first: JPY Tibor-like curve build
-# ------------------------------------------------------------
+# Part 1　Callable BondとBermudan Swaption
 
-trade_date_calib <- QuantLibGauss::qlg_date("2022-08-19")
-calendar_jp <- Japan()
-dc_a365 <- Actual365Fixed()
+## 2. 債券条件
 
-jpy_curve_quotes <- tibble::tribble(
-  ~kind,  ~tenor, ~rate_pct,
-  "depo", "6m",   0.13636,
-  "swap", "1y",   0.15249,
-  "swap", "18m",  0.18742,
-  "swap", "2y",   0.20541,
-  "swap", "3y",   0.23156,
-  "swap", "4y",   0.25653,
-  "swap", "5y",   0.28528,
-  "swap", "6y",   0.32341,
-  "swap", "7y",   0.36591,
-  "swap", "8y",   0.40906,
-  "swap", "9y",   0.45471,
-  "swap", "10y",  0.50224
-) |>
-  mutate(rate = rate_pct / 100)
+5年満期、年率3％、半年払いの固定利付債を考える。
+
+市場利回りも3％とするため、オプションを含まないBullet Bondの価格はおおむね額面付近になる。
+
+```{r chapter13-bond-inputs}
+trade_date <- QuantLibGauss::qlg_date(
+  "2024-04-15"
+)
+
+issue_date <- QuantLibGauss::qlg_date(
+  "2024-04-17"
+)
+
+maturity_date <- QuantLibGauss::qlg_date(
+  "2029-04-17"
+)
+
+QuantLibGauss::qlg_set_eval_date(
+  trade_date
+)
+
+bond_input_tbl <- tibble::tribble(
+  ~input,             ~value,
+  "trade_date",        "2024-04-15",
+  "issue_date",        "2024-04-17",
+  "maturity_date",     "2029-04-17",
+  "coupon_rate",        0.03,
+  "market_yield",       0.03,
+  "settlement_days",    2,
+  "face_amount",        100,
+  "call_price",         100,
+  "coupon_frequency",   2
+)
+
+coupon_rate <-
+  bond_input_tbl$value[
+    bond_input_tbl$input ==
+      "coupon_rate"
+  ] |>
+  as.numeric()
+
+market_yield <-
+  bond_input_tbl$value[
+    bond_input_tbl$input ==
+      "market_yield"
+  ] |>
+  as.numeric()
+
+settlement_days <-
+  bond_input_tbl$value[
+    bond_input_tbl$input ==
+      "settlement_days"
+  ] |>
+  as.integer()
+
+face_amount <-
+  bond_input_tbl$value[
+    bond_input_tbl$input ==
+      "face_amount"
+  ] |>
+  as.numeric()
+
+call_price_clean <-
+  bond_input_tbl$value[
+    bond_input_tbl$input ==
+      "call_price"
+  ] |>
+  as.numeric()
+
+bond_calendar <-
+  WeekendsOnly()
+
+bond_day_counter <-
+  ActualActual("Bond")
+
+bond_compounding <-
+  Compounding_Compounded_get()
+
+bond_frequency <-
+  Frequency_Semiannual_get()
 
 QuantLibGauss::qlg_show_tbl(
-  jpy_curve_quotes,
-  "JPY Tibor-like input quotes",
+  bond_input_tbl,
+  "Callable bond input assumptions",
   n = 20
 )
+```
 
-QuantLibGauss::qlg_set_eval_date(trade_date_calib)
+## 3. Bullet Bondの作成
 
-jpy_curve_helpers <- RateHelperVector()
-
-RateHelperVector_append(
-  jpy_curve_helpers,
-  DepositRateHelper(
-    QuoteHandle(SimpleQuote(
-      jpy_curve_quotes |>
-        filter(kind == "depo", tenor == "6m") |>
-        pull(rate)
-    )),
-    QuantLibGauss::qlg_period_months(6),
-    2L,
-    calendar_jp,
-    "ModifiedFollowing",
-    FALSE,
-    dc_a365
-  )
-)
-
-swap_rows <- jpy_curve_quotes |>
-  filter(kind == "swap")
-
-purrr::walk(
-  seq_len(nrow(swap_rows)),
-  function(i) {
-    RateHelperVector_append(
-      jpy_curve_helpers,
-      SwapRateHelper(
-        QuoteHandle(SimpleQuote(swap_rows$rate[i])),
-        QuantLibGauss::qlg_period(swap_rows$tenor[i]),
-        calendar_jp,
-        Frequency_Semiannual_get(),
-        "ModifiedFollowing",
-        dc_a365,
-        JPYLibor(QuantLibGauss::qlg_period_months(6))
-      )
-    )
-  }
-)
-
-jpy_curve_obj <- PiecewiseLogLinearDiscount(
-  2L,
-  calendar_jp,
-  jpy_curve_helpers,
-  dc_a365
-)
-
-TermStructure_enableExtrapolation(jpy_curve_obj)
-jpy_curve_handle <- YieldTermStructureHandle(jpy_curve_obj)
-
-jpy_index <- JPYLibor(
-  QuantLibGauss::qlg_period_months(6),
-  jpy_curve_handle
-)
-
-curve_check_tbl <- tibble(
-  maturity = seq(0.5, 10, by = 0.5),
-  discount = map_dbl(seq(0.5, 10, by = 0.5), ~ jpy_curve_obj$discount(.x)),
-  zero = map_dbl(seq(0.5, 10, by = 0.5), ~ -log(jpy_curve_obj$discount(.x)) / .x)
-)
-
-QuantLibGauss::qlg_show_tbl(
-  curve_check_tbl,
-  "JPY Tibor-like curve check",
-  n = 20
-)
-
-# ------------------------------------------------------------
-# 3. Part 1: bullet / callable / bermudan
-# ------------------------------------------------------------
-
-trade_date <- QuantLibGauss::qlg_date("2024-04-15")
-issue_date <- QuantLibGauss::qlg_date("2024-04-17")
-maturity_date <- QuantLibGauss::qlg_date("2029-04-17")
-QuantLibGauss::qlg_set_eval_date(trade_date)
-
-coupon_rate <- 0.03
-market_yield <- 0.03
-
-settlement_days <- 2L
-par_amount <- 100
-par_price <- 100
-
-calendar_obj <- WeekendsOnly()
-day_counter_bond <- ActualActual("Bond")
-
-compounding_cmp <- Compounding_Compounded_get()
-freq_semiannual <- Frequency_Semiannual_get()
-
-schedule_bond <- Schedule(
+```{r chapter13-bullet-bond}
+bond_schedule <- Schedule(
   issue_date,
   maturity_date,
-  QuantLibGauss::qlg_period_months(6),
-  calendar_obj,
+  QuantLibGauss::qlg_period_months(
+    6
+  ),
+  bond_calendar,
   "Unadjusted",
   "Unadjusted",
   "Backward",
   FALSE
 )
 
+bond_schedule_tbl <-
+  schedule_table_local(
+    bond_schedule
+  )
+
 QuantLibGauss::qlg_show_tbl(
-  make_schedule_tbl(schedule_bond),
+  bond_schedule_tbl,
   "Bullet bond schedule",
   n = 20
 )
 
 bullet_bond <- FixedRateBond(
   settlement_days,
-  par_amount,
-  schedule_bond,
+  face_amount,
+  bond_schedule,
   c(coupon_rate),
-  day_counter_bond
+  bond_day_counter
 )
 
-bullet_clean_price <- bond_clean_price_from_yield_safe(
-  bullet_bond,
-  market_yield,
-  day_counter_bond,
-  compounding_cmp,
-  freq_semiannual
-)
-
-bullet_summary_tbl <- tibble(
-  metric = c(
-    "coupon_rate",
-    "market_yield_input",
-    "clean_price_from_market_yield"
-  ),
-  value = c(
-    coupon_rate,
-    market_yield,
-    bullet_clean_price
+bullet_settlement_date <-
+  tryCatch(
+    bullet_bond$settlementDate(),
+    error = function(e) {
+      NULL
+    }
   )
+
+bullet_clean_price <-
+  bond_clean_price_from_yield_safe(
+    bond_obj =
+      bullet_bond,
+    yield_rate =
+      market_yield,
+    day_counter =
+      bond_day_counter,
+    compounding =
+      bond_compounding,
+    frequency =
+      bond_frequency,
+    settlement_date =
+      bullet_settlement_date
+  )
+
+bullet_summary_tbl <- tibble::tribble(
+  ~metric,                          ~value,
+  "coupon_rate",                     coupon_rate,
+  "market_yield",                    market_yield,
+  "clean_price_from_market_yield",   bullet_clean_price,
+  "face_amount",                     face_amount
 )
 
 QuantLibGauss::qlg_show_tbl(
@@ -372,99 +506,225 @@ QuantLibGauss::qlg_show_tbl(
   "Bullet bond summary",
   n = 20
 )
+```
 
-nc_periods <- 2L
-swap_spread <- 0.0
-hw_a <- 0.03
-hw_sigma <- 0.01
-n_step_tree <- 12L * 5L
+## 4. Hull–Whiteモデル
 
-flat_curve_obj <- safe_flat_curve(
-  reference_date = QuantLibGauss::qlg_date("2024-04-17"),
-  rate = market_yield,
-  day_counter = day_counter_bond,
-  compounding = "Compounded"
+Callable BondとBermudan Swaptionを同じHull–White 1-factorモデルとTree stepで評価する。
+
+モデルは次の短期金利過程を仮定する。
+
+[
+dr_t =
+\left(
+\theta(t)-a r_t
+\right)dt
++
+\sigma dW_t
+]
+
+ここで、(a) は平均回帰速度、(\sigma) は短期金利のボラティリティである。
+
+```{r chapter13-hull-white-inputs}
+hull_white_input_tbl <- tibble::tribble(
+  ~parameter,          ~value,
+  "mean_reversion_a",   0.03,
+  "sigma",              0.01,
+  "tree_steps",         60,
+  "non_call_periods",   2,
+  "swap_spread",        0
 )
 
-flat_curve_handle <- YieldTermStructureHandle(flat_curve_obj)
+hull_white_a <-
+  hull_white_input_tbl$value[
+    hull_white_input_tbl$parameter ==
+      "mean_reversion_a"
+  ]
 
-float_index <- Libor(
-  "ffIX",
-  QuantLibGauss::qlg_period_months(6),
+hull_white_sigma <-
+  hull_white_input_tbl$value[
+    hull_white_input_tbl$parameter ==
+      "sigma"
+  ]
+
+tree_steps <-
+  hull_white_input_tbl$value[
+    hull_white_input_tbl$parameter ==
+      "tree_steps"
+  ] |>
+  as.integer()
+
+non_call_periods <-
+  hull_white_input_tbl$value[
+    hull_white_input_tbl$parameter ==
+      "non_call_periods"
+  ] |>
+  as.integer()
+
+swap_spread <-
+  hull_white_input_tbl$value[
+    hull_white_input_tbl$parameter ==
+      "swap_spread"
+  ]
+
+flat_curve <- flat_curve_local(
+  reference_date =
+    issue_date,
+  rate =
+    market_yield,
+  day_counter =
+    bond_day_counter,
+  compounding =
+    "Compounded"
+)
+
+flat_curve_handle <-
+  YieldTermStructureHandle(
+    flat_curve
+  )
+
+floating_index <- Libor(
+  "CallableBondIndex",
+  QuantLibGauss::qlg_period_months(
+    6
+  ),
   settlement_days,
   JPYCurrency(),
-  calendar_obj,
-  day_counter_bond,
+  bond_calendar,
+  bond_day_counter,
   flat_curve_handle
 )
 
 tryCatch(
-  float_index$addFixing(trade_date, market_yield, TRUE),
-  error = function(e) NULL
+  floating_index$addFixing(
+    trade_date,
+    market_yield,
+    TRUE
+  ),
+  error = function(e) {
+    NULL
+  }
 )
 
-hw_model <- HullWhite(
+hull_white_model <- HullWhite(
   flat_curve_handle,
-  hw_a,
-  hw_sigma
-)
-
-hw_tbl <- tibble(
-  metric = c("a", "sigma", "n_step_tree"),
-  value = c(hw_a, hw_sigma, n_step_tree)
+  hull_white_a,
+  hull_white_sigma
 )
 
 QuantLibGauss::qlg_show_tbl(
-  hw_tbl,
-  "Hull-White parameters",
+  hull_white_input_tbl,
+  "Hull-White model assumptions",
   n = 20
 )
+```
 
-call_dates <- schedule_date_vec(schedule_bond)[
-  (nc_periods + 1L):length(schedule_date_vec(schedule_bond))
+## 5. コールスケジュール
+
+最初の2回のクーポン期間をノンコール期間とし、その後の各クーポン日に額面100でコールできるものとする。
+
+```{r chapter13-call-schedule}
+bond_schedule_dates <-
+  schedule_date_vec_local(
+    bond_schedule
+  )
+
+first_call_position <-
+  non_call_periods +
+  1L
+
+call_dates <- bond_schedule_dates[
+  first_call_position:
+    length(
+      bond_schedule_dates
+    )
 ]
 
-call_schedule <- safe_callable_schedule(
-  call_dates = call_dates,
-  call_price_clean = par_price
+call_schedule <-
+  callability_schedule_local(
+    call_dates =
+      call_dates,
+    call_price_clean =
+      call_price_clean
+  )
+
+call_schedule_tbl <- tibble::tibble(
+  call_number =
+    seq_along(
+      call_dates
+    ),
+  call_date =
+    purrr::map_chr(
+      call_dates,
+      QuantLibGauss::qlg_iso
+    ),
+  call_price =
+    rep(
+      call_price_clean,
+      length(
+        call_dates
+      )
+    )
 )
 
+QuantLibGauss::qlg_show_tbl(
+  call_schedule_tbl,
+  "Callable bond exercise schedule",
+  n = 20
+)
+```
+
+## 6. Callable Bondの作成
+
+```{r chapter13-callable-bond}
 callable_bond <- CallableFixedRateBond(
   settlement_days,
-  par_amount,
-  schedule_bond,
+  face_amount,
+  bond_schedule,
   c(coupon_rate),
-  day_counter_bond,
+  bond_day_counter,
   "Unadjusted",
-  par_price,
+  call_price_clean,
   issue_date,
   call_schedule
 )
 
-callable_engine <- TreeCallableFixedRateBondEngine(
-  hw_model,
-  n_step_tree
+callable_bond_engine <-
+  TreeCallableFixedRateBondEngine(
+    hull_white_model,
+    tree_steps
+  )
+
+callable_bond$setPricingEngine(
+  callable_bond_engine
 )
 
-callable_bond$setPricingEngine(callable_engine)
-
-callable_price_proxy <- safe_clean_price(callable_bond)
-callable_dirty_price <- safe_dirty_price(callable_bond)
-callable_settlement_value <- safe_settlement_value(callable_bond)
-
-callable_summary_tbl <- tibble(
-  metric = c(
-    "callable_price_proxy",
-    "callable_dirty_price",
-    "callable_settlement_value",
-    "embedded_option_value_vs_100"
-  ),
-  value = c(
-    callable_price_proxy,
-    callable_dirty_price,
-    callable_settlement_value,
-    par_price - callable_price_proxy
+callable_clean_price <-
+  callable_bond_clean_price_safe(
+    callable_bond
   )
+
+callable_dirty_price <-
+  callable_bond_dirty_price_safe(
+    callable_bond
+  )
+
+callable_settlement_value <-
+  callable_bond_settlement_value_safe(
+    callable_bond
+  )
+
+embedded_call_value <-
+  bullet_clean_price -
+  callable_clean_price
+
+callable_summary_tbl <- tibble::tribble(
+  ~metric,                       ~value,
+  "bullet_clean_price",           bullet_clean_price,
+  "callable_clean_price",         callable_clean_price,
+  "callable_dirty_price",         callable_dirty_price,
+  "callable_settlement_value",    callable_settlement_value,
+  "embedded_call_value",          embedded_call_value
 )
 
 QuantLibGauss::qlg_show_tbl(
@@ -472,45 +732,75 @@ QuantLibGauss::qlg_show_tbl(
   "Callable bond summary",
   n = 20
 )
+```
 
+## 7. 対応するBermudan Swaption
+
+発行体のコール権は、固定金利を支払い変動金利を受け取るPayer Swaptionとして解釈できる。
+
+金利が上昇するとPayer Swapの価値が高くなる。一方、Callable Bondの発行体が期限前償還を選択するのは、一般には市場金利が低下した場合である。
+
+したがって、Callable Bondとの厳密な対応関係を論じる際には、スワップの向き、債券価格と金利の符号関係、行使日の設定に注意する必要がある。
+
+ここでは元コードの設定を維持し、同じHull–Whiteモデルと同じ行使日でBermudan Swaptionを評価する。
+
+```{r chapter13-bermudan-swaption}
 underlying_swap <- VanillaSwap(
   Swap_Payer_get(),
-  par_amount,
-  schedule_bond,
+  face_amount,
+  bond_schedule,
   coupon_rate,
-  day_counter_bond,
-  schedule_bond,
-  float_index,
+  bond_day_counter,
+  bond_schedule,
+  floating_index,
   swap_spread,
-  day_counter_bond
+  bond_day_counter
 )
 
-bermudan_exercise_dates <- ql_date_vector(call_dates)
-bermudan_exercise <- BermudanExercise(bermudan_exercise_dates)
+bermudan_exercise_date_vector <-
+  date_vector_local(
+    call_dates
+  )
+
+bermudan_exercise <-
+  BermudanExercise(
+    bermudan_exercise_date_vector
+  )
 
 bermudan_swaption <- Swaption(
   underlying_swap,
   bermudan_exercise
 )
 
-tree_swaption_engine <- TreeSwaptionEngine(
-  hw_model,
-  n_step_tree
+bermudan_swaption_engine <-
+  TreeSwaptionEngine(
+    hull_white_model,
+    tree_steps
+  )
+
+bermudan_swaption$setPricingEngine(
+  bermudan_swaption_engine
 )
 
-bermudan_swaption$setPricingEngine(tree_swaption_engine)
-
-bermudan_swaption_npv <- safe_npv(bermudan_swaption)
-
-swaption_summary_tbl <- tibble(
-  metric = c(
-    "bermudan_swaption_npv",
-    "100_minus_swaption_value"
-  ),
-  value = c(
-    bermudan_swaption_npv,
-    par_price - bermudan_swaption_npv / par_amount * 100
+bermudan_swaption_npv <-
+  instrument_npv_safe(
+    bermudan_swaption
   )
+
+bermudan_swaption_value_per_100 <-
+  bermudan_swaption_npv /
+  face_amount *
+  100
+
+bullet_minus_swaption_value <-
+  bullet_clean_price -
+  bermudan_swaption_value_per_100
+
+swaption_summary_tbl <- tibble::tribble(
+  ~metric,                           ~value,
+  "bermudan_swaption_npv",            bermudan_swaption_npv,
+  "swaption_value_per_100",           bermudan_swaption_value_per_100,
+  "bullet_minus_swaption_value",      bullet_minus_swaption_value
 )
 
 QuantLibGauss::qlg_show_tbl(
@@ -518,1216 +808,3679 @@ QuantLibGauss::qlg_show_tbl(
   "Bermudan swaption summary",
   n = 20
 )
+```
 
-comparison_tbl <- tibble(
-  metric = c(
-    "callable_bond_price_proxy",
-    "100_minus_bermudan_swaption_value",
-    "difference"
-  ),
-  value = c(
-    callable_price_proxy,
-    par_price - bermudan_swaption_npv / par_amount * 100,
-    callable_price_proxy - (par_price - bermudan_swaption_npv / par_amount * 100)
-  )
+## 8. Callable BondとBermudan Swaptionの比較
+
+Callable Bondの価格と、
+
+[
+\text{Bullet Bond}
+------------------
+
+\text{Bermudan Swaption}
+]
+
+を比較する。
+
+元コードでは常に100からSwaption価値を引いていたが、ここでは実際に計算したBullet Bond価格を基準にする。
+
+```{r chapter13-callable-comparison}
+callable_comparison_tbl <- tibble::tribble(
+  ~valuation,                         ~value,
+  "bullet_bond_clean_price",           bullet_clean_price,
+  "callable_bond_clean_price",         callable_clean_price,
+  "bermudan_swaption_value_per_100",   bermudan_swaption_value_per_100,
+  "bullet_minus_swaption",             bullet_minus_swaption_value,
+  "pricing_difference",
+  callable_clean_price -
+    bullet_minus_swaption_value
 )
 
 QuantLibGauss::qlg_show_tbl(
-  comparison_tbl,
-  "Callable bond vs Bermudan swaption comparison",
+  callable_comparison_tbl,
+  "Callable bond and Bermudan swaption comparison",
   n = 20
 )
+```
 
-cat("\nchapter09 callable / hull-white rewrite part1 completed successfully.\n")
+## 9. Part 1のまとめ
 
-# ------------------------------------------------------------
-# 4. Part 2: Vasicek / Hull-White curve illustration
-# ------------------------------------------------------------
+Callable Bondの価格は、同条件のBullet Bondより低くなる。これは、発行体が期限前償還権を保有しており、投資家がそのオプションを売っているためである。
 
-vasicek_B <- function(t, T, a = 0.03) {
-  (1 - exp(-a * (T - t))) / a
-}
+理論上は、同じモデル、同じカーブ、同じ行使日、同じ基礎キャッシュフローを使用すれば、
 
-vasicek_A <- function(t, T, a = 0.03, sigma = 0.01, theta = 0.05) {
-  a2 <- a^2
-  sigma2 <- sigma^2
+[
+\text{Callable Bond}
+====================
 
-  (sigma2 / (2 * a2)) * (T - t - vasicek_B(t, T, a)) -
-    (sigma2 * vasicek_B(t, T, a)^2) / (4 * a) -
-    theta * (T - t - vasicek_B(t, T, a))
-}
+## \text{Bullet Bond}
 
-vasicek_R <- function(t, T, theta = 0.05, a = 0.03, sigma = 0.01, r0 = 0.05) {
-  if (abs(T - t) < 1e-12) return(r0)
-  -(vasicek_A(t, T, a, sigma, theta) - r0 * vasicek_B(t, T, a)) / (T - t)
-}
+\text{Embedded Call Option}
+]
 
-time_grid_vasicek <- seq(0, 10, by = 0.5)
+という関係が得られる。
 
-vasicek_tbl <- bind_rows(
-  tibble(
-    maturity = time_grid_vasicek,
-    rate = map_dbl(time_grid_vasicek, ~ vasicek_R(0, .x, theta = 0.04, a = 2.0, sigma = 0.08, r0 = 0.02)),
-    panel = "a = 2.0",
-    scenario = "r0 = 2.0%"
-  ),
-  tibble(
-    maturity = time_grid_vasicek,
-    rate = map_dbl(time_grid_vasicek, ~ vasicek_R(0, .x, theta = 0.04, a = 2.0, sigma = 0.08, r0 = 0.025)),
-    panel = "a = 2.0",
-    scenario = "r0 = 2.5%"
-  ),
-  tibble(
-    maturity = time_grid_vasicek,
-    rate = map_dbl(time_grid_vasicek, ~ vasicek_R(0, .x, theta = 0.04, a = 0.3, sigma = 0.08, r0 = 0.02)),
-    panel = "a = 0.3",
-    scenario = "r0 = 2.0%"
-  ),
-  tibble(
-    maturity = time_grid_vasicek,
-    rate = map_dbl(time_grid_vasicek, ~ vasicek_R(0, .x, theta = 0.04, a = 0.3, sigma = 0.08, r0 = 0.025)),
-    panel = "a = 0.3",
-    scenario = "r0 = 2.5%"
-  )
+ただし、Callable BondエンジンとSwaptionエンジンでは、以下が完全に一致している必要がある。
+
+* 行使可能日
+* 固定レグと債券クーポン
+* 元本交換
+* 支払日の調整
+* day count
+* settlement
+* スワップの方向
+* Tree grid
+* Hull–Whiteパラメータ
+
+```{r chapter13-part1-completion}
+cat(
+  "\nChapter 13 Part 1 callable bond and Bermudan swaption prepared successfully.\n"
 )
+```
+# Part 2　VasicekモデルとHull–Whiteモデルの期間構造
 
-QuantLibGauss::qlg_show_tbl(
-  vasicek_tbl,
-  "Vasicek curve table",
-  n = 20
-)
+## 10. Vasicekモデル
 
-vasicek_plot <- ggplot(
-  vasicek_tbl,
-  aes(x = maturity, y = rate, color = scenario, linetype = scenario)
-) +
-  geom_line(linewidth = 0.7) +
-  facet_wrap(~ panel, nrow = 1) +
-  scale_x_continuous(breaks = seq(0, 10, by = 1)) +
-  scale_y_continuous(labels = \(x) sprintf("%.2f%%", 100 * x)) +
-  labs(
-    title = "Vasicek curves",
-    x = "Residual maturity (years)",
-    y = "Continuously compounded rate"
-  ) +
-  theme_minimal()
+Vasicekモデルでは、短期金利は次の平均回帰過程に従う。
 
-print(vasicek_plot)
+[
+dr_t
+====
 
-hw_B <- function(t, T, a) {
-  (1 - exp(-a * (T - t))) / a
-}
+a(\theta-r_t)dt
++
+\sigma dW_t
+]
 
-hw_V <- function(t, T, a, sigma) {
-  (sigma^2 / a^2) * (
-    (T - t) +
-      (2 / a) * exp(-a * (T - t)) -
-      (1 / (2 * a)) * exp(-2 * a * (T - t)) -
-      3 / (2 * a)
-  )
-}
+ここで、
 
-hw_A <- function(t, T, a, sigma) {
-  0.5 * (hw_V(t, T, a, sigma) - hw_V(0, T, a, sigma) + hw_V(0, t, a, sigma))
-}
+* (a)：平均回帰速度
+* (\theta)：長期平均金利
+* (\sigma)：短期金利のボラティリティ
+* (r_0)：初期短期金利
 
-hw_R <- function(t, T, curve_obj, a = 0.03, sigma = 0.01, x0 = 0) {
-  if (abs(T - t) < 1e-12) {
-    return(tryCatch(-log(curve_obj$discount(0.0001)) / 0.0001 + x0, error = function(e) x0))
+である。
+
+ゼロクーポン債価格は、アフィン形式
+
+[
+P(t,T)
+======
+
+\exp\left(
+A(t,T)-B(t,T)r_t
+\right)
+]
+
+で表される。
+
+```{r chapter13-vasicek-helpers}
+vasicek_B <- function(
+  time,
+  maturity,
+  mean_reversion
+) {
+  time_to_maturity <-
+    maturity -
+    time
+
+  if (
+    abs(mean_reversion) <
+    1e-12
+  ) {
+    return(
+      time_to_maturity
+    )
   }
 
-  df_T <- tryCatch(curve_obj$discount(T), error = function(e) NA_real_)
-  df_t <- tryCatch(curve_obj$discount(t), error = function(e) 1.0)
-
-  -(log(df_T / df_t) + hw_A(t, T, a, sigma) - x0 * hw_B(t, T, a)) / (T - t)
+  (
+    1 -
+    exp(
+      -mean_reversion *
+      time_to_maturity
+    )
+  ) /
+    mean_reversion
 }
 
-time_grid_hw <- seq(0, 10, by = 0.5)
+vasicek_A <- function(
+  time,
+  maturity,
+  mean_reversion,
+  sigma,
+  long_run_rate
+) {
+  time_to_maturity <-
+    maturity -
+    time
 
-hw_curve_tbl <- bind_rows(
-  tibble(
-    maturity = time_grid_hw,
-    rate = map_dbl(time_grid_hw, ~ hw_R(0, .x, jpy_curve_obj, a = 2.0, sigma = 0.08, x0 = 0.000)),
-    panel = "a = 2.0",
-    scenario = "base curve"
-  ),
-  tibble(
-    maturity = time_grid_hw,
-    rate = map_dbl(time_grid_hw, ~ hw_R(0, .x, jpy_curve_obj, a = 2.0, sigma = 0.08, x0 = -0.003)),
-    panel = "a = 2.0",
-    scenario = "x0 = -0.3%"
-  ),
-  tibble(
-    maturity = time_grid_hw,
-    rate = map_dbl(time_grid_hw, ~ hw_R(0, .x, jpy_curve_obj, a = 2.0, sigma = 0.08, x0 = 0.003)),
-    panel = "a = 2.0",
-    scenario = "x0 = 0.3%"
-  ),
-  tibble(
-    maturity = time_grid_hw,
-    rate = map_dbl(time_grid_hw, ~ hw_R(0, .x, jpy_curve_obj, a = 0.3, sigma = 0.08, x0 = 0.000)),
-    panel = "a = 0.3",
-    scenario = "base curve"
-  ),
-  tibble(
-    maturity = time_grid_hw,
-    rate = map_dbl(time_grid_hw, ~ hw_R(0, .x, jpy_curve_obj, a = 0.3, sigma = 0.08, x0 = -0.003)),
-    panel = "a = 0.3",
-    scenario = "x0 = -0.3%"
-  ),
-  tibble(
-    maturity = time_grid_hw,
-    rate = map_dbl(time_grid_hw, ~ hw_R(0, .x, jpy_curve_obj, a = 0.3, sigma = 0.08, x0 = 0.003)),
-    panel = "a = 0.3",
-    scenario = "x0 = 0.3%"
+  b_value <- vasicek_B(
+    time =
+      time,
+    maturity =
+      maturity,
+    mean_reversion =
+      mean_reversion
   )
+
+  mean_reversion_squared <-
+    mean_reversion^2
+
+  sigma_squared <-
+    sigma^2
+
+  (
+    sigma_squared /
+      (
+        2 *
+        mean_reversion_squared
+      )
+  ) *
+    (
+      time_to_maturity -
+      b_value
+    ) -
+    (
+      sigma_squared *
+      b_value^2
+    ) /
+    (
+      4 *
+      mean_reversion
+    ) -
+    long_run_rate *
+    (
+      time_to_maturity -
+      b_value
+    )
+}
+
+vasicek_zero_rate <- function(
+  time,
+  maturity,
+  mean_reversion,
+  sigma,
+  long_run_rate,
+  short_rate
+) {
+  if (
+    abs(
+      maturity -
+      time
+    ) <
+    1e-12
+  ) {
+    return(
+      short_rate
+    )
+  }
+
+  a_value <- vasicek_A(
+    time =
+      time,
+    maturity =
+      maturity,
+    mean_reversion =
+      mean_reversion,
+    sigma =
+      sigma,
+    long_run_rate =
+      long_run_rate
+  )
+
+  b_value <- vasicek_B(
+    time =
+      time,
+    maturity =
+      maturity,
+    mean_reversion =
+      mean_reversion
+  )
+
+  -(
+    a_value -
+    short_rate *
+      b_value
+  ) /
+    (
+      maturity -
+      time
+    )
+}
+```
+
+## 11. Vasicekモデルのシナリオ
+
+平均回帰速度と初期短期金利を変化させ、ゼロ金利曲線への影響を確認する。
+
+固定されたシナリオは`tribble()`で記述する。
+
+```{r chapter13-vasicek-scenarios}
+vasicek_scenario_tbl <- tibble::tribble(
+  ~panel,     ~scenario,     ~mean_reversion, ~sigma, ~long_run_rate, ~short_rate,
+  "a = 2.0",  "r0 = 2.0%",    2.0,             0.08,   0.04,           0.020,
+  "a = 2.0",  "r0 = 2.5%",    2.0,             0.08,   0.04,           0.025,
+  "a = 0.3",  "r0 = 2.0%",    0.3,             0.08,   0.04,           0.020,
+  "a = 0.3",  "r0 = 2.5%",    0.3,             0.08,   0.04,           0.025
+)
+
+vasicek_maturity_grid <- seq(
+  0,
+  10,
+  by = 0.5
+)
+
+vasicek_curve_tbl <- purrr::pmap_dfr(
+  vasicek_scenario_tbl,
+  function(
+    panel,
+    scenario,
+    mean_reversion,
+    sigma,
+    long_run_rate,
+    short_rate
+  ) {
+    tibble::tibble(
+      maturity =
+        vasicek_maturity_grid,
+      zero_rate =
+        purrr::map_dbl(
+          vasicek_maturity_grid,
+          function(maturity_value) {
+            vasicek_zero_rate(
+              time = 0,
+              maturity =
+                maturity_value,
+              mean_reversion =
+                mean_reversion,
+              sigma =
+                sigma,
+              long_run_rate =
+                long_run_rate,
+              short_rate =
+                short_rate
+            )
+          }
+        ),
+      panel =
+        panel,
+      scenario =
+        scenario
+    )
+  }
 )
 
 QuantLibGauss::qlg_show_tbl(
-  hw_curve_tbl,
-  "Hull-White curve table",
+  vasicek_scenario_tbl,
+  "Vasicek scenario assumptions",
   n = 20
 )
 
-hw_plot <- ggplot(
-  hw_curve_tbl,
-  aes(x = maturity, y = rate, color = scenario, linetype = scenario)
+QuantLibGauss::qlg_show_tbl(
+  vasicek_curve_tbl,
+  "Vasicek zero-rate curve table",
+  n = 20
+)
+```
+
+## 12. Vasicek曲線の可視化
+
+```{r chapter13-vasicek-plot}
+#| fig-width: 9
+#| fig-height: 5
+
+vasicek_curve_plot <- ggplot2::ggplot(
+  vasicek_curve_tbl,
+  ggplot2::aes(
+    x = maturity,
+    y = zero_rate,
+    group = scenario,
+    linetype = scenario
+  )
 ) +
-  geom_line(linewidth = 0.7) +
-  facet_wrap(~ panel, nrow = 1) +
-  scale_x_continuous(breaks = seq(0, 10, by = 1)) +
-  scale_y_continuous(labels = \(x) sprintf("%.2f%%", 100 * x)) +
-  labs(
-    title = "Hull-White curves",
-    x = "Residual maturity (years)",
-    y = "Continuously compounded rate"
+  ggplot2::geom_line(
+    linewidth = 0.7
   ) +
-  theme_minimal()
+  ggplot2::facet_wrap(
+    ~panel,
+    nrow = 1
+  ) +
+  ggplot2::scale_x_continuous(
+    breaks = seq(
+      0,
+      10,
+      by = 1
+    )
+  ) +
+  ggplot2::scale_y_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.2f%%",
+        100 * x
+      )
+    }
+  ) +
+  ggplot2::labs(
+    title =
+      "Vasicek zero-rate curves",
+    subtitle =
+      "Effects of mean reversion and the initial short rate",
+    x =
+      "Residual maturity (years)",
+    y =
+      "Continuously compounded zero rate",
+    linetype =
+      "Scenario"
+  ) +
+  ggplot2::theme_minimal()
 
-print(hw_plot)
+print(
+  vasicek_curve_plot
+)
+```
 
-cat("\nchapter09 callable / hull-white rewrite part2 completed successfully.\n")
+## 13. Hull–Whiteモデル
 
-# ------------------------------------------------------------
-# 5. Part 3: Hull-White calibration and swaption checks
-# ------------------------------------------------------------
+Hull–Whiteモデルは、Vasicekモデルを時変ドリフトへ拡張し、観測された初期金利期間構造へ適合できるようにしたモデルである。
 
-QuantLibGauss::qlg_set_eval_date(trade_date_calib)
+[
+dr_t
+====
 
-# 5.1 One-helper setup: first build 1Yx5Y underlying and ATM strike
+\left[
+\theta(t)-a r_t
+\right]dt
++
+\sigma dW_t
+]
 
-swap_effective_date <- QuantLibGauss::qlg_date("2023-08-23")
-swap_maturity_date <- QuantLibGauss::qlg_date("2028-08-23")
-exercise_date <- calendar_jp$advance(trade_date_calib, 1L, "Years")
-maturity_tenor <- QuantLibGauss::qlg_period_years(5L)
+Vasicekモデルでは長期平均金利が一定であるのに対し、Hull–Whiteモデルでは(\theta(t))を時間依存にすることで、初期イールドカーブを再現する。
+
+この節では、Part 1で作成したフラットカーブを初期期間構造として利用する。
+
+```{r chapter13-hull-white-curve-helpers}
+hull_white_B <- function(
+  time,
+  maturity,
+  mean_reversion
+) {
+  time_to_maturity <-
+    maturity -
+    time
+
+  if (
+    abs(mean_reversion) <
+    1e-12
+  ) {
+    return(
+      time_to_maturity
+    )
+  }
+
+  (
+    1 -
+    exp(
+      -mean_reversion *
+      time_to_maturity
+    )
+  ) /
+    mean_reversion
+}
+
+hull_white_variance <- function(
+  time,
+  maturity,
+  mean_reversion,
+  sigma
+) {
+  time_to_maturity <-
+    maturity -
+    time
+
+  (
+    sigma^2 /
+    mean_reversion^2
+  ) *
+    (
+      time_to_maturity +
+      (
+        2 /
+        mean_reversion
+      ) *
+        exp(
+          -mean_reversion *
+          time_to_maturity
+        ) -
+      (
+        1 /
+        (
+          2 *
+          mean_reversion
+        )
+      ) *
+        exp(
+          -2 *
+          mean_reversion *
+          time_to_maturity
+        ) -
+      3 /
+        (
+          2 *
+          mean_reversion
+        )
+    )
+}
+
+hull_white_A <- function(
+  time,
+  maturity,
+  mean_reversion,
+  sigma
+) {
+  0.5 *
+    (
+      hull_white_variance(
+        time =
+          time,
+        maturity =
+          maturity,
+        mean_reversion =
+          mean_reversion,
+        sigma =
+          sigma
+      ) -
+      hull_white_variance(
+        time = 0,
+        maturity =
+          maturity,
+        mean_reversion =
+          mean_reversion,
+        sigma =
+          sigma
+      ) +
+      hull_white_variance(
+        time = 0,
+        maturity =
+          time,
+        mean_reversion =
+          mean_reversion,
+        sigma =
+          sigma
+      )
+    )
+}
+
+curve_discount_safe <- function(
+  curve_obj,
+  time
+) {
+  tryCatch(
+    curve_obj$discount(
+      time
+    ),
+    error = function(e) {
+      NA_real_
+    }
+  )
+}
+
+hull_white_zero_rate <- function(
+  time,
+  maturity,
+  curve_obj,
+  mean_reversion,
+  sigma,
+  state_variable = 0
+) {
+  if (
+    abs(
+      maturity -
+      time
+    ) <
+    1e-12
+  ) {
+    small_time <- 0.0001
+
+    initial_curve_rate <- tryCatch(
+      -log(
+        curve_obj$discount(
+          small_time
+        )
+      ) /
+        small_time,
+      error = function(e) {
+        0
+      }
+    )
+
+    return(
+      initial_curve_rate +
+      state_variable
+    )
+  }
+
+  maturity_discount_factor <-
+    curve_discount_safe(
+      curve_obj,
+      maturity
+    )
+
+  time_discount_factor <-
+    curve_discount_safe(
+      curve_obj,
+      time
+    )
+
+  if (
+    !is.finite(
+      maturity_discount_factor
+    ) ||
+    !is.finite(
+      time_discount_factor
+    ) ||
+    maturity_discount_factor <= 0 ||
+    time_discount_factor <= 0
+  ) {
+    return(
+      NA_real_
+    )
+  }
+
+  a_value <- hull_white_A(
+    time =
+      time,
+    maturity =
+      maturity,
+    mean_reversion =
+      mean_reversion,
+    sigma =
+      sigma
+  )
+
+  b_value <- hull_white_B(
+    time =
+      time,
+    maturity =
+      maturity,
+    mean_reversion =
+      mean_reversion
+  )
+
+  -(
+    log(
+      maturity_discount_factor /
+      time_discount_factor
+    ) +
+      a_value -
+      state_variable *
+        b_value
+  ) /
+    (
+      maturity -
+      time
+    )
+}
+```
+
+## 14. Hull–White曲線のシナリオ
+
+状態変数(x_0)を変化させ、基準カーブからの短期金利ショックが期間構造へ与える影響を確認する。
+
+```{r chapter13-hull-white-curve-scenarios}
+hull_white_curve_scenario_tbl <- tibble::tribble(
+  ~panel,     ~scenario,       ~mean_reversion, ~sigma, ~state_variable,
+  "a = 2.0",  "base curve",      2.0,             0.08,    0.000,
+  "a = 2.0",  "x0 = -0.3%",      2.0,             0.08,   -0.003,
+  "a = 2.0",  "x0 = 0.3%",       2.0,             0.08,    0.003,
+  "a = 0.3",  "base curve",      0.3,             0.08,    0.000,
+  "a = 0.3",  "x0 = -0.3%",      0.3,             0.08,   -0.003,
+  "a = 0.3",  "x0 = 0.3%",       0.3,             0.08,    0.003
+)
+
+hull_white_maturity_grid <- seq(
+  0,
+  10,
+  by = 0.5
+)
+
+hull_white_curve_tbl <- purrr::pmap_dfr(
+  hull_white_curve_scenario_tbl,
+  function(
+    panel,
+    scenario,
+    mean_reversion,
+    sigma,
+    state_variable
+  ) {
+    tibble::tibble(
+      maturity =
+        hull_white_maturity_grid,
+      zero_rate =
+        purrr::map_dbl(
+          hull_white_maturity_grid,
+          function(maturity_value) {
+            hull_white_zero_rate(
+              time = 0,
+              maturity =
+                maturity_value,
+              curve_obj =
+                flat_curve,
+              mean_reversion =
+                mean_reversion,
+              sigma =
+                sigma,
+              state_variable =
+                state_variable
+            )
+          }
+        ),
+      panel =
+        panel,
+      scenario =
+        scenario
+    )
+  }
+)
+
+QuantLibGauss::qlg_show_tbl(
+  hull_white_curve_scenario_tbl,
+  "Hull-White curve scenario assumptions",
+  n = 20
+)
+
+QuantLibGauss::qlg_show_tbl(
+  hull_white_curve_tbl,
+  "Hull-White zero-rate curve table",
+  n = 20
+)
+```
+
+## 15. Hull–White曲線の可視化
+
+```{r chapter13-hull-white-curve-plot}
+#| fig-width: 9
+#| fig-height: 5
+
+hull_white_curve_plot <- ggplot2::ggplot(
+  hull_white_curve_tbl,
+  ggplot2::aes(
+    x = maturity,
+    y = zero_rate,
+    group = scenario,
+    linetype = scenario
+  )
+) +
+  ggplot2::geom_line(
+    linewidth = 0.7
+  ) +
+  ggplot2::facet_wrap(
+    ~panel,
+    nrow = 1
+  ) +
+  ggplot2::scale_x_continuous(
+    breaks = seq(
+      0,
+      10,
+      by = 1
+    )
+  ) +
+  ggplot2::scale_y_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.2f%%",
+        100 * x
+      )
+    }
+  ) +
+  ggplot2::labs(
+    title =
+      "Hull-White zero-rate curves",
+    subtitle =
+      "Initial-curve-preserving rate shifts under different mean-reversion speeds",
+    x =
+      "Residual maturity (years)",
+    y =
+      "Continuously compounded zero rate",
+    linetype =
+      "Scenario"
+  ) +
+  ggplot2::theme_minimal()
+
+print(
+  hull_white_curve_plot
+)
+```
+
+## 16. VasicekモデルとHull–Whiteモデルの比較
+
+VasicekモデルとHull–WhiteモデルはいずれもGaussian短期金利モデルであり、金利が負になる可能性を許容する。
+
+一方、両者には重要な違いがある。
+
+| 項目        | Vasicek               | Hull–White       |
+| --------- | --------------------- | ---------------- |
+| 平均回帰      | 一定の長期平均へ回帰            | 時変ドリフトを利用        |
+| 初期カーブへの適合 | 一般には完全適合しない           | 初期カーブへ適合可能       |
+| パラメータ     | (a,\theta,\sigma,r_0) | (a,\sigma)と初期カーブ |
+| 実務用途      | モデル構造の理解              | 金利デリバティブ評価       |
+| 金利の符号     | 負金利を許容                | 負金利を許容           |
+
+Hull–Whiteモデルでは、観測された初期カーブがモデルへ直接組み込まれる。このため、Callable BondやSwaptionのように、現在の期間構造を保持したまま将来金利の確率変動を扱う商品に適している。
+
+```{r chapter13-part2-completion}
+cat(
+  "\nChapter 13 Part 2 Vasicek and Hull-White curve illustrations prepared successfully.\n"
+)
+```
+
+# Part 3　Hull–Whiteモデルのカリブレーション
+
+## 17. JPY Tibor型カーブ
+
+Hull–WhiteモデルをSwaption市場へカリブレーションするため、JPYの預金金利とスワップ金利から割引カーブを構築する。
+
+この例では、6か月預金と1年から10年までのスワップ金利を利用する。
+
+```{r chapter13-calibration-helpers}
+calibration_helper_vector_local <- function(
+  helper_list
+) {
+  helper_vector <-
+    CalibrationHelperVector()
+
+  purrr::walk(
+    helper_list,
+    function(helper_obj) {
+      CalibrationHelperVector_append(
+        helper_vector,
+        helper_obj
+      )
+    }
+  )
+
+  helper_vector
+}
+
+rate_helper_vector_local <- function(
+  helper_list
+) {
+  helper_vector <-
+    RateHelperVector()
+
+  purrr::walk(
+    helper_list,
+    function(helper_obj) {
+      RateHelperVector_append(
+        helper_vector,
+        helper_obj
+      )
+    }
+  )
+
+  helper_vector
+}
+
+swap_annuity_local <- function(
+  schedule_obj,
+  curve_obj,
+  day_counter
+) {
+  schedule_dates <-
+    schedule_date_vec_local(
+      schedule_obj
+    )
+
+  if (
+    length(schedule_dates) < 2
+  ) {
+    return(NA_real_)
+  }
+
+  accrual_fractions <- purrr::map_dbl(
+    seq_len(
+      length(schedule_dates) -
+      1L
+    ),
+    function(i) {
+      day_counter$yearFraction(
+        schedule_dates[[i]],
+        schedule_dates[[i + 1L]]
+      )
+    }
+  )
+
+  payment_discount_factors <- purrr::map_dbl(
+    schedule_dates[-1],
+    function(payment_date) {
+      curve_obj$discount(
+        payment_date
+      )
+    }
+  )
+
+  sum(
+    accrual_fractions *
+    payment_discount_factors
+  )
+}
+
+forward_swap_rate_local <- function(
+  schedule_obj,
+  curve_obj,
+  day_counter
+) {
+  schedule_dates <-
+    schedule_date_vec_local(
+      schedule_obj
+    )
+
+  annuity_value <-
+    swap_annuity_local(
+      schedule_obj =
+        schedule_obj,
+      curve_obj =
+        curve_obj,
+      day_counter =
+        day_counter
+    )
+
+  start_discount_factor <-
+    curve_obj$discount(
+      schedule_dates[[1]]
+    )
+
+  end_discount_factor <-
+    curve_obj$discount(
+      schedule_dates[
+        [length(schedule_dates)]
+      ]
+    )
+
+  (
+    start_discount_factor -
+    end_discount_factor
+  ) /
+    annuity_value
+}
+```
+
+```{r chapter13-jpy-curve-inputs}
+calibration_trade_date <-
+  QuantLibGauss::qlg_date(
+    "2022-08-19"
+  )
+
+jpy_calendar <-
+  Japan()
+
+jpy_day_counter <-
+  Actual365Fixed()
+
+QuantLibGauss::qlg_set_eval_date(
+  calibration_trade_date
+)
+
+jpy_curve_quote_tbl <- tibble::tribble(
+  ~kind,   ~tenor, ~rate_pct,
+  "depo",  "6M",    0.13636,
+  "swap",  "1Y",    0.15249,
+  "swap",  "18M",   0.18742,
+  "swap",  "2Y",    0.20541,
+  "swap",  "3Y",    0.23156,
+  "swap",  "4Y",    0.25653,
+  "swap",  "5Y",    0.28528,
+  "swap",  "6Y",    0.32341,
+  "swap",  "7Y",    0.36591,
+  "swap",  "8Y",    0.40906,
+  "swap",  "9Y",    0.45471,
+  "swap",  "10Y",   0.50224
+) |>
+  dplyr::mutate(
+    rate =
+      rate_pct /
+      100
+  )
+
+QuantLibGauss::qlg_show_tbl(
+  jpy_curve_quote_tbl,
+  "JPY Tibor-like market quotes",
+  n = 20
+)
+```
+
+## 18. RateHelperの作成
+
+6か月預金を`DepositRateHelper`、各スワップ金利を`SwapRateHelper`へ変換する。
+
+```{r chapter13-jpy-rate-helpers}
+deposit_rate <-
+  jpy_curve_quote_tbl |>
+  dplyr::filter(
+    kind == "depo",
+    tenor == "6M"
+  ) |>
+  dplyr::pull(
+    rate
+  )
+
+jpy_deposit_helper <- DepositRateHelper(
+  QuoteHandle(
+    SimpleQuote(
+      deposit_rate
+    )
+  ),
+  QuantLibGauss::qlg_period_months(
+    6
+  ),
+  2L,
+  jpy_calendar,
+  "ModifiedFollowing",
+  FALSE,
+  jpy_day_counter
+)
+
+jpy_swap_quote_tbl <- jpy_curve_quote_tbl |>
+  dplyr::filter(
+    kind == "swap"
+  )
+
+jpy_swap_helpers <- purrr::map(
+  seq_len(
+    nrow(
+      jpy_swap_quote_tbl
+    )
+  ),
+  function(i) {
+    SwapRateHelper(
+      QuoteHandle(
+        SimpleQuote(
+          jpy_swap_quote_tbl$
+            rate[i]
+        )
+      ),
+      QuantLibGauss::qlg_period(
+        jpy_swap_quote_tbl$
+          tenor[i]
+      ),
+      jpy_calendar,
+      Frequency_Semiannual_get(),
+      "ModifiedFollowing",
+      jpy_day_counter,
+      JPYLibor(
+        QuantLibGauss::qlg_period_months(
+          6
+        )
+      )
+    )
+  }
+)
+
+jpy_rate_helper_vector <-
+  rate_helper_vector_local(
+    c(
+      list(
+        jpy_deposit_helper
+      ),
+      jpy_swap_helpers
+    )
+  )
+```
+
+## 19. JPYカーブの構築
+
+```{r chapter13-jpy-curve-build}
+jpy_curve <- PiecewiseLogLinearDiscount(
+  2L,
+  jpy_calendar,
+  jpy_rate_helper_vector,
+  jpy_day_counter
+)
+
+TermStructure_enableExtrapolation(
+  jpy_curve
+)
+
+jpy_curve_handle <-
+  YieldTermStructureHandle(
+    jpy_curve
+  )
+
+jpy_index <- JPYLibor(
+  QuantLibGauss::qlg_period_months(
+    6
+  ),
+  jpy_curve_handle
+)
+
+jpy_curve_maturity_grid <- seq(
+  0.5,
+  10,
+  by = 0.5
+)
+
+jpy_curve_check_tbl <- tibble::tibble(
+  maturity =
+    jpy_curve_maturity_grid,
+  discount_factor =
+    purrr::map_dbl(
+      jpy_curve_maturity_grid,
+      function(maturity_value) {
+        jpy_curve$discount(
+          maturity_value
+        )
+      }
+    )
+) |>
+  dplyr::mutate(
+    continuous_zero_rate =
+      -log(
+        discount_factor
+      ) /
+      maturity
+  )
+
+QuantLibGauss::qlg_show_tbl(
+  jpy_curve_check_tbl,
+  "JPY Tibor-like curve check",
+  n = 20
+)
+```
+
+## 20. JPYカーブの可視化
+
+```{r chapter13-jpy-curve-plot}
+#| fig-width: 9
+#| fig-height: 5
+
+jpy_curve_plot <- ggplot2::ggplot(
+  jpy_curve_check_tbl,
+  ggplot2::aes(
+    x = maturity,
+    y = continuous_zero_rate
+  )
+) +
+  ggplot2::geom_line(
+    linewidth = 0.7
+  ) +
+  ggplot2::geom_point(
+    size = 1.8
+  ) +
+  ggplot2::scale_x_continuous(
+    breaks = seq(
+      0,
+      10,
+      by = 1
+    )
+  ) +
+  ggplot2::scale_y_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.3f%%",
+        100 * x
+      )
+    }
+  ) +
+  ggplot2::labs(
+    title =
+      "JPY Tibor-like zero curve",
+    x =
+      "Maturity (years)",
+    y =
+      "Continuously compounded zero rate"
+  ) +
+  ggplot2::theme_minimal()
+
+print(
+  jpy_curve_plot
+)
+```
+
+## 21. 1Y×5Y Forward Swap
+
+評価日から1年後に開始し、その後5年間継続するSwapを考える。
+
+まず、固定レグの支払スケジュールからアニュイティとATM Forward Swap Rateを計算する。
+
+```{r chapter13-one-by-five-swap}
+QuantLibGauss::qlg_set_eval_date(
+  calibration_trade_date
+)
+
+swaption_expiry_date <-
+  jpy_calendar$advance(
+    calibration_trade_date,
+    1L,
+    "Years"
+  )
+
+swap_effective_date_1y5y <-
+  QuantLibGauss::qlg_date(
+    "2023-08-23"
+  )
+
+swap_maturity_date_1y5y <-
+  QuantLibGauss::qlg_date(
+    "2028-08-23"
+  )
+
+swap_tenor_1y5y <-
+  QuantLibGauss::qlg_period_years(
+    5L
+  )
 
 fixed_schedule_1y5y <- Schedule(
-  swap_effective_date,
-  swap_maturity_date,
-  QuantLibGauss::qlg_period_months(6),
-  calendar_jp,
+  swap_effective_date_1y5y,
+  swap_maturity_date_1y5y,
+  QuantLibGauss::qlg_period_months(
+    6
+  ),
+  jpy_calendar,
   "ModifiedFollowing",
   "ModifiedFollowing",
   "Backward",
   FALSE
 )
 
-dt_1y5y <- schedule_date_vec(fixed_schedule_1y5y)
-
-annuity_1y5y <- {
-  accruals <- map_dbl(
-    seq_len(length(dt_1y5y) - 1L),
-    ~ dc_a365$yearFraction(dt_1y5y[[.x]], dt_1y5y[[.x + 1L]])
+fixed_schedule_1y5y_tbl <-
+  schedule_table_local(
+    fixed_schedule_1y5y
   )
-  dfs <- map_dbl(dt_1y5y[-1], ~ jpy_curve_obj$discount(.x))
-  sum(accruals * dfs)
-}
 
-forward_swap_rate_1y5y <- (
-  jpy_curve_obj$discount(dt_1y5y[[1]]) -
-    jpy_curve_obj$discount(dt_1y5y[[length(dt_1y5y)]])
-) / annuity_1y5y
+QuantLibGauss::qlg_show_tbl(
+  fixed_schedule_1y5y_tbl,
+  "1Yx5Y fixed-leg schedule",
+  n = 20
+)
 
-forward_swap_tbl <- tibble(
-  metric = c("annuity", "forward_swap_rate"),
-  value = c(annuity_1y5y, forward_swap_rate_1y5y)
+annuity_1y5y <-
+  swap_annuity_local(
+    schedule_obj =
+      fixed_schedule_1y5y,
+    curve_obj =
+      jpy_curve,
+    day_counter =
+      jpy_day_counter
+  )
+
+forward_swap_rate_1y5y <-
+  forward_swap_rate_local(
+    schedule_obj =
+      fixed_schedule_1y5y,
+    curve_obj =
+      jpy_curve,
+    day_counter =
+      jpy_day_counter
+  )
+
+forward_swap_summary_tbl <- tibble::tribble(
+  ~metric,               ~value,
+  "annuity",               annuity_1y5y,
+  "forward_swap_rate",     forward_swap_rate_1y5y,
+  "expiry_years",          1,
+  "swap_tenor_years",      5
 )
 
 QuantLibGauss::qlg_show_tbl(
-  forward_swap_tbl,
+  forward_swap_summary_tbl,
   "1Yx5Y forward swap summary",
   n = 20
 )
+```
 
-# 5.2 One-helper Hull-White calibration with ATM strike
+## 22. One-helper Hull–Whiteカリブレーション
 
-hw_a_1 <- 0.03
-hw_sigma_init_1 <- 1 / 10000
+1Y×5YのATM SwaptionのNormal volatilityを利用し、Hull–Whiteモデルの(\sigma)をカリブレーションする。
 
-hw_model_1 <- HullWhite(
-  jpy_curve_handle,
-  hw_a_1,
-  hw_sigma_init_1
+平均回帰速度(a)は0.03に固定する。
+
+```{r chapter13-one-helper-market-input}
+one_helper_market_tbl <- tibble::tribble(
+  ~input,                   ~value,
+  "expiry_years",            1,
+  "swap_tenor_years",        5,
+  "market_normal_vol_bp",    36.06,
+  "fixed_mean_reversion",    0.03,
+  "initial_sigma",           0.0001
 )
 
-jam_engine_1 <- JamshidianSwaptionEngine(hw_model_1)
+market_normal_vol_1y5y <-
+  one_helper_market_tbl$value[
+    one_helper_market_tbl$input ==
+      "market_normal_vol_bp"
+  ] /
+  10000
 
-helper_1 <- SwaptionHelper(
-  exercise_date,
-  maturity_tenor,
-  QuoteHandle(SimpleQuote(36.06 / 10000)),
+fixed_mean_reversion_1 <-
+  one_helper_market_tbl$value[
+    one_helper_market_tbl$input ==
+      "fixed_mean_reversion"
+  ]
+
+initial_sigma_1 <-
+  one_helper_market_tbl$value[
+    one_helper_market_tbl$input ==
+      "initial_sigma"
+  ]
+
+QuantLibGauss::qlg_show_tbl(
+  one_helper_market_tbl,
+  "1Yx5Y swaption calibration input",
+  n = 20
+)
+```
+
+```{r chapter13-one-helper-calibration}
+hull_white_model_1 <- HullWhite(
+  jpy_curve_handle,
+  fixed_mean_reversion_1,
+  initial_sigma_1
+)
+
+jamshidian_engine_1 <-
+  JamshidianSwaptionEngine(
+    hull_white_model_1
+  )
+
+swaption_helper_1 <- SwaptionHelper(
+  swaption_expiry_date,
+  swap_tenor_1y5y,
+  QuoteHandle(
+    SimpleQuote(
+      market_normal_vol_1y5y
+    )
+  ),
   jpy_index,
-  QuantLibGauss::qlg_period_months(6),
-  dc_a365,
-  dc_a365,
+  QuantLibGauss::qlg_period_months(
+    6
+  ),
+  jpy_day_counter,
+  jpy_day_counter,
   jpy_curve_handle,
   BlackCalibrationHelper_RelativePriceError_get(),
   forward_swap_rate_1y5y,
-  1.0,
+  1,
   VolatilityType_Normal_get()
 )
 
-helper_1$setPricingEngine(jam_engine_1)
-helper_vec_1 <- make_swaption_helper_vector(list(helper_1))
-
-end_criteria <- EndCriteria(10000L, 100L, 1e-6, 1e-8, 1e-8)
-
-hw_model_1$calibrate(
-  helper_vec_1,
-  LevenbergMarquardt(),
-  end_criteria,
-  NoConstraint(),
-  numeric(),
-  c(TRUE, FALSE)
+swaption_helper_1$setPricingEngine(
+  jamshidian_engine_1
 )
 
-hw_param_1 <- hw_model_1$params()
+one_helper_vector <-
+  calibration_helper_vector_local(
+    list(
+      swaption_helper_1
+    )
+  )
 
-hw_one_helper_tbl <- tibble(
-  parameter = c("a_fixed", "sigma_calibrated"),
-  value = c(hw_param_1[1], hw_param_1[2])
+calibration_end_criteria <- EndCriteria(
+  10000L,
+  100L,
+  1e-6,
+  1e-8,
+  1e-8
+)
+
+hull_white_model_1$calibrate(
+  one_helper_vector,
+  LevenbergMarquardt(),
+  calibration_end_criteria,
+  NoConstraint(),
+  numeric(),
+  c(
+    TRUE,
+    FALSE
+  )
+)
+
+one_helper_parameters <-
+  hull_white_model_1$params()
+
+one_helper_calibration_tbl <- tibble::tribble(
+  ~parameter,          ~value,
+  "a_fixed",            one_helper_parameters[1],
+  "sigma_calibrated",   one_helper_parameters[2]
 )
 
 QuantLibGauss::qlg_show_tbl(
-  hw_one_helper_tbl,
+  one_helper_calibration_tbl,
   "Hull-White one-helper calibration",
   n = 20
 )
+```
 
-# 5.3 1Yx5Y swaption engine comparison
+## 23. 1Y×5Y Swaptionの作成
 
-swap_1y5y <- VanillaSwap(
+カリブレーションに用いたATM Swapを基礎資産とするEuropean Payer Swaptionを作成する。
+
+```{r chapter13-one-by-five-swaption}
+underlying_swap_1y5y <- VanillaSwap(
   Swap_Payer_get(),
   1,
   fixed_schedule_1y5y,
   forward_swap_rate_1y5y,
-  dc_a365,
+  jpy_day_counter,
   fixed_schedule_1y5y,
   jpy_index,
-  0.0,
-  dc_a365
+  0,
+  jpy_day_counter
 )
 
-swaption_1y5y <- Swaption(
-  swap_1y5y,
-  EuropeanExercise(exercise_date)
+european_swaption_1y5y <- Swaption(
+  underlying_swap_1y5y,
+  EuropeanExercise(
+    swaption_expiry_date
+  )
+)
+```
+
+## 24. Swaption Engineの比較
+
+同じ1Y×5Y Swaptionを、次の3つのエンジンで評価する。
+
+* Jamshidian decomposition
+* Hull–White tree
+* Bachelier analytic engine
+
+```{r chapter13-swaption-engine-comparison}
+european_swaption_1y5y$setPricingEngine(
+  jamshidian_engine_1
 )
 
-swaption_1y5y$setPricingEngine(jam_engine_1)
-npv_jam <- swaption_1y5y$NPV()
+npv_jamshidian <-
+  instrument_npv_safe(
+    european_swaption_1y5y
+  )
 
-tree_engine_1 <- TreeSwaptionEngine(hw_model_1, 1000L)
-swaption_1y5y$setPricingEngine(tree_engine_1)
-npv_tree <- swaption_1y5y$NPV()
-
-normal_engine_1 <- BachelierSwaptionEngine(
-  jpy_curve_handle,
-  QuoteHandle(SimpleQuote(36.06 / 10000))
+tree_engine_1 <- TreeSwaptionEngine(
+  hull_white_model_1,
+  1000L
 )
-swaption_1y5y$setPricingEngine(normal_engine_1)
-npv_normal <- swaption_1y5y$NPV()
 
-engine_compare_tbl <- tibble(
-  model = c("Jamshidian", "Tree", "Normal"),
-  npv = c(npv_jam, npv_tree, npv_normal)
+european_swaption_1y5y$setPricingEngine(
+  tree_engine_1
+)
+
+npv_tree <-
+  instrument_npv_safe(
+    european_swaption_1y5y
+  )
+
+bachelier_engine_1 <-
+  BachelierSwaptionEngine(
+    jpy_curve_handle,
+    QuoteHandle(
+      SimpleQuote(
+        market_normal_vol_1y5y
+      )
+    )
+  )
+
+european_swaption_1y5y$setPricingEngine(
+  bachelier_engine_1
+)
+
+npv_bachelier <-
+  instrument_npv_safe(
+    european_swaption_1y5y
+  )
+
+engine_comparison_tbl <- tibble::tribble(
+  ~engine,          ~npv,
+  "Jamshidian",      npv_jamshidian,
+  "Hull-White tree", npv_tree,
+  "Bachelier",       npv_bachelier
 )
 
 QuantLibGauss::qlg_show_tbl(
-  engine_compare_tbl,
+  engine_comparison_tbl,
   "1Yx5Y swaption engine comparison",
   n = 20
 )
 
-helper_detail_tbl_1 <- tibble(
-  expiry_date = QuantLibGauss::qlg_iso(exercise_date),
-  swap_effective_date = QuantLibGauss::qlg_iso(swap_effective_date),
-  swap_maturity_date = QuantLibGauss::qlg_iso(swap_maturity_date),
-  coupon_rate = forward_swap_rate_1y5y,
-  strike = forward_swap_rate_1y5y,
-  market_normal_vol = 36.06 / 10000,
-  bachelier_price = npv_normal,
-  hw_price = npv_jam
+one_helper_detail_tbl <- tibble::tribble(
+  ~metric,                    ~value,
+  "expiry_date",               QuantLibGauss::qlg_iso(
+                                  swaption_expiry_date
+                                ),
+  "swap_effective_date",       QuantLibGauss::qlg_iso(
+                                  swap_effective_date_1y5y
+                                ),
+  "swap_maturity_date",        QuantLibGauss::qlg_iso(
+                                  swap_maturity_date_1y5y
+                                ),
+  "atm_strike",                forward_swap_rate_1y5y,
+  "market_normal_vol",         market_normal_vol_1y5y,
+  "bachelier_price",           npv_bachelier,
+  "jamshidian_price",          npv_jamshidian,
+  "tree_price",                npv_tree
 )
 
 QuantLibGauss::qlg_show_tbl(
-  helper_detail_tbl_1,
-  "1Yx5Y helper detail",
+  one_helper_detail_tbl,
+  "1Yx5Y swaption detail",
   n = 20
 )
+```
 
-# 5.4 Multi-helper preparation: fair rates first
+## 25. Multi-helper市場データ
 
-vol_data_multi <- tibble(
-  start_year = c(1L, 2L, 3L, 4L, 5L),
-  swap_tenor_year = c(5L, 4L, 3L, 2L, 1L),
-  normal_vol = c(36.06, 34.28, 34.14, 34.99, 37.15) / 10000
+次に、満期の異なる5本のATM Swaptionを利用する。
+
+すべてのSwapは最終満期が概ね同じになるように、
+
+* 1Y×5Y
+* 2Y×4Y
+* 3Y×3Y
+* 4Y×2Y
+* 5Y×1Y
+
+を設定する。
+
+```{r chapter13-multi-helper-market-data}
+multi_helper_market_tbl <- tibble::tribble(
+  ~start_year, ~swap_tenor_year, ~normal_vol_bp,
+  1L,          5L,                36.06,
+  2L,          4L,                34.28,
+  3L,          3L,                34.14,
+  4L,          2L,                34.99,
+  5L,          1L,                37.15
+) |>
+  dplyr::mutate(
+    market_normal_vol =
+      normal_vol_bp /
+      10000
+  )
+
+QuantLibGauss::qlg_show_tbl(
+  multi_helper_market_tbl,
+  "Hull-White multi-helper market data",
+  n = 20
 )
+```
 
-multi_swap_input_tbl <- purrr::map_dfr(
-  seq_len(nrow(vol_data_multi)),
+## 26. Multi-helper用ATM Swapの作成
+
+各Swaptionについて、行使日、Swap開始日、Swap満期、アニュイティ、ATM Forward Swap Rateを計算する。
+
+```{r chapter13-multi-helper-swap-inputs}
+multi_helper_swap_tbl <- purrr::map_dfr(
+  seq_len(
+    nrow(
+      multi_helper_market_tbl
+    )
+  ),
   function(i) {
-    expiry_date_i <- calendar_jp$advance(
-      trade_date_calib,
-      vol_data_multi$start_year[i],
-      "Years"
-    )
+    expiry_date_i <-
+      jpy_calendar$advance(
+        calibration_trade_date,
+        multi_helper_market_tbl$
+          start_year[i],
+        "Years"
+      )
 
-    swap_effective_i <- expiry_date_i + 2L
-    swap_maturity_i <- calendar_jp$advance(
-      swap_effective_i,
-      vol_data_multi$swap_tenor_year[i],
-      "Years"
-    )
+    swap_effective_date_i <-
+      expiry_date_i +
+      2L
+
+    swap_maturity_date_i <-
+      jpy_calendar$advance(
+        swap_effective_date_i,
+        multi_helper_market_tbl$
+          swap_tenor_year[i],
+        "Years"
+      )
 
     fixed_schedule_i <- Schedule(
-      swap_effective_i,
-      swap_maturity_i,
-      QuantLibGauss::qlg_period_months(6),
-      calendar_jp,
+      swap_effective_date_i,
+      swap_maturity_date_i,
+      QuantLibGauss::qlg_period_months(
+        6
+      ),
+      jpy_calendar,
       "ModifiedFollowing",
       "ModifiedFollowing",
       "Backward",
       FALSE
     )
 
-    dt_i <- schedule_date_vec(fixed_schedule_i)
+    annuity_i <-
+      swap_annuity_local(
+        schedule_obj =
+          fixed_schedule_i,
+        curve_obj =
+          jpy_curve,
+        day_counter =
+          jpy_day_counter
+      )
 
-    accrual_i <- map_dbl(
-      seq_len(length(dt_i) - 1L),
-      ~ dc_a365$yearFraction(dt_i[[.x]], dt_i[[.x + 1L]])
-    )
+    fair_rate_i <-
+      forward_swap_rate_local(
+        schedule_obj =
+          fixed_schedule_i,
+        curve_obj =
+          jpy_curve,
+        day_counter =
+          jpy_day_counter
+      )
 
-    dfs_i <- map_dbl(dt_i[-1], ~ jpy_curve_obj$discount(.x))
-    annuity_i <- sum(accrual_i * dfs_i)
-
-    fair_rate_i <- (
-      jpy_curve_obj$discount(dt_i[[1]]) -
-        jpy_curve_obj$discount(dt_i[[length(dt_i)]])
-    ) / annuity_i
-
-    tibble(
-      row_id = i,
-      expiry_date_obj = list(expiry_date_i),
-      swap_effective_obj = list(swap_effective_i),
-      swap_maturity_obj = list(swap_maturity_i),
-      fixed_schedule_obj = list(fixed_schedule_i),
-      expiry_date = QuantLibGauss::qlg_iso(expiry_date_i),
-      swap_effective_date = QuantLibGauss::qlg_iso(swap_effective_i),
-      swap_maturity_date = QuantLibGauss::qlg_iso(swap_maturity_i),
-      annuity = annuity_i,
-      fair_rate = fair_rate_i,
-      market_normal_vol = vol_data_multi$normal_vol[i]
+    tibble::tibble(
+      row_id =
+        i,
+      start_year =
+        multi_helper_market_tbl$
+          start_year[i],
+      swap_tenor_year =
+        multi_helper_market_tbl$
+          swap_tenor_year[i],
+      expiry_date_obj =
+        list(
+          expiry_date_i
+        ),
+      swap_effective_date_obj =
+        list(
+          swap_effective_date_i
+        ),
+      swap_maturity_date_obj =
+        list(
+          swap_maturity_date_i
+        ),
+      fixed_schedule_obj =
+        list(
+          fixed_schedule_i
+        ),
+      expiry_date =
+        QuantLibGauss::qlg_iso(
+          expiry_date_i
+        ),
+      swap_effective_date =
+        QuantLibGauss::qlg_iso(
+          swap_effective_date_i
+        ),
+      swap_maturity_date =
+        QuantLibGauss::qlg_iso(
+          swap_maturity_date_i
+        ),
+      annuity =
+        annuity_i,
+      fair_rate =
+        fair_rate_i,
+      market_normal_vol =
+        multi_helper_market_tbl$
+          market_normal_vol[i]
     )
   }
 )
 
-# 5.5 Multi-helper Hull-White calibration with ATM strikes
+QuantLibGauss::qlg_show_tbl(
+  multi_helper_swap_tbl |>
+    dplyr::select(
+      -dplyr::ends_with(
+        "_obj"
+      )
+    ),
+  "Multi-helper ATM swap inputs",
+  n = 20
+)
+```
 
-hw_model_multi <- HullWhite(
+## 27. Multi-helper Hull–Whiteカリブレーション
+
+平均回帰速度(a)は0.03に固定し、5本のSwaptionを用いて(\sigma)を推定する。
+
+```{r chapter13-multi-helper-calibration}
+fixed_mean_reversion_multi <-
+  0.03
+
+initial_sigma_multi <-
+  1 /
+  10000
+
+hull_white_model_multi <- HullWhite(
   jpy_curve_handle,
-  0.03,
-  1 / 10000
+  fixed_mean_reversion_multi,
+  initial_sigma_multi
 )
 
-jam_engine_multi <- JamshidianSwaptionEngine(hw_model_multi)
+jamshidian_engine_multi <-
+  JamshidianSwaptionEngine(
+    hull_white_model_multi
+  )
 
-helper_list_multi <- purrr::map(
-  seq_len(nrow(multi_swap_input_tbl)),
+multi_helper_list <- purrr::map(
+  seq_len(
+    nrow(
+      multi_helper_swap_tbl
+    )
+  ),
   function(i) {
     helper_i <- SwaptionHelper(
-      multi_swap_input_tbl$expiry_date_obj[[i]],
-      QuantLibGauss::qlg_period_years(vol_data_multi$swap_tenor_year[i]),
-      QuoteHandle(SimpleQuote(multi_swap_input_tbl$market_normal_vol[i])),
+      multi_helper_swap_tbl$
+        expiry_date_obj[[i]],
+      QuantLibGauss::qlg_period_years(
+        multi_helper_swap_tbl$
+          swap_tenor_year[i]
+      ),
+      QuoteHandle(
+        SimpleQuote(
+          multi_helper_swap_tbl$
+            market_normal_vol[i]
+        )
+      ),
       jpy_index,
-      QuantLibGauss::qlg_period_months(6),
-      dc_a365,
-      dc_a365,
+      QuantLibGauss::qlg_period_months(
+        6
+      ),
+      jpy_day_counter,
+      jpy_day_counter,
       jpy_curve_handle,
       BlackCalibrationHelper_RelativePriceError_get(),
-      multi_swap_input_tbl$fair_rate[i],
-      1.0,
+      multi_helper_swap_tbl$
+        fair_rate[i],
+      1,
       VolatilityType_Normal_get()
     )
 
-    helper_i$setPricingEngine(jam_engine_multi)
+    helper_i$setPricingEngine(
+      jamshidian_engine_multi
+    )
+
     helper_i
   }
 )
 
-helper_vec_multi <- make_swaption_helper_vector(helper_list_multi)
+multi_helper_vector <-
+  calibration_helper_vector_local(
+    multi_helper_list
+  )
 
-hw_model_multi$calibrate(
-  helper_vec_multi,
+hull_white_model_multi$calibrate(
+  multi_helper_vector,
   LevenbergMarquardt(),
-  end_criteria,
+  calibration_end_criteria,
   NoConstraint(),
   numeric(),
-  c(TRUE, FALSE)
+  c(
+    TRUE,
+    FALSE
+  )
 )
 
-hw_param_multi <- hw_model_multi$params()
+multi_helper_parameters <-
+  hull_white_model_multi$params()
 
-hw_multi_tbl <- tibble(
-  parameter = c("a_fixed", "sigma_calibrated"),
-  value = c(hw_param_multi[1], hw_param_multi[2])
+multi_helper_calibration_tbl <- tibble::tribble(
+  ~parameter,          ~value,
+  "a_fixed",            multi_helper_parameters[1],
+  "sigma_calibrated",   multi_helper_parameters[2]
 )
 
 QuantLibGauss::qlg_show_tbl(
-  hw_multi_tbl,
+  multi_helper_calibration_tbl,
   "Hull-White multi-helper calibration",
   n = 20
 )
+```
 
-# 5.6 Multi-helper detail
+## 28. Multi-helperの価格再現
 
-helper_detail_multi_tbl <- purrr::map_dfr(
-  seq_len(nrow(multi_swap_input_tbl)),
+各市場Swaptionについて、Bachelier価格とカリブレーション後のHull–White価格を比較する。
+
+```{r chapter13-multi-helper-price-check}
+multi_helper_price_tbl <- purrr::map_dfr(
+  seq_len(
+    nrow(
+      multi_helper_swap_tbl
+    )
+  ),
   function(i) {
-    fixed_schedule_i <- multi_swap_input_tbl$fixed_schedule_obj[[i]]
+    fixed_schedule_i <-
+      multi_helper_swap_tbl$
+        fixed_schedule_obj[[i]]
 
-    swap_i <- VanillaSwap(
+    underlying_swap_i <- VanillaSwap(
       Swap_Payer_get(),
       1,
       fixed_schedule_i,
-      multi_swap_input_tbl$fair_rate[i],
-      dc_a365,
+      multi_helper_swap_tbl$
+        fair_rate[i],
+      jpy_day_counter,
       fixed_schedule_i,
       jpy_index,
-      0.0,
-      dc_a365
+      0,
+      jpy_day_counter
     )
 
-    swptn_i <- Swaption(
-      swap_i,
-      EuropeanExercise(multi_swap_input_tbl$expiry_date_obj[[i]])
-    )
-
-    swptn_i$setPricingEngine(
-      BachelierSwaptionEngine(
-        jpy_curve_handle,
-        QuoteHandle(SimpleQuote(multi_swap_input_tbl$market_normal_vol[i]))
+    european_swaption_i <- Swaption(
+      underlying_swap_i,
+      EuropeanExercise(
+        multi_helper_swap_tbl$
+          expiry_date_obj[[i]]
       )
     )
-    bac_price_i <- swptn_i$NPV()
 
-    swptn_i$setPricingEngine(JamshidianSwaptionEngine(hw_model_multi))
-    hw_price_i <- swptn_i$NPV()
+    bachelier_engine_i <-
+      BachelierSwaptionEngine(
+        jpy_curve_handle,
+        QuoteHandle(
+          SimpleQuote(
+            multi_helper_swap_tbl$
+              market_normal_vol[i]
+          )
+        )
+      )
 
-    tibble(
-      swap_effective_date = multi_swap_input_tbl$swap_effective_date[i],
-      swap_maturity_date = multi_swap_input_tbl$swap_maturity_date[i],
-      expiry_date = multi_swap_input_tbl$expiry_date[i],
-      coupon_rate = multi_swap_input_tbl$fair_rate[i],
-      strike = multi_swap_input_tbl$fair_rate[i],
-      market_normal_vol = multi_swap_input_tbl$market_normal_vol[i],
-      bachelier_price = bac_price_i,
-      hw_price = hw_price_i
+    european_swaption_i$setPricingEngine(
+      bachelier_engine_i
+    )
+
+    bachelier_price_i <-
+      instrument_npv_safe(
+        european_swaption_i
+      )
+
+    european_swaption_i$setPricingEngine(
+      JamshidianSwaptionEngine(
+        hull_white_model_multi
+      )
+    )
+
+    hull_white_price_i <-
+      instrument_npv_safe(
+        european_swaption_i
+      )
+
+    tibble::tibble(
+      start_year =
+        multi_helper_swap_tbl$
+          start_year[i],
+      swap_tenor_year =
+        multi_helper_swap_tbl$
+          swap_tenor_year[i],
+      expiry_date =
+        multi_helper_swap_tbl$
+          expiry_date[i],
+      swap_effective_date =
+        multi_helper_swap_tbl$
+          swap_effective_date[i],
+      swap_maturity_date =
+        multi_helper_swap_tbl$
+          swap_maturity_date[i],
+      atm_strike =
+        multi_helper_swap_tbl$
+          fair_rate[i],
+      market_normal_vol =
+        multi_helper_swap_tbl$
+          market_normal_vol[i],
+      bachelier_price =
+        bachelier_price_i,
+      hull_white_price =
+        hull_white_price_i,
+      price_difference =
+        hull_white_price_i -
+        bachelier_price_i
     )
   }
 )
 
 QuantLibGauss::qlg_show_tbl(
-  helper_detail_multi_tbl,
-  "Multi-helper detail",
+  multi_helper_price_tbl,
+  "Hull-White multi-helper price comparison",
   n = 20
 )
+```
 
-# 5.7 Bermudan swaption under calibrated Hull-White
+## 29. One-helperとMulti-helperの比較
 
-bermudan_ex_dates_1y5y <- ql_date_vector(
-  purrr::map(
-    dt_1y5y[-length(dt_1y5y)],
-    ~ calendar_jp$advance(.x, -2L, "Days")
-  )
-)
-
-bermudan_swaption_1y5y <- Swaption(
-  swap_1y5y,
-  BermudanExercise(bermudan_ex_dates_1y5y)
-)
-
-tree_engine_multi <- TreeSwaptionEngine(hw_model_multi, 12L * 6L)
-bermudan_swaption_1y5y$setPricingEngine(tree_engine_multi)
-
-bermudan_multi_tbl <- tibble(
-  metric = c("bermudan_swaption_npv"),
-  value = c(bermudan_swaption_1y5y$NPV())
+```{r chapter13-calibration-comparison}
+hull_white_calibration_comparison_tbl <- tibble::tribble(
+  ~calibration,    ~a,                          ~sigma,
+  "One helper",     one_helper_parameters[1],    one_helper_parameters[2],
+  "Multi helper",   multi_helper_parameters[1],  multi_helper_parameters[2]
 )
 
 QuantLibGauss::qlg_show_tbl(
-  bermudan_multi_tbl,
-  "Bermudan swaption under calibrated Hull-White",
+  hull_white_calibration_comparison_tbl,
+  "Hull-White calibration comparison",
+  n = 20
+)
+```
+
+## 30. カリブレーション後のBermudan Swaption
+
+1Y×5Y Swapの各固定支払日前を行使日とするBermudan Swaptionを作成する。
+
+行使日は支払日の2営業日前とする。
+
+```{r chapter13-calibrated-bermudan-swaption}
+fixed_schedule_dates_1y5y <-
+  schedule_date_vec_local(
+    fixed_schedule_1y5y
+  )
+
+bermudan_exercise_dates_1y5y <-
+  purrr::map(
+    fixed_schedule_dates_1y5y[
+      -length(
+        fixed_schedule_dates_1y5y
+      )
+    ],
+    function(schedule_date) {
+      jpy_calendar$advance(
+        schedule_date,
+        -2L,
+        "Days"
+      )
+    }
+  )
+
+bermudan_exercise_date_vector_1y5y <-
+  date_vector_local(
+    bermudan_exercise_dates_1y5y
+  )
+
+bermudan_exercise_1y5y <-
+  BermudanExercise(
+    bermudan_exercise_date_vector_1y5y
+  )
+
+bermudan_swaption_1y5y <- Swaption(
+  underlying_swap_1y5y,
+  bermudan_exercise_1y5y
+)
+
+calibrated_tree_steps <-
+  12L *
+  6L
+
+calibrated_tree_engine <-
+  TreeSwaptionEngine(
+    hull_white_model_multi,
+    calibrated_tree_steps
+  )
+
+bermudan_swaption_1y5y$setPricingEngine(
+  calibrated_tree_engine
+)
+
+calibrated_bermudan_npv <-
+  instrument_npv_safe(
+    bermudan_swaption_1y5y
+  )
+
+bermudan_exercise_schedule_tbl <- tibble::tibble(
+  exercise_number =
+    seq_along(
+      bermudan_exercise_dates_1y5y
+    ),
+  exercise_date =
+    purrr::map_chr(
+      bermudan_exercise_dates_1y5y,
+      QuantLibGauss::qlg_iso
+    )
+)
+
+QuantLibGauss::qlg_show_tbl(
+  bermudan_exercise_schedule_tbl,
+  "Calibrated Bermudan exercise schedule",
   n = 20
 )
 
-cat("\nchapter09 callable / hull-white rewrite part3 completed successfully.\n")
+calibrated_bermudan_tbl <- tibble::tribble(
+  ~metric,                    ~value,
+  "bermudan_swaption_npv",     calibrated_bermudan_npv,
+  "tree_steps",                calibrated_tree_steps,
+  "calibrated_a",              multi_helper_parameters[1],
+  "calibrated_sigma",          multi_helper_parameters[2]
+)
 
-# ------------------------------------------------------------
-# 6. Part 4A: one-step tree hand calculation
-# ------------------------------------------------------------
+QuantLibGauss::qlg_show_tbl(
+  calibrated_bermudan_tbl,
+  "Bermudan swaption under calibrated Hull-White",
+  n = 20
+)
+```
 
-QuantLibGauss::qlg_set_eval_date(trade_date_calib)
+## 31. Part 3のまとめ
 
-aa_hand <- 0.03
-sigma_hand <- 0.39609 / 100
-expr_date_hand <- calendar_jp$advance(trade_date_calib, 1L, "Years")
+Hull–Whiteモデルのカリブレーションでは、Swaption市場のボラティリティまたは価格を再現するようにモデルパラメータを推定する。
 
-swap_effective_hand <- QuantLibGauss::qlg_date("2023-08-23")
-swap_maturity_hand <- QuantLibGauss::qlg_date("2028-08-23")
+この例では平均回帰速度(a)を固定し、(\sigma)のみを推定した。
 
-fix_schedule_hand <- Schedule(
-  swap_effective_hand,
-  swap_maturity_hand,
-  QuantLibGauss::qlg_period_months(6),
-  calendar_jp,
+One-helper calibrationでは1本のSwaptionを正確に再現しやすい一方、他の満期への適合性は保証されない。
+
+Multi-helper calibrationでは、複数の商品を同時に近似するため、各商品の誤差を完全にゼロにできない場合がある。しかし、期間構造全体を代表するパラメータとしては、Multi-helper calibrationの方が実務的である。
+
+```{r chapter13-part3-completion}
+cat(
+  "\nChapter 13 Part 3 Hull-White calibration and swaption checks prepared successfully.\n"
+)
+```
+# Part 4　Hull–White Treeの手計算と収束
+
+## 32. One-step TreeによるSwaption評価
+
+Part 3では、1Y×5Y European Swaptionを次の方法で評価した。
+
+* Jamshidian decomposition
+* Hull–White tree
+* Bachelier analytic engine
+
+ここでは、Hull–White treeの考え方を理解するため、行使時点までを1ステップに簡略化した手計算を行う。
+
+1ステップ近似では、行使時点の状態変数(x_T)を次の3状態で表現する。
+
+[
+x_T
+\in
+\left{
++\Delta x,\ 0,\ -\Delta x
+\right}
+]
+
+それぞれの確率は、
+
+[
+\left{
+\frac{1}{6},
+\frac{4}{6},
+\frac{1}{6}
+\right}
+]
+
+とする。
+
+この近似はHull–White tree全体を厳密に再現するものではないが、金利状態、割引係数、Swap value、Swaption payoffの関係を確認するために有用である。
+
+```{r chapter13-hand-calculation-setup}
+QuantLibGauss::qlg_set_eval_date(
+  calibration_trade_date
+)
+
+hand_mean_reversion <-
+  one_helper_parameters[1]
+
+hand_sigma <-
+  one_helper_parameters[2]
+
+hand_exercise_date <-
+  swaption_expiry_date
+
+hand_swap_effective_date <-
+  swap_effective_date_1y5y
+
+hand_swap_maturity_date <-
+  swap_maturity_date_1y5y
+
+hand_input_tbl <- tibble::tribble(
+  ~input,              ~value,
+  "mean_reversion_a",   hand_mean_reversion,
+  "sigma",              hand_sigma,
+  "exercise_date",
+  QuantLibGauss::qlg_iso(
+    hand_exercise_date
+  ),
+  "swap_effective_date",
+  QuantLibGauss::qlg_iso(
+    hand_swap_effective_date
+  ),
+  "swap_maturity_date",
+  QuantLibGauss::qlg_iso(
+    hand_swap_maturity_date
+  )
+)
+
+QuantLibGauss::qlg_show_tbl(
+  hand_input_tbl,
+  "One-step Hull-White hand-calculation inputs",
+  n = 20
+)
+```
+
+## 33. 基礎Swapのキャッシュフロー日
+
+Part 3と同じ1Y×5Y Swapの固定レグを利用する。
+
+```{r chapter13-hand-swap-schedule}
+hand_fixed_schedule <- Schedule(
+  hand_swap_effective_date,
+  hand_swap_maturity_date,
+  QuantLibGauss::qlg_period_months(
+    6
+  ),
+  jpy_calendar,
   "ModifiedFollowing",
   "ModifiedFollowing",
   "Backward",
   FALSE
 )
 
-fix_dates_hand <- schedule_date_vec(fix_schedule_hand)
+hand_fixed_dates <-
+  schedule_date_vec_local(
+    hand_fixed_schedule
+  )
 
 QuantLibGauss::qlg_show_tbl(
-  make_schedule_tbl(fix_schedule_hand),
+  schedule_table_local(
+    hand_fixed_schedule
+  ),
   "1Yx5Y fixed schedule for hand calculation",
   n = 20
 )
 
-curve_ref_date <- jpy_curve_obj$referenceDate()
+curve_reference_date <-
+  jpy_curve$referenceDate()
 
-cf_year_tbl <- tibble(
-  schedule_date = map_chr(fix_dates_hand, QuantLibGauss::qlg_iso),
-  cf_year = map_dbl(fix_dates_hand, ~ dc_a365$yearFraction(curve_ref_date, .x)),
-  now_df = map_dbl(fix_dates_hand, ~ jpy_curve_obj$discount(.x))
+hand_cashflow_tbl <- tibble::tibble(
+  schedule_date =
+    purrr::map_chr(
+      hand_fixed_dates,
+      QuantLibGauss::qlg_iso
+    ),
+  curve_time =
+    purrr::map_dbl(
+      hand_fixed_dates,
+      function(date_obj) {
+        jpy_day_counter$yearFraction(
+          curve_reference_date,
+          date_obj
+        )
+      }
+    ),
+  current_discount_factor =
+    purrr::map_dbl(
+      hand_fixed_dates,
+      function(date_obj) {
+        jpy_curve$discount(
+          date_obj
+        )
+      }
+    )
 ) |>
-  mutate(
-    tenor_year = c(
+  dplyr::mutate(
+    accrual_fraction = c(
       0,
       purrr::map_dbl(
-        seq_len(n() - 1L),
-        ~ dc_a365$yearFraction(fix_dates_hand[[.x]], fix_dates_hand[[.x + 1L]])
+        seq_len(
+          dplyr::n() -
+          1L
+        ),
+        function(i) {
+          jpy_day_counter$yearFraction(
+            hand_fixed_dates[[i]],
+            hand_fixed_dates[[i + 1L]]
+          )
+        }
       )
     )
   )
 
 QuantLibGauss::qlg_show_tbl(
-  cf_year_tbl,
-  "Cashflow dates / year fractions / discount factors",
+  hand_cashflow_tbl,
+  "Cashflow dates, year fractions, and discount factors",
   n = 20
 )
+```
 
-annuity_hand <- sum(cf_year_tbl$now_df * cf_year_tbl$tenor_year)
-coupon_rate_hand <- (cf_year_tbl$now_df[1] - dplyr::last(cf_year_tbl$now_df)) / annuity_hand
+## 34. ATM Forward Swap Rate
 
-forward_swap_hand_tbl <- tibble(
-  metric = c("annuity", "forward_swap_rate"),
-  value = c(annuity_hand, coupon_rate_hand)
+現在の割引カーブから、固定レグのアニュイティとATM Forward Swap Rateを計算する。
+
+```{r chapter13-hand-forward-swap}
+hand_annuity <- sum(
+  hand_cashflow_tbl$
+    current_discount_factor *
+  hand_cashflow_tbl$
+    accrual_fraction
+)
+
+hand_forward_swap_rate <- (
+  hand_cashflow_tbl$
+    current_discount_factor[1] -
+  dplyr::last(
+    hand_cashflow_tbl$
+      current_discount_factor
+  )
+) /
+  hand_annuity
+
+hand_forward_swap_tbl <- tibble::tribble(
+  ~metric,              ~value,
+  "annuity",             hand_annuity,
+  "forward_swap_rate",   hand_forward_swap_rate,
+  "part3_forward_rate",  forward_swap_rate_1y5y,
+  "difference",
+  hand_forward_swap_rate -
+    forward_swap_rate_1y5y
 )
 
 QuantLibGauss::qlg_show_tbl(
-  forward_swap_hand_tbl,
+  hand_forward_swap_tbl,
   "Forward swap summary for hand calculation",
   n = 20
 )
+```
 
-hw_BB <- function(t, T, a) {
-  (1 - exp(-a * (T - t))) / a
+## 35. 行使時点までの時間と状態幅
+
+Hull–White状態変数の分散から、1ステップtreeの状態幅を計算する。
+
+[
+\Delta x
+========
+
+\sigma
+\sqrt{
+\frac{3}{2a}
+\left(
+1-e^{-2aT}
+\right)
 }
+]
 
-hw_VV <- function(t, T, a, sigma) {
-  (sigma^2 / a^2) * (
-    (T - t) +
-      (2 / a) * exp(-a * (T - t)) -
-      (1 / (2 * a)) * exp(-2 * a * (T - t)) -
-      3 / (2 * a)
-  )
-}
-
-hw_AA <- function(t, T, a, sigma) {
-  0.5 * (hw_VV(t, T, a, sigma) - hw_VV(0, T, a, sigma) + hw_VV(0, t, a, sigma))
-}
-
-hw_forward_drift <- function(s, t, T, a, sigma) {
-  item_a <- 1 - exp(-a * (t - s))
-  item_b <- exp(-a * (T - t)) - exp(-a * (T + t - 2 * s))
-  (sigma^2 / a^2) * (item_a - 0.5 * item_b)
-}
-
-dT_hand <- dc_a365$yearFraction(trade_date_calib, expr_date_hand)
-dX_hand <- sigma_hand * sqrt(3 / (2 * aa_hand) * (1 - exp(-2 * aa_hand * dT_hand)))
-
-x1_prob <- c(1 / 6, 4 / 6, 1 / 6)
-x1_val_raw <- c(dX_hand, 0, -dX_hand)
-
-one_step_state_tbl <- tibble(
-  state = c("up", "mid", "down"),
-  x_value = x1_val_raw,
-  probability = x1_prob
+```{r chapter13-one-step-state-grid}
+exercise_time <- jpy_day_counter$yearFraction(
+  calibration_trade_date,
+  hand_exercise_date
 )
+
+state_width <- hand_sigma *
+  sqrt(
+    3 /
+      (
+        2 *
+        hand_mean_reversion
+      ) *
+      (
+        1 -
+        exp(
+          -2 *
+          hand_mean_reversion *
+          exercise_time
+        )
+      )
+  )
+
+one_step_state_tbl <- tibble::tribble(
+  ~state, ~state_multiplier, ~probability,
+  "up",     1,                1 / 6,
+  "mid",    0,                4 / 6,
+  "down",  -1,                1 / 6
+) |>
+  dplyr::mutate(
+    raw_state =
+      state_multiplier *
+      state_width
+  )
 
 QuantLibGauss::qlg_show_tbl(
   one_step_state_tbl,
-  "One-step x states (raw)",
+  "One-step Hull-White states",
   n = 20
 )
+```
 
-mkt_curve_ratio <- cf_year_tbl$now_df / cf_year_tbl$now_df[1]
-bb_vec <- purrr::map_dbl(cf_year_tbl$cf_year, ~ hw_BB(cf_year_tbl$cf_year[1], .x, aa_hand))
-aa_vec <- purrr::map_dbl(cf_year_tbl$cf_year, ~ hw_AA(cf_year_tbl$cf_year[1], .x, aa_hand, sigma_hand))
+## 36. 行使時点の割引係数
 
-x1_df_raw <- purrr::map(
-  x1_val_raw,
-  ~ mkt_curve_ratio * exp(aa_vec - .x * bb_vec)
+Hull–Whiteモデルでは、時点(t)における満期(T)の割引係数を、状態変数(x_t)を用いて次のように表現する。
+
+[
+P(t,T)
+======
+
+\frac{P(0,T)}{P(0,t)}
+\exp
+\left[
+A(t,T)
+------
+
+B(t,T)x_t
+\right]
+]
+
+Part 2で定義した`hull_white_A()`と`hull_white_B()`を使用する。
+
+```{r chapter13-one-step-node-discounts}
+exercise_curve_time <-
+  jpy_day_counter$yearFraction(
+    curve_reference_date,
+    hand_exercise_date
+  )
+
+market_curve_ratio <-
+  hand_cashflow_tbl$
+    current_discount_factor /
+  jpy_curve$discount(
+    hand_exercise_date
+  )
+
+node_b_values <- purrr::map_dbl(
+  hand_cashflow_tbl$curve_time,
+  function(cashflow_time) {
+    hull_white_B(
+      time =
+        exercise_curve_time,
+      maturity =
+        cashflow_time,
+      mean_reversion =
+        hand_mean_reversion
+    )
+  }
 )
 
-x1_df_raw_tbl <- purrr::imap_dfr(
-  x1_df_raw,
-  function(df_vec, i) {
-    tibble(
-      state = c("up", "mid", "down")[i],
-      cf_year = cf_year_tbl$cf_year,
-      node_df = df_vec
+node_a_values <- purrr::map_dbl(
+  hand_cashflow_tbl$curve_time,
+  function(cashflow_time) {
+    hull_white_A(
+      time =
+        exercise_curve_time,
+      maturity =
+        cashflow_time,
+      mean_reversion =
+        hand_mean_reversion,
+      sigma =
+        hand_sigma
+    )
+  }
+)
+
+raw_node_discount_list <- purrr::map(
+  one_step_state_tbl$raw_state,
+  function(state_value) {
+    market_curve_ratio *
+      exp(
+        node_a_values -
+        state_value *
+          node_b_values
+      )
+  }
+)
+
+raw_node_discount_tbl <- purrr::map2_dfr(
+  raw_node_discount_list,
+  one_step_state_tbl$state,
+  function(discount_vector, state_name) {
+    tibble::tibble(
+      state =
+        state_name,
+      schedule_date =
+        hand_cashflow_tbl$
+          schedule_date,
+      curve_time =
+        hand_cashflow_tbl$
+          curve_time,
+      node_discount_factor =
+        discount_vector
     )
   }
 )
 
 QuantLibGauss::qlg_show_tbl(
-  x1_df_raw_tbl,
-  "Node discount factors (raw x)",
-  n = 30
+  raw_node_discount_tbl,
+  "One-step node discount factors",
+  n = 40
+)
+```
+
+## 37. 各状態のSwaption payoff
+
+各状態について、行使時点のアニュイティとSwap Rateを計算する。
+
+Payer Swaptionのpayoffは、
+
+[
+A_T
+\max
+\left(
+S_T-K,\ 0
+\right)
+]
+
+である。
+
+ここで、
+
+* (A_T)：行使時点のSwap annuity
+* (S_T)：行使時点のForward Swap Rate
+* (K)：Strike
+
+である。
+
+```{r chapter13-one-step-payoff}
+raw_state_annuity <- purrr::map_dbl(
+  raw_node_discount_list,
+  function(discount_vector) {
+    sum(
+      discount_vector *
+      hand_cashflow_tbl$
+        accrual_fraction
+    )
+  }
 )
 
-x1_annuity_raw <- purrr::map_dbl(
-  x1_df_raw,
-  ~ sum(.x * cf_year_tbl$tenor_year)
+raw_state_swap_rate <- purrr::map_dbl(
+  raw_node_discount_list,
+  function(discount_vector) {
+    (
+      1 -
+      dplyr::last(
+        discount_vector
+      )
+    ) /
+      sum(
+        discount_vector *
+        hand_cashflow_tbl$
+          accrual_fraction
+      )
+  }
 )
 
-itm_rate_raw <- purrr::map_dbl(
-  x1_df_raw,
-  ~ (1 - dplyr::last(.x)) / sum(.x * cf_year_tbl$tenor_year) - coupon_rate_hand
+raw_state_intrinsic_rate <- pmax(
+  raw_state_swap_rate -
+    hand_forward_swap_rate,
+  0
 )
 
-itm_rate_raw_pos <- pmax(itm_rate_raw, 0)
-
-expr_df_raw <- exp(
-  -(
-    0.5 * dT_hand * x1_val_raw +
-      (-log(jpy_curve_obj$discount(expr_date_hand)) + 0.5 * hw_VV(0, dT_hand, aa_hand, sigma_hand)) * dT_hand
+discount_to_exercise <-
+  jpy_curve$discount(
+    hand_exercise_date
   )
-)
 
-swaption_npv_raw <- sum(itm_rate_raw_pos * x1_annuity_raw * expr_df_raw * x1_prob)
+raw_state_payoff <-
+  raw_state_annuity *
+  raw_state_intrinsic_rate
 
-one_step_raw_tbl <- tibble(
-  state = c("up", "mid", "down"),
-  x_value = x1_val_raw,
-  probability = x1_prob,
-  annuity = x1_annuity_raw,
-  itm_rate_before_floor = itm_rate_raw,
-  itm_rate_after_floor = itm_rate_raw_pos,
-  exercise_df = expr_df_raw
+one_step_raw_tbl <- one_step_state_tbl |>
+  dplyr::mutate(
+    annuity =
+      raw_state_annuity,
+    node_swap_rate =
+      raw_state_swap_rate,
+    strike =
+      hand_forward_swap_rate,
+    intrinsic_rate =
+      raw_state_intrinsic_rate,
+    payoff_at_exercise =
+      raw_state_payoff,
+    discounted_expected_payoff =
+      probability *
+      payoff_at_exercise *
+      discount_to_exercise
+  )
+
+one_step_raw_npv <- sum(
+  one_step_raw_tbl$
+    discounted_expected_payoff
 )
 
 QuantLibGauss::qlg_show_tbl(
   one_step_raw_tbl,
-  "One-step swaption decomposition (raw x)",
+  "One-step swaption decomposition",
   n = 20
 )
 
-one_step_raw_summary_tbl <- tibble(
-  metric = c("dT", "dX", "coupon_rate", "one_step_swaption_npv_raw"),
-  value = c(dT_hand, dX_hand, coupon_rate_hand, swaption_npv_raw)
+one_step_raw_summary_tbl <- tibble::tribble(
+  ~metric,                    ~value,
+  "exercise_time",             exercise_time,
+  "state_width",               state_width,
+  "strike",                    hand_forward_swap_rate,
+  "discount_to_exercise",      discount_to_exercise,
+  "one_step_swaption_npv",     one_step_raw_npv
 )
 
 QuantLibGauss::qlg_show_tbl(
   one_step_raw_summary_tbl,
-  "One-step hand calculation summary (raw x)",
+  "One-step hand-calculation summary",
   n = 20
 )
+```
 
-t_fwd_drift <- hw_forward_drift(
-  s = 0,
-  t = dT_hand,
-  T = dT_hand,
-  a = aa_hand,
-  sigma = sigma_hand
-)
+## 38. Forward-measure drift adjustment
 
-x1_val_adj <- x1_val_raw - t_fwd_drift
+単純な対称3状態だけでは、使用する測度と状態変数のドリフトが十分に反映されない場合がある。
 
-x1_df_adj <- purrr::map(
-  x1_val_adj,
-  ~ mkt_curve_ratio * exp(aa_vec - .x * bb_vec)
-)
+元コードと同様に、Forward measureに対応する近似的なdrift adjustmentを加えた結果も確認する。
 
-x1_annuity_adj <- purrr::map_dbl(
-  x1_df_adj,
-  ~ sum(.x * cf_year_tbl$tenor_year)
-)
+```{r chapter13-forward-drift-helper}
+hull_white_forward_drift <- function(
+  start_time,
+  exercise_time,
+  maturity,
+  mean_reversion,
+  sigma
+) {
+  first_term <- 1 -
+    exp(
+      -mean_reversion *
+      (
+        exercise_time -
+        start_time
+      )
+    )
 
-itm_rate_adj <- purrr::map_dbl(
-  x1_df_adj,
-  ~ (1 - dplyr::last(.x)) / sum(.x * cf_year_tbl$tenor_year) - coupon_rate_hand
-)
+  second_term <- exp(
+    -mean_reversion *
+      (
+        maturity -
+        exercise_time
+      )
+  ) -
+    exp(
+      -mean_reversion *
+      (
+        maturity +
+        exercise_time -
+        2 *
+        start_time
+      )
+    )
 
-itm_rate_adj_pos <- pmax(itm_rate_adj, 0)
+  (
+    sigma^2 /
+    mean_reversion^2
+  ) *
+    (
+      first_term -
+      0.5 *
+        second_term
+    )
+}
 
-swaption_npv_adj <- sum(itm_rate_adj_pos * x1_annuity_adj * x1_prob) * jpy_curve_obj$discount(expr_date_hand)
-
-one_step_adj_tbl <- tibble(
-  state = c("up", "mid", "down"),
-  x_value_adjusted = x1_val_adj,
-  probability = x1_prob,
-  annuity = x1_annuity_adj,
-  itm_rate_before_floor = itm_rate_adj,
-  itm_rate_after_floor = itm_rate_adj_pos
-)
-
-QuantLibGauss::qlg_show_tbl(
-  one_step_adj_tbl,
-  "One-step swaption decomposition (forward-drift adjusted x)",
-  n = 20
-)
-
-one_step_adj_summary_tbl <- tibble(
-  metric = c(
-    "forward_drift_adjustment",
-    "discount_to_expiry",
-    "one_step_swaption_npv_adjusted"
-  ),
-  value = c(
-    t_fwd_drift,
-    jpy_curve_obj$discount(expr_date_hand),
-    swaption_npv_adj
+forward_drift_adjustment <-
+  hull_white_forward_drift(
+    start_time = 0,
+    exercise_time =
+      exercise_time,
+    maturity =
+      exercise_time,
+    mean_reversion =
+      hand_mean_reversion,
+    sigma =
+      hand_sigma
   )
+
+adjusted_states <-
+  one_step_state_tbl$
+    raw_state -
+  forward_drift_adjustment
+```
+
+```{r chapter13-forward-adjusted-payoff}
+adjusted_node_discount_list <- purrr::map(
+  adjusted_states,
+  function(state_value) {
+    market_curve_ratio *
+      exp(
+        node_a_values -
+        state_value *
+          node_b_values
+      )
+  }
 )
 
-QuantLibGauss::qlg_show_tbl(
-  one_step_adj_summary_tbl,
-  "One-step hand calculation summary (forward-drift adjusted x)",
-  n = 20
+adjusted_state_annuity <- purrr::map_dbl(
+  adjusted_node_discount_list,
+  function(discount_vector) {
+    sum(
+      discount_vector *
+      hand_cashflow_tbl$
+        accrual_fraction
+    )
+  }
 )
 
-part3_vs_hand_tbl <- tibble(
-  method = c(
-    "one_step_raw",
-    "one_step_forward_adjusted",
-    "jamshidian_part3",
-    "tree_part3",
-    "normal_part3"
-  ),
-  npv = c(
-    swaption_npv_raw,
-    swaption_npv_adj,
-    npv_jam,
-    npv_tree,
-    npv_normal
+adjusted_state_swap_rate <- purrr::map_dbl(
+  adjusted_node_discount_list,
+  function(discount_vector) {
+    (
+      1 -
+      dplyr::last(
+        discount_vector
+      )
+    ) /
+      sum(
+        discount_vector *
+        hand_cashflow_tbl$
+          accrual_fraction
+      )
+  }
+)
+
+adjusted_state_intrinsic_rate <- pmax(
+  adjusted_state_swap_rate -
+    hand_forward_swap_rate,
+  0
+)
+
+adjusted_state_payoff <-
+  adjusted_state_annuity *
+  adjusted_state_intrinsic_rate
+
+one_step_adjusted_tbl <- one_step_state_tbl |>
+  dplyr::mutate(
+    adjusted_state =
+      adjusted_states,
+    annuity =
+      adjusted_state_annuity,
+    node_swap_rate =
+      adjusted_state_swap_rate,
+    strike =
+      hand_forward_swap_rate,
+    intrinsic_rate =
+      adjusted_state_intrinsic_rate,
+    payoff_at_exercise =
+      adjusted_state_payoff,
+    discounted_expected_payoff =
+      probability *
+      payoff_at_exercise *
+      discount_to_exercise
   )
+
+one_step_adjusted_npv <- sum(
+  one_step_adjusted_tbl$
+    discounted_expected_payoff
 )
 
 QuantLibGauss::qlg_show_tbl(
-  part3_vs_hand_tbl,
-  "Part 3 vs Part 4A comparison",
+  one_step_adjusted_tbl,
+  "Forward-drift-adjusted one-step decomposition",
   n = 20
 )
 
-cat("\nchapter09 callable / hull-white rewrite part4A completed successfully.\n")
+one_step_adjusted_summary_tbl <- tibble::tribble(
+  ~metric,                         ~value,
+  "forward_drift_adjustment",       forward_drift_adjustment,
+  "discount_to_exercise",           discount_to_exercise,
+  "one_step_adjusted_npv",          one_step_adjusted_npv
+)
 
-# ------------------------------------------------------------
-# 7. Part 4B: tree-step convergence vs hand calculation
-# ------------------------------------------------------------
+QuantLibGauss::qlg_show_tbl(
+  one_step_adjusted_summary_tbl,
+  "Forward-drift-adjusted hand calculation",
+  n = 20
+)
+```
 
-QuantLibGauss::qlg_set_eval_date(trade_date_calib)
+## 39. 手計算とPart 3の比較
 
-tree_step_grid <- c(1L, 2L, 3L, 6L, 12L, 24L, 60L, 120L, 240L, 1000L)
+```{r chapter13-hand-vs-engine-comparison}
+hand_engine_comparison_tbl <- tibble::tribble(
+  ~method,                         ~npv,
+  "One-step hand",                 one_step_raw_npv,
+  "One-step hand adjusted",        one_step_adjusted_npv,
+  "Jamshidian",                    npv_jamshidian,
+  "Hull-White tree 1000 steps",    npv_tree,
+  "Bachelier",                     npv_bachelier
+) |>
+  dplyr::mutate(
+    difference_vs_bachelier =
+      npv -
+      npv_bachelier,
+    difference_vs_jamshidian =
+      npv -
+      npv_jamshidian
+  )
+
+QuantLibGauss::qlg_show_tbl(
+  hand_engine_comparison_tbl,
+  "One-step hand calculation and engine comparison",
+  n = 20
+)
+```
+
+1ステップ手計算と1000ステップTreeの結果が異なるのは、必ずしも実装エラーを意味しない。
+
+1ステップ近似では、行使時点の金利分布を3状態だけで表現しているため、非線形なSwaption payoffを十分に捉えられない。Tree stepを増やすことで、金利分布と早期行使判断の離散化が細かくなる。
+
+# Part 4B　Tree stepの収束
+
+## 40. Tree step別のSwaption価格
+
+```{r chapter13-tree-convergence}
+QuantLibGauss::qlg_set_eval_date(
+  calibration_trade_date
+)
+
+tree_step_grid <- c(
+  1L,
+  2L,
+  3L,
+  6L,
+  12L,
+  24L,
+  60L,
+  120L,
+  240L,
+  1000L
+)
 
 tree_convergence_tbl <- purrr::map_dfr(
   tree_step_grid,
-  function(n_step) {
-    eng_i <- TreeSwaptionEngine(hw_model_1, n_step)
-    swaption_1y5y$setPricingEngine(eng_i)
+  function(tree_step) {
+    tree_engine_i <- TreeSwaptionEngine(
+      hull_white_model_1,
+      tree_step
+    )
 
-    tibble(
-      method = paste0("Tree_", n_step, "_step"),
-      step = n_step,
-      npv = swaption_1y5y$NPV()
+    european_swaption_1y5y$setPricingEngine(
+      tree_engine_i
+    )
+
+    tree_npv_i <- instrument_npv_safe(
+      european_swaption_1y5y
+    )
+
+    tibble::tibble(
+      tree_steps =
+        tree_step,
+      npv =
+        tree_npv_i,
+      difference_vs_jamshidian =
+        tree_npv_i -
+        npv_jamshidian,
+      difference_vs_bachelier =
+        tree_npv_i -
+        npv_bachelier
     )
   }
 )
 
 QuantLibGauss::qlg_show_tbl(
   tree_convergence_tbl,
-  "Tree convergence table",
+  "Hull-White tree convergence",
   n = 20
 )
+```
 
-part4b_compare_tbl <- bind_rows(
-  tibble(
-    method = c(
-      "Hand_1step_raw",
-      "Hand_1step_forward_adjusted",
-      "Tree_1step",
-      "Tree_2step",
-      "Tree_3step",
-      "Tree_6step",
-      "Tree_12step",
-      "Tree_24step",
-      "Tree_60step",
-      "Tree_120step",
-      "Tree_240step",
-      "Tree_1000step",
-      "Jamshidian",
-      "Normal"
-    ),
-    npv = c(
-      swaption_npv_raw,
-      swaption_npv_adj,
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 1L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 2L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 3L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 6L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 12L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 24L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 60L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 120L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 240L],
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 1000L],
-      npv_jam,
-      npv_normal
-    )
+## 41. 手計算・Tree・解析エンジンの比較
+
+```{r chapter13-tree-full-comparison}
+tree_reference_tbl <- tibble::tribble(
+  ~method,                    ~tree_steps, ~npv,
+  "One-step hand",             1,          one_step_raw_npv,
+  "One-step hand adjusted",    1,          one_step_adjusted_npv,
+  "Jamshidian",                NA,         npv_jamshidian,
+  "Bachelier",                 NA,         npv_bachelier
+)
+
+tree_engine_result_tbl <- tree_convergence_tbl |>
+  dplyr::transmute(
+    method =
+      paste0(
+        "Tree ",
+        tree_steps,
+        " steps"
+      ),
+    tree_steps =
+      tree_steps,
+    npv =
+      npv
   )
+
+tree_full_comparison_tbl <- dplyr::bind_rows(
+  tree_reference_tbl,
+  tree_engine_result_tbl
 ) |>
-  mutate(
-    diff_vs_normal = npv - npv_normal,
-    diff_vs_jam = npv - npv_jam
+  dplyr::mutate(
+    difference_vs_bachelier =
+      npv -
+      npv_bachelier,
+    difference_vs_jamshidian =
+      npv -
+      npv_jamshidian
   )
 
 QuantLibGauss::qlg_show_tbl(
-  part4b_compare_tbl,
-  "Part 4B comparison: hand vs tree vs analytic",
+  tree_full_comparison_tbl,
+  "Hand calculation, tree, and analytic comparison",
   n = 30
 )
+```
 
-part4b_summary_tbl <- tibble(
-  metric = c(
-    "hand_raw_minus_tree_1step",
-    "hand_adj_minus_tree_1step",
-    "tree_1step_minus_tree_1000step",
-    "tree_60step_minus_tree_1000step",
-    "tree_1000step_minus_jam",
-    "jam_minus_normal"
-  ),
-  value = c(
-    swaption_npv_raw -
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 1L],
-    swaption_npv_adj -
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 1L],
-    tree_convergence_tbl$npv[tree_convergence_tbl$step == 1L] -
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 1000L],
-    tree_convergence_tbl$npv[tree_convergence_tbl$step == 60L] -
-      tree_convergence_tbl$npv[tree_convergence_tbl$step == 1000L],
-    tree_convergence_tbl$npv[tree_convergence_tbl$step == 1000L] - npv_jam,
-    npv_jam - npv_normal
+## 42. 収束診断
+
+```{r chapter13-tree-diagnostics}
+tree_npv_at <- function(
+  step_value
+) {
+  tree_convergence_tbl |>
+    dplyr::filter(
+      tree_steps ==
+        step_value
+    ) |>
+    dplyr::pull(
+      npv
+    )
+}
+
+tree_1_npv <-
+  tree_npv_at(
+    1L
   )
+
+tree_60_npv <-
+  tree_npv_at(
+    60L
+  )
+
+tree_1000_npv <-
+  tree_npv_at(
+    1000L
+  )
+
+tree_diagnostic_tbl <- tibble::tribble(
+  ~metric,                              ~value,
+  "hand_minus_tree_1",                   one_step_raw_npv - tree_1_npv,
+  "adjusted_hand_minus_tree_1",          one_step_adjusted_npv - tree_1_npv,
+  "tree_1_minus_tree_1000",              tree_1_npv - tree_1000_npv,
+  "tree_60_minus_tree_1000",             tree_60_npv - tree_1000_npv,
+  "tree_1000_minus_jamshidian",          tree_1000_npv - npv_jamshidian,
+  "jamshidian_minus_bachelier",          npv_jamshidian - npv_bachelier
 )
 
 QuantLibGauss::qlg_show_tbl(
-  part4b_summary_tbl,
-  "Part 4B summary diagnostics",
+  tree_diagnostic_tbl,
+  "Hull-White tree convergence diagnostics",
   n = 20
 )
+```
 
-part4b_plot_tbl <- bind_rows(
+## 43. Tree収束の可視化
+
+```{r chapter13-tree-convergence-plot}
+#| fig-width: 9
+#| fig-height: 5
+
+tree_convergence_plot_tbl <- dplyr::bind_rows(
   tree_convergence_tbl |>
-    transmute(
-      step = as.numeric(step),
-      npv = npv,
-      series = "Tree"
+    dplyr::transmute(
+      tree_steps =
+        as.numeric(
+          tree_steps
+        ),
+      npv =
+        npv,
+      series =
+        "Hull-White tree"
     ),
-  tibble(
-    step = max(tree_step_grid),
-    npv = npv_jam,
-    series = "Jamshidian"
-  ),
-  tibble(
-    step = max(tree_step_grid),
-    npv = npv_normal,
-    series = "Normal"
-  ),
-  tibble(
-    step = 1,
-    npv = swaption_npv_raw,
-    series = "Hand raw"
-  ),
-  tibble(
-    step = 1,
-    npv = swaption_npv_adj,
-    series = "Hand adjusted"
+  tibble::tribble(
+    ~tree_steps,            ~npv,                    ~series,
+    max(tree_step_grid),     npv_jamshidian,          "Jamshidian",
+    max(tree_step_grid),     npv_bachelier,           "Bachelier",
+    1,                       one_step_raw_npv,         "One-step hand",
+    1,                       one_step_adjusted_npv,    "One-step adjusted"
   )
 )
 
-part4b_plot <- ggplot(
-  part4b_plot_tbl,
-  aes(x = step, y = npv, color = series)
+tree_convergence_plot <- ggplot2::ggplot(
+  tree_convergence_plot_tbl,
+  ggplot2::aes(
+    x = tree_steps,
+    y = npv,
+    shape = series
+  )
 ) +
-  geom_line(
-    data = dplyr::filter(part4b_plot_tbl, series == "Tree"),
+  ggplot2::geom_line(
+    data = tree_convergence_plot_tbl |>
+      dplyr::filter(
+        series ==
+          "Hull-White tree"
+      ),
     linewidth = 0.7
   ) +
-  geom_point(size = 2) +
-  scale_x_continuous(breaks = tree_step_grid) +
-  labs(
-    title = "Part 4B: hand calculation vs tree-step convergence",
-    x = "Tree steps",
-    y = "Swaption NPV"
+  ggplot2::geom_point(
+    size = 2.2
   ) +
-  theme_minimal()
+  ggplot2::scale_x_continuous(
+    breaks =
+      tree_step_grid
+  ) +
+  ggplot2::labs(
+    title =
+      "Hull-White tree-step convergence",
+    subtitle =
+      "Comparison with one-step hand calculation and analytic engines",
+    x =
+      "Tree steps",
+    y =
+      "Swaption NPV",
+    shape =
+      "Method"
+  ) +
+  ggplot2::theme_minimal()
 
-print(part4b_plot)
+print(
+  tree_convergence_plot
+)
+```
 
-cat("\nchapter09 callable / hull-white rewrite part4B completed successfully.\n")
-# Hull-White one-factor model was calibrated to ATM normal swaption volatility using a
-# SwaptionHelper with strike set to the forward swap rate. After this correction,
-# the calibrated model reproduced the European 1Yx5Y swaption price consistently a
-# cross Jamshidian, lattice, and Bachelier pricing.
-#
-# The one-step hand calculation produced a lower price than the full model price,
-# but Part 4B showed that this is not a bug. The hand calculation is close to the one-step tree result,
-# while the tree price converges upward toward the Jamshidian and Bachelier values as the number of steps
-# increases. Therefore, the difference between Part 3 and Part 4A is explained by discretization error
-# from the coarse one-step approximation.
+## 44. Part 4のまとめ
 
+1ステップの手計算は、Hull–WhiteモデルによるSwaption評価の構造を理解するうえで有用である。
 
-# ------------------------------------------------------------
-# Part 5: Hull-White path simulation for 10Y zero rate
-# ------------------------------------------------------------
+具体的には、次の流れを確認できる。
 
-QuantLibGauss::qlg_set_eval_date(trade_date_calib)
+1. 行使時点の短期金利状態を生成する
+2. 各状態の将来割引係数を求める
+3. 各状態のSwap annuityを計算する
+4. 各状態のForward Swap Rateを計算する
+5. Swaption payoffを計算する
+6. 状態確率と行使日までの割引係数を適用する
 
-# ------------------------------------------------------------
-# 5.1 parameters
-# ------------------------------------------------------------
+一方、1ステップ近似は状態空間が非常に粗いため、完全なTreeや解析解との差が生じる。
 
-a_path <- hw_param_1[1]
-sigma_path <- hw_param_1[2]
+Tree stepを増やすと、Hull–White tree価格はJamshidian decompositionによる価格へ近づく。したがって、1ステップ手計算とPart 3のエンジン価格との差は、主として粗い離散化によるものと解釈できる。
 
-n_path <- 30L
-n_step <- 24L * 5L
-horizon_year <- 5
+```{r chapter13-part4-completion}
+cat(
+  "\nChapter 13 Part 4 Hull-White hand calculation and tree convergence prepared successfully.\n"
+)
+```
+# Part 5　Hull–Whiteモデルによる金利パス
 
-time_grid <- seq(0, horizon_year, length.out = n_step + 1L)
-dt <- diff(time_grid)[1]
+## 45. Hull–White状態変数のシミュレーション
 
-set.seed(123)
+Hull–Whiteモデルでは、初期金利期間構造を表す決定論的な部分と、確率的な状態変数(x_t)を分離して考えることができる。
 
-# ------------------------------------------------------------
-# 5.2 HW helper functions
-# ------------------------------------------------------------
+状態変数は、平均ゼロへ回帰するOrnstein–Uhlenbeck過程として表される。
 
-hw_B_path <- function(t, T, a) {
-  (1 - exp(-a * (T - t))) / a
+[
+dx_t
+====
+
+-a x_t,dt
++
+\sigma dW_t
+]
+
+離散時点間の厳密な推移は、次のように書ける。
+
+[
+x_{t+\Delta t}
+==============
+
+x_t e^{-a\Delta t}
++
+\sigma
+\sqrt{
+\frac{
+1-e^{-2a\Delta t}
+}{
+2a
 }
-
-hw_V_path <- function(t, T, a, sigma) {
-  (sigma^2 / a^2) * (
-    (T - t) +
-      (2 / a) * exp(-a * (T - t)) -
-      (1 / (2 * a)) * exp(-2 * a * (T - t)) -
-      3 / (2 * a)
-  )
 }
+Z
+]
 
-hw_A_path <- function(t, T, a, sigma) {
-  0.5 * (
-    hw_V_path(t, T, a, sigma) -
-      hw_V_path(0, T, a, sigma) +
-      hw_V_path(0, t, a, sigma)
-  )
-}
+ここで、(Z)は標準正規乱数である。
 
-hw_discount_given_x_path <- function(t, T, x_t, curve_obj, a, sigma) {
-  p0t <- curve_obj$discount(t)
-  p0T <- curve_obj$discount(T)
-  A_tT <- hw_A_path(t, T, a, sigma)
-  B_tT <- hw_B_path(t, T, a)
+この節では、Part 3のOne-helper calibrationで得たHull–Whiteパラメータを使用する。
 
-  (p0T / p0t) * exp(A_tT - x_t * B_tT)
-}
-
-hw_zero_given_x_path <- function(t, tau, x_t, curve_obj, a, sigma) {
-  T <- t + tau
-  ptT <- hw_discount_given_x_path(t, T, x_t, curve_obj, a, sigma)
-  -log(ptT) / tau
-}
-
-# OU state process approximation for x_t
-simulate_hw_x_path <- function(time_grid, a, sigma) {
-  x <- numeric(length(time_grid))
-  for (i in 2:length(time_grid)) {
-    dt_i <- time_grid[i] - time_grid[i - 1]
-    z <- rnorm(1)
-    x[i] <- x[i - 1] * exp(-a * dt_i) +
-      sigma * sqrt((1 - exp(-2 * a * dt_i)) / (2 * a)) * z
-  }
-  x
-}
-
-# ------------------------------------------------------------
-# 5.3 simulate x_t paths
-# ------------------------------------------------------------
-
-x_path_mat <- replicate(
-  n_path,
-  simulate_hw_x_path(time_grid, a = a_path, sigma = sigma_path)
+```{r chapter13-path-simulation-inputs}
+QuantLibGauss::qlg_set_eval_date(
+  calibration_trade_date
 )
 
-x_path_tbl <- tibble(
-  time = rep(time_grid, times = n_path),
-  path = rep(seq_len(n_path), each = length(time_grid)),
-  x_t = as.vector(x_path_mat)
+path_simulation_input_tbl <- tibble::tribble(
+  ~input,                  ~value,
+  "mean_reversion_a",       one_helper_parameters[1],
+  "sigma",                  one_helper_parameters[2],
+  "number_of_paths",        30,
+  "steps_per_year",         24,
+  "simulation_horizon",     5,
+  "target_zero_tenor",      10,
+  "random_seed",            123
+)
+
+path_mean_reversion <-
+  path_simulation_input_tbl$value[
+    path_simulation_input_tbl$input ==
+      "mean_reversion_a"
+  ]
+
+path_sigma <-
+  path_simulation_input_tbl$value[
+    path_simulation_input_tbl$input ==
+      "sigma"
+  ]
+
+number_of_paths <-
+  path_simulation_input_tbl$value[
+    path_simulation_input_tbl$input ==
+      "number_of_paths"
+  ] |>
+  as.integer()
+
+steps_per_year <-
+  path_simulation_input_tbl$value[
+    path_simulation_input_tbl$input ==
+      "steps_per_year"
+  ] |>
+  as.integer()
+
+simulation_horizon <-
+  path_simulation_input_tbl$value[
+    path_simulation_input_tbl$input ==
+      "simulation_horizon"
+  ]
+
+target_zero_tenor <-
+  path_simulation_input_tbl$value[
+    path_simulation_input_tbl$input ==
+      "target_zero_tenor"
+  ]
+
+random_seed <-
+  path_simulation_input_tbl$value[
+    path_simulation_input_tbl$input ==
+      "random_seed"
+  ] |>
+  as.integer()
+
+number_of_steps <-
+  steps_per_year *
+  simulation_horizon
+
+simulation_time_grid <- seq(
+  0,
+  simulation_horizon,
+  length.out =
+    number_of_steps +
+    1L
 )
 
 QuantLibGauss::qlg_show_tbl(
-  x_path_tbl,
-  "Hull-White state variable paths",
-  n = 40
+  path_simulation_input_tbl,
+  "Hull-White path-simulation inputs",
+  n = 20
+)
+```
+
+## 46. Hull–White状態変数の推移関数
+
+```{r chapter13-state-path-helper}
+simulate_hull_white_state_path <- function(
+  time_grid,
+  mean_reversion,
+  sigma
+) {
+  state_path <- numeric(
+    length(
+      time_grid
+    )
+  )
+
+  if (
+    length(time_grid) <= 1L
+  ) {
+    return(
+      state_path
+    )
+  }
+
+  for (
+    i in 2:
+      length(
+        time_grid
+      )
+  ) {
+    time_step <-
+      time_grid[i] -
+      time_grid[i - 1L]
+
+    normal_draw <-
+      stats::rnorm(
+        1
+      )
+
+    conditional_mean <-
+      state_path[i - 1L] *
+      exp(
+        -mean_reversion *
+        time_step
+      )
+
+    conditional_standard_deviation <-
+      if (
+        abs(
+          mean_reversion
+        ) <
+        1e-12
+      ) {
+        sigma *
+          sqrt(
+            time_step
+          )
+      } else {
+        sigma *
+          sqrt(
+            (
+              1 -
+              exp(
+                -2 *
+                mean_reversion *
+                time_step
+              )
+            ) /
+              (
+                2 *
+                mean_reversion
+              )
+          )
+      }
+
+    state_path[i] <-
+      conditional_mean +
+      conditional_standard_deviation *
+      normal_draw
+  }
+
+  state_path
+}
+```
+
+## 47. 状態変数パスの生成
+
+```{r chapter13-state-path-simulation}
+set.seed(
+  random_seed
 )
 
-x_path_plot <- ggplot(
-  x_path_tbl,
-  aes(x = time, y = x_t, group = path)
+state_path_matrix <- replicate(
+  number_of_paths,
+  simulate_hull_white_state_path(
+    time_grid =
+      simulation_time_grid,
+    mean_reversion =
+      path_mean_reversion,
+    sigma =
+      path_sigma
+  )
+)
+
+state_path_tbl <- tibble::tibble(
+  observation_time =
+    rep(
+      simulation_time_grid,
+      times =
+        number_of_paths
+    ),
+  path_id =
+    rep(
+      seq_len(
+        number_of_paths
+      ),
+      each =
+        length(
+          simulation_time_grid
+        )
+    ),
+  state_variable =
+    as.vector(
+      state_path_matrix
+    )
+)
+
+QuantLibGauss::qlg_show_tbl(
+  state_path_tbl,
+  "Hull-White state-variable paths",
+  n = 40
+)
+```
+
+## 48. 状態変数パスの可視化
+
+```{r chapter13-state-path-plot}
+#| fig-width: 9
+#| fig-height: 5
+
+state_path_plot <- ggplot2::ggplot(
+  state_path_tbl,
+  ggplot2::aes(
+    x = observation_time,
+    y = state_variable,
+    group = path_id
+  )
 ) +
-  geom_line(linewidth = 0.5, alpha = 0.7) +
-  scale_y_continuous(labels = \(x) sprintf("%.2f%%", 100 * x)) +
-  labs(
-    title = "Hull-White state variable paths",
-    x = "Time (years)",
-    y = "x(t)"
+  ggplot2::geom_line(
+    linewidth = 0.5,
+    alpha = 0.7
   ) +
-  theme_minimal()
-
-print(x_path_plot)
-
-# ------------------------------------------------------------
-# 5.4 10Y zero-rate paths
-# ------------------------------------------------------------
-
-tau_target <- 10
-
-zero_10y_tbl <- purrr::map_dfr(
-  seq_len(n_path),
-  function(p) {
-    tibble(
-      time = time_grid,
-      path = p,
-      zero_10y = purrr::map_dbl(
-        seq_along(time_grid),
-        function(i) {
-          hw_zero_given_x_path(
-            t = time_grid[i],
-            tau = tau_target,
-            x_t = x_path_mat[i, p],
-            curve_obj = jpy_curve_obj,
-            a = a_path,
-            sigma = sigma_path
-          )
-        }
+  ggplot2::scale_y_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.2f%%",
+        100 * x
       )
+    }
+  ) +
+  ggplot2::labs(
+    title =
+      "Hull-White state-variable paths",
+    subtitle =
+      "Mean-reverting Gaussian state process",
+    x =
+      "Observation time (years)",
+    y =
+      "State variable x(t)"
+  ) +
+  ggplot2::theme_minimal()
+
+print(
+  state_path_plot
+)
+```
+
+## 49. 状態変数から将来割引係数を求める
+
+時点(t)における満期(T)の割引係数を、次の式で計算する。
+
+[
+P(t,T)
+======
+
+\frac{P(0,T)}{P(0,t)}
+\exp
+\left[
+A(t,T)-B(t,T)x_t
+\right]
+]
+
+Part 2で定義した`hull_white_A()`と`hull_white_B()`を再利用する。
+
+```{r chapter13-path-discount-helper}
+hull_white_discount_from_state <- function(
+  observation_time,
+  maturity_time,
+  state_value,
+  curve_obj,
+  mean_reversion,
+  sigma
+) {
+  if (
+    maturity_time <=
+    observation_time
+  ) {
+    return(
+      1
+    )
+  }
+
+  initial_discount_observation <-
+    curve_obj$discount(
+      observation_time
+    )
+
+  initial_discount_maturity <-
+    curve_obj$discount(
+      maturity_time
+    )
+
+  a_value <- hull_white_A(
+    time =
+      observation_time,
+    maturity =
+      maturity_time,
+    mean_reversion =
+      mean_reversion,
+    sigma =
+      sigma
+  )
+
+  b_value <- hull_white_B(
+    time =
+      observation_time,
+    maturity =
+      maturity_time,
+    mean_reversion =
+      mean_reversion
+  )
+
+  (
+    initial_discount_maturity /
+    initial_discount_observation
+  ) *
+    exp(
+      a_value -
+      state_value *
+      b_value
+    )
+}
+
+hull_white_zero_rate_from_state <- function(
+  observation_time,
+  residual_tenor,
+  state_value,
+  curve_obj,
+  mean_reversion,
+  sigma
+) {
+  maturity_time <-
+    observation_time +
+    residual_tenor
+
+  future_discount_factor <-
+    hull_white_discount_from_state(
+      observation_time =
+        observation_time,
+      maturity_time =
+        maturity_time,
+      state_value =
+        state_value,
+      curve_obj =
+        curve_obj,
+      mean_reversion =
+        mean_reversion,
+      sigma =
+        sigma
+    )
+
+  if (
+    !is.finite(
+      future_discount_factor
+    ) ||
+    future_discount_factor <= 0 ||
+    residual_tenor <= 0
+  ) {
+    return(
+      NA_real_
+    )
+  }
+
+  -log(
+    future_discount_factor
+  ) /
+    residual_tenor
+}
+```
+
+## 50. 10年ゼロ金利のパス
+
+各観測時点における、残存期間10年のゼロ金利を計算する。
+
+ここで表示するのは、暦上の満期日を固定したゼロ金利ではなく、各観測時点から常に10年先を満期とする**Constant Maturity 10-year zero rate**である。
+
+```{r chapter13-ten-year-zero-paths}
+ten_year_zero_path_tbl <- purrr::map_dfr(
+  seq_len(
+    number_of_paths
+  ),
+  function(path_id) {
+    tibble::tibble(
+      observation_time =
+        simulation_time_grid,
+      path_id =
+        path_id,
+      state_variable =
+        state_path_matrix[
+          ,
+          path_id
+        ],
+      ten_year_zero_rate =
+        purrr::map2_dbl(
+          simulation_time_grid,
+          state_path_matrix[
+            ,
+            path_id
+          ],
+          function(
+            observation_time,
+            state_value
+          ) {
+            hull_white_zero_rate_from_state(
+              observation_time =
+                observation_time,
+              residual_tenor =
+                target_zero_tenor,
+              state_value =
+                state_value,
+              curve_obj =
+                jpy_curve,
+              mean_reversion =
+                path_mean_reversion,
+              sigma =
+                path_sigma
+            )
+          }
+        )
     )
   }
 )
 
 QuantLibGauss::qlg_show_tbl(
-  zero_10y_tbl,
-  "10Y zero-rate paths",
+  ten_year_zero_path_tbl,
+  "Simulated constant-maturity 10-year zero rates",
   n = 40
 )
+```
 
-print(zero_10y_plot)
-zero_10y_plot <- ggplot(
-  zero_10y_tbl,
-  aes(x = time, y = zero_10y, group = path, color = factor(path))
+## 51. 10年ゼロ金利パスの可視化
+
+```{r chapter13-ten-year-zero-path-plot}
+#| fig-width: 9
+#| fig-height: 5
+
+ten_year_zero_path_plot <- ggplot2::ggplot(
+  ten_year_zero_path_tbl,
+  ggplot2::aes(
+    x = observation_time,
+    y = ten_year_zero_rate,
+    group = path_id
+  )
 ) +
-  geom_line(linewidth = 0.5, alpha = 0.7, show.legend = FALSE) +
-  scale_y_continuous(labels = \(x) sprintf("%.2f%%", 100 * x)) +
-  labs(
-    title = "Simulated 10Y zero-rate paths under Hull-White",
-    subtitle = "Each line is one path",
-    x = "Observation time (years)",
-    y = "10Y zero rate"
+  ggplot2::geom_line(
+    linewidth = 0.5,
+    alpha = 0.7
   ) +
-  theme_minimal()
+  ggplot2::scale_y_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.2f%%",
+        100 * x
+      )
+    }
+  ) +
+  ggplot2::labs(
+    title =
+      "Simulated 10-year zero-rate paths under Hull-White",
+    subtitle =
+      "Each line represents a constant-maturity 10-year zero-rate path",
+    x =
+      "Observation time (years)",
+    y =
+      "10-year zero rate"
+  ) +
+  ggplot2::theme_minimal()
 
-print(zero_10y_plot)
+print(
+  ten_year_zero_path_plot
+)
+```
 
-# ------------------------------------------------------------
-# 5.5 average / percentile summary of 10Y rate
-# ------------------------------------------------------------
+## 52. パス分布の要約
 
-zero_10y_summary_tbl <- zero_10y_tbl |>
-  group_by(time) |>
-  summarise(
-    mean = mean(zero_10y),
-    p10 = quantile(zero_10y, 0.10),
-    p50 = quantile(zero_10y, 0.50),
-    p90 = quantile(zero_10y, 0.90),
+各観測時点について、次の統計量を計算する。
+
+* 平均
+* 10パーセンタイル
+* 中央値
+* 90パーセンタイル
+
+```{r chapter13-ten-year-zero-summary}
+ten_year_zero_summary_tbl <- ten_year_zero_path_tbl |>
+  dplyr::group_by(
+    observation_time
+  ) |>
+  dplyr::summarise(
+    mean_rate =
+      mean(
+        ten_year_zero_rate,
+        na.rm = TRUE
+      ),
+    p10 =
+      stats::quantile(
+        ten_year_zero_rate,
+        probs = 0.10,
+        na.rm = TRUE
+      ),
+    median_rate =
+      stats::quantile(
+        ten_year_zero_rate,
+        probs = 0.50,
+        na.rm = TRUE
+      ),
+    p90 =
+      stats::quantile(
+        ten_year_zero_rate,
+        probs = 0.90,
+        na.rm = TRUE
+      ),
+    standard_deviation =
+      stats::sd(
+        ten_year_zero_rate,
+        na.rm = TRUE
+      ),
     .groups = "drop"
   )
 
 QuantLibGauss::qlg_show_tbl(
-  zero_10y_summary_tbl,
-  "10Y zero-rate path summary",
+  ten_year_zero_summary_tbl,
+  "10-year zero-rate path summary",
   n = 40
 )
-
-
-zero_10y_summary_plot <- ggplot(zero_10y_summary_tbl, aes(x = time)) +
-  geom_line(aes(y = mean, color = "mean", linetype = "mean"), linewidth = 0.9) +
-  geom_line(aes(y = p10,  color = "p10",  linetype = "p10"),  linewidth = 0.7) +
-  geom_line(aes(y = p50,  color = "p50",  linetype = "p50"),  linewidth = 0.7) +
-  geom_line(aes(y = p90,  color = "p90",  linetype = "p90"),  linewidth = 0.7) +
-  scale_y_continuous(labels = \(x) sprintf("%.2f%%", 100 * x)) +
-  scale_color_manual(
-    values = c(
-      mean = "black",
-      p10  = "blue",
-      p50  = "darkgreen",
-      p90  = "red"
-    )
-  ) +
-  labs(
-    title = "10Y zero-rate summary paths",
-    subtitle = "Mean / percentile evolution under Hull-White",
-    x = "Observation time (years)",
-    y = "10Y zero rate",
-    color = "Series",
-    linetype = "Series"
-  ) +
-  theme_minimal()
-
-print(zero_10y_summary_plot)
-
-cat("\nchapter09 callable / hull-white rewrite part5 completed successfully.\n")
-
 ```
+
+## 53. 平均とパーセンタイルの可視化
+
+```{r chapter13-ten-year-zero-summary-plot}
+#| fig-width: 9
+#| fig-height: 5
+
+ten_year_zero_summary_plot_tbl <-
+  ten_year_zero_summary_tbl |>
+  dplyr::select(
+    observation_time,
+    mean_rate,
+    p10,
+    median_rate,
+    p90
+  ) |>
+  tidyr::pivot_longer(
+    cols = c(
+      mean_rate,
+      p10,
+      median_rate,
+      p90
+    ),
+    names_to =
+      "statistic",
+    values_to =
+      "zero_rate"
+  )
+
+ten_year_zero_summary_plot <- ggplot2::ggplot(
+  ten_year_zero_summary_plot_tbl,
+  ggplot2::aes(
+    x = observation_time,
+    y = zero_rate,
+    linetype = statistic
+  )
+) +
+  ggplot2::geom_line(
+    linewidth = 0.8
+  ) +
+  ggplot2::scale_y_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.2f%%",
+        100 * x
+      )
+    }
+  ) +
+  ggplot2::labs(
+    title =
+      "Distribution of simulated 10-year zero rates",
+    subtitle =
+      "Mean, median, and percentile evolution under Hull-White",
+    x =
+      "Observation time (years)",
+    y =
+      "10-year zero rate",
+    linetype =
+      "Statistic"
+  ) +
+  ggplot2::theme_minimal()
+
+print(
+  ten_year_zero_summary_plot
+)
+```
+
+## 54. 終端時点の分布
+
+シミュレーション期間の最終時点における、状態変数と10年ゼロ金利の分布を確認する。
+
+```{r chapter13-terminal-distribution}
+terminal_path_tbl <- ten_year_zero_path_tbl |>
+  dplyr::filter(
+    observation_time ==
+      max(
+        observation_time
+      )
+  )
+
+terminal_summary_tbl <- tibble::tribble(
+  ~metric,                         ~value,
+  "terminal_time",                  max(
+                                      terminal_path_tbl$
+                                        observation_time
+                                    ),
+  "mean_state_variable",            mean(
+                                      terminal_path_tbl$
+                                        state_variable
+                                    ),
+  "state_standard_deviation",       stats::sd(
+                                      terminal_path_tbl$
+                                        state_variable
+                                    ),
+  "mean_ten_year_zero_rate",        mean(
+                                      terminal_path_tbl$
+                                        ten_year_zero_rate
+                                    ),
+  "zero_rate_standard_deviation",   stats::sd(
+                                      terminal_path_tbl$
+                                        ten_year_zero_rate
+                                    ),
+  "minimum_ten_year_zero_rate",     min(
+                                      terminal_path_tbl$
+                                        ten_year_zero_rate
+                                    ),
+  "maximum_ten_year_zero_rate",     max(
+                                      terminal_path_tbl$
+                                        ten_year_zero_rate
+                                    )
+)
+
+QuantLibGauss::qlg_show_tbl(
+  terminal_summary_tbl,
+  "Terminal Hull-White path distribution",
+  n = 20
+)
+```
+
+## 55. 状態変数とゼロ金利の関係
+
+Hull–White 1-factorモデルでは、同じ観測時点における金利期間構造全体が、単一の状態変数(x_t)によって動く。
+
+状態変数が高いほど割引係数は低くなり、ゼロ金利は高くなる。この関係を終端時点の散布図で確認する。
+
+```{r chapter13-state-zero-scatter}
+#| fig-width: 8
+#| fig-height: 5
+
+state_zero_scatter_plot <- ggplot2::ggplot(
+  terminal_path_tbl,
+  ggplot2::aes(
+    x = state_variable,
+    y = ten_year_zero_rate
+  )
+) +
+  ggplot2::geom_point(
+    size = 2
+  ) +
+  ggplot2::scale_x_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.2f%%",
+        100 * x
+      )
+    }
+  ) +
+  ggplot2::scale_y_continuous(
+    labels = function(x) {
+      sprintf(
+        "%.2f%%",
+        100 * x
+      )
+    }
+  ) +
+  ggplot2::labs(
+    title =
+      "Hull-White state variable and 10-year zero rate",
+    subtitle =
+      "Terminal simulated values",
+    x =
+      "State variable x(t)",
+    y =
+      "10-year zero rate"
+  ) +
+  ggplot2::theme_minimal()
+
+print(
+  state_zero_scatter_plot
+)
+```
+
+## 56. Part 5のまとめ
+
+Hull–Whiteモデルでは、現在の金利期間構造を維持しながら、平均回帰するGaussian状態変数によって将来の金利変動を表現する。
+
+この節では、次の流れを確認した。
+
+1. カリブレーション済みの(a)と(\sigma)を取得する
+2. 状態変数(x_t)のパスを生成する
+3. 状態変数から将来割引係数を計算する
+4. 将来割引係数からゼロ金利を計算する
+5. 複数パスの平均とパーセンタイルを確認する
+
+1-factorモデルでは、単一の状態変数が期間構造全体を動かす。そのため、異なる満期の金利は強く連動する。
+
+これはモデルを単純で扱いやすくする一方、実際の市場で見られる複雑なイールドカーブ変形を完全には表現できないという制約にもなる。
+
+```{r chapter13-part5-completion}
+cat(
+  "\nChapter 13 Part 5 Hull-White rate-path simulation prepared successfully.\n"
+)
+```
+
+# 第13章のまとめ
+
+この章では、Hull–White 1-factorモデルを利用して、Callable BondとSwaptionの評価を段階的に確認した。
+
+* Callable Bondは、Bullet Bondから発行体のコールオプション価値を差し引いた商品として理解できる。
+* Hull–Whiteモデルは、現在の初期金利カーブへ適合しながら、将来金利を平均回帰型のGaussian過程で表現する。
+* Swaption市場へのカリブレーションによって、モデルのボラティリティ・パラメータを推定できる。
+* Tree評価では、ステップ数が少ないと離散化誤差が大きくなる。
+* Tree stepを増やすと、価格はJamshidian decompositionによる解析的評価へ収束する。
+* 状態変数のシミュレーションから、将来の割引係数とゼロ金利パスを生成できる。
+
+この章で章内に定義した次のヘルパーは、将来GaussQuantへ移す候補である。
+
+```text
+schedule_date_at_GQL()
+schedule_dates_GQL()
+schedule_table_GQL()
+date_vector_GQL()
+
+rate_helper_vector_GQL()
+calibration_helper_vector_GQL()
+
+bond_clean_price_from_yield_GQL()
+callability_schedule_GQL()
+
+swap_annuity_GQL()
+forward_swap_rate_GQL()
+
+hull_white_discount_GQL()
+hull_white_zero_rate_GQL()
+hull_white_state_path_GQL()
+```
+
+```{r chapter13-completion}
+cat(
+  "\nChapter 13 Callable Bond and Hull-White model rewrite prepared successfully.\n"
+)
+```
+
+
