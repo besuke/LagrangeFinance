@@ -1,27 +1,23 @@
 # 第10章 Blackモデル
 
 ---
-
 title: "第10章 Blackモデル"
 subtitle: "Black-76、Black–Scholes–Merton、Monte Carlo、Sobol、Longstaff–Schwartz"
 author: "Eiichi Horigome"
 format:
-html:
-toc: true
-toc-depth: 3
-number-sections: true
-code-fold: false
-code-tools: true
-pdf:
-toc: true
-toc-depth: 3
-number-sections: true
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
 execute:
-echo: true
-warning: false
-message: false
-error: false
+  echo: true
+  warning: false
+  message: false
+  error: false
 lang: ja
+---
+
+# Blackモデル
 --------
 
 # Blackモデル
