@@ -1,63 +1,92 @@
-# 第8章 国債先物とCTD
+---
+title: "Chapter 8: Treasury Futures and CTD"
+subtitle: "Deliverable basket, basis, implied repo, and CTD analysis with GaussQuant"
+format:
+  html:
+    toc: true
+    number-sections: true
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
 
-```{r chapter08-treasury-futures}
-#| message: false
-#| warning: false
+# Treasury futures and cheapest-to-deliver analysis
 
-# ============================================================
-# Chapter 08: Treasury Futures and CTD
-# ------------------------------------------------------------
-# 国債先物とCTD分析
-#
-# 内容:
-# 1. US Treasury bond setup
-# 2. Price from yield
-# 3. Accrued interest hand calculation
-# 4. Deliverable basket and gross basis
-# 5. Net basis, carry, and implied repo
-# 6. Deliverable basket summary and CTD proxy
-#
-# 前提:
-# - QuantLibGauss がインストール済み
-# - QuantLib SWIG版が利用可能
-# ============================================================
+This chapter studies a US Treasury futures deliverable basket with the current `GaussQuant` API.
 
-# ------------------------------------------------------------
-# 0. Setup
-# ------------------------------------------------------------
+The workflow is:
 
-library(QuantLib)
+- build a Treasury bond and verify its price and accrued interest;
+- calculate gross basis, carry, net basis, and implied repo;
+- select the cheapest-to-deliver bond from the minimum net basis;
+- calculate the CTD-adjusted futures BPV.
 
-# ------------------------------------------------------------
-# 1. Local formatting helper
-# ------------------------------------------------------------
+```{r setup}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
 
-fmt_pct <- function(x, digits = 4) {
-  sprintf(
-    paste0("%.", digits, "f%%"),
-    100 * x
-  )
-}
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(QuantLib)
+  library(GaussQuant)
+})
+```
 
-# ------------------------------------------------------------
-# 2. Calendars, day counters, and enums
-# ------------------------------------------------------------
+# Calendar, dates, and conventions
 
-cal_us_gov <- UnitedStates("GovernmentBond")
+```{r treasury-futures-setup}
+cal_us_gov <- QuantLib::UnitedStates("GovernmentBond")
 
-dc_act_act_bond <- ActualActual("Bond")
-dc_act_360 <- Actual360()
+dc_act_act_bond <- GaussQuant::day_counter_GQL("ActualActual_Bond")
+dc_act_360 <- GaussQuant::day_counter_GQL("Actual360")
 
-cmpd_compounded <- Compounding_Compounded_get()
-freq_semiannual <- Frequency_Semiannual_get()
+cmpd_compounded <- QuantLib::Compounding_Compounded_get()
+freq_semiannual <- QuantLib::Frequency_Semiannual_get()
 
 settlement_days_t1 <- 1L
+trade_date_chr <- "2023-04-20"
+repo_end_date_chr <- "2023-07-06"
 
-# ------------------------------------------------------------
-# 3. US Treasury bond example
-# ------------------------------------------------------------
+trade_date <- GaussQuant::date_GQL(trade_date_chr)
+repo_end_date_ql <- GaussQuant::date_GQL(repo_end_date_chr)
 
-bond_bundle <- QuantLibGauss::qlg_us_treasury_bond(
+GaussQuant::set_eval_date_GQL(trade_date)
+
+settle_date <- GaussQuant::advance_days_GQL(
+  calendar_obj = cal_us_gov,
+  date_obj = trade_date,
+  n_days = settlement_days_t1
+)
+
+settle_date_chr <- as.character(settle_date)
+settle_date_ql <- GaussQuant::date_GQL(settle_date_chr)
+
+setup_tbl <- tibble::tribble(
+  ~item, ~value,
+  "trade_date", trade_date_chr,
+  "spot_settlement_date", settle_date_chr,
+  "repo_end_date", repo_end_date_chr,
+  "settlement_days", as.character(settlement_days_t1),
+  "calendar", "UnitedStates(GovernmentBond)",
+  "bond_day_counter", "ActualActual(Bond)",
+  "repo_day_counter", "Actual360",
+  "compounding", "Compounded",
+  "frequency", "Semiannual"
+)
+
+GaussQuant::show_tbl_GQH(setup_tbl, "Treasury futures setup")
+```
+
+# US Treasury bond example
+
+```{r us-treasury-bond}
+bond_bundle <- GaussQuant::us_treasury_bond_GQL(
   effective_date = "2022-09-30",
   maturity_date = "2027-09-30",
   coupon_rate_pct = 4.125,
@@ -69,156 +98,139 @@ bond_bundle <- QuantLibGauss::qlg_us_treasury_bond(
 
 bond_obj <- bond_bundle$bond
 
-QuantLibGauss::qlg_show_tbl(
-  QuantLibGauss::qlg_schedule_dates(
-    bond_bundle$schedule
-  ),
+GaussQuant::show_tbl_GQH(
+  GaussQuant::schedule_dates_GQL(bond_bundle$schedule),
   "US Treasury bond schedule",
   n = 20
 )
 
-cf_prc <- bond_obj$cleanPrice(
-  6 / 100,
-  dc_act_act_bond,
-  cmpd_compounded,
-  freq_semiannual,
-  QuantLibGauss::qlg_date("2023-07-06")
+clean_price_at_six_percent <- GaussQuant::bond_clean_price_from_yield_safe_GQL(
+  bond = bond_obj,
+  yield_rate = 6 / 100,
+  day_counter = dc_act_act_bond,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual,
+  settlement_date = GaussQuant::date_GQL("2023-07-06")
 )
 
 cat(
   "Yield 6%, settle 2023-07-06 clean price:",
-  QuantLibGauss::qlg_fmt_num(cf_prc, 4),
+  GaussQuant::fmt_num_GQH(clean_price_at_six_percent, 4),
   "\n"
 )
+```
 
-# ------------------------------------------------------------
-# 4. Yield 3.70% to price
-# ------------------------------------------------------------
+# Bond price from yield
 
-trade_date <- QuantLibGauss::qlg_date("2023-04-20")
-
+```{r bond-price-from-yield}
 bond_yield <- 3.70 / 100
 futures_price <- 109 + 10 / 32
 
-QuantLibGauss::qlg_set_eval_date(
-  trade_date
-)
+accrued_amount <- bond_obj$accruedAmount(settle_date_ql)
 
-settle_date <- QuantLibGauss::qlg_advance_days(
-  calendar_obj = cal_us_gov,
-  date_obj = trade_date,
-  n_days = settlement_days_t1
-)
-
-accrued_amount <- bond_obj$accruedAmount(
-  settle_date
-)
-
-clean_price <- bond_obj$cleanPrice(
-  bond_yield,
-  dc_act_act_bond,
-  cmpd_compounded,
-  freq_semiannual,
-  settle_date
+clean_price <- GaussQuant::bond_clean_price_from_yield_safe_GQL(
+  bond = bond_obj,
+  yield_rate = bond_yield,
+  day_counter = dc_act_act_bond,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual,
+  settlement_date = settle_date_ql
 )
 
 dirty_price <- clean_price + accrued_amount
 
-i_rate_obj <- InterestRate(
+price_tbl <- tibble::tibble(
+  trade_date = as.Date(trade_date_chr),
+  settlement_date = as.Date(settle_date_chr),
+  yield = bond_yield,
+  accrued_amount = accrued_amount,
+  clean_price = clean_price,
+  dirty_price = dirty_price,
+  futures_price = futures_price
+)
+
+GaussQuant::show_tbl_GQH(price_tbl, "Bond price from yield")
+
+cat(
+  "Yield:",
+  sprintf("%.8f", bond_yield),
+  "\nClean price:",
+  sprintf("%.8f", clean_price),
+  "\nDirty price:",
+  sprintf("%.8f", dirty_price),
+  "\nAccrued amount:",
+  sprintf("%.8f", accrued_amount),
+  "\n"
+)
+```
+
+# Bond cashflow present-value illustration
+
+The generic interest-rate discount factors below are illustrative. They do not exactly reproduce QuantLib bond-yield pricing because ActualActual(Bond) uses coupon reference periods.
+
+```{r bond-cashflow-pv}
+interest_rate_obj <- QuantLib::InterestRate(
   bond_yield,
   dc_act_act_bond,
   cmpd_compounded,
   freq_semiannual
 )
 
-QuantLibGauss::qlg_show_tbl(
-  tibble::tibble(
-    trade_date = QuantLibGauss::qlg_iso(
-      trade_date
-    ),
-    settle_date = QuantLibGauss::qlg_iso(
-      settle_date
-    ),
-    bond_yield = bond_yield,
-    accrued_amount = accrued_amount,
-    clean_price = clean_price,
-    dirty_price = dirty_price
-  ),
-  "Bond price from yield",
-  n = 20
-)
+settle_date_r <- as.Date(settle_date_chr)
 
-# ------------------------------------------------------------
-# 5. Bond cashflow present-value table
-# ------------------------------------------------------------
-
-settle_date_r <- as.Date(
-  QuantLibGauss::qlg_iso(settle_date)
-)
-
-bond_cf_tbl <- QuantLibGauss::qlg_bond_cashflow_table(
-  bond_obj
-) |>
+bond_cf_tbl <- GaussQuant::bond_cashflow_table_GQL(bond_obj) |>
   dplyr::mutate(
-    pay_date_r = as.Date(
-      as.character(pay_date)
-    ),
-    discount_factor = dplyr::if_else(
-      pay_date_r >= settle_date_r,
-      purrr::map_dbl(
-        as.character(pay_date),
-        function(x) {
-          tryCatch(
-            i_rate_obj$discountFactor(
-              settle_date,
-              QuantLibGauss::qlg_date(x)
-            ),
-            error = function(e) {
-              NA_real_
-            }
-          )
+    pay_date = as.Date(.data$date),
+    discount_factor = purrr::map_dbl(
+      as.character(.data$pay_date),
+      function(x) {
+        if (as.Date(x) < settle_date_r) {
+          return(NA_real_)
         }
-      ),
-      NA_real_
+
+        tryCatch(
+          interest_rate_obj$discountFactor(
+            settle_date_ql,
+            GaussQuant::date_GQL(x)
+          ),
+          error = function(e) NA_real_
+        )
+      }
     ),
-    pv = amount * discount_factor
+    pv = .data$amount * .data$discount_factor
   ) |>
   dplyr::select(
-    pay_date,
-    coupon_rate,
-    accrual_start,
-    accrual_end,
-    amount,
-    discount_factor,
-    pv,
-    cashflow_type
+    .data$pay_date,
+    .data$amount,
+    .data$discount_factor,
+    .data$pv
   )
 
-QuantLibGauss::qlg_show_tbl(
-  bond_cf_tbl,
-  "Bond cashflow present-value table",
-  n = 20
+cashflow_pv <- sum(bond_cf_tbl$pv, na.rm = TRUE)
+
+cashflow_check_tbl <- tibble::tribble(
+  ~metric, ~value,
+  "cashflow_present_value", cashflow_pv,
+  "dirty_price_from_yield", dirty_price,
+  "illustrative_difference", cashflow_pv - dirty_price
 )
 
-# ------------------------------------------------------------
-# 6. Accrued interest hand calculation
-# ------------------------------------------------------------
-
-previous_coupon_date <- QuantLibGauss::qlg_date(
-  "2023-03-31"
+GaussQuant::show_tbl_GQH(bond_cf_tbl, "Bond cashflow present-value table", n = 20)
+GaussQuant::show_tbl_GQH(
+  GaussQuant::metric_tbl_display_GQH(cashflow_check_tbl),
+  "Cashflow PV illustration"
 )
+```
 
-spot_settlement_date <- QuantLibGauss::qlg_date(
-  "2023-04-21"
-)
+# Accrued interest hand calculation
 
-next_coupon_date <- QuantLibGauss::qlg_date(
-  "2023-09-30"
-)
+```{r accrued-interest-handcalc}
+previous_coupon_date <- GaussQuant::date_GQL("2023-03-30")
+next_coupon_date <- GaussQuant::date_GQL("2023-09-30")
 
 accrued_days_hand <- dc_act_act_bond$dayCount(
   previous_coupon_date,
-  spot_settlement_date
+  settle_date_ql
 )
 
 coupon_period_days <- dc_act_act_bond$dayCount(
@@ -228,252 +240,178 @@ coupon_period_days <- dc_act_act_bond$dayCount(
 
 coupon_amount_semiannual <- 4.125 / 2
 
-accrued_interest_hand <-
-  coupon_amount_semiannual *
+accrued_interest_hand <- coupon_amount_semiannual *
   accrued_days_hand /
   coupon_period_days
 
-QuantLibGauss::qlg_show_tbl(
-  tibble::tibble(
-    previous_coupon_date =
-      QuantLibGauss::qlg_iso(
-        previous_coupon_date
-      ),
-    settlement_date =
-      QuantLibGauss::qlg_iso(
-        spot_settlement_date
-      ),
-    next_coupon_date =
-      QuantLibGauss::qlg_iso(
-        next_coupon_date
-      ),
-    accrued_days = accrued_days_hand,
-    coupon_period_days = coupon_period_days,
-    coupon_amount = coupon_amount_semiannual,
-    accrued_interest_hand =
-      accrued_interest_hand,
-    accrued_amount_quantlib =
-      accrued_amount
-  ),
-  "Accrued interest hand calculation",
-  n = 20
+accrued_tbl <- tibble::tibble(
+  previous_coupon_date = as.Date(GaussQuant::iso_GQL(previous_coupon_date)),
+  settlement_date = as.Date(settle_date_chr),
+  next_coupon_date = as.Date(GaussQuant::iso_GQL(next_coupon_date)),
+  accrued_days = accrued_days_hand,
+  coupon_period_days = coupon_period_days,
+  coupon_amount = coupon_amount_semiannual,
+  accrued_interest_hand = accrued_interest_hand,
+  accrued_amount_quantlib = accrued_amount,
+  difference = accrued_interest_hand - accrued_amount
 )
 
-# ------------------------------------------------------------
-# 7. Deliverable basket and gross basis
-# ------------------------------------------------------------
+GaussQuant::show_tbl_GQH(accrued_tbl, "Accrued interest hand calculation")
+```
 
+# Deliverable basket
+
+```{r deliverable-basket}
 deliverable_tbl <- tibble::tribble(
-  ~issue_date,
-  ~maturity_date,
-  ~coupon_rate_pct,
-  ~conversion_factor,
-  ~market_yield_pct,
-  "2022-09-30",
-  "2027-09-30",
-  4.125,
-  0.9305,
-  3.70,
-  "2022-08-31",
-  "2027-08-31",
-  3.125,
-  0.8953,
-  3.69,
-  "2023-01-31",
-  "2028-01-31",
-  3.500,
-  0.9011,
-  3.65
+  ~issue_date, ~maturity_date, ~coupon_rate_pct, ~conversion_factor, ~market_yield_pct,
+  "2022-09-30", "2027-09-30", 4.125, 0.9305, 3.70,
+  "2022-08-31", "2027-08-31", 3.125, 0.8953, 3.69,
+  "2023-01-31", "2028-01-31", 3.500, 0.9011, 3.65
 )
 
-gross_basis_tbl <- purrr::pmap_dfr(
-  deliverable_tbl,
-  function(
-    issue_date,
-    maturity_date,
-    coupon_rate_pct,
-    conversion_factor,
-    market_yield_pct
-  ) {
-    QuantLibGauss::qlg_bond_futures_gross_basis_row(
-      issue_date = issue_date,
-      maturity_date = maturity_date,
-      coupon_rate_pct = coupon_rate_pct,
-      conversion_factor = conversion_factor,
-      market_yield_pct = market_yield_pct,
-      settlement_date = settle_date,
-      futures_price = futures_price,
-      settlement_days = settlement_days_t1,
-      calendar = cal_us_gov,
-      day_counter = dc_act_act_bond,
-      compounding = cmpd_compounded,
-      frequency = freq_semiannual
-    )
-  }
+GaussQuant::show_tbl_GQH(deliverable_tbl, "Treasury futures deliverable basket")
+```
+
+# Gross basis, net basis, and CTD
+
+```{r treasury-futures-ctd}
+repo_rate <- 5.10 / 100
+
+repo_days <- dc_act_360$dayCount(
+  settle_date_ql,
+  repo_end_date_ql
+)
+
+repo_year_fraction <- dc_act_360$yearFraction(
+  settle_date_ql,
+  repo_end_date_ql
+)
+
+ctd_result <- GaussQuant::bond_futures_ctd_table_GQL(
+  deliverable_tbl = deliverable_tbl,
+  settlement_date = settle_date_chr,
+  futures_price = futures_price,
+  repo_end_date = repo_end_date_chr,
+  repo_rate = repo_rate,
+  settlement_days = settlement_days_t1,
+  calendar = cal_us_gov,
+  day_counter = dc_act_act_bond,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual,
+  repo_day_counter = dc_act_360,
+  carry_day_counter = dc_act_360
+)
+
+basket_tbl <- ctd_result$basket
+
+gross_basis_tbl <- basket_tbl |>
+  dplyr::select(
+    .data$issue_date,
+    .data$maturity,
+    .data$coupon,
+    .data$yield_pct,
+    .data$bpv,
+    .data$clean_price,
+    .data$dirty_price,
+    .data$conversion_factor,
+    .data$gross_basis
+  )
+
+net_basis_tbl <- basket_tbl |>
+  dplyr::select(
+    .data$maturity,
+    .data$conversion_factor,
+    .data$gross_basis,
+    .data$accrued_start,
+    .data$accrued_end,
+    .data$coupon_income,
+    .data$repo_cost,
+    .data$carry,
+    .data$net_basis,
+    .data$forward_price,
+    .data$implied_repo,
+    .data$ctd
+  )
+
+basket_display_tbl <- basket_tbl |>
+  dplyr::select(-dplyr::any_of("bond_obj"))
+
+ctd_tbl <- ctd_result$ctd
+ctd_display_tbl <- ctd_tbl |>
+  dplyr::select(-dplyr::any_of("bond_obj"))
+
+stopifnot(
+  nrow(ctd_tbl) == 1L,
+  isTRUE(ctd_tbl$ctd[[1L]])
 )
 
 cat(
   "Futures price:",
-  QuantLibGauss::qlg_fmt_num(
-    futures_price,
-    6
-  ),
-  ", spot settlement date:",
-  QuantLibGauss::qlg_iso(
-    settle_date
-  ),
-  "\n"
-)
-
-QuantLibGauss::qlg_show_tbl(
-  gross_basis_tbl |>
-    dplyr::select(
-      -dplyr::any_of("bond_obj")
-    ),
-  "Gross basis table",
-  n = 20
-)
-
-# ------------------------------------------------------------
-# 8. Net basis, carry, and implied repo
-# ------------------------------------------------------------
-
-repo_rate <- 5.10 / 100
-
-repo_end_date <- QuantLibGauss::qlg_date(
-  "2023-07-06"
-)
-
-repo_year_frac <- dc_act_360$yearFraction(
-  settle_date,
-  repo_end_date
-)
-
-repo_days <- dc_act_360$dayCount(
-  settle_date,
-  repo_end_date
-)
-
-net_basis_tbl <- purrr::pmap_dfr(
-  list(
-    bond_obj =
-      gross_basis_tbl$bond_obj,
-    conversion_factor =
-      gross_basis_tbl$conversion_factor,
-    clean_price =
-      gross_basis_tbl$clean_price,
-    dirty_price =
-      gross_basis_tbl$dirty_price,
-    gross_basis =
-      gross_basis_tbl$gross_basis
-  ),
-  function(
-    bond_obj,
-    conversion_factor,
-    clean_price,
-    dirty_price,
-    gross_basis
-  ) {
-    QuantLibGauss::qlg_bond_futures_net_basis_row(
-      bond_obj = bond_obj,
-      conversion_factor = conversion_factor,
-      clean_price = clean_price,
-      dirty_price = dirty_price,
-      gross_basis = gross_basis,
-      settlement_date = settle_date,
-      repo_end_date = repo_end_date,
-      repo_rate = repo_rate,
-      repo_day_counter = dc_act_360,
-      carry_day_counter = dc_act_360,
-      futures_price = futures_price
-    )
-  }
-)
-
-cat(
-  "Repo rate:",
-  fmt_pct(repo_rate),
-  ", repo end date:",
-  QuantLibGauss::qlg_iso(
-    repo_end_date
-  ),
-  ", repo days:",
+  sprintf("%.6f", futures_price),
+  "\nRepo rate:",
+  sprintf("%.6f", repo_rate),
+  "\nRepo days:",
   repo_days,
-  ", repo year fraction:",
-  QuantLibGauss::qlg_fmt_num(
-    repo_year_frac,
-    6
-  ),
+  "\nRepo year fraction:",
+  sprintf("%.8f", repo_year_fraction),
   "\n"
 )
 
-QuantLibGauss::qlg_show_tbl(
-  net_basis_tbl |>
-    dplyr::select(
-      -dplyr::any_of("bond_obj")
-    ),
-  "Net basis table",
-  n = 20
+GaussQuant::show_tbl_GQH(gross_basis_tbl, "Gross basis table", n = 20)
+GaussQuant::show_tbl_GQH(net_basis_tbl, "Net basis and implied repo table", n = 20)
+GaussQuant::show_tbl_GQH(basket_display_tbl, "Deliverable basket summary", n = 20)
+GaussQuant::show_tbl_GQH(ctd_display_tbl, "Cheapest-to-deliver bond", n = 20)
+```
+
+# CTD-adjusted futures BPV
+
+```{r ctd-futures-bpv}
+ctd_bond <- ctd_tbl$bond_obj[[1L]]
+ctd_conversion_factor <- ctd_tbl$conversion_factor[[1L]]
+ctd_yield <- ctd_tbl$yield_pct[[1L]] / 100
+
+ctd_futures_bpv <- GaussQuant::bond_futures_bpv_GQL(
+  bond = ctd_bond,
+  conversion_factor = ctd_conversion_factor,
+  contracts = 1,
+  measure = "dv01",
+  ytm = ctd_yield,
+  day_counter = dc_act_act_bond,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual
 )
 
-# ------------------------------------------------------------
-# 9. Combined deliverable basket and CTD proxy
-# ------------------------------------------------------------
-
-gross_basis_display_tbl <- gross_basis_tbl |>
-  dplyr::select(
-    -dplyr::any_of("bond_obj")
+ctd_summary_tbl <- tibble::tibble(
+  metric = c(
+    "ctd_maturity",
+    "ctd_coupon",
+    "ctd_yield_pct",
+    "conversion_factor",
+    "gross_basis",
+    "net_basis",
+    "implied_repo",
+    "ctd_bond_bpv",
+    "ctd_futures_bpv"
+  ),
+  value = list(
+    as.character(ctd_tbl$maturity[[1L]]),
+    ctd_tbl$coupon[[1L]],
+    ctd_tbl$yield_pct[[1L]],
+    ctd_conversion_factor,
+    ctd_tbl$gross_basis[[1L]],
+    ctd_tbl$net_basis[[1L]],
+    ctd_tbl$implied_repo[[1L]],
+    ctd_tbl$bpv[[1L]],
+    ctd_futures_bpv
   )
-
-duplicate_net_cols <- intersect(
-  names(net_basis_tbl),
-  names(gross_basis_display_tbl)
 )
 
-net_basis_additional_tbl <- net_basis_tbl |>
-  dplyr::select(
-    -dplyr::any_of(
-      c(
-        "bond_obj",
-        duplicate_net_cols
-      )
-    )
-  )
-
-basket_summary_tbl <- dplyr::bind_cols(
-  gross_basis_display_tbl,
-  net_basis_additional_tbl
-) |>
-  dplyr::mutate(
-    ctd_proxy =
-      dplyr::row_number() ==
-      which.min(net_basis)
-  ) |>
-  dplyr::arrange(
-    net_basis
-  )
-
-QuantLibGauss::qlg_show_tbl(
-  basket_summary_tbl,
-  "Deliverable basket summary",
-  n = 20
-)
-
-# ------------------------------------------------------------
-# 10. CTD proxy result
-# ------------------------------------------------------------
-
-ctd_proxy_tbl <- basket_summary_tbl |>
-  dplyr::filter(
-    ctd_proxy
-  )
-
-QuantLibGauss::qlg_show_tbl(
-  ctd_proxy_tbl,
-  "CTD proxy based on minimum net basis",
-  n = 20
+GaussQuant::show_tbl_GQH(
+  GaussQuant::metric_tbl_display_GQH(ctd_summary_tbl),
+  "CTD and futures BPV summary"
 )
 
 cat(
-  "\nChapter 08 treasury futures and CTD completed successfully.\n"
+  "\nChapter 08 treasury futures and CTD migrated to GaussQuant successfully.\n"
 )
+```
