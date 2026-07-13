@@ -579,7 +579,7 @@ DF(T)N_0
 
 intro_coupon_dates_prdc <- GaussQuant::schedule_dates_GQL(
   intro_coupon_schedule_prdc
-)
+)$schedule_date
 
 remaining_intro_coupon_dates_prdc <- intro_coupon_dates_prdc[
   intro_coupon_dates_prdc > valuation_date_prdc
