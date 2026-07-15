@@ -1,6 +1,6 @@
 # 第12章 SABRモデル
 
-この章では、QuantLibGaussとQuantLibのSWIG版を利用し、SABRモデルによるボラティリティ・スマイルの表現とパラメータ推定を確認する。
+この章では、GaussQuantとQuantLibのSWIG版を利用し、SABRモデルによるボラティリティ・スマイルの表現とパラメータ推定を確認する。
 
 扱う内容は次のとおりである。
 
@@ -15,343 +15,16 @@
 #| message: false
 #| warning: false
 
-# ============================================================
-# Chapter 12: SABR Model
-# ------------------------------------------------------------
-# QuantLibGauss + QuantLib SWIG for R
-#
-# 内容:
-# 1. Black SABR calibration
-# 2. SABR parameter sensitivity
-# 3. Shifted SABR normal-volatility approximation
-# 4. Shifted SABR calibration
-# 5. Out-of-range strike checks
-# 6. Numerical-gradient evaluation history
-#
-# 前提:
-# - QuantLibGauss がインストール済み
-# - QuantLib SWIG版が利用可能
-# ============================================================
-
+library(tidyverse)
 library(QuantLib)
-
-suppressPackageStartupMessages({
-  library(ggplot2)
-  library(dplyr)
-  library(purrr)
-  library(tidyr)
-  library(tibble)
-})
+library(GaussQuant)
 ```
 
-## 1. 共通ヘルパー
+## 1. Black SABRの市場データ
 
-```{r chapter12-helpers}
-fmt_num <- function(
-  x,
-  digits = 6
-) {
-  sprintf(
-    paste0(
-      "%.",
-      digits,
-      "f"
-    ),
-    x
-  )
-}
+最初に、Black SABRのカリブレーションへ利用するストライクと市場ボラティリティを用意する。
 
-fmt_pct <- function(
-  x,
-  digits = 4
-) {
-  sprintf(
-    paste0(
-      "%.",
-      digits,
-      "f%%"
-    ),
-    100 * x
-  )
-}
-
-rmse_vec <- function(
-  actual,
-  fitted
-) {
-  sqrt(
-    mean(
-      (
-        actual -
-        fitted
-      )^2
-    )
-  )
-}
-
-safe_sabr_vol <- function(
-  strike,
-  forward,
-  maturity,
-  alpha,
-  beta,
-  volvol,
-  rho
-) {
-  tryCatch(
-    sabrVolatility(
-      strike,
-      forward,
-      maturity,
-      alpha,
-      beta,
-      volvol,
-      rho
-    ),
-    error = function(e) {
-      NA_real_
-    }
-  )
-}
-
-approx_gradient <- function(
-  parameters,
-  objective_function,
-  epsilon = 1e-8
-) {
-  base_value <-
-    objective_function(
-      parameters
-    )
-
-  purrr::map_dbl(
-    seq_along(
-      parameters
-    ),
-    function(i) {
-      parameters_up <-
-        parameters
-
-      parameters_up[i] <-
-        parameters_up[i] +
-        epsilon
-
-      (
-        objective_function(
-          parameters_up
-        ) -
-        base_value
-      ) /
-        epsilon
-    }
-  )
-}
-```
-
-## 2. HaganのNormal SABR近似
-
-Normal SABRの近似式をRで実装する。
-
-`F`はフォワード、`K`はストライク、`T`は満期までの年数である。負の金利やゼロ近傍の金利を扱う場合には、フォワードとストライクの両方へshiftを加える。
-
-```{r chapter12-normal-sabr-helpers}
-normal_vol_hagan <- function(
-  strike,
-  forward,
-  maturity,
-  beta,
-  alpha,
-  volvol,
-  rho
-) {
-  epsilon <- 1e-7
-
-  log_fk <- log(
-    forward /
-      strike
-  )
-
-  first_adjustment <- 1 +
-    log_fk^2 /
-      24 +
-    log_fk^4 /
-      1920
-
-  second_adjustment <- 1 +
-    (
-      1 -
-      beta
-    )^2 *
-      log_fk^2 /
-      24 +
-    (
-      1 -
-      beta
-    )^4 *
-      log_fk^4 /
-      1920
-
-  leading_term <-
-    alpha *
-    (
-      forward *
-      strike
-    )^(
-      beta /
-      2
-    ) *
-    first_adjustment /
-    second_adjustment
-
-  z_value <- (
-    volvol /
-    alpha
-  ) *
-    (
-      forward *
-      strike
-    )^(
-      (
-        1 -
-        beta
-      ) /
-      2
-    ) *
-    log_fk
-
-  x_value <- log(
-    (
-      sqrt(
-        1 -
-          2 *
-          rho *
-          z_value +
-          z_value^2
-      ) -
-        rho +
-        z_value
-    ) /
-      (
-        1 -
-        rho
-      )
-  )
-
-  z_over_x <- ifelse(
-    abs(z_value) >
-      epsilon,
-    z_value /
-      x_value,
-    1
-  )
-
-  correction_1 <- -
-    beta *
-    (
-      2 -
-      beta
-    ) *
-    alpha^2 /
-    (
-      24 *
-      (
-        forward *
-        strike
-      )^(
-        1 -
-        beta
-      )
-    )
-
-  correction_2 <-
-    rho *
-    alpha *
-    volvol *
-    beta /
-    (
-      4 *
-      (
-        forward *
-        strike
-      )^(
-        (
-          1 -
-          beta
-        ) /
-        2
-      )
-    )
-
-  correction_3 <- (
-    2 -
-      3 *
-      rho^2
-  ) *
-    volvol^2 /
-    24
-
-  time_correction <- 1 +
-    (
-      correction_1 +
-      correction_2 +
-      correction_3
-    ) *
-    maturity
-
-  leading_term *
-    z_over_x *
-    time_correction
-}
-
-shifted_normal_vol_hagan <- function(
-  strike,
-  forward,
-  maturity,
-  beta,
-  alpha,
-  volvol,
-  rho,
-  shift = 0.025
-) {
-  shifted_strike <-
-    strike +
-    shift
-
-  shifted_forward <-
-    forward +
-    shift
-
-  if (
-    shifted_strike <= 0 ||
-    shifted_forward <= 0
-  ) {
-    return(NA_real_)
-  }
-
-  normal_vol_hagan(
-    strike =
-      shifted_strike,
-    forward =
-      shifted_forward,
-    maturity =
-      maturity,
-    beta =
-      beta,
-    alpha =
-      alpha,
-    volvol =
-      volvol,
-    rho =
-      rho
-  )
-}
-```
-
-## 3. Black SABRの市場データ
-
-Black SABRのカリブレーションに利用するストライクと市場ボラティリティを用意する。
-
-固定された市場入力は、手で確認しやすいように `tribble()` で記述する。
+`beta`は固定し、`alpha`、`volvol`、`rho`を推定する。市場データとモデル入力は、値を確認しやすいように`tribble()`で管理する。
 
 ```{r chapter12-black-market-data}
 black_market_data <- tibble::tribble(
@@ -365,12 +38,8 @@ black_market_data <- tibble::tribble(
   2.56,        62.72
 ) |>
   dplyr::mutate(
-    strike =
-      strike_pct /
-      100,
-    market_vol =
-      market_vol_pct /
-      100
+    strike = strike_pct / 100,
+    market_vol = market_vol_pct / 100
   )
 
 black_model_inputs <- tibble::tribble(
@@ -380,23 +49,12 @@ black_model_inputs <- tibble::tribble(
   "fixed_beta", 0.5
 )
 
-forward_black <-
-  black_model_inputs$value[
-    black_model_inputs$input ==
-      "forward"
-  ]
+black_input_values <- black_model_inputs |>
+  tibble::deframe()
 
-maturity_black <-
-  black_model_inputs$value[
-    black_model_inputs$input ==
-      "maturity"
-  ]
-
-beta_black <-
-  black_model_inputs$value[
-    black_model_inputs$input ==
-      "fixed_beta"
-  ]
+forward_black <- unname(black_input_values["forward"])
+maturity_black <- unname(black_input_values["maturity"])
+beta_black <- unname(black_input_values["fixed_beta"])
 
 initial_parameters_black <- c(
   alpha = 0.1,
@@ -404,191 +62,125 @@ initial_parameters_black <- c(
   rho = 0.1
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   black_market_data |>
-    dplyr::select(
-      strike,
-      market_vol
-    ),
+    dplyr::select(strike, market_vol),
   "Black SABR market data",
   n = 20
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   black_model_inputs,
   "Black SABR model inputs",
   n = 20
 )
 ```
 
-## 4. Black SABRのカリブレーション
+## 2. Black SABRのカリブレーション
 
-`beta`は固定し、`alpha`、`volvol`、`rho`を推定する。
+Black SABRボラティリティは、GaussQuantの`safe_sabr_vol_GQL()`で計算する。この関数はQuantLibのSABR近似を安全に呼び出し、計算できない入力では`NA`を返す。
 
-目的関数には、市場ボラティリティとSABRボラティリティのRMSEを利用する。
+目的関数には、市場ボラティリティとモデルボラティリティのRMSEを使用する。
 
 ```{r chapter12-black-calibration}
-objective_sabr_black <- function(
-  parameters
-) {
-  alpha <-
-    parameters[1]
+objective_sabr_black <- function(parameters) {
+  alpha <- unname(parameters[1])
+  volvol <- unname(parameters[2])
+  rho <- unname(parameters[3])
 
-  volvol <-
-    parameters[2]
-
-  rho <-
-    parameters[3]
-
-  if (
-    alpha <= 0 ||
-    volvol < 0 ||
-    rho <= -0.9999 ||
-    rho >= 0.9999
-  ) {
+  if (alpha <= 0 || volvol < 0 || rho <= -0.9999 || rho >= 0.9999) {
     return(1e6)
   }
 
   calculated_volatility <- purrr::map_dbl(
     black_market_data$strike,
-    function(strike_value) {
-      safe_sabr_vol(
-        strike =
-          strike_value,
-        forward =
-          forward_black,
-        maturity =
-          maturity_black,
-        alpha =
-          alpha,
-        beta =
-          beta_black,
-        volvol =
-          volvol,
-        rho =
-          rho
-      )
-    }
+    \(strike_value) GaussQuant::safe_sabr_vol_GQL(
+      strike = strike_value,
+      forward = forward_black,
+      maturity = maturity_black,
+      alpha = alpha,
+      beta = beta_black,
+      volvol = volvol,
+      rho = rho
+    )
   )
 
-  if (
-    any(
-      is.na(
-        calculated_volatility
-      )
-    ) ||
-    any(
-      !is.finite(
-        calculated_volatility
-      )
-    )
-  ) {
+  if (any(!is.finite(calculated_volatility))) {
     return(1e6)
   }
 
-  rmse_vec(
-    black_market_data$
-      market_vol,
-    calculated_volatility
+  GaussQuant::rmse_GQH(
+    actual = black_market_data$market_vol,
+    fitted = calculated_volatility
   )
 }
 
 black_fit <- stats::optim(
-  par =
-    initial_parameters_black,
-  fn =
-    objective_sabr_black,
-  method =
-    "L-BFGS-B",
-  lower = c(
-    0.0001,
-    0,
-    -0.9999
-  ),
-  upper = c(
-    Inf,
-    Inf,
-    0.9999
-  )
+  par = initial_parameters_black,
+  fn = objective_sabr_black,
+  method = "L-BFGS-B",
+  lower = c(0.0001, 0, -0.9999),
+  upper = c(Inf, Inf, 0.9999)
 )
 
-black_parameters <-
-  black_fit$par
+black_parameters <- stats::setNames(
+  black_fit$par,
+  c("alpha", "volvol", "rho")
+)
 
-black_calculated_volatility <-
-  purrr::map_dbl(
-    black_market_data$strike,
-    function(strike_value) {
-      safe_sabr_vol(
-        strike =
-          strike_value,
-        forward =
-          forward_black,
-        maturity =
-          maturity_black,
-        alpha =
-          black_parameters[1],
-        beta =
-          beta_black,
-        volvol =
-          black_parameters[2],
-        rho =
-          black_parameters[3]
-      )
-    }
+black_calculated_volatility <- purrr::map_dbl(
+  black_market_data$strike,
+  \(strike_value) GaussQuant::safe_sabr_vol_GQL(
+    strike = strike_value,
+    forward = forward_black,
+    maturity = maturity_black,
+    alpha = black_parameters["alpha"],
+    beta = beta_black,
+    volvol = black_parameters["volvol"],
+    rho = black_parameters["rho"]
   )
+)
 
 black_calibration_tbl <- tibble::tribble(
-  ~parameter, ~value,
-  "alpha",     black_parameters[1],
-  "beta",      beta_black,
-  "volvol",    black_parameters[2],
-  "rho",       black_parameters[3],
-  "rmse",      black_fit$value,
-  "convergence_code",
-  black_fit$convergence
+  ~parameter,          ~value,
+  "alpha",              unname(black_parameters["alpha"]),
+  "beta",               beta_black,
+  "volvol",             unname(black_parameters["volvol"]),
+  "rho",                unname(black_parameters["rho"]),
+  "rmse",               black_fit$value,
+  "convergence_code",   as.numeric(black_fit$convergence)
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   black_calibration_tbl,
   "Black SABR calibration summary",
   n = 20
 )
 ```
 
-## 5. Black SABR smile
+## 3. Black SABR smile
+
+推定したSABRボラティリティと市場ボラティリティを比較する。
 
 ```{r chapter12-black-smile}
 black_smile_tbl <- black_market_data |>
   dplyr::transmute(
-    strike =
-      strike,
-    market_vol =
-      market_vol,
-    sabr_vol =
-      black_calculated_volatility,
-    residual =
-      market_vol -
-      sabr_vol
+    strike,
+    market_vol,
+    sabr_vol = black_calculated_volatility,
+    residual = market_vol - sabr_vol
   )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   black_smile_tbl,
   "Black SABR smile table",
   n = 20
 )
 
 black_smile_plot_tbl <- black_smile_tbl |>
-  dplyr::select(
-    strike,
-    market_vol,
-    sabr_vol
-  ) |>
+  dplyr::select(strike, market_vol, sabr_vol) |>
   tidyr::pivot_longer(
-    cols = c(
-      market_vol,
-      sabr_vol
-    ),
+    cols = c(market_vol, sabr_vol),
     names_to = "series",
     values_to = "volatility"
   )
@@ -603,52 +195,21 @@ black_smile_plot <- ggplot2::ggplot(
     shape = series
   )
 ) +
-  ggplot2::geom_line(
-    linewidth = 0.6
-  ) +
-  ggplot2::geom_point(
-    size = 2.2
-  ) +
+  ggplot2::geom_line(linewidth = 0.6) +
+  ggplot2::geom_point(size = 2.2) +
   ggplot2::scale_x_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.2f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_percent(accuracy = 0.01)
   ) +
   ggplot2::scale_y_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.0f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_percent(accuracy = 1)
   ) +
   ggplot2::labs(
-    title =
-      "Black SABR calibration",
+    title = "Black SABR calibration",
     subtitle = paste0(
-      "alpha=",
-      fmt_num(
-        black_parameters[1],
-        5
-      ),
-      ", beta=",
-      fmt_num(
-        beta_black,
-        3
-      ),
-      ", volvol=",
-      fmt_num(
-        black_parameters[2],
-        5
-      ),
-      ", rho=",
-      fmt_num(
-        black_parameters[3],
-        5
-      )
+      "alpha=", GaussQuant::fmt_num_GQH(black_parameters["alpha"], 5),
+      ", beta=", GaussQuant::fmt_num_GQH(beta_black, 3),
+      ", volvol=", GaussQuant::fmt_num_GQH(black_parameters["volvol"], 5),
+      ", rho=", GaussQuant::fmt_num_GQH(black_parameters["rho"], 5)
     ),
     x = "Strike",
     y = "Black volatility",
@@ -657,142 +218,79 @@ black_smile_plot <- ggplot2::ggplot(
   ) +
   ggplot2::theme_minimal()
 
-print(
-  black_smile_plot
-)
+print(black_smile_plot)
 ```
 
-## 6. SABRパラメータの感応度
+## 4. SABRパラメータの感応度
 
-推定したパラメータを基準に、各パラメータを個別に上下させた場合のスマイルの変化を確認する。
+推定したパラメータを基準に、各パラメータだけを上下させた場合のスマイルの変化を確認する。
 
-比較用のシフト幅も固定データとして `tribble()` で管理する。
+`alpha`と`volvol`は非負、`beta`は0から1、`rho`は-1から1の範囲に収まるようにシナリオ値を制限する。
 
 ```{r chapter12-parameter-sensitivity}
 base_parameter_tbl <- tibble::tribble(
-  ~parameter, ~base_value,          ~shift,
-  "alpha",     black_parameters[1],  0.02,
-  "beta",      beta_black,           0.20,
-  "volvol",    black_parameters[2],  0.40,
-  "rho",       black_parameters[3],  0.44
+  ~parameter, ~base_value,                          ~shift,
+  "alpha",     unname(black_parameters["alpha"]),    0.02,
+  "beta",      beta_black,                           0.20,
+  "volvol",    unname(black_parameters["volvol"]),   0.40,
+  "rho",       unname(black_parameters["rho"]),      0.44
 )
 
-base_parameters <- stats::setNames(
-  base_parameter_tbl$base_value,
-  base_parameter_tbl$parameter
-)
+base_parameters <- base_parameter_tbl |>
+  dplyr::select(parameter, base_value) |>
+  tibble::deframe()
 
-parameter_shifts <- stats::setNames(
-  base_parameter_tbl$shift,
-  base_parameter_tbl$parameter
-)
+bound_parameter <- function(parameter, value) {
+  dplyr::case_when(
+    parameter == "alpha" ~ max(value, 0.0001),
+    parameter == "beta" ~ min(max(value, 0), 1),
+    parameter == "volvol" ~ max(value, 0),
+    parameter == "rho" ~ min(max(value, -0.9999), 0.9999),
+    TRUE ~ value
+  )
+}
 
-sabr_sensitivity_tbl <- purrr::map_dfr(
-  seq_along(
-    base_parameters
-  ),
-  function(parameter_id) {
-    parameters_up <-
-      base_parameters
-
-    parameters_down <-
-      base_parameters
-
-    parameters_up[parameter_id] <-
-      parameters_up[parameter_id] +
-      parameter_shifts[parameter_id]
-
-    parameters_down[parameter_id] <-
-      parameters_down[parameter_id] -
-      parameter_shifts[parameter_id]
-
-    scenario_parameter_tbl <- tibble::tribble(
-      ~scenario, ~alpha, ~beta, ~volvol, ~rho,
-      "base",
-      base_parameters["alpha"],
-      base_parameters["beta"],
-      base_parameters["volvol"],
-      base_parameters["rho"],
-      "up",
-      parameters_up["alpha"],
-      parameters_up["beta"],
-      parameters_up["volvol"],
-      parameters_up["rho"],
-      "down",
-      parameters_down["alpha"],
-      parameters_down["beta"],
-      parameters_down["volvol"],
-      parameters_down["rho"]
+sabr_sensitivity_tbl <- purrr::pmap_dfr(
+  base_parameter_tbl,
+  \(parameter, base_value, shift) {
+    scenario_tbl <- tibble::tribble(
+      ~scenario, ~target_value,
+      "base",      base_value,
+      "up",        bound_parameter(parameter, base_value + shift),
+      "down",      bound_parameter(parameter, base_value - shift)
     )
 
     purrr::pmap_dfr(
-      scenario_parameter_tbl,
-      function(
-        scenario,
-        alpha,
-        beta,
-        volvol,
-        rho
-      ) {
+      scenario_tbl,
+      \(scenario, target_value) {
+        scenario_parameters <- base_parameters
+        scenario_parameters[parameter] <- target_value
+
         tibble::tibble(
-          strike =
+          parameter = parameter,
+          scenario = scenario,
+          strike = black_market_data$strike,
+          volatility = purrr::map_dbl(
             black_market_data$strike,
-          volatility =
-            purrr::map_dbl(
-              black_market_data$strike,
-              function(strike_value) {
-                safe_sabr_vol(
-                  strike =
-                    strike_value,
-                  forward =
-                    forward_black,
-                  maturity =
-                    maturity_black,
-                  alpha =
-                    alpha,
-                  beta =
-                    beta,
-                  volvol =
-                    volvol,
-                  rho =
-                    rho
-                )
-              }
-            ),
-          scenario =
-            scenario,
-          parameter =
-            names(
-              base_parameters
-            )[parameter_id],
-          base_value =
-            base_parameters[
-              parameter_id
-            ],
-          shifted_value =
-            dplyr::case_when(
-              scenario ==
-                "up" ~
-                parameters_up[
-                  parameter_id
-                ],
-              scenario ==
-                "down" ~
-                parameters_down[
-                  parameter_id
-                ],
-              TRUE ~
-                base_parameters[
-                  parameter_id
-                ]
+            \(strike_value) GaussQuant::safe_sabr_vol_GQL(
+              strike = strike_value,
+              forward = forward_black,
+              maturity = maturity_black,
+              alpha = scenario_parameters["alpha"],
+              beta = scenario_parameters["beta"],
+              volvol = scenario_parameters["volvol"],
+              rho = scenario_parameters["rho"]
             )
+          ),
+          base_value = base_value,
+          shifted_value = target_value
         )
       }
     )
   }
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   base_parameter_tbl,
   "SABR sensitivity settings",
   n = 20
@@ -808,35 +306,17 @@ sabr_sensitivity_plot <- ggplot2::ggplot(
     shape = scenario
   )
 ) +
-  ggplot2::geom_line(
-    linewidth = 0.6
-  ) +
-  ggplot2::geom_point(
-    size = 1.8
-  ) +
-  ggplot2::facet_wrap(
-    ~parameter,
-    scales = "free_y"
-  ) +
+  ggplot2::geom_line(linewidth = 0.6) +
+  ggplot2::geom_point(size = 1.8) +
+  ggplot2::facet_wrap(~parameter, scales = "free_y") +
   ggplot2::scale_x_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.2f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_percent(accuracy = 0.01)
   ) +
   ggplot2::scale_y_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.0f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_percent(accuracy = 1)
   ) +
   ggplot2::labs(
-    title =
-      "SABR parameter sensitivity",
+    title = "SABR parameter sensitivity",
     x = "Strike",
     y = "Black volatility",
     linetype = "Scenario",
@@ -844,16 +324,16 @@ sabr_sensitivity_plot <- ggplot2::ggplot(
   ) +
   ggplot2::theme_minimal()
 
-print(
-  sabr_sensitivity_plot
-)
+print(sabr_sensitivity_plot)
 ```
 
-## 7. Shifted SABR Normalの市場データ
+## 5. HaganのNormal SABR近似
 
-Normalボラティリティの市場データを用意する。
+Normal SABRのHagan近似はGaussQuantの`normal_vol_hagan_GQL()`に実装されている。
 
-負のストライクを含むため、フォワードとストライクへ2.5％のshiftを加えたHagan近似を使用する。
+負の金利やゼロ近傍の金利を扱う場合は、フォワードとストライクの両方へshiftを加える。GaussQuantの`shifted_normal_vol_hagan_GQL()`はshift後の値が正であることを確認してからNormal SABRボラティリティを計算する。
+
+ここでは負のストライクを含むため、2.5％のshiftを使用する。
 
 ```{r chapter12-normal-market-data}
 normal_market_data <- tibble::tribble(
@@ -867,12 +347,8 @@ normal_market_data <- tibble::tribble(
    1.05,       47.81
 ) |>
   dplyr::mutate(
-    strike =
-      strike_pct /
-      100,
-    market_vol =
-      market_vol_bp /
-      10000
+    strike = strike_pct / 100,
+    market_vol = market_vol_bp / 10000
   )
 
 normal_model_inputs <- tibble::tribble(
@@ -883,29 +359,13 @@ normal_model_inputs <- tibble::tribble(
   "shift",      0.025
 )
 
-forward_normal <-
-  normal_model_inputs$value[
-    normal_model_inputs$input ==
-      "forward"
-  ]
+normal_input_values <- normal_model_inputs |>
+  tibble::deframe()
 
-maturity_normal <-
-  normal_model_inputs$value[
-    normal_model_inputs$input ==
-      "maturity"
-  ]
-
-beta_normal <-
-  normal_model_inputs$value[
-    normal_model_inputs$input ==
-      "fixed_beta"
-  ]
-
-shift_normal <-
-  normal_model_inputs$value[
-    normal_model_inputs$input ==
-      "shift"
-  ]
+forward_normal <- unname(normal_input_values["forward"])
+maturity_normal <- unname(normal_input_values["maturity"])
+beta_normal <- unname(normal_input_values["fixed_beta"])
+shift_normal <- unname(normal_input_values["shift"])
 
 initial_parameters_normal <- c(
   alpha = 0.1,
@@ -913,192 +373,157 @@ initial_parameters_normal <- c(
   rho = 0.1
 )
 
-QuantLibGauss::qlg_show_tbl(
-  normal_market_data |>
-    dplyr::select(
-      strike,
-      market_vol
+normal_formula_check_tbl <- normal_market_data |>
+  dplyr::slice_min(abs(strike - forward_normal), n = 1, with_ties = FALSE) |>
+  dplyr::transmute(
+    strike,
+    unshifted_normal_vol = GaussQuant::normal_vol_hagan_GQL(
+      strike = strike + shift_normal,
+      forward = forward_normal + shift_normal,
+      maturity = maturity_normal,
+      beta = beta_normal,
+      alpha = initial_parameters_normal["alpha"],
+      volvol = initial_parameters_normal["volvol"],
+      rho = initial_parameters_normal["rho"]
     ),
+    shifted_normal_vol = GaussQuant::shifted_normal_vol_hagan_GQL(
+      strike = strike,
+      forward = forward_normal,
+      maturity = maturity_normal,
+      beta = beta_normal,
+      alpha = initial_parameters_normal["alpha"],
+      volvol = initial_parameters_normal["volvol"],
+      rho = initial_parameters_normal["rho"],
+      shift = shift_normal
+    )
+  )
+
+GaussQuant::show_tbl_GQH(
+  normal_market_data |>
+    dplyr::select(strike, market_vol),
   "Shifted SABR normal market data",
   n = 20
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   normal_model_inputs,
   "Shifted SABR normal model inputs",
   n = 20
 )
+
+GaussQuant::show_tbl_GQH(
+  normal_formula_check_tbl,
+  "Normal SABR shifted-wrapper check",
+  n = 20
+)
 ```
 
-## 8. Shifted SABR Normalのカリブレーション
+## 6. Shifted SABR Normalのカリブレーション
+
+`beta`とshiftを固定し、`alpha`、`volvol`、`rho`を推定する。
 
 ```{r chapter12-normal-calibration}
-objective_sabr_normal <- function(
-  parameters
-) {
-  alpha <-
-    parameters[1]
+objective_sabr_normal <- function(parameters) {
+  alpha <- unname(parameters[1])
+  volvol <- unname(parameters[2])
+  rho <- unname(parameters[3])
 
-  volvol <-
-    parameters[2]
-
-  rho <-
-    parameters[3]
-
-  if (
-    alpha <= 0.001 ||
-    volvol < 0 ||
-    rho <= -0.999 ||
-    rho >= 0.999
-  ) {
+  if (alpha < 0.001 || volvol < 0 || rho <= -0.999 || rho >= 0.999) {
     return(1e6)
   }
 
   calculated_volatility <- purrr::map_dbl(
     normal_market_data$strike,
-    function(strike_value) {
-      shifted_normal_vol_hagan(
-        strike =
-          strike_value,
-        forward =
-          forward_normal,
-        maturity =
-          maturity_normal,
-        beta =
-          beta_normal,
-        alpha =
-          alpha,
-        volvol =
-          volvol,
-        rho =
-          rho,
-        shift =
-          shift_normal
-      )
-    }
+    \(strike_value) GaussQuant::shifted_normal_vol_hagan_GQL(
+      strike = strike_value,
+      forward = forward_normal,
+      maturity = maturity_normal,
+      beta = beta_normal,
+      alpha = alpha,
+      volvol = volvol,
+      rho = rho,
+      shift = shift_normal
+    )
   )
 
-  if (
-    any(
-      is.na(
-        calculated_volatility
-      )
-    ) ||
-    any(
-      !is.finite(
-        calculated_volatility
-      )
-    )
-  ) {
+  if (any(!is.finite(calculated_volatility))) {
     return(1e6)
   }
 
-  rmse_vec(
-    normal_market_data$
-      market_vol,
-    calculated_volatility
+  GaussQuant::rmse_GQH(
+    actual = normal_market_data$market_vol,
+    fitted = calculated_volatility
   )
 }
 
 normal_fit <- stats::optim(
-  par =
-    initial_parameters_normal,
-  fn =
-    objective_sabr_normal,
-  method =
-    "L-BFGS-B",
-  lower = c(
-    0.001,
-    0,
-    -0.999
-  ),
-  upper = c(
-    Inf,
-    Inf,
-    0.999
-  )
+  par = initial_parameters_normal,
+  fn = objective_sabr_normal,
+  method = "L-BFGS-B",
+  lower = c(0.001, 0, -0.999),
+  upper = c(Inf, Inf, 0.999)
 )
 
-normal_parameters <-
-  normal_fit$par
+normal_parameters <- stats::setNames(
+  normal_fit$par,
+  c("alpha", "volvol", "rho")
+)
 
-normal_calculated_volatility <-
-  purrr::map_dbl(
-    normal_market_data$strike,
-    function(strike_value) {
-      shifted_normal_vol_hagan(
-        strike =
-          strike_value,
-        forward =
-          forward_normal,
-        maturity =
-          maturity_normal,
-        beta =
-          beta_normal,
-        alpha =
-          normal_parameters[1],
-        volvol =
-          normal_parameters[2],
-        rho =
-          normal_parameters[3],
-        shift =
-          shift_normal
-      )
-    }
+normal_calculated_volatility <- purrr::map_dbl(
+  normal_market_data$strike,
+  \(strike_value) GaussQuant::shifted_normal_vol_hagan_GQL(
+    strike = strike_value,
+    forward = forward_normal,
+    maturity = maturity_normal,
+    beta = beta_normal,
+    alpha = normal_parameters["alpha"],
+    volvol = normal_parameters["volvol"],
+    rho = normal_parameters["rho"],
+    shift = shift_normal
   )
+)
 
 normal_calibration_tbl <- tibble::tribble(
-  ~parameter, ~value,
-  "alpha",     normal_parameters[1],
-  "beta",      beta_normal,
-  "volvol",    normal_parameters[2],
-  "rho",       normal_parameters[3],
-  "shift",     shift_normal,
-  "rmse",      normal_fit$value,
-  "convergence_code",
-  normal_fit$convergence
+  ~parameter,          ~value,
+  "alpha",              unname(normal_parameters["alpha"]),
+  "beta",               beta_normal,
+  "volvol",             unname(normal_parameters["volvol"]),
+  "rho",                unname(normal_parameters["rho"]),
+  "shift",              shift_normal,
+  "rmse",               normal_fit$value,
+  "convergence_code",   as.numeric(normal_fit$convergence)
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   normal_calibration_tbl,
   "Shifted SABR normal calibration summary",
   n = 20
 )
 ```
 
-## 9. Shifted SABR Normal smile
+## 7. Shifted SABR Normal smile
+
+Normalボラティリティは小数で表すと値が小さいため、グラフの縦軸ではbasis pointへ変換して表示する。
 
 ```{r chapter12-normal-smile}
 normal_smile_tbl <- normal_market_data |>
   dplyr::transmute(
-    strike =
-      strike,
-    market_vol =
-      market_vol,
-    sabr_vol =
-      normal_calculated_volatility,
-    residual =
-      market_vol -
-      sabr_vol
+    strike,
+    market_vol,
+    sabr_vol = normal_calculated_volatility,
+    residual = market_vol - sabr_vol
   )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   normal_smile_tbl,
   "Shifted SABR normal smile table",
   n = 20
 )
 
 normal_smile_plot_tbl <- normal_smile_tbl |>
-  dplyr::select(
-    strike,
-    market_vol,
-    sabr_vol
-  ) |>
+  dplyr::select(strike, market_vol, sabr_vol) |>
   tidyr::pivot_longer(
-    cols = c(
-      market_vol,
-      sabr_vol
-    ),
+    cols = c(market_vol, sabr_vol),
     names_to = "series",
     values_to = "volatility"
   )
@@ -1113,57 +538,26 @@ normal_smile_plot <- ggplot2::ggplot(
     shape = series
   )
 ) +
-  ggplot2::geom_line(
-    linewidth = 0.6
-  ) +
-  ggplot2::geom_point(
-    size = 2.2
-  ) +
+  ggplot2::geom_line(linewidth = 0.6) +
+  ggplot2::geom_point(size = 2.2) +
   ggplot2::scale_x_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.2f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_percent(accuracy = 0.01)
   ) +
   ggplot2::scale_y_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.2f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_number(
+      accuracy = 0.1,
+      scale = 10000,
+      suffix = " bp"
+    )
   ) +
   ggplot2::labs(
-    title =
-      "Shifted SABR normal calibration",
+    title = "Shifted SABR normal calibration",
     subtitle = paste0(
-      "alpha=",
-      fmt_num(
-        normal_parameters[1],
-        5
-      ),
-      ", beta=",
-      fmt_num(
-        beta_normal,
-        3
-      ),
-      ", volvol=",
-      fmt_num(
-        normal_parameters[2],
-        5
-      ),
-      ", rho=",
-      fmt_num(
-        normal_parameters[3],
-        5
-      ),
-      ", shift=",
-      fmt_pct(
-        shift_normal,
-        2
-      )
+      "alpha=", GaussQuant::fmt_num_GQH(normal_parameters["alpha"], 5),
+      ", beta=", GaussQuant::fmt_num_GQH(beta_normal, 3),
+      ", volvol=", GaussQuant::fmt_num_GQH(normal_parameters["volvol"], 5),
+      ", rho=", GaussQuant::fmt_num_GQH(normal_parameters["rho"], 5),
+      ", shift=", scales::percent(shift_normal, accuracy = 0.01)
     ),
     x = "Strike",
     y = "Normal volatility",
@@ -1172,16 +566,12 @@ normal_smile_plot <- ggplot2::ggplot(
   ) +
   ggplot2::theme_minimal()
 
-print(
-  normal_smile_plot
-)
+print(normal_smile_plot)
 ```
 
-## 10. 外側ストライクの確認
+## 8. 外側ストライクの確認
 
-カリブレーションに使用したストライクの外側について、Shifted SABRのNormalボラティリティを確認する。
-
-固定された確認ストライクは `tribble()` で記述する。
+カリブレーションに使用した範囲の外側でも、shift後のストライクが正であればSABRボラティリティを計算できる。
 
 ```{r chapter12-otm-check}
 otm_check_inputs <- tibble::tribble(
@@ -1192,158 +582,100 @@ otm_check_inputs <- tibble::tribble(
 
 otm_check_tbl <- otm_check_inputs |>
   dplyr::mutate(
-    normal_volatility =
-      purrr::map_dbl(
-        strike,
-        function(strike_value) {
-          shifted_normal_vol_hagan(
-            strike =
-              strike_value,
-            forward =
-              forward_normal,
-            maturity =
-              maturity_normal,
-            beta =
-              beta_normal,
-            alpha =
-              normal_parameters[1],
-            volvol =
-              normal_parameters[2],
-            rho =
-              normal_parameters[3],
-            shift =
-              shift_normal
-          )
-        }
+    shifted_strike = strike + shift_normal,
+    normal_volatility = purrr::map_dbl(
+      strike,
+      \(strike_value) GaussQuant::shifted_normal_vol_hagan_GQL(
+        strike = strike_value,
+        forward = forward_normal,
+        maturity = maturity_normal,
+        beta = beta_normal,
+        alpha = normal_parameters["alpha"],
+        volvol = normal_parameters["volvol"],
+        rho = normal_parameters["rho"],
+        shift = shift_normal
       )
+    ),
+    normal_volatility_bp = 10000 * normal_volatility
   )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   otm_check_tbl,
   "Shifted SABR outer-strike check",
   n = 20
 )
 ```
 
-## 11. 数値gradientの評価履歴
+## 9. 数値gradientの評価履歴
 
-`optim()`の目的関数が評価されるたびに、有限差分によるgradientを保存する。
+`optim()`の目的関数が評価されるたびに、GaussQuantの`approx_gradient_GQH()`を使って有限差分gradientを保存する。
 
-これは厳密な最適化iteration番号ではなく、目的関数の**評価番号**である。そのため、列名とグラフの横軸には`evaluation`を使用する。
+ここで記録する番号は厳密な最適化iterationではなく、目的関数の**評価番号**である。
 
 ```{r chapter12-gradient-history}
-gradient_history <- list()
+gradient_history_env <- rlang::env(
+  values = list()
+)
 
-objective_sabr_normal_with_history <- function(
-  parameters
-) {
-  objective_sabr_normal(
-    parameters
-  )
-}
+objective_sabr_normal_with_history <- function(parameters) {
+  objective_value <- objective_sabr_normal(parameters)
 
-store_gradient <- function(
-  parameters
-) {
-  gradient_history[
-    [length(
-      gradient_history
-    ) + 1L]
-  ] <<- approx_gradient(
-    parameters =
-      parameters,
-    objective_function =
-      objective_sabr_normal_with_history,
+  gradient_value <- GaussQuant::approx_gradient_GQH(
+    parameters = parameters,
+    objective_function = objective_sabr_normal,
     epsilon = 1e-8
   )
+
+  gradient_history_env$values <- append(
+    gradient_history_env$values,
+    list(gradient_value)
+  )
+
+  objective_value
 }
 
 normal_fit_with_history <- stats::optim(
-  par =
-    initial_parameters_normal,
-  fn = function(parameters) {
-    objective_value <-
-      objective_sabr_normal_with_history(
-        parameters
+  par = initial_parameters_normal,
+  fn = objective_sabr_normal_with_history,
+  method = "L-BFGS-B",
+  lower = c(0.001, 0, -0.999),
+  upper = c(Inf, Inf, 0.999)
+)
+
+gradient_history_tbl <- gradient_history_env$values |>
+  purrr::map(
+    \(gradient_value) tibble::as_tibble_row(
+      stats::setNames(
+        gradient_value,
+        c("d_alpha", "d_volvol", "d_rho")
       )
-
-    store_gradient(
-      parameters
     )
-
-    objective_value
-  },
-  method =
-    "L-BFGS-B",
-  lower = c(
-    0.001,
-    0,
-    -0.999
-  ),
-  upper = c(
-    Inf,
-    Inf,
-    0.999
-  )
-)
-
-gradient_history_matrix <- do.call(
-  rbind,
-  gradient_history
-)
-
-gradient_history_tbl <- tibble::as_tibble(
-  gradient_history_matrix,
-  .name_repair = "minimal"
-)
-
-names(
-  gradient_history_tbl
-) <- c(
-  "d_alpha",
-  "d_volvol",
-  "d_rho"
-)
-
-gradient_history_tbl <- gradient_history_tbl |>
-  dplyr::mutate(
-    evaluation =
-      dplyr::row_number()
   ) |>
-  dplyr::select(
-    evaluation,
-    dplyr::everything()
+  dplyr::bind_rows() |>
+  dplyr::mutate(
+    evaluation = dplyr::row_number(),
+    .before = 1
   )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   gradient_history_tbl |>
-    dplyr::slice_head(
-      n = 10
-    ),
+    dplyr::slice_head(n = 10),
   "Numerical-gradient history: first evaluations",
   n = 20
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   gradient_history_tbl |>
-    dplyr::slice_tail(
-      n = 5
-    ),
+    dplyr::slice_tail(n = 5),
   "Numerical-gradient history: last evaluations",
   n = 20
 )
 
 gradient_history_plot_tbl <- gradient_history_tbl |>
   tidyr::pivot_longer(
-    cols = c(
-      d_alpha,
-      d_volvol,
-      d_rho
-    ),
-    names_to =
-      "gradient",
-    values_to =
-      "value"
+    cols = c(d_alpha, d_volvol, d_rho),
+    names_to = "gradient",
+    values_to = "value"
   )
 
 gradient_history_plot <- ggplot2::ggplot(
@@ -1355,46 +687,51 @@ gradient_history_plot <- ggplot2::ggplot(
     linetype = gradient
   )
 ) +
-  ggplot2::geom_line(
-    linewidth = 0.6
-  ) +
+  ggplot2::geom_line(linewidth = 0.6) +
   ggplot2::labs(
-    title =
-      "Shifted SABR numerical-gradient history",
-    x =
-      "Objective-function evaluation",
-    y =
-      "Numerical gradient",
-    linetype =
-      "Gradient"
+    title = "Shifted SABR numerical-gradient history",
+    x = "Objective-function evaluation",
+    y = "Numerical gradient",
+    linetype = "Gradient"
   ) +
   ggplot2::theme_minimal()
 
-print(
-  gradient_history_plot
-)
+print(gradient_history_plot)
 ```
 
-## 12. カリブレーション結果の比較
+## 10. カリブレーション結果の比較
 
 Black SABRとShifted SABR Normalの推定結果を一つの表で確認する。
 
 ```{r chapter12-calibration-comparison}
 calibration_comparison_tbl <- tibble::tribble(
-  ~model,               ~alpha,                 ~beta,       ~volvol,                 ~rho,                  ~rmse,
-  "Black SABR",          black_parameters[1],    beta_black,  black_parameters[2],     black_parameters[3],   black_fit$value,
-  "Shifted SABR Normal", normal_parameters[1],   beta_normal, normal_parameters[2],    normal_parameters[3],  normal_fit$value
+  ~model,                 ~alpha,                              ~beta,       ~volvol,                              ~rho,                              ~rmse,             ~convergence_code,
+  "Black SABR",            unname(black_parameters["alpha"]),   beta_black,  unname(black_parameters["volvol"]),   unname(black_parameters["rho"]),   black_fit$value,    black_fit$convergence,
+  "Shifted SABR Normal",   unname(normal_parameters["alpha"]),  beta_normal, unname(normal_parameters["volvol"]),  unname(normal_parameters["rho"]),  normal_fit$value,   normal_fit$convergence
 )
 
-QuantLibGauss::qlg_show_tbl(
+GaussQuant::show_tbl_GQH(
   calibration_comparison_tbl,
   "SABR calibration comparison",
   n = 20
 )
 ```
 
+## 11. まとめ
+
+本章では、Black SABRとShifted SABR Normalを同じ市場データ処理と最適化の流れで比較した。
+
+再利用可能な数値計算はGaussQuantへ集約されている。
+
+- Black SABRボラティリティ：`safe_sabr_vol_GQL()`
+- HaganのNormal SABR近似：`normal_vol_hagan_GQL()`
+- Shifted Normal SABR近似：`shifted_normal_vol_hagan_GQL()`
+- 誤差評価：`rmse_GQH()`
+- 有限差分gradient：`approx_gradient_GQH()`
+- 表示：`show_tbl_GQH()`と`fmt_num_GQH()`
+
+LagrangeFinance側には、市場入力、パラメータ推定、感応度分析、表、グラフ、解説だけを残した。
+
 ```{r chapter12-completion}
-cat(
-  "\nChapter 12 SABR model rewrite prepared successfully.\n"
-)
+cat("\nChapter 12 SABR model GaussQuant rewrite completed successfully.\n")
 ```
