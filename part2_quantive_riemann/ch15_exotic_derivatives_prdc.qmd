@@ -4,133 +4,104 @@ PRDC（Power Reverse Dual Currency Note）は、為替レートに連動するCo
 
 典型的なPRDC Couponは、次の形で表される。
 
-[
+$$
 C_t
-===
-
-\min
-\left[
+=
+\min\left[
 C_{\max},
-\max
-\left(
+\max\left(
 a\frac{S_t}{S_0}-b,
 C_{\min}
 \right)
-\right]
-]
+\right].
+$$
 
 ここで、
 
-* (S_t)：Coupon決定日における為替レート
-* (S_0)：基準為替レート
-* (a)：為替連動係数
-* (b)：固定控除率
-* (C_{\min})：Floor
-* (C_{\max})：Cap
+- $S_t$：Coupon決定日における為替レート
+- $S_0$：基準為替レート
+- $a$：為替連動係数
+- $b$：固定控除率
+- $C_{\min}$：Floor
+- $C_{\max}$：Cap
 
 である。
 
-為替レートが上昇するとCouponが増加する一方、FloorとCapによってCouponの下限と上限が制限される。
-
-本章では、次の内容を扱う。
-
-1. PRDCの商品構造
-2. Domestic／Foreign金利カーブ
-3. Garman–Kohlhagen FX Process
-4. Coupon日を時間グリッドとするFXパス
-5. PRDC Coupon payoff
-6. Monte Carloによる期待Coupon
-7. Coupon legとRedemption leg
-8. PRDC現在価値
-9. FX感応度とCoupon分布
+本章では、Domestic／Foreign金利カーブとGarman–Kohlhagen FX Processを使ってCoupon日ベースのFXパスを生成し、非Callable PRDCの期待Coupon、Coupon leg、Redemption leg、現在価値、感応度、Monte Carlo誤差を確認する。
 
 ```{r chapter15-setup}
 #| message: false
 #| warning: false
 
-# ============================================================
-# Chapter 15: Exotic Derivatives and PRDC
-# ------------------------------------------------------------
-# GaussQuant + QuantLib SWIG for R
-#
-# Calculation core:
-# - Schedule access
-# - Garman-Kohlhagen FX process
-# - Coupon-date FX paths
-# - PRDC coupon, cash flow, NPV, sensitivity, and MC error
-#
-# Chapter layer:
-# - Product assumptions
-# - Tables
-# - Plots
-# - Financial interpretation
-# ============================================================
-
-library(QuantLib)
-
 suppressPackageStartupMessages({
+  library(tidyverse)
+  library(QuantLib)
   library(GaussQuant)
-  library(dplyr)
-  library(purrr)
-  library(tibble)
-  library(tidyr)
-  library(ggplot2)
 })
 ```
+
 # Part 1　PRDCの商品構造とFXパス
 
 ## 1. PRDCの契約条件
 
 この例では、2015年9月3日から2041年9月3日までの半年Coupon型PRDCを考える。
 
-最初の1年間は固定Couponを支払い、その後は為替連動Couponへ移行する。
+最初の1年間は固定Couponを支払い、その後は為替連動Couponへ移行する。評価日は2023年4月11日であるため、固定Intro Coupon期間はすでに終了している。
 
 ```{r chapter15-product-inputs}
 prdc_input_tbl <- tibble::tribble(
-  ~input,                     ~value,
-  "valuation_date",            "2023-04-11",
-  "effective_date",            "2015-09-03",
-  "termination_date",          "2041-09-03",
-  "intro_coupon_end_date",     "2016-09-03",
-  "notional_jpy",               300000000,
-  "intro_coupon_rate",          0.022,
-  "coupon_frequency_months",    6,
-  "domestic_rate",              0.01,
-  "foreign_rate",               0.03,
-  "discount_rate",              0.005,
-  "fx_volatility",              0.10,
-  "fx_spot",                    133.2681,
-  "coupon_fx_base",             120,
-  "coupon_leverage",            0.122,
-  "coupon_subtraction",         0.10,
-  "coupon_floor",               0,
-  "coupon_cap",                 0.022,
-  "number_of_paths",            10000,
-  "random_seed",                123
+  ~input, ~value,
+  "valuation_date", "2023-04-11",
+  "effective_date", "2015-09-03",
+  "termination_date", "2041-09-03",
+  "intro_coupon_end_date", "2016-09-03",
+  "notional_jpy", "300000000",
+  "intro_coupon_rate", "0.022",
+  "coupon_frequency_months", "6",
+  "domestic_rate", "0.01",
+  "foreign_rate", "0.03",
+  "discount_rate", "0.005",
+  "fx_volatility", "0.10",
+  "fx_spot", "133.2681",
+  "coupon_fx_base", "120",
+  "coupon_leverage", "0.122",
+  "coupon_subtraction", "0.10",
+  "coupon_floor", "0",
+  "coupon_cap", "0.022",
+  "number_of_paths", "10000",
+  "random_seed", "123"
 )
 
-prdc_input <- stats::setNames(
-  prdc_input_tbl$value,
-  prdc_input_tbl$input
-)
+prdc_input <- prdc_input_tbl |>
+  tibble::deframe()
 
 valuation_date_prdc <- as.Date(prdc_input[["valuation_date"]])
 effective_date_prdc <- as.Date(prdc_input[["effective_date"]])
 termination_date_prdc <- as.Date(prdc_input[["termination_date"]])
 intro_coupon_end_date_prdc <- as.Date(prdc_input[["intro_coupon_end_date"]])
 
-valuation_date_ql_prdc <- QuantLib::DateParser_parseISO(as.character(valuation_date_prdc))
-effective_date_ql_prdc <- QuantLib::DateParser_parseISO(as.character(effective_date_prdc))
-termination_date_ql_prdc <- QuantLib::DateParser_parseISO(as.character(termination_date_prdc))
-intro_coupon_end_date_ql_prdc <- QuantLib::DateParser_parseISO(as.character(intro_coupon_end_date_prdc))
+valuation_date_ql_prdc <- GaussQuant::date_GQL(as.character(valuation_date_prdc))
+effective_date_ql_prdc <- GaussQuant::date_GQL(as.character(effective_date_prdc))
+termination_date_ql_prdc <- GaussQuant::date_GQL(as.character(termination_date_prdc))
+intro_coupon_end_date_ql_prdc <- GaussQuant::date_GQL(as.character(intro_coupon_end_date_prdc))
 
 notional_prdc <- as.numeric(prdc_input[["notional_jpy"]])
 intro_coupon_rate_prdc <- as.numeric(prdc_input[["intro_coupon_rate"]])
 coupon_frequency_months_prdc <- as.integer(prdc_input[["coupon_frequency_months"]])
+domestic_rate_prdc <- as.numeric(prdc_input[["domestic_rate"]])
+foreign_rate_prdc <- as.numeric(prdc_input[["foreign_rate"]])
+discount_rate_prdc <- as.numeric(prdc_input[["discount_rate"]])
+fx_volatility_prdc <- as.numeric(prdc_input[["fx_volatility"]])
+fx_spot_prdc <- as.numeric(prdc_input[["fx_spot"]])
+coupon_fx_base_prdc <- as.numeric(prdc_input[["coupon_fx_base"]])
+coupon_leverage_prdc <- as.numeric(prdc_input[["coupon_leverage"]])
+coupon_subtraction_prdc <- as.numeric(prdc_input[["coupon_subtraction"]])
+coupon_floor_prdc <- as.numeric(prdc_input[["coupon_floor"]])
+coupon_cap_prdc <- as.numeric(prdc_input[["coupon_cap"]])
 number_of_paths_prdc <- as.integer(prdc_input[["number_of_paths"]])
 random_seed_prdc <- as.integer(prdc_input[["random_seed"]])
 
-GaussQuant::set_eval_date_GQL(valuation_date_prdc)
+GaussQuant::set_eval_date_GQL(valuation_date_ql_prdc)
 
 GaussQuant::show_tbl_GQH(
   prdc_input_tbl,
@@ -138,14 +109,18 @@ GaussQuant::show_tbl_GQH(
   n = 30
 )
 ```
+
 ## 2. Coupon Schedule
 
 ```{r chapter15-coupon-schedules}
+prdc_calendar <- QuantLib::TARGET()
+prdc_day_counter <- QuantLib::Actual360()
+
 coupon_schedule_prdc <- QuantLib::Schedule(
   effective_date_ql_prdc,
   termination_date_ql_prdc,
   GaussQuant::period_months_GQL(coupon_frequency_months_prdc),
-  QuantLib::TARGET(),
+  prdc_calendar,
   "ModifiedFollowing",
   "ModifiedFollowing",
   "Backward",
@@ -156,80 +131,69 @@ intro_coupon_schedule_prdc <- QuantLib::Schedule(
   effective_date_ql_prdc,
   intro_coupon_end_date_ql_prdc,
   GaussQuant::period_months_GQL(coupon_frequency_months_prdc),
-  QuantLib::TARGET(),
+  prdc_calendar,
   "ModifiedFollowing",
   "ModifiedFollowing",
   "Backward",
   FALSE
 )
 
+coupon_schedule_tbl <- GaussQuant::schedule_table_GQL(coupon_schedule_prdc)
+intro_coupon_schedule_tbl <- GaussQuant::schedule_table_GQL(intro_coupon_schedule_prdc)
+
 GaussQuant::show_tbl_GQH(
-  GaussQuant::schedule_table_GQL(coupon_schedule_prdc),
+  coupon_schedule_tbl,
   "PRDC full coupon schedule",
   n = 60
 )
 
 GaussQuant::show_tbl_GQH(
-  GaussQuant::schedule_table_GQL(intro_coupon_schedule_prdc),
+  intro_coupon_schedule_tbl,
   "PRDC introductory fixed-coupon schedule",
   n = 20
 )
 ```
+
 ## 3. Domestic、Foreign、Discountカーブ
 
 Garman–Kohlhagenモデルでは、FX SpotをDomestic currency建てForeign currency価格として表す。
 
-本章では、FX Quoteを
+本章では、
 
-[
+$$
 S_t
-===
-
+=
 \text{JPY per unit of foreign currency}
-]
+$$
 
-と解釈する。
-
-このとき、
-
-* Domestic curve：JPY金利
-* Foreign curve：外国通貨金利
-
-である。
-
-ただし、元コードの金利設定を維持するため、Domestic rateは1％、Foreign rateは3％とする。
+と解釈する。このときDomestic curveはJPY金利、Foreign curveは外国通貨金利である。
 
 ```{r chapter15-market-curves}
-domestic_rate_prdc <- as.numeric(prdc_input[["domestic_rate"]])
-foreign_rate_prdc <- as.numeric(prdc_input[["foreign_rate"]])
-discount_rate_prdc <- as.numeric(prdc_input[["discount_rate"]])
-
 domestic_curve_prdc <- QuantLib::FlatForward(
   valuation_date_ql_prdc,
-  QuantLib::QuoteHandle(QuantLib::SimpleQuote(domestic_rate_prdc)),
-  QuantLib::Actual360()
+  GaussQuant::quote_handle_GQL(domestic_rate_prdc),
+  prdc_day_counter
 )
 
 foreign_curve_prdc <- QuantLib::FlatForward(
   valuation_date_ql_prdc,
-  QuantLib::QuoteHandle(QuantLib::SimpleQuote(foreign_rate_prdc)),
-  QuantLib::Actual360()
+  GaussQuant::quote_handle_GQL(foreign_rate_prdc),
+  prdc_day_counter
 )
 
 discount_curve_prdc <- QuantLib::FlatForward(
   valuation_date_ql_prdc,
-  QuantLib::QuoteHandle(QuantLib::SimpleQuote(discount_rate_prdc)),
-  QuantLib::Actual360()
+  GaussQuant::quote_handle_GQL(discount_rate_prdc),
+  prdc_day_counter
 )
 
 domestic_curve_handle_prdc <- QuantLib::YieldTermStructureHandle(domestic_curve_prdc)
 foreign_curve_handle_prdc <- QuantLib::YieldTermStructureHandle(foreign_curve_prdc)
-discount_curve_handle_prdc <- QuantLib::YieldTermStructureHandle(discount_curve_prdc)
 
 curve_summary_tbl <- tibble::tribble(
-  ~curve,               ~flat_rate,
-  "Domestic FX curve",   domestic_rate_prdc,
-  "Foreign FX curve",    foreign_rate_prdc,
+  ~curve, ~flat_rate,
+  "Domestic FX curve", domestic_rate_prdc,
+  "Foreign FX curve", foreign_rate_prdc,
   "PRDC discount curve", discount_rate_prdc
 )
 
@@ -239,29 +203,47 @@ GaussQuant::show_tbl_GQH(
   n = 20
 )
 ```
-## 4. FXボラティリティとSpot
 
-```{r chapter15-fx-market-inputs}
-fx_spot_prdc <- as.numeric(prdc_input[["fx_spot"]])
-fx_volatility_prdc <- as.numeric(prdc_input[["fx_volatility"]])
+## 4. FXボラティリティとGarman–Kohlhagen Process
 
+リスク中立測度の下でFX Spotは、
+
+$$
+\frac{dS_t}{S_t}
+=
+(r_d-r_f)\,dt
++
+\sigma_{\mathrm{FX}}\,dW_t
+$$
+
+に従う。
+
+```{r chapter15-fx-process}
 fx_volatility_curve_prdc <- QuantLib::BlackConstantVol(
   valuation_date_ql_prdc,
   QuantLib::NullCalendar(),
   GaussQuant::quote_handle_GQL(fx_volatility_prdc),
-  QuantLib::Actual360()
+  prdc_day_counter
 )
 
 fx_volatility_handle_prdc <- QuantLib::BlackVolTermStructureHandle(
   fx_volatility_curve_prdc
 )
 
+fx_process_prdc <- GaussQuant::fx_process_GQL(
+  spot = fx_spot_prdc,
+  foreign_curve_handle = foreign_curve_handle_prdc,
+  domestic_curve_handle = domestic_curve_handle_prdc,
+  volatility_handle = fx_volatility_handle_prdc
+)
+
 fx_market_summary_tbl <- tibble::tribble(
-  ~metric,          ~value,
-  "fx_spot",         fx_spot_prdc,
-  "fx_volatility",   fx_volatility_prdc,
-  "domestic_rate",   domestic_rate_prdc,
-  "foreign_rate",    foreign_rate_prdc
+  ~metric, ~value,
+  "fx_spot", fx_spot_prdc,
+  "fx_volatility", fx_volatility_prdc,
+  "domestic_rate", domestic_rate_prdc,
+  "foreign_rate", foreign_rate_prdc,
+  "discount_rate", discount_rate_prdc
 )
 
 GaussQuant::show_tbl_GQH(
@@ -270,44 +252,14 @@ GaussQuant::show_tbl_GQH(
   n = 20
 )
 ```
-## 5. Garman–Kohlhagen Process
 
-FX Spotは、リスク中立測度の下で次の過程に従う。
-
-[
-\frac{dS_t}{S_t}
-================
-
-(r_d-r_f)dt
-+
-\sigma_{\mathrm{FX}}dW_t
-]
-
-ここで、
-
-* (r_d)：Domestic金利
-* (r_f)：Foreign金利
-* (\sigma_{\mathrm{FX}})：FX volatility
-
-である。
-
-```{r chapter15-garman-kohlhagen-process}
-fx_process_prdc <- GaussQuant::fx_process_GQL(
-  spot = fx_spot_prdc,
-  foreign_curve_handle = foreign_curve_handle_prdc,
-  domestic_curve_handle = domestic_curve_handle_prdc,
-  volatility_handle = fx_volatility_handle_prdc
-)
-```
-## 6. Coupon日ベースの時間グリッド
-
-PRDC Couponの評価に必要なのは、評価日より後に到来するCoupon日である。
+## 5. Coupon日ベースの時間グリッド
 
 ```{r chapter15-time-grid}
 fx_path_generator_prdc <- GaussQuant::fx_path_generator_GQL(
   valuation_date = valuation_date_prdc,
   coupon_schedule = coupon_schedule_prdc,
-  day_counter = QuantLib::Actual360(),
+  day_counter = prdc_day_counter,
   process = fx_process_prdc
 )
 
@@ -323,29 +275,22 @@ GaussQuant::show_tbl_GQH(
   "PRDC remaining coupon-date time grid",
   n = 60
 )
-```
-## 7. FX Path Generator
 
-QuantLibの`StochasticProcess1D$evolve()`へ渡す第5引数は、標準正規変量である。
-
-元コードでは、
-
-```r
-dw <- normal_draw * time_step
-```
-
-としていたが、これはBrownian incrementの扱いとして不自然である。
-
-`evolve()`を利用する場合は、標準正規変量をそのまま渡す。
-
-```{r chapter15-path-generator}
-path_generator_summary_tbl <- tibble::tribble(
-  ~metric,                   ~value,
-  "valuation_date",           as.character(fx_path_generator_prdc$valuation_date),
-  "remaining_coupon_dates",   length(fx_path_generator_prdc$remaining_coupon_dates),
-  "number_of_steps",          fx_path_generator_prdc$number_of_steps,
-  "first_coupon_time",        min(fx_path_generator_prdc$coupon_times),
-  "final_coupon_time",        max(fx_path_generator_prdc$coupon_times)
+path_generator_summary_tbl <- tibble::tibble(
+  metric = c(
+    "valuation_date",
+    "remaining_coupon_dates",
+    "number_of_steps",
+    "first_coupon_time",
+    "final_coupon_time"
+  ),
+  value = c(
+    as.character(fx_path_generator_prdc$valuation_date),
+    as.character(length(fx_path_generator_prdc$remaining_coupon_dates)),
+    as.character(fx_path_generator_prdc$number_of_steps),
+    format(min(fx_path_generator_prdc$coupon_times), digits = 8),
+    format(max(fx_path_generator_prdc$coupon_times), digits = 8)
+  )
 )
 
 GaussQuant::show_tbl_GQH(
@@ -354,45 +299,31 @@ GaussQuant::show_tbl_GQH(
   n = 20
 )
 ```
-## 8. PRDC Coupon Payoff
 
-この例のCouponは、次の式である。
+## 6. PRDC Coupon Payoff
 
-[
+この例のCouponは、
+
+$$
 C(S)
-====
-
-\min
-\left[
-2.2%,
-\max
-\left(
-12.2%
-\frac{S}{120}
--------------
-
-10%,
+=
+\min\left[
+2.2\%,
+\max\left(
+12.2\%\frac{S}{120}-10\%,
 0
 \right)
 \right]
-]
+$$
 
-```{r chapter15-prdc-payoff}
-coupon_fx_base_prdc <- as.numeric(prdc_input[["coupon_fx_base"]])
-coupon_leverage_prdc <- as.numeric(prdc_input[["coupon_leverage"]])
-coupon_subtraction_prdc <- as.numeric(prdc_input[["coupon_subtraction"]])
-coupon_floor_prdc <- as.numeric(prdc_input[["coupon_floor"]])
-coupon_cap_prdc <- as.numeric(prdc_input[["coupon_cap"]])
-```
-## 9. Coupon payoffの形状
+である。
 
 ```{r chapter15-payoff-table}
 fx_payoff_grid_tbl <- tibble::tibble(
   fx_rate = seq(80, 180, by = 2)
 ) |>
   dplyr::mutate(
-    uncapped_coupon = coupon_leverage_prdc *
-      fx_rate / coupon_fx_base_prdc -
+    uncapped_coupon = coupon_leverage_prdc * fx_rate / coupon_fx_base_prdc -
       coupon_subtraction_prdc,
     coupon_rate = GaussQuant::prdc_coupon_GQL(
       fx_rate = fx_rate,
@@ -410,46 +341,31 @@ GaussQuant::show_tbl_GQH(
   n = 60
 )
 ```
+
 ```{r chapter15-payoff-plot}
 #| fig-width: 9
 #| fig-height: 5
 
 prdc_payoff_plot <- ggplot2::ggplot(
   fx_payoff_grid_tbl,
-  ggplot2::aes(
-    x = fx_rate,
-    y = coupon_rate
-  )
+  ggplot2::aes(x = fx_rate, y = coupon_rate)
 ) +
-  ggplot2::geom_line(
-    linewidth = 0.8
-  ) +
+  ggplot2::geom_line(linewidth = 0.8) +
   ggplot2::scale_y_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.2f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_percent(accuracy = 0.01)
   ) +
   ggplot2::labs(
-    title =
-      "PRDC coupon payoff",
-    subtitle =
-      "Floored and capped FX-linked coupon",
-    x =
-      "FX rate",
-    y =
-      "Coupon rate"
+    title = "PRDC coupon payoff",
+    subtitle = "Floored and capped FX-linked coupon",
+    x = "FX rate",
+    y = "Coupon rate"
   ) +
   ggplot2::theme_minimal()
 
-print(
-  prdc_payoff_plot
-)
+print(prdc_payoff_plot)
 ```
 
-## 10. サンプルFXパス
+## 7. サンプルFXパス
 
 Monte Carlo評価へ進む前に、少数のFXパスを生成して確認する。
 
@@ -464,7 +380,7 @@ sample_fx_path_matrix <- GaussQuant::prdc_path_matrix_GQL(
 
 sample_fx_path_tbl <- purrr::map_dfr(
   seq_len(ncol(sample_fx_path_matrix)),
-  function(path_id) {
+  \(path_id) {
     path_values <- sample_fx_path_matrix[, path_id]
 
     tibble::tibble(
@@ -491,92 +407,60 @@ GaussQuant::show_tbl_GQH(
   n = 40
 )
 ```
+
 ```{r chapter15-sample-path-plot}
 #| fig-width: 9
 #| fig-height: 5
 
 sample_fx_path_plot <- ggplot2::ggplot(
   sample_fx_path_tbl,
-  ggplot2::aes(
-    x = time,
-    y = fx_rate,
-    group = path_id
-  )
+  ggplot2::aes(x = time, y = fx_rate, group = path_id)
 ) +
-  ggplot2::geom_line(
-    linewidth = 0.5,
-    alpha = 0.7
-  ) +
+  ggplot2::geom_line(linewidth = 0.5, alpha = 0.7) +
   ggplot2::labs(
-    title =
-      "Sample FX paths for PRDC valuation",
-    x =
-      "Time from valuation date (years)",
-    y =
-      "FX rate"
+    title = "Sample FX paths for PRDC valuation",
+    x = "Time from valuation date (years)",
+    y = "FX rate"
   ) +
   ggplot2::theme_minimal()
 
-print(
-  sample_fx_path_plot
-)
+print(sample_fx_path_plot)
 ```
 
 ```{r chapter15-part1-completion}
-cat(
-  "\nChapter 15 Part 1 PRDC structure and FX path generation prepared successfully.\n"
-)
+cat("\nChapter 15 Part 1 PRDC structure and FX path generation completed successfully.\n")
 ```
+
 # Part 2　Monte CarloによるPRDC評価
 
-## 11. Monte Carlo評価の考え方
+## 8. Monte Carlo評価
 
-PRDCの各Coupon日は、将来の為替レートに依存する。
+各Coupon日の期待Coupon rateは、$N$本のFXパスから、
 
-したがって、各Coupon日の期待Coupon rateは、Monte Carloによって次のように近似する。
-
-[
+$$
 E[C(S_{t_i})]
 \approx
 \frac{1}{N}
 \sum_{j=1}^{N}
 C(S_{t_i}^{(j)})
-]
+$$
 
-ここで、
+として近似する。
 
-* (N)：シミュレーションパス数
-* (S_{t_i}^{(j)})：パス(j)におけるCoupon日(t_i)の為替レート
-* (C(\cdot))：PRDC Coupon payoff
+PRDCの現在価値は、
+
+$$
+PV
+=
+\sum_i
+DF(t_i)N_0\alpha_iE[C(S_{t_i})]
++
+DF(T)N_0
+$$
 
 である。
 
-期待Couponを求めた後、各Coupon cash flowを割り引き、最終元本償還額を加える。
-
-[
-PV
-==
-
-\sum_i
-DF(t_i)
-N_0
-\alpha_i
-E[C(S_{t_i})]
-+
-DF(T)N_0
-]
-
-## 12. Intro Coupon対象日の確認
-
-最初の1年間に属するCouponは、為替連動ではなく固定Coupon 2.2％とする。
-
-評価日は2023年4月11日であるため、この例ではIntro Coupon期間はすでに終了している。
-
-したがって将来Couponには固定Intro Couponは残っていないが、汎用的な計算ができるように判定処理を残す。
-
 ```{r chapter15-intro-coupon-dates}
-#| eval: false
-
 intro_coupon_dates_prdc <- GaussQuant::schedule_dates_GQL(
   intro_coupon_schedule_prdc
 )$schedule_date
@@ -585,6 +469,31 @@ remaining_intro_coupon_dates_prdc <- intro_coupon_dates_prdc[
   intro_coupon_dates_prdc > valuation_date_prdc
 ]
 
+intro_coupon_status_tbl <- tibble::tibble(
+  metric = c(
+    "intro_coupon_rate",
+    "total_intro_schedule_dates",
+    "remaining_intro_coupon_dates",
+    "has_remaining_intro_coupon"
+  ),
+  value = c(
+    format(intro_coupon_rate_prdc, digits = 8),
+    as.character(length(intro_coupon_dates_prdc)),
+    as.character(length(remaining_intro_coupon_dates_prdc)),
+    as.character(length(remaining_intro_coupon_dates_prdc) > 0)
+  )
+)
+
+GaussQuant::show_tbl_GQH(
+  intro_coupon_status_tbl,
+  "PRDC introductory coupon status",
+  n = 20
+)
+```
+
+## 9. PRDCの一括評価
+
+```{r chapter15-prdc-result}
 prdc_result <- GaussQuant::prdc_npv_GQL(
   valuation_date = valuation_date_prdc,
   coupon_schedule = coupon_schedule_prdc,
@@ -596,7 +505,7 @@ prdc_result <- GaussQuant::prdc_npv_GQL(
   subtraction = coupon_subtraction_prdc,
   floor_rate = coupon_floor_prdc,
   cap_rate = coupon_cap_prdc,
-  day_counter = QuantLib::Actual360(),
+  day_counter = prdc_day_counter,
   intro_coupon_dates = intro_coupon_dates_prdc,
   intro_coupon_rate = intro_coupon_rate_prdc,
   n_paths = number_of_paths_prdc,
@@ -605,100 +514,43 @@ prdc_result <- GaussQuant::prdc_npv_GQL(
   return_details = TRUE
 )
 
-intro_coupon_status_tbl <- tibble::tribble(
-  ~metric,                       ~value,
-  "intro_coupon_rate",            intro_coupon_rate_prdc,
-  "total_intro_schedule_dates",   length(intro_coupon_dates_prdc),
-  "remaining_intro_coupon_dates", length(remaining_intro_coupon_dates_prdc),
-  "has_remaining_intro_coupon",   length(remaining_intro_coupon_dates_prdc) > 0
-)
+fx_path_generator_prdc <- prdc_result$path_generator
+fx_path_matrix_prdc <- prdc_result$path_matrix
+expected_coupon_tbl <- prdc_result$expected_coupon
+prdc_cashflow_tbl <- prdc_result$cashflows
 
 GaussQuant::show_tbl_GQH(
-  intro_coupon_status_tbl,
-  "PRDC introductory coupon status",
+  prdc_result$summary,
+  "PRDC Monte Carlo valuation summary",
   n = 20
 )
 ```
-## 13. Coupon期間のAccrual fraction
 
-各Coupon cash flowは、Coupon rateだけでなくAccrual fractionを掛けて計算する。
-
-[
-CF_i
-====
-
-N_0
-\alpha_i
-C_i
-]
-
-```{r chapter15-accrual-table}
-#| eval: false
-
-coupon_period_tbl <- prdc_result$cashflows |>
-  dplyr::select(
-    coupon_number,
-    accrual_start,
-    accrual_end,
-    accrual_fraction
-  )
-
-GaussQuant::show_tbl_GQH(
-  coupon_period_tbl,
-  "PRDC remaining coupon periods",
-  n = 60
-)
-```
-## 14. Monte Carloパスの生成
-
-通常のBook renderでは10,000パスを実行すると時間がかかるため、このチャンクは個別検証用とする。
-
-```{r chapter15-monte-carlo-paths}
-#| eval: false
-
-fx_path_generator_prdc <- prdc_result$path_generator
-fx_path_matrix_prdc <- prdc_result$path_matrix
-number_of_coupon_steps_prdc <- nrow(fx_path_matrix_prdc)
-
-dim(fx_path_matrix_prdc)
-```
-## 15. 各Coupon日の期待FXと期待Coupon
+## 10. 各Coupon日の期待FXと期待Coupon
 
 ```{r chapter15-expected-coupons}
-#| eval: false
-
-expected_coupon_tbl <- prdc_result$expected_coupon
-
 GaussQuant::show_tbl_GQH(
   expected_coupon_tbl,
   "PRDC expected FX and coupon rates",
   n = 60
 )
 ```
-## 16. Intro Couponの上書き
 
-将来のIntro Coupon日が残っている場合、そのCoupon rateはMonte Carlo結果ではなく固定Coupon rateへ置き換える。
+## 11. Coupon期間と期待キャッシュフロー
 
-```{r chapter15-intro-coupon-override}
-#| eval: false
+各Coupon cash flowは、
 
-expected_coupon_with_intro_tbl <- prdc_result$expected_coupon
+$$
+CF_i
+=
+N_0\alpha_iC_i
+$$
 
-GaussQuant::show_tbl_GQH(
-  expected_coupon_with_intro_tbl,
-  "PRDC expected coupons after introductory-coupon override",
-  n = 60
-)
-```
-## 17. Coupon cash flow
+で計算する。
 
 ```{r chapter15-coupon-cashflows}
-#| eval: false
-
-prdc_coupon_cashflow_tbl <- prdc_result$cashflows
-
 GaussQuant::show_tbl_GQH(
-  prdc_coupon_cashflow_tbl |>
+  prdc_cashflow_tbl |>
     dplyr::select(
       coupon_number,
       accrual_start,
@@ -716,25 +568,26 @@ GaussQuant::show_tbl_GQH(
   n = 60
 )
 ```
-## 18. Redemption leg
 
-PRDCは満期日に元本を償還するものとする。
+## 12. Redemption leg
 
 ```{r chapter15-redemption-leg}
-#| eval: false
-
-redemption_row_prdc <- prdc_result$cashflows |>
+redemption_row_prdc <- prdc_cashflow_tbl |>
   dplyr::filter(redemption_amount > 0)
 
-redemption_discount_factor_prdc <- redemption_row_prdc$discount_factor[[1]]
-redemption_present_value_prdc <- redemption_row_prdc$redemption_present_value[[1]]
-
-redemption_summary_tbl <- tibble::tribble(
-  ~metric,                   ~value,
-  "redemption_date",          as.character(redemption_row_prdc$accrual_end[[1]]),
-  "redemption_amount",        redemption_row_prdc$redemption_amount[[1]],
-  "discount_factor",          redemption_discount_factor_prdc,
-  "redemption_present_value", redemption_present_value_prdc
+redemption_summary_tbl <- tibble::tibble(
+  metric = c(
+    "redemption_date",
+    "redemption_amount",
+    "discount_factor",
+    "redemption_present_value"
+  ),
+  value = c(
+    as.character(redemption_row_prdc$accrual_end[[1]]),
+    format(redemption_row_prdc$redemption_amount[[1]], scientific = FALSE),
+    format(redemption_row_prdc$discount_factor[[1]], digits = 10),
+    format(redemption_row_prdc$redemption_present_value[[1]], scientific = FALSE)
+  )
 )
 
 GaussQuant::show_tbl_GQH(
@@ -743,11 +596,10 @@ GaussQuant::show_tbl_GQH(
   n = 20
 )
 ```
-## 19. PRDC現在価値
+
+## 13. PRDC現在価値
 
 ```{r chapter15-prdc-valuation}
-#| eval: false
-
 coupon_leg_present_value_prdc <- prdc_result$summary |>
   dplyr::filter(metric == "coupon_leg_npv") |>
   dplyr::pull(value)
@@ -761,12 +613,12 @@ jpy_per_eur_prdc <- 145.3275
 prdc_present_value_eur <- prdc_present_value_jpy / jpy_per_eur_prdc
 
 prdc_valuation_summary_tbl <- tibble::tribble(
-  ~metric,                    ~value,
-  "coupon_leg_pv_jpy",         coupon_leg_present_value_prdc,
-  "redemption_leg_pv_jpy",     redemption_present_value_prdc,
-  "total_pv_jpy",              prdc_present_value_jpy,
-  "jpy_per_eur",               jpy_per_eur_prdc,
-  "total_pv_eur",              prdc_present_value_eur,
+  ~metric, ~value,
+  "coupon_leg_pv_jpy", coupon_leg_present_value_prdc,
+  "redemption_leg_pv_jpy", redemption_present_value_prdc,
+  "total_pv_jpy", prdc_present_value_jpy,
+  "jpy_per_eur", jpy_per_eur_prdc,
+  "total_pv_eur", prdc_present_value_eur,
   "pv_as_percent_of_notional", prdc_present_value_jpy / notional_prdc
 )
 
@@ -776,17 +628,12 @@ GaussQuant::show_tbl_GQH(
   n = 20
 )
 ```
-## 20. 最終キャッシュフロー表
 
-最終Coupon日にRedemptionを加える。
+## 14. 最終キャッシュフロー表
 
 ```{r chapter15-final-cashflow-table}
-#| eval: false
-
-prdc_final_cashflow_tbl <- prdc_result$cashflows
-
 GaussQuant::show_tbl_GQH(
-  prdc_final_cashflow_tbl |>
+  prdc_cashflow_tbl |>
     dplyr::select(
       coupon_number,
       accrual_start,
@@ -802,58 +649,36 @@ GaussQuant::show_tbl_GQH(
   n = 60
 )
 ```
-## 21. Coupon rateの期間構造
+
+## 15. Coupon rateの期間構造
 
 ```{r chapter15-expected-coupon-plot}
-#| eval: false
 #| fig-width: 9
 #| fig-height: 5
 
 expected_coupon_plot <- ggplot2::ggplot(
-  expected_coupon_with_intro_tbl,
-  ggplot2::aes(
-    x = time,
-    y = final_coupon_rate
-  )
+  expected_coupon_tbl,
+  ggplot2::aes(x = time, y = final_coupon_rate)
 ) +
-  ggplot2::geom_line(
-    linewidth = 0.8
-  ) +
-  ggplot2::geom_point(
-    size = 1.8
-  ) +
+  ggplot2::geom_line(linewidth = 0.8) +
+  ggplot2::geom_point(size = 1.8) +
   ggplot2::scale_y_continuous(
-    labels = function(x) {
-      sprintf(
-        "%.2f%%",
-        100 * x
-      )
-    }
+    labels = scales::label_percent(accuracy = 0.01)
   ) +
   ggplot2::labs(
-    title =
-      "Expected PRDC coupon rates",
-    subtitle =
-      "Monte Carlo expectation at each future coupon date",
-    x =
-      "Time from valuation date (years)",
-    y =
-      "Expected coupon rate"
+    title = "Expected PRDC coupon rates",
+    subtitle = "Monte Carlo expectation at each future coupon date",
+    x = "Time from valuation date (years)",
+    y = "Expected coupon rate"
   ) +
   ggplot2::theme_minimal()
 
-print(
-  expected_coupon_plot
-)
+print(expected_coupon_plot)
 ```
 
-## 22. Coupon Cap／Floor到達確率
-
-各Coupon日について、CouponがFloorまたはCapに到達する確率を計算する。
+## 16. Coupon Cap／Floor到達確率
 
 ```{r chapter15-cap-floor-probability}
-#| eval: false
-
 coupon_cap_floor_probability_tbl <- GaussQuant::prdc_cap_floor_probability_GQL(
   path_matrix = fx_path_matrix_prdc,
   fx_base = coupon_fx_base_prdc,
@@ -871,12 +696,12 @@ GaussQuant::show_tbl_GQH(
   n = 60
 )
 ```
-## 23. Coupon分布の可視化
 
-代表的な短期、中期、長期Coupon日についてCoupon分布を確認する。
+## 17. Coupon分布
+
+短期、中期、長期の代表的なCoupon日について分布を確認する。
 
 ```{r chapter15-coupon-distribution}
-#| eval: false
 #| fig-width: 9
 #| fig-height: 5
 
@@ -889,6 +714,8 @@ coupon_path_matrix_prdc <- GaussQuant::prdc_coupon_GQL(
   cap_rate = coupon_cap_prdc
 )
 
+number_of_coupon_steps_prdc <- nrow(coupon_path_matrix_prdc)
+
 distribution_coupon_ids <- unique(
   pmax(
     1L,
@@ -896,7 +723,7 @@ distribution_coupon_ids <- unique(
       number_of_coupon_steps_prdc,
       c(
         1L,
-        round(number_of_coupon_steps_prdc / 2),
+        as.integer(round(number_of_coupon_steps_prdc / 2)),
         number_of_coupon_steps_prdc
       )
     )
@@ -905,7 +732,7 @@ distribution_coupon_ids <- unique(
 
 coupon_distribution_tbl <- purrr::map_dfr(
   distribution_coupon_ids,
-  function(coupon_id) {
+  \(coupon_id) {
     tibble::tibble(
       coupon_number = coupon_id,
       coupon_date = as.character(
@@ -920,18 +747,10 @@ coupon_distribution_plot <- ggplot2::ggplot(
   coupon_distribution_tbl,
   ggplot2::aes(x = coupon_rate)
 ) +
-  ggplot2::geom_histogram(
-    bins = 30,
-    linewidth = 0.3
-  ) +
-  ggplot2::facet_wrap(
-    ~coupon_date,
-    scales = "free_y"
-  ) +
+  ggplot2::geom_histogram(bins = 30, linewidth = 0.3) +
+  ggplot2::facet_wrap(~coupon_date, scales = "free_y") +
   ggplot2::scale_x_continuous(
-    labels = function(x) {
-      sprintf("%.2f%%", 100 * x)
-    }
+    labels = scales::label_percent(accuracy = 0.01)
   ) +
   ggplot2::labs(
     title = "Simulated PRDC coupon distributions",
@@ -942,26 +761,23 @@ coupon_distribution_plot <- ggplot2::ggplot(
 
 print(coupon_distribution_plot)
 ```
-## 24. FX Spot感応度
 
-PRDCのCouponはFX Spotへ依存するため、Spotを上下させたシナリオを比較する。
+## 18. FX Spot感応度
 
-ここでは計算負荷を抑えるため、感応度計算用のパス数を2,000本とする。
+感応度計算では同じ乱数Seedを使い、共通乱数によってシナリオ間のMonte Carloノイズを抑える。
 
 ```{r chapter15-spot-sensitivity}
-#| eval: false
-
-spot_scenario_tbl <- tibble::tribble(
-  ~scenario,       ~fx_spot,
-  "spot_minus_10",  fx_spot_prdc * 0.90,
-  "spot_minus_5",   fx_spot_prdc * 0.95,
-  "base",           fx_spot_prdc,
-  "spot_plus_5",    fx_spot_prdc * 1.05,
-  "spot_plus_10",   fx_spot_prdc * 1.10
+spot_scenario_input_tbl <- tibble::tribble(
+  ~scenario, ~fx_spot,
+  "spot_minus_10", fx_spot_prdc * 0.90,
+  "spot_minus_5", fx_spot_prdc * 0.95,
+  "base", fx_spot_prdc,
+  "spot_plus_5", fx_spot_prdc * 1.05,
+  "spot_plus_10", fx_spot_prdc * 1.10
 )
 
-spot_scenario_tbl <- GaussQuant::prdc_spot_sensitivity_GQL(
-  spot_scenarios = spot_scenario_tbl,
+spot_sensitivity_tbl <- GaussQuant::prdc_spot_sensitivity_GQL(
+  spot_scenarios = spot_scenario_input_tbl,
   valuation_date = valuation_date_prdc,
   coupon_schedule = coupon_schedule_prdc,
   foreign_curve_handle = foreign_curve_handle_prdc,
@@ -974,7 +790,7 @@ spot_scenario_tbl <- GaussQuant::prdc_spot_sensitivity_GQL(
   subtraction = coupon_subtraction_prdc,
   floor_rate = coupon_floor_prdc,
   cap_rate = coupon_cap_prdc,
-  day_counter = QuantLib::Actual360(),
+  day_counter = prdc_day_counter,
   intro_coupon_dates = intro_coupon_dates_prdc,
   intro_coupon_rate = intro_coupon_rate_prdc,
   n_paths = 2000L,
@@ -988,29 +804,26 @@ spot_scenario_tbl <- GaussQuant::prdc_spot_sensitivity_GQL(
   )
 
 GaussQuant::show_tbl_GQH(
-  spot_scenario_tbl,
+  spot_sensitivity_tbl,
   "PRDC FX spot sensitivity",
   n = 20
 )
 ```
-## 25. FXボラティリティ感応度
 
-PRDC CouponはCapとFloorを持つ非線形Payoffであるため、FX volatilityの変化も価値へ影響する。
+## 19. FXボラティリティ感応度
 
 ```{r chapter15-volatility-sensitivity}
-#| eval: false
-
-volatility_scenario_tbl <- tibble::tribble(
-  ~scenario,      ~fx_volatility,
-  "vol_5pct",       0.05,
-  "vol_7_5pct",     0.075,
-  "base",           fx_volatility_prdc,
-  "vol_12_5pct",    0.125,
-  "vol_15pct",      0.15
+volatility_scenario_input_tbl <- tibble::tribble(
+  ~scenario, ~fx_volatility,
+  "vol_5pct", 0.05,
+  "vol_7_5pct", 0.075,
+  "base", fx_volatility_prdc,
+  "vol_12_5pct", 0.125,
+  "vol_15pct", 0.15
 )
 
-volatility_scenario_tbl <- GaussQuant::prdc_volatility_sensitivity_GQL(
-  volatility_scenarios = volatility_scenario_tbl,
+volatility_sensitivity_tbl <- GaussQuant::prdc_volatility_sensitivity_GQL(
+  volatility_scenarios = volatility_scenario_input_tbl,
   valuation_date = valuation_date_prdc,
   coupon_schedule = coupon_schedule_prdc,
   spot = fx_spot_prdc,
@@ -1023,7 +836,7 @@ volatility_scenario_tbl <- GaussQuant::prdc_volatility_sensitivity_GQL(
   subtraction = coupon_subtraction_prdc,
   floor_rate = coupon_floor_prdc,
   cap_rate = coupon_cap_prdc,
-  day_counter = QuantLib::Actual360(),
+  day_counter = prdc_day_counter,
   calendar = QuantLib::NullCalendar(),
   intro_coupon_dates = intro_coupon_dates_prdc,
   intro_coupon_rate = intro_coupon_rate_prdc,
@@ -1038,23 +851,18 @@ volatility_scenario_tbl <- GaussQuant::prdc_volatility_sensitivity_GQL(
   )
 
 GaussQuant::show_tbl_GQH(
-  volatility_scenario_tbl,
+  volatility_sensitivity_tbl,
   "PRDC FX volatility sensitivity",
   n = 20
 )
 ```
-## 26. Monte Carlo標準誤差
 
-Monte Carlo推定値には統計誤差が存在する。
-
-各パスについて全CouponとRedemptionの現在価値を計算し、標準誤差を推定する。
+## 20. Monte Carlo標準誤差
 
 ```{r chapter15-monte-carlo-error}
-#| eval: false
-
 monte_carlo_error_result <- GaussQuant::prdc_monte_carlo_error_GQL(
   path_matrix = fx_path_matrix_prdc,
-  cashflow_tbl = prdc_result$cashflows,
+  cashflow_tbl = prdc_cashflow_tbl,
   notional = notional_prdc,
   fx_base = coupon_fx_base_prdc,
   leverage = coupon_leverage_prdc,
@@ -1075,102 +883,53 @@ GaussQuant::show_tbl_GQH(
   n = 20
 )
 ```
-## 27. Part 2のまとめ
-
-このPartでは、FXパスを利用してPRDCの期待Couponと現在価値を計算した。
-
-評価手順は次のとおりである。
-
-1. Garman–Kohlhagen ProcessからFXパスを生成する
-2. 各Coupon日でPRDC Coupon payoffを計算する
-3. 全パスの平均から期待Coupon rateを求める
-4. Intro Coupon対象日は固定Couponへ置き換える
-5. NotionalとAccrual fractionを掛けてCoupon amountを計算する
-6. Coupon cash flowをDiscount curveで割り引く
-7. 最終元本償還額を加える
-
-PRDC CouponはCapとFloorを持つため、FX SpotやFX volatilityに対する価値変化は線形ではない。
-
-特に長期PRDCでは、次の要素が価値へ大きな影響を与える。
-
-* FX Spot
-* FX volatility
-* Domestic／Foreign金利差
-* Coupon leverage
-* Coupon floor
-* Coupon cap
-* 満期
-* Intro Coupon
-* Redemption条件
-* Callable条項
-
-本章の例ではCallable条項を扱っていない。実際のPRDCでは発行体の期限前償還権を含むことが多く、その場合はLeast-Squares Monte CarloやBackward inductionなどの追加処理が必要になる。
-
-```{r chapter15-part2-completion}
-cat(
-  "\nChapter 15 Part 2 PRDC Monte Carlo valuation prepared successfully.\n"
-)
-```
 
 # 第15章のまとめ
 
 この章では、PRDCを長期のFX連動Coupon債として評価した。
 
-PRDCの価値は、将来のFX分布に依存するCoupon legと、元本を償還するRedemption legから構成される。
+PRDCの価値は、
 
-[
+$$
 PV_{\mathrm{PRDC}}
-==================
-
+=
 PV_{\mathrm{coupon}}
 +
 PV_{\mathrm{redemption}}
-]
+$$
 
-Couponは、
+と分解できる。
 
-[
-C(S)
-====
+本章では、次の処理を確認した。
 
-\min
-\left[
-C_{\max},
-\max
-\left(
-a\frac{S}{S_0}-b,
-C_{\min}
-\right)
-\right]
-]
+1. Domestic／Foreign金利カーブとFXボラティリティを設定する
+2. Garman–Kohlhagen Processを構築する
+3. 将来Coupon日を時間グリッドとしてFXパスを生成する
+4. 各パスのFXからFloor／Cap付きCouponを計算する
+5. 期待Coupon cash flowとRedemptionを割り引く
+6. FX Spot感応度とFX volatility感応度を計算する
+7. Monte Carlo標準誤差と信頼区間を確認する
 
-という非線形な構造を持つ。
-
-そのため、FX Spot、FX volatility、Domestic／Foreign金利差が変わると、期待Couponと商品価値も変化する。
-
-本章の再利用可能な計算コアはGaussQuantへ移管済みであり、章側では次の公開APIを利用する。
+本章で利用した主なGaussQuant APIは次のとおりである。
 
 ```text
-schedule_date_at_GQL()
 schedule_dates_GQL()
 schedule_table_GQL()
-
 fx_process_GQL()
 fx_path_generator_GQL()
-
+prdc_path_matrix_GQL()
 prdc_coupon_GQL()
 prdc_expected_coupon_GQL()
 prdc_cashflow_table_GQL()
 prdc_npv_GQL()
-
+prdc_cap_floor_probability_GQL()
 prdc_spot_sensitivity_GQL()
 prdc_volatility_sensitivity_GQL()
 prdc_monte_carlo_error_GQL()
 ```
 
-```{r chapter15-completion}
-cat(
-  "\nChapter 15 Exotic Derivatives and PRDC rewrite prepared successfully.\n"
-)
-```
+実際のPRDCはCallable条項を含むことが多い。その場合は、発行体の期限前償還権を含めたLeast-Squares Monte CarloまたはBackward inductionが追加で必要になる。
 
+```{r chapter15-completion}
+cat("\nChapter 15 Exotic Derivatives and PRDC GaussQuant rewrite completed successfully.\n")
+```
