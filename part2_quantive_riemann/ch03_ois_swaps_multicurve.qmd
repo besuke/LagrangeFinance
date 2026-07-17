@@ -1,0 +1,701 @@
+---
+title: "第II-3章 OISスワップとマルチカーブ評価"
+subtitle: "IBOR改革、TONA・SOFR、日次複利およびカーブ分離"
+format:
+  html:
+    toc: true
+    number-sections: true
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+# 第II-3章 OISスワップとマルチカーブ評価
+
+## 1. IBOR改革と歴史的背景
+
+2007年から2009年にかけての世界金融危機、とりわけ2008年9月のリーマン・ブラザーズ破綻は、金利デリバティブの評価方法を大きく変化させた。それ以前の市場では、LIBORは信用リスクをほとんど含まない基準金利として扱われ、同一のLIBORカーブから将来の変動金利を予測すると同時に、将来キャッシュフローの現在価値を計算するシングルカーブ評価が広く用いられていた。
+
+しかし、LIBORは銀行間の無担保資金調達金利である。したがって、LIBORには将来の短期金利に対する市場予想だけでなく、借り手銀行の信用リスク、資金流動性リスクおよび借入期間に応じたプレミアムが含まれる。金融危機時にLIBORとOIS金利の差が急拡大したことにより、LIBORを信用リスクのない割引金利として扱うことができないことが明らかになった。
+
+この認識を背景として、デリバティブ市場では中央清算および担保契約の利用が拡大した。担保付取引では、担保に付される翌日物金利に近いOISカーブを用いて将来キャッシュフローを割り引くことが経済的に整合的である。一方、LIBOR、TIBORまたはEURIBORなどを参照する契約の将来変動金利は、それぞれの参照金利に対応するフォワードカーブから予測する必要がある。その結果、将来金利を予測するカーブと現在価値を求めるディスカウントカーブを分離するマルチカーブ評価が定着した。
+
+ここで、「担保付取引への移行」と「翌日物指標の性質」は区別する必要がある。米ドルのSOFRは米国債レポ取引に基づく有担保翌日物金利であるのに対し、日本円のTONAは無担保コール市場の翌日物金利である。いずれも翌日物のリスク・フリー・レートに近い指標として用いられるが、基礎となる市場の担保性は同一ではない。
+
+さらに、LIBORの不正操作および虚偽報告が明らかになり、銀行の判断に大きく依存する金利指標の信頼性が損なわれた。金融安定理事会は2014年、既存IBORの強化と、実取引に基づく代替的なリスク・フリー・レートの育成を提言した。2017年には、英国の金融行為規制機構であるFCAが、2021年末以降も銀行へLIBORの呈示を求め続けることはないとの方針を示した。
+
+代表性のある円、ポンド、ユーロおよびスイスフランLIBORの多くは2021年末に終了し、米ドルLIBORの銀行パネルも2023年6月30日に終了した。経過措置として残された合成LIBORも2024年9月30日に最終公表され、すべてのLIBOR設定が恒久的に終了した。
+
+LIBORに代わる主要な指標として、日本円ではTONA、米ドルではSOFRが採用された。これらの翌日物金利を参照するOISでは、通常、計算期間中の日次金利を後決めで複利計算する。そのため、LIBORのように期間開始時点で適用金利が確定する取引とは異なり、期間全体の金利と利息額が確定するのは期末近くとなる。日次金利の公表時刻、Fixingが利用可能になるまでの時間差、計算終了日から支払日までの事務処理期間は、新たなオペレーショナル・リスクとして管理する必要がある。
+
+以上のIBOR改革によって、金利デリバティブ評価は、単一のLIBORカーブですべてを処理する方法から、翌日物金利を基礎とするOISカーブを割引に用い、参照金利ごとに将来金利を予測する方法へ移行した。
+
+本章では、この歴史的変化を踏まえ、日本円のTONAおよび米ドルのSOFRを参照するOISを取り上げる。まず市場レートからOISカーブを構築し、固定レグと翌日物変動レグを評価する。次に、変動レグを日次金利へ分解し、Fixingの確定前後で評価額がどのように変化するかを確認する。最後に、将来金利を予測するカーブとキャッシュフローを割り引くカーブを分離し、マルチカーブ評価の基本構造を示す。
+
+```{r chapter03-setup}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(QuantLib)
+  library(GaussQuant)
+})
+```
+
+## 2. OISと翌日物金利
+
+OIS（Overnight Index Swap）は、あらかじめ定めた固定金利と、計算期間中の翌日物金利を複利で積み上げた変動金利を交換する金利スワップである。元本そのものは交換せず、通常は固定レグと変動レグの利息差額を決済する。
+
+日次金利を \(r_i\)、その金利が適用される日数を \(d_i\)、日数計算の年間基準を \(B\) とすると、計算期間全体の複利収益率は概念的に次式で表される。
+
+$$
+R_{\mathrm{comp}}
+=
+\prod_{i=1}^{n}
+\left(
+1+r_i\frac{d_i}{B}
+\right)-1
+$$
+
+元本を \(N\) とすると、変動レグの利息額は次式となる。
+
+$$
+I_{\mathrm{overnight}}
+=
+N R_{\mathrm{comp}}
+$$
+
+固定金利を \(K\)、固定レグの年率換算期間を \(\alpha\) とすると、固定レグの利息額は次式となる。
+
+$$
+I_{\mathrm{fixed}}
+=
+N K \alpha
+$$
+
+固定金利を支払うOISの価値は、変動レグの現在価値から固定レグの現在価値を差し引いて求める。
+
+$$
+PV_{\mathrm{OIS}}
+=
+PV_{\mathrm{overnight}}
+-
+PV_{\mathrm{fixed}}
+$$
+
+契約締結時に両レグの現在価値を等しくする固定金利がフェアOISレートである。
+
+以下では、カーブを表形式で確認するための補助関数を定義する。これは計算ロジックを新たに実装するものではなく、QuantLibのカーブから割引係数と連続複利ゼロ金利を取り出す表示用関数である。
+
+```{r chapter03-curve-helper}
+curve_tbl_local <- function(curve_obj, n = 200, extrapolate = TRUE) {
+  if (extrapolate) {
+    QuantLib::TermStructure_enableExtrapolation(curve_obj)
+  }
+
+  reference_date <- as.Date(
+    GaussQuant::iso_GQL(curve_obj$referenceDate())
+  )
+
+  curve_times <- seq(
+    from = 0,
+    to = curve_obj$maxTime(),
+    length.out = n
+  )
+
+  tibble::tibble(time = curve_times) |>
+    dplyr::mutate(
+      discount_factor = purrr::map_dbl(
+        .data$time,
+        function(x) curve_obj$discount(x)
+      ),
+      zero_rate = dplyr::if_else(
+        .data$time > 0,
+        -log(.data$discount_factor) / .data$time,
+        0
+      ),
+      date = reference_date + round(.data$time * 365)
+    ) |>
+    dplyr::select(
+      .data$date,
+      .data$time,
+      .data$discount_factor,
+      .data$zero_rate
+    )
+}
+```
+
+## 3. TONA市場レートとOISカーブ
+
+TONAは、日本の無担保コール市場における翌日物金利を基礎とする円のリスク・フリー・レートである。本節では、2022年8月19日の例示的なTONAおよびOIS市場レートから、円OISカーブを構築する。
+
+短期部分には翌日物金利や短期OISを使用し、中長期部分には各満期のOISスワップレートを使用する。ブートストラップでは、各市場商品の理論価格が市場価格と一致するように、満期ごとの割引係数を順次決定する。
+
+### 3.1 TONA市場レート
+
+```{r chapter03-tona-quotes}
+trade_date_tona <- "2022-08-19"
+
+GaussQuant::set_eval_date_GQL(trade_date_tona)
+
+tona_quotes <- tibble::tribble(
+  ~as_of_date, ~currency, ~instrument, ~kind, ~tenor, ~rate,
+  as.Date(trade_date_tona), "JPY", "TONA", "depo", "1D",  -0.0000900,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "1W",  -0.0001261,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "2W",  -0.0001469,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "1M",  -0.0001807,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "3M",  -0.0001919,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "6M",  -0.0001043,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "9M",   0.0000022,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "12M",  0.0001250,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "18M",  0.0003125,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "2Y",   0.0004875,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "3Y",   0.0007375,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "4Y",   0.0009479,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "5Y",   0.0011854,
+  as.Date(trade_date_tona), "JPY", "TONA", "ois",  "7Y",   0.0019146
+)
+
+GaussQuant::show_tbl_GQH(
+  tona_quotes,
+  "TONA market quotes",
+  n = 20
+)
+```
+
+### 3.2 TONA OISカーブの構築
+
+```{r chapter03-build-tona-curve}
+tona_curve_envs <- GaussQuant::ir_build_ois_curve_envs_GQH(
+  quotes = tona_quotes,
+  trade_date = trade_date_tona,
+  verbose = TRUE
+)
+
+tona_curve_env <- tona_curve_envs[["JPY::TONA"]]
+tona_curve <- tona_curve_env$curve
+
+tona_curve_display_tbl <- curve_tbl_local(
+  curve_obj = tona_curve,
+  n = 200
+)
+
+GaussQuant::show_tbl_GQH(
+  tona_curve_display_tbl,
+  "TONA OIS curve",
+  n = 12
+)
+
+tona_curve_check_tbl <- tibble::tibble(
+  reference_date = GaussQuant::iso_GQL(
+    tona_curve$referenceDate()
+  ),
+  discount_2022_08_23 = tona_curve$discount(
+    GaussQuant::date_GQL("2022-08-23")
+  )
+)
+
+GaussQuant::show_tbl_GQH(
+  tona_curve_check_tbl,
+  "TONA curve checks",
+  n = 20
+)
+```
+
+割引係数 \(P(0,T)\) は、将来時点 \(T\) の1円を評価日時点の価値へ換算する係数である。満期が長くなるほど、通常は割引係数が低下する。ゼロ金利は、各満期の割引係数を単一の金利として表したものである。
+
+## 4. JPY短期OISの評価
+
+次に、TONAカーブを用いて短期円OISを評価する。評価対象は、2022年8月23日から8月30日までの7日間、元本1,000万円、固定金利マイナス0.015%の固定金利支払いOISである。
+
+OISの固定レグと翌日物レグを確認し、NPVとフェアレートを表示する。
+
+```{r chapter03-jpy-short-ois}
+jpy_ois_short <- GaussQuant::trade_ois_swap_py_GQH(
+  curve_env = tona_curve_env,
+  effective = "2022-08-23",
+  maturity = "2022-08-30",
+  notional = 10000000,
+  fixed_rate = -0.00015,
+  pay_receive = "pay",
+  verbose = TRUE
+)
+
+GaussQuant::ir_show_swap_summary_GQH(
+  trade_env = jpy_ois_short,
+  title = "JPY short OIS summary"
+)
+
+jpy_ois_fixed_cf_tbl <- GaussQuant::swap_fixed_leg_table_GQL(
+  jpy_ois_short$swap
+)
+
+jpy_ois_overnight_cf_tbl <- GaussQuant::ois_overnight_leg_table_GQL(
+  jpy_ois_short$swap
+)
+
+GaussQuant::show_tbl_GQH(
+  jpy_ois_fixed_cf_tbl,
+  "TONA fixed leg cashflows",
+  n = 10
+)
+
+GaussQuant::show_tbl_GQH(
+  jpy_ois_overnight_cf_tbl,
+  "TONA overnight leg cashflows",
+  n = 10
+)
+```
+
+### 4.1 フェアレートの手計算
+
+単一期間のOISでは、開始日の割引係数を \(P(0,T_0)\)、終了日の割引係数を \(P(0,T_1)\)、固定レグの支払日の割引係数を \(P(0,T_p)\)、固定レグの年率換算期間を \(\alpha\) とすると、フェアレートは概念的に次式で求められる。
+
+$$
+K_{\mathrm{fair}}
+=
+\frac{
+P(0,T_0)-P(0,T_1)
+}{
+\alpha P(0,T_p)
+}
+$$
+
+```{r chapter03-jpy-fair-rate-check}
+jpy_effective_df <- tona_curve$discount(
+  GaussQuant::date_GQL("2022-08-23")
+)
+
+jpy_maturity_df <- tona_curve$discount(
+  GaussQuant::date_GQL("2022-08-30")
+)
+
+jpy_payment_df <- tona_curve$discount(
+  GaussQuant::date_GQL("2022-09-01")
+)
+
+jpy_annuity <- (7 / 365) * jpy_payment_df
+
+jpy_swap_rate_hand <- (
+  jpy_effective_df - jpy_maturity_df
+) / jpy_annuity
+
+jpy_fair_rate_check_tbl <- tibble::tibble(
+  effective_discount_factor = jpy_effective_df,
+  maturity_discount_factor = jpy_maturity_df,
+  payment_discount_factor = jpy_payment_df,
+  annuity = jpy_annuity,
+  fair_swap_rate_hand = jpy_swap_rate_hand
+)
+
+GaussQuant::show_tbl_GQH(
+  jpy_fair_rate_check_tbl,
+  "TONA fair-rate hand check",
+  n = 20
+)
+```
+
+## 5. OIS変動レグの日次複利
+
+OISの変動レグでは、計算期間中の翌日物金利を日ごとに複利で積み上げる。休日をまたぐ金利は、次の営業日まで複数日分に適用されるため、各行の適用日数を確認する必要がある。
+
+次のコードでは、変動レグを日次単位に分解し、割引係数から日次フォワード金利を求める。
+
+```{r chapter03-jpy-daily-forward}
+jpy_ois_daily <- GaussQuant::trade_ois_swap_py_GQH(
+  curve_env = tona_curve_env,
+  effective = "2022-08-23",
+  maturity = "2022-08-30",
+  notional = 10000000,
+  fixed_rate = -0.00015,
+  pay_receive = "pay",
+  fixed_schedule_tenor = "1Y",
+  floating_schedule_tenor = "1D",
+  pay_lag = 0,
+  verbose = TRUE
+)
+
+GaussQuant::set_eval_date_GQL(trade_date_tona)
+
+jpy_daily_float_cf_tbl <- GaussQuant::ois_daily_forward_table_GQH(
+  swap = jpy_ois_daily$swap,
+  curve = tona_curve,
+  index = jpy_ois_daily$index,
+  eval_date = trade_date_tona,
+  notional = 10000000
+)
+
+GaussQuant::show_tbl_GQH(
+  jpy_daily_float_cf_tbl,
+  "TONA daily forward leg",
+  n = 20
+)
+```
+
+各日の単利フォワード金利は、開始日の割引係数を \(P(0,t_i)\)、終了日の割引係数を \(P(0,t_{i+1})\)、年率換算期間を \(\delta_i\) とすると、次式で求められる。
+
+$$
+f_i
+=
+\frac{
+P(0,t_i)/P(0,t_{i+1})-1
+}{
+\delta_i
+}
+$$
+
+日次フォワード金利を用いて複利収益率と利息額を確認する。
+
+```{r chapter03-jpy-daily-compounding}
+daily_compounding_result <- if (
+  nrow(jpy_daily_float_cf_tbl) >= 2 &&
+  all(c("days", "rate") %in% names(jpy_daily_float_cf_tbl))
+) {
+  daily_compounded_return <- (
+    1 +
+      jpy_daily_float_cf_tbl$days[-1] /
+      365 *
+      jpy_daily_float_cf_tbl$rate[-1]
+  ) |>
+    prod() -
+    1
+
+  tibble::tibble(
+    compounded_return = daily_compounded_return,
+    floating_interest = daily_compounded_return * 10000000,
+    equivalent_annual_rate = daily_compounded_return * 365 / 7
+  )
+} else {
+  tibble::tibble(
+    compounded_return = NA_real_,
+    floating_interest = NA_real_,
+    equivalent_annual_rate = NA_real_
+  )
+}
+
+GaussQuant::show_tbl_GQH(
+  daily_compounding_result,
+  "TONA daily compounding result",
+  n = 20
+)
+```
+
+## 6. Fixingの確定と再評価
+
+評価日より前の翌日物金利には、実際に公表されたFixingを使用する。評価日より後の金利は、OISカーブから推定したフォワード金利を使用する。
+
+したがって、評価途中のOIS変動レグは、次の二つから構成される。
+
+- 評価日までに確定した日次Fixingの複利部分
+- 評価日より後のフォワード金利による予測部分
+
+後決め複利では、期間終了まで変動レグ全体の利息額が確定しない。Fixingの公表時刻と支払処理の間に必要な時間を確保するため、実務ではLookback、Observation Shift、LockoutまたはPayment Delayなどの規則が用いられることがある。
+
+次の例では、2022年8月23日および24日のTONA Fixingを登録し、2022年8月25日時点で再評価する。
+
+```{r chapter03-jpy-fixings}
+jpy_fixings_tbl <- tibble::tribble(
+  ~date, ~currency, ~instrument, ~fixing,
+  "2022-08-23", "JPY", "TONA", -0.000090,
+  "2022-08-24", "JPY", "TONA", -0.000085
+)
+
+GaussQuant::set_eval_date_GQL(trade_date_tona)
+
+jpy_overnight_before_tbl <- GaussQuant::ois_overnight_leg_table_GQL(
+  jpy_ois_short$swap
+)
+
+GaussQuant::ir_apply_fixings_GQH(
+  index_obj = jpy_ois_short$index,
+  fixings_tbl = jpy_fixings_tbl,
+  currency = "JPY",
+  instrument = "TONA"
+)
+
+GaussQuant::set_eval_date_GQL("2022-08-25")
+
+jpy_overnight_after_tbl <- GaussQuant::ois_overnight_leg_table_GQL(
+  jpy_ois_short$swap
+)
+
+GaussQuant::ir_show_fixing_before_after_GQH(
+  before_tbl = jpy_overnight_before_tbl,
+  after_tbl = jpy_overnight_after_tbl,
+  title = "TONA fixing before / after",
+  n = 10
+)
+
+GaussQuant::ir_show_swap_summary_GQH(
+  trade_env = jpy_ois_short,
+  title = "TONA short OIS summary after fixings"
+)
+
+jpy_fixing_diag_tbl <- GaussQuant::ir_fixing_table_GQH(
+  swap = jpy_ois_daily$swap,
+  curve = tona_curve,
+  index = jpy_ois_short$index
+)
+
+GaussQuant::show_tbl_GQH(
+  jpy_fixing_diag_tbl,
+  "TONA daily fixing decomposition",
+  n = 20
+)
+```
+
+## 7. SOFR OISカーブとスワップ評価
+
+SOFRは、米国債を担保とする翌日物レポ取引に基づく米ドルのリスク・フリー・レートである。TONAが無担保翌日物市場に基づくのに対し、SOFRは有担保取引に基づく点が異なる。
+
+OIS評価の基本構造はTONAと同じであり、通貨、休日カレンダー、日数計算規則、市場クォートおよび翌日物指数が異なる。
+
+### 7.1 SOFR市場レートとOISカーブ
+
+```{r chapter03-sofr-curve}
+trade_date_sofr <- "2023-09-26"
+
+GaussQuant::set_eval_date_GQL(trade_date_sofr)
+
+sofr_quotes <- tibble::tribble(
+  ~as_of_date, ~currency, ~instrument, ~kind, ~tenor, ~rate,
+  as.Date(trade_date_sofr), "USD", "SOFR", "depo", "1D", 0.0531,
+  as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "1M", 0.0532,
+  as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "3M", 0.0538,
+  as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "6M", 0.0546,
+  as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "1Y", 0.0545,
+  as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "2Y", 0.0501,
+  as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "3Y", 0.0467
+)
+
+sofr_curve_envs <- GaussQuant::ir_build_ois_curve_envs_GQH(
+  quotes = sofr_quotes,
+  trade_date = trade_date_sofr,
+  verbose = TRUE
+)
+
+sofr_curve_env <- sofr_curve_envs[["USD::SOFR"]]
+sofr_curve <- sofr_curve_env$curve
+
+GaussQuant::show_tbl_GQH(
+  curve_tbl_local(sofr_curve),
+  "SOFR OIS curve",
+  n = 12
+)
+```
+
+### 7.2 SOFR OISの評価
+
+```{r chapter03-sofr-ois-swap}
+sofr_ois_trade <- GaussQuant::trade_ois_swap_py_GQH(
+  curve_env = sofr_curve_env,
+  effective = "2023-09-28",
+  maturity = "2025-09-28",
+  notional = 10000000,
+  fixed_rate = 0.05,
+  pay_receive = "pay",
+  verbose = TRUE
+)
+
+GaussQuant::ir_show_swap_summary_GQH(
+  trade_env = sofr_ois_trade,
+  title = "SOFR OIS summary"
+)
+
+sofr_overnight_cf_tbl <- GaussQuant::ois_overnight_leg_table_GQL(
+  sofr_ois_trade$swap
+)
+
+GaussQuant::show_tbl_GQH(
+  sofr_overnight_cf_tbl,
+  "SOFR overnight leg cashflows",
+  n = 20
+)
+```
+
+## 8. マルチカーブ評価
+
+金融危機以前のシングルカーブ評価では、同一の金利カーブを用いて、将来変動金利の予測とキャッシュフローの割引を行っていた。
+
+マルチカーブ評価では、二つの役割を分離する。
+
+- **フォワードカーブ**
+  参照金利の将来Fixingまたは期間フォワード金利を予測する。
+
+- **ディスカウントカーブ**
+  担保契約に対応する金利を用いて、将来キャッシュフローを現在価値へ割り引く。
+
+将来変動金利を \(F_j\)、年率換算期間を \(\alpha_j\)、割引係数を \(D_j\)、元本を \(N\) とすると、変動レグの現在価値は概念的に次式で表される。
+
+$$
+PV_{\mathrm{floating}}
+=
+N
+\sum_{j=1}^{m}
+\alpha_j F_j D_j
+$$
+
+ここで、\(F_j\) はフォワードカーブから求め、\(D_j\) はディスカウントカーブから求める。
+
+以下では、マルチカーブの効果だけを明確にするため、EURIBOR 6か月物を参照する一般的なバニラスワップを用いる。同じフォワードカーブを使用しながら、割引カーブを同一にした場合と分離した場合のNPVを比較する。
+
+### 8.1 フォワードカーブとディスカウントカーブ
+
+```{r chapter03-multicurve-build}
+GaussQuant::set_eval_date_GQL("2023-09-26")
+
+multi_curve_dates <- c(
+  "2023-09-26",
+  "2024-09-26",
+  "2025-09-26",
+  "2026-09-28",
+  "2028-09-26"
+)
+
+forecast_zero_rates <- c(
+  0.0450,
+  0.0470,
+  0.0460,
+  0.0445,
+  0.0420
+)
+
+discount_zero_rates <- c(
+  0.0400,
+  0.0415,
+  0.0410,
+  0.0400,
+  0.0380
+)
+
+forecast_curve <- GaussQuant::build_zero_curve_GQL(
+  date_chr = multi_curve_dates,
+  zero_rates = forecast_zero_rates,
+  day_counter = "Actual365Fixed"
+)
+
+discount_curve <- GaussQuant::build_zero_curve_GQL(
+  date_chr = multi_curve_dates,
+  zero_rates = discount_zero_rates,
+  day_counter = "Actual365Fixed"
+)
+
+QuantLib::TermStructure_enableExtrapolation(forecast_curve)
+QuantLib::TermStructure_enableExtrapolation(discount_curve)
+
+forecast_handle <- GaussQuant::yield_curve_handle_GQL(
+  forecast_curve
+)
+
+discount_handle <- GaussQuant::yield_curve_handle_GQL(
+  discount_curve
+)
+
+multi_curve_comparison_tbl <- tibble::tibble(
+  date = as.Date(multi_curve_dates)
+) |>
+  dplyr::mutate(
+    forecast_discount_factor = purrr::map_dbl(
+      as.character(.data$date),
+      function(x) {
+        forecast_curve$discount(
+          GaussQuant::date_GQL(x)
+        )
+      }
+    ),
+    ois_discount_factor = purrr::map_dbl(
+      as.character(.data$date),
+      function(x) {
+        discount_curve$discount(
+          GaussQuant::date_GQL(x)
+        )
+      }
+    )
+  )
+
+GaussQuant::show_tbl_GQH(
+  multi_curve_comparison_tbl,
+  "Forecast and discount curves",
+  n = 20
+)
+```
+
+### 8.2 シングルカーブ評価との比較
+
+```{r chapter03-multicurve-swap}
+single_curve_swap <- GaussQuant::make_vanilla_swap_GQL(
+  effective_date = "2023-09-28",
+  maturity_date = "2025-09-28",
+  fixed_rate = 0.045,
+  notional = 10000000,
+  forecast_handle = forecast_handle,
+  discount_handle = forecast_handle,
+  swap_type = "payer",
+  index = "Euribor6M",
+  fixed_tenor = GaussQuant::period_years_GQL(1),
+  floating_tenor = GaussQuant::period_months_GQL(6),
+  calendar = QuantLib::TARGET()
+)
+
+multi_curve_swap <- GaussQuant::make_vanilla_swap_GQL(
+  effective_date = "2023-09-28",
+  maturity_date = "2025-09-28",
+  fixed_rate = 0.045,
+  notional = 10000000,
+  forecast_handle = forecast_handle,
+  discount_handle = discount_handle,
+  swap_type = "payer",
+  index = "Euribor6M",
+  fixed_tenor = GaussQuant::period_years_GQL(1),
+  floating_tenor = GaussQuant::period_months_GQL(6),
+  calendar = QuantLib::TARGET()
+)
+
+single_curve_summary <- GaussQuant::swap_summary_GQL(
+  single_curve_swap
+)
+
+multi_curve_summary <- GaussQuant::swap_summary_GQL(
+  multi_curve_swap
+)
+
+curve_valuation_comparison_tbl <- dplyr::bind_rows(
+  single_curve_summary |>
+    dplyr::mutate(valuation_method = "single_curve"),
+  multi_curve_summary |>
+    dplyr::mutate(valuation_method = "multi_curve")
+) |>
+  dplyr::relocate(.data$valuation_method)
+
+GaussQuant::show_tbl_GQH(
+  curve_valuation_comparison_tbl,
+  "Single-curve and multi-curve valuation",
+  n = 20
+)
+```
+
+両方のスワップは同じフォワードカーブから将来EURIBORを予測するが、シングルカーブ評価ではそのカーブを割引にも使用し、マルチカーブ評価では別のディスカウントカーブを使用する。割引係数が異なるため、同じ将来キャッシュフローであってもNPVおよびフェアレートが変化する。
+
+## 9. まとめ
+
+世界金融危機は、LIBORに含まれる信用リスクと流動性リスクを顕在化させ、単一カーブによる金利デリバティブ評価の前提を崩した。担保付取引と中央清算の拡大により、OISカーブを割引に用い、参照金利ごとのカーブから将来金利を予測するマルチカーブ評価が定着した。
+
+その後、LIBOR不正操作問題と基礎取引の減少によってLIBORの持続可能性が失われ、TONAやSOFRなどの翌日物リスク・フリー・レートへの移行が進められた。すべてのLIBOR設定は2024年9月30日に恒久的に終了した。
+
+OISの変動レグでは、日々の翌日物金利を複利で積み上げる。評価日より前の金利には確定Fixingを使用し、評価日より後の金利にはカーブから求めたフォワード金利を使用する。後決め複利では、金利の公表と利息額の確定が期末近くになるため、Fixingの公表時刻や支払日までの処理期間も重要となる。
+
+マルチカーブ評価では、将来金利を予測するフォワードカーブと、キャッシュフローを現在価値へ変換するディスカウントカーブを分離する。この区別は、現代の金利デリバティブ評価における基本的な市場慣行である。
+
+## 参考資料
+
+- Financial Conduct Authority, [The future of LIBOR](https://www.fca.org.uk/news/speeches/the-future-of-libor), 27 July 2017.
+- Financial Conduct Authority, [The end of LIBOR](https://www.fca.org.uk/news/press-releases/end-libor), 1 October 2024.
+- Financial Stability Board, [Reforming Major Interest Rate Benchmarks](https://www.fsb.org/2014/07/r_140722/), 22 July 2014.
+- Bank of Japan, [Uncollateralized Overnight Call Rate](https://www.boj.or.jp/en/statistics/market/short/mutan/index.htm).

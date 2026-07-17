@@ -20,15 +20,15 @@ book:
 
     - part: "第II部 金融工学と金融数学"
       chapters:
-        - part2_quantive_riemann/ch07_bonds.qmd
-        - part2_quantive_riemann/ch08_treasury_futures_ctd.qmd
-        - part2_quantive_riemann/ch09_ois_swaps_multicurve.qmd
-        - part2_quantive_riemann/ch10_black_model.qmd
-        - part2_quantive_riemann/ch11_normal_model.qmd
-        - part2_quantive_riemann/ch12_sabr_model.qmd
-        - part2_quantive_riemann/ch13_callable_hull_white.qmd
-        - part2_quantive_riemann/ch14_credit_risk_cds.qmd
-        - part2_quantive_riemann/ch15_exotic_derivatives_prdc.qmd
+        - part2_quantive_riemann/ch01_bonds.qmd
+        - part2_quantive_riemann/ch02_treasury_futures_ctd.qmd
+        - part2_quantive_riemann/ch03_ois_swaps_multicurve.qmd
+        - part2_quantive_riemann/ch04_black_model.qmd
+        - part2_quantive_riemann/ch05_normal_model.qmd
+        - part2_quantive_riemann/ch06_sabr_model.qmd
+        - part2_quantive_riemann/ch07_callable_hull_white.qmd
+        - part2_quantive_riemann/ch08_credit_risk_cds.qmd
+        - part2_quantive_riemann/ch09_exotic_derivatives_prdc.qmd
 
 format:
   html:

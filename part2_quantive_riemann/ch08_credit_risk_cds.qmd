@@ -1,0 +1,1280 @@
+---
+title: "第II-8章 信用リスクとCDS"
+subtitle: "Hazard Rate、回収率、Premium LegおよびProtection Leg"
+format:
+  html:
+    toc: true
+    number-sections: true
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+# 第II-8章 信用リスクとCDS
+
+前章までの評価では、将来の市場価格、金利またはボラティリティの変動を扱った。本章では、契約相手または参照企業が債務を履行できなくなる信用リスクを検討する。
+
+Credit Default Swap（CDS）は、参照企業などに信用事由が発生した場合に、プロテクションの売り手が買い手へ損失補償を支払う契約である。プロテクションの買い手は、その対価として契約期間中に定期的なPremiumを支払う。
+
+したがって、CDSは二つのレグから構成される。
+
+- Premium Leg：プロテクション買い手が定期的なSpreadを支払う。
+- Protection Leg：信用事由が発生した場合に、プロテクション売り手が損失を補償する。
+
+プロテクション買い手から見たCDS価値は、次のように表される。
+
+$$
+V_{\mathrm{CDS}}
+=
+V_{\mathrm{protection}}
++
+V_{\mathrm{premium}}
+$$
+
+Premium Legは支払いであるため通常は負、Protection Legは受取りであるため正となる。
+
+CDS評価には、割引カーブだけでなく、将来のデフォルト確率を表すDefault Probability Curveが必要である。本章では、Hazard Rateから生存確率とデフォルト確率を求め、Premium LegとProtection Legを評価する。
+
+まず、フラット割引率とフラットHazard Rateを使用して、MidPoint法によるCDS評価と手計算を比較する。次に、標準CDS2015契約をISDA CDS Engineで評価し、Fair spread、Fair upfrontおよびAccrual rebateを確認する。
+
+```{r chapter08-setup}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(QuantLib)
+  library(GaussQuant)
+})
+```
+
+## 1. デフォルト時刻と生存確率
+
+デフォルトが発生する確率時刻を \(\tau\) とする。時点 \(t\) まで企業がデフォルトせずに存続する確率を、生存確率と呼ぶ。
+
+$$
+Q(t)
+=
+P(\tau>t)
+$$
+
+時点0から \(t\) までの累積デフォルト確率は、
+
+$$
+P(\tau\leq t)
+=
+1-Q(t)
+$$
+
+である。
+
+Hazard Rate \(\lambda(t)\) は、時点 \(t\) まで存続しているという条件の下で、その直後にデフォルトする瞬間的な強度を表す。
+
+$$
+\lambda(t)
+=
+\lim_{\Delta t\to 0}
+\frac{
+P(t<\tau\leq t+\Delta t\mid \tau>t)
+}{
+\Delta t
+}
+$$
+
+Hazard Rateが一定のフラットモデルでは、生存確率は次式となる。
+
+$$
+Q(t)
+=
+\exp(-\lambda t)
+$$
+
+累積デフォルト確率は、
+
+$$
+1-Q(t)
+=
+1-\exp(-\lambda t)
+$$
+
+である。
+
+Hazard Rateは、通常の意味での「一年間のデフォルト確率」そのものではない。たとえばHazard Rateが2%であっても、1年累積デフォルト確率は、
+
+$$
+1-e^{-0.02}
+$$
+
+であり、厳密には2%と一致しない。
+
+## 2. Recovery RateとLoss Given Default
+
+デフォルトが発生した場合でも、債権価値のすべてが失われるとは限らない。デフォルト後に回収できる元本比率をRecovery Rate \(R\) とする。
+
+損失率Loss Given Defaultは、
+
+$$
+LGD
+=
+1-R
+$$
+
+である。
+
+Notionalを \(N\) とすると、Protection Legが補償する損失額は概ね、
+
+$$
+N(1-R)
+$$
+
+となる。
+
+Recovery Rateが高いほどデフォルト時の損失は小さくなり、同じデフォルト確率であればCDS Spreadは低くなる。
+
+## 3. CDS SpreadとHazard Rateの近似
+
+連続的なPremium支払い、一定Hazard Rate、一定Recovery Rateおよび単純な割引を仮定すると、CDS Spread \(s\) とHazard Rate \(\lambda\) には次の近似関係がある。
+
+$$
+s
+\approx
+(1-R)\lambda
+$$
+
+したがって、
+
+$$
+\lambda
+\approx
+\frac{s}{1-R}
+$$
+
+となる。
+
+この近似はCDSの信用水準を理解するために有用である。ただし、実際の評価では、四半期ごとの支払い、Accrual on default、割引、標準日付およびカーブ補間が影響するため、厳密なHazard Rateとは一致しない。
+
+## 4. フラットカーブによる1年物CDS
+
+1年物CDSを考える。
+
+- 評価日：2022年9月19日
+- 満期：2023年9月20日
+- Notional：10,000,000
+- 割引率：10%
+- 市場Spread：130bp
+- 契約Coupon：100bp
+- Recovery Rate：40%
+
+市場Spreadは130bpであるが、契約Couponは100bpである。このため、契約時点のCDS価値はゼロにならない。
+
+```{r chapter08-flat-inputs}
+trade_date_flat <- GaussQuant::date_GQL("2022-09-19")
+maturity_date_flat <- GaussQuant::date_GQL("2023-09-20")
+
+GaussQuant::set_eval_date_GQL(trade_date_flat)
+
+notional_flat <- 10000000
+risk_free_rate_flat <- 0.10
+market_spread_flat <- 130 / 10000
+contract_coupon_flat <- 100 / 10000
+recovery_rate_flat <- 0.40
+
+actual_365 <- QuantLib::Actual365Fixed()
+actual_360 <- QuantLib::Actual360()
+weekend_calendar <- QuantLib::WeekendsOnly()
+
+flat_cds_input_tbl <- tibble::tribble(
+  ~input,             ~value,
+  "trade_date",        "2022-09-19",
+  "maturity_date",     "2023-09-20",
+  "notional",          as.character(notional_flat),
+  "risk_free_rate",    as.character(risk_free_rate_flat),
+  "market_spread",     as.character(market_spread_flat),
+  "contract_coupon",   as.character(contract_coupon_flat),
+  "recovery_rate",     as.character(recovery_rate_flat)
+)
+
+GaussQuant::show_tbl_GQH(
+  flat_cds_input_tbl,
+  "Flat CDS input assumptions",
+  n = 20
+)
+```
+
+## 5. Hazard Rate近似と確率曲線
+
+市場Spread 130bpとRecovery Rate 40%から、フラットHazard Rateを近似する。
+
+```{r chapter08-flat-hazard}
+hazard_rate_approximation <- market_spread_flat /
+  (1 - recovery_rate_flat)
+
+hazard_approximation_tbl <- tibble::tribble(
+  ~metric,                 ~value,
+  "market_spread",          market_spread_flat,
+  "recovery_rate",          recovery_rate_flat,
+  "loss_given_default",     1 - recovery_rate_flat,
+  "hazard_rate_approx",     hazard_rate_approximation
+)
+
+probability_time_grid <- seq(
+  0,
+  5,
+  by = 0.25
+)
+
+flat_probability_tbl <- tibble::tibble(
+  time = probability_time_grid
+) |>
+  dplyr::mutate(
+    survival_probability = exp(
+      -hazard_rate_approximation * .data$time
+    ),
+    cumulative_default_probability = 1 -
+      .data$survival_probability
+  )
+
+flat_probability_plot_tbl <- flat_probability_tbl |>
+  tidyr::pivot_longer(
+    cols = c(
+      survival_probability,
+      cumulative_default_probability
+    ),
+    names_to = "probability_type",
+    values_to = "probability"
+  )
+
+flat_probability_plot <- ggplot2::ggplot(
+  flat_probability_plot_tbl,
+  ggplot2::aes(
+    x = .data$time,
+    y = .data$probability,
+    linetype = .data$probability_type
+  )
+) +
+  ggplot2::geom_line(
+    linewidth = 0.7
+  ) +
+  ggplot2::scale_y_continuous(
+    labels = scales::percent_format(
+      accuracy = 0.1
+    )
+  ) +
+  ggplot2::labs(
+    title = "Flat-hazard survival and default probabilities",
+    x = "Time (years)",
+    y = "Probability",
+    linetype = "Probability"
+  ) +
+  ggplot2::theme_minimal()
+
+GaussQuant::show_tbl_GQH(
+  hazard_approximation_tbl,
+  "Flat hazard-rate approximation",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  flat_probability_tbl,
+  "Flat-hazard probability curve",
+  n = 30
+)
+
+print(flat_probability_plot)
+```
+
+## 6. CDS Scheduleとカーブ
+
+Premiumは四半期ごとに支払われるものとする。単純な教育用例として、評価日の翌日から満期までのForward Scheduleを作成する。
+
+```{r chapter08-flat-schedule-curves}
+cds_schedule_flat <- QuantLib::Schedule(
+  trade_date_flat + 1L,
+  maturity_date_flat,
+  GaussQuant::period_months_GQL(3),
+  weekend_calendar,
+  "Following",
+  "Unadjusted",
+  "Forward",
+  FALSE
+)
+
+discount_curve_flat <- GaussQuant::flat_curve_GQL(
+  reference_date = trade_date_flat,
+  rate = risk_free_rate_flat,
+  day_counter = actual_365,
+  compounding = "Continuous"
+)
+
+discount_curve_handle_flat <- QuantLib::YieldTermStructureHandle(
+  discount_curve_flat
+)
+
+hazard_curve_flat <- QuantLib::FlatHazardRate(
+  trade_date_flat,
+  GaussQuant::quote_handle_GQL(
+    hazard_rate_approximation
+  ),
+  actual_365
+)
+
+hazard_curve_handle_flat <- QuantLib::DefaultProbabilityTermStructureHandle(
+  hazard_curve_flat
+)
+
+flat_curve_check_tbl <- tibble::tribble(
+  ~metric,                            ~value,
+  "discount_factor_at_maturity",       discount_curve_flat$discount(
+                                          maturity_date_flat
+                                        ),
+  "survival_probability_at_maturity", hazard_curve_flat$survivalProbability(
+                                          maturity_date_flat
+                                        ),
+  "default_probability_to_maturity",  1 -
+                                        hazard_curve_flat$survivalProbability(
+                                          maturity_date_flat
+                                        ),
+  "hazard_rate_at_maturity",          hazard_curve_flat$hazardRate(
+                                          maturity_date_flat
+                                        )
+)
+
+GaussQuant::show_tbl_GQH(
+  GaussQuant::schedule_table_GQL(
+    cds_schedule_flat
+  ),
+  "CDS schedule: flat-curve example",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  flat_curve_check_tbl,
+  "Flat discount and hazard-curve check",
+  n = 20
+)
+```
+
+## 7. MidPoint CDS Engine
+
+MidPoint法では、各Premium期間中に発生するデフォルトを、その期間の中点で発生したものとして近似する。
+
+100bp CouponのCDSを作成し、GaussQuantのMidPoint CDS Engineで評価する。
+
+```{r chapter08-midpoint-cds}
+cds_flat <- QuantLib::CreditDefaultSwap(
+  GaussQuant::cds_buyer_side_GQL(),
+  notional_flat,
+  contract_coupon_flat,
+  cds_schedule_flat,
+  "Following",
+  actual_360
+)
+
+midpoint_engine_flat <- GaussQuant::cds_midpoint_engine_GQL(
+  probability_handle = hazard_curve_handle_flat,
+  recovery_rate = recovery_rate_flat,
+  discount_handle = discount_curve_handle_flat
+)
+
+cds_flat$setPricingEngine(
+  midpoint_engine_flat
+)
+
+cds_flat_summary_tbl <- GaussQuant::cds_summary_GQL(
+  cds_flat
+)
+
+cds_flat_leg_check_tbl <- tibble::tribble(
+  ~metric,             ~value,
+  "coupon_leg_npv",     cds_flat$couponLegNPV(),
+  "default_leg_npv",    cds_flat$defaultLegNPV(),
+  "sum_of_two_legs",    cds_flat$couponLegNPV() +
+                          cds_flat$defaultLegNPV(),
+  "reported_npv",       GaussQuant::cds_npv_GQL(
+                          cds_flat
+                        ),
+  "difference",         GaussQuant::cds_npv_GQL(
+                          cds_flat
+                        ) -
+                          (
+                            cds_flat$couponLegNPV() +
+                              cds_flat$defaultLegNPV()
+                          )
+)
+
+GaussQuant::show_tbl_GQH(
+  cds_flat_summary_tbl,
+  "CDS summary: MidPoint engine with flat curves",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  cds_flat_leg_check_tbl,
+  "CDS two-leg NPV check",
+  n = 20
+)
+```
+
+プロテクション買い手から見て、Premium Legは負、Protection Legは正となる。契約CouponがFair Spreadより低ければ、プロテクション買い手に有利となり、CDS NPVは一般に正となる。
+
+## 8. CDSキャッシュフローと確率表
+
+GaussQuantの`cds_cashflow_table_GQL()`を利用し、各Premium期間の割引係数、生存確率、デフォルト確率および期間中点の情報を確認する。
+
+```{r chapter08-cds-cashflow-table}
+cds_cashflow_flat_tbl <- GaussQuant::cds_cashflow_table_GQL(
+  cds_schedule = cds_schedule_flat,
+  protection_start_date = cds_flat$protectionStartDate(),
+  coupon_rate = contract_coupon_flat,
+  hazard_curve = hazard_curve_flat,
+  discount_curve = discount_curve_flat,
+  trade_date = trade_date_flat,
+  notional = notional_flat
+)
+
+GaussQuant::show_tbl_GQH(
+  cds_cashflow_flat_tbl,
+  "CDS cash-flow and probability table",
+  n = 20
+)
+```
+
+
+## 9. Premium Legの手計算
+
+Premium Legは、参照企業が各支払日まで存続した場合に支払われる。
+
+単純化した現在価値は次式で表される。
+
+$$
+V_{\mathrm{premium}}
+\approx
+-Ns
+\sum_i
+\alpha_i
+D(0,t_i)
+Q(t_i)
+$$
+
+ここで、\(N\)はNotional、\(s\)は契約Coupon、\(\alpha_i\)は利息計算期間、\(D(0,t_i)\)は割引係数、\(Q(t_i)\)は生存確率である。
+
+```{r chapter08-premium-leg-hand}
+premium_leg_hand_flat <- -sum(
+  cds_cashflow_flat_tbl$coupon_amount *
+    cds_cashflow_flat_tbl$discount_factor *
+    cds_cashflow_flat_tbl$midpoint_survival_probability,
+  na.rm = TRUE
+)
+```
+
+この近似では期間中点の生存確率を使用している。実際のCDSでは、期間中にデフォルトした場合の経過PremiumであるAccrual on defaultも考慮される。
+
+## 10. Protection Legの手計算
+
+期間 \((t_{i-1},t_i]\) にデフォルトする確率を、
+
+$$
+\Delta PD_i
+=
+Q(t_{i-1})-Q(t_i)
+$$
+
+とする。
+
+Protection Legは、各期間の中点 \(m_i\) で損失補償が支払われると近似する。
+
+$$
+V_{\mathrm{protection}}
+\approx
+N(1-R)
+\sum_i
+D(0,m_i)
+\Delta PD_i
+$$
+
+```{r chapter08-protection-leg-hand}
+protection_leg_per_unit_hand_flat <- (
+  1 - recovery_rate_flat
+) *
+  sum(
+    cds_cashflow_flat_tbl$midpoint_discount_factor *
+      cds_cashflow_flat_tbl$default_probability,
+    na.rm = TRUE
+  )
+
+protection_leg_hand_flat <- notional_flat *
+  protection_leg_per_unit_hand_flat
+```
+
+## 11. Risky PV01とFair Spread
+
+Risky PV01は、CDS Spreadを1単位支払うPremium Legの現在価値に相当する。
+
+$$
+RPV01
+\approx
+\sum_i
+\alpha_i
+D(0,t_i)
+Q(t_i)
+$$
+
+Fair Spreadは、Premium LegとProtection Legの価値を等しくし、UpfrontなしのCDS NPVをゼロにするRunning Spreadである。
+
+$$
+s_{\mathrm{fair}}
+=
+\frac{
+V_{\mathrm{protection}}/N
+}{
+RPV01
+}
+$$
+
+```{r chapter08-rpv01-fair-spread}
+risky_pv01_hand_flat <- sum(
+  (
+    cds_cashflow_flat_tbl$accrual_days /
+      360
+  ) *
+    cds_cashflow_flat_tbl$discount_factor *
+    cds_cashflow_flat_tbl$midpoint_survival_probability,
+  na.rm = TRUE
+)
+
+fair_spread_hand_flat <- protection_leg_per_unit_hand_flat /
+  risky_pv01_hand_flat
+
+cds_npv_hand_flat <- premium_leg_hand_flat +
+  protection_leg_hand_flat
+
+flat_hand_check_tbl <- tibble::tribble(
+  ~metric,               ~hand_value,              ~quantlib_value,
+  "coupon_leg_npv",       premium_leg_hand_flat,     cds_flat$couponLegNPV(),
+  "default_leg_npv",      protection_leg_hand_flat,  cds_flat$defaultLegNPV(),
+  "cds_npv",              cds_npv_hand_flat,         GaussQuant::cds_npv_GQL(
+                                                       cds_flat
+                                                     ),
+  "fair_spread",          fair_spread_hand_flat,     GaussQuant::cds_fair_spread_GQL(
+                                                       cds_flat
+                                                     )
+) |>
+  dplyr::mutate(
+    difference = .data$hand_value -
+      .data$quantlib_value
+  )
+
+flat_hand_summary_tbl <- tibble::tribble(
+  ~metric,                    ~value,
+  "risky_pv01",                risky_pv01_hand_flat,
+  "protection_leg_per_unit",   protection_leg_per_unit_hand_flat,
+  "hand_fair_spread",          fair_spread_hand_flat,
+  "quantlib_fair_spread",      GaussQuant::cds_fair_spread_GQL(
+                                  cds_flat
+                                ),
+  "fair_spread_difference",    fair_spread_hand_flat -
+                                  GaussQuant::cds_fair_spread_GQL(
+                                    cds_flat
+                                  )
+)
+
+GaussQuant::show_tbl_GQH(
+  flat_hand_check_tbl,
+  "CDS hand calculation and MidPoint engine comparison",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  flat_hand_summary_tbl,
+  "CDS hand-calculation summary",
+  n = 20
+)
+```
+
+手計算とMidPoint Engineは近い値となるが、厳密には一致しない。差にはAccrual on default、日付規則、Protection開始日およびQuantLib内部の計算規約が含まれる。
+
+## 12. Zero-NPV CDSからHazard Rateを推定する
+
+市場Spreadを契約Couponとして設定したCDSは、契約開始時点でNPVがゼロとなるようにHazard Rateを調整できる。
+
+ここでは、市場Spread 130bpのCDSについて、MidPoint EngineのNPVがゼロとなるフラットHazard Rateを`uniroot()`で推定する。
+
+```{r chapter08-hazard-calibration}
+cds_market_flat <- QuantLib::CreditDefaultSwap(
+  GaussQuant::cds_buyer_side_GQL(),
+  notional_flat,
+  market_spread_flat,
+  cds_schedule_flat,
+  "Following",
+  actual_360
+)
+
+cds_market_npv_at_hazard <- function(hazard_rate) {
+  engine <- GaussQuant::cds_midpoint_engine_GQL(
+    recovery_rate = recovery_rate_flat,
+    hazard_rate = hazard_rate,
+    discount_rate = risk_free_rate_flat,
+    reference_date = trade_date_flat,
+    day_counter = "Actual365Fixed"
+  )
+
+  cds_market_flat$setPricingEngine(
+    engine
+  )
+
+  GaussQuant::cds_npv_GQL(
+    cds_market_flat
+  )
+}
+
+hazard_calibration_result <- stats::uniroot(
+  cds_market_npv_at_hazard,
+  interval = c(
+    1e-8,
+    0.50
+  ),
+  tol = 1e-10
+)
+
+hazard_rate_calibrated <- hazard_calibration_result$root
+
+calibrated_midpoint_engine <- GaussQuant::cds_midpoint_engine_GQL(
+  recovery_rate = recovery_rate_flat,
+  hazard_rate = hazard_rate_calibrated,
+  discount_rate = risk_free_rate_flat,
+  reference_date = trade_date_flat,
+  day_counter = "Actual365Fixed"
+)
+
+cds_market_flat$setPricingEngine(
+  calibrated_midpoint_engine
+)
+
+hazard_calibration_tbl <- tibble::tribble(
+  ~metric,                       ~value,
+  "market_spread",                market_spread_flat,
+  "simple_hazard_approximation",  hazard_rate_approximation,
+  "calibrated_hazard_rate",       hazard_rate_calibrated,
+  "zero_npv_check",               GaussQuant::cds_npv_GQL(
+                                      cds_market_flat
+                                    ),
+  "fair_spread_check",            GaussQuant::cds_fair_spread_GQL(
+                                      cds_market_flat
+                                    )
+)
+
+GaussQuant::show_tbl_GQH(
+  hazard_calibration_tbl,
+  "Flat hazard calibration from a zero-NPV CDS",
+  n = 20
+)
+```
+
+単純近似 \(\lambda\approx s/(1-R)\) とカリブレーション結果は近いが、支払頻度と割引の影響により差が生じる。
+
+## 13. SpreadとRecovery Rateの感応度
+
+単純近似の下では、Spreadが高いほどHazard Rateは高くなる。また、同じSpreadでRecovery Rateを高く仮定すると、デフォルト時損失が小さくなるため、そのSpreadを説明するために必要なHazard Rateは高くなる。
+
+```{r chapter08-credit-sensitivity}
+credit_sensitivity_input_tbl <- tidyr::crossing(
+  market_spread_bp = c(
+    50,
+    100,
+    200
+  ),
+  recovery_rate = c(
+    0.20,
+    0.40,
+    0.60
+  )
+)
+
+credit_sensitivity_tbl <- credit_sensitivity_input_tbl |>
+  dplyr::mutate(
+    market_spread = .data$market_spread_bp /
+      10000,
+    loss_given_default = 1 -
+      .data$recovery_rate,
+    hazard_rate_approx = .data$market_spread /
+      .data$loss_given_default,
+    survival_probability_5y = exp(
+      -5 * .data$hazard_rate_approx
+    ),
+    cumulative_default_probability_5y = 1 -
+      .data$survival_probability_5y
+  )
+
+GaussQuant::show_tbl_GQH(
+  credit_sensitivity_tbl,
+  "Spread and recovery-rate sensitivity",
+  n = 30
+)
+```
+
+Recovery RateとHazard Rateは、CDS Spreadだけから完全に独立して識別できない。実務ではRecovery Rateを外生的に仮定し、その仮定の下でDefault Probability Curveを構築することが多い。
+
+## 14. 標準CDSとCDS2015満期
+
+標準CDSでは、満期を単純に取引日から5年後とするのではなく、CDS IMM日とCDS2015ルールに従って決定する。
+
+次の5年物CDSを考える。
+
+- 取引日：2022年8月19日
+- 市場Spread：30.426bp
+- 契約Coupon：100bp
+- Notional：10,000,000
+- Recovery Rate：40%
+- 外生的なOIS割引率：0.25%
+
+第II-3章ではOISカーブの構築を扱った。本章の目的は信用カーブとCDS評価であるため、割引カーブの動学やブートストラップを繰り返さず、フラットOIS割引率を外生的に与える。
+
+```{r chapter08-isda-inputs}
+trade_date_isda <- GaussQuant::date_GQL(
+  "2022-08-19"
+)
+
+GaussQuant::set_eval_date_GQL(
+  trade_date_isda
+)
+
+cds_tenor_isda <- GaussQuant::period_years_GQL(
+  5L
+)
+
+maturity_date_isda <- QuantLib::cdsMaturity(
+  trade_date_isda,
+  cds_tenor_isda,
+  "CDS2015"
+)
+
+market_spread_isda <- 30.426 / 10000
+contract_coupon_isda <- 100 / 10000
+notional_isda <- 10000000
+recovery_rate_isda <- 0.40
+ois_discount_rate_isda <- 0.0025
+
+isda_cds_input_tbl <- tibble::tribble(
+  ~input,               ~value,
+  "trade_date",          "2022-08-19",
+  "cds_tenor",           "5Y",
+  "maturity_date",       GaussQuant::iso_GQL(
+                           maturity_date_isda
+                         ),
+  "market_spread_bp",    as.character(
+                           market_spread_isda *
+                             10000
+                         ),
+  "contract_coupon_bp",  as.character(
+                           contract_coupon_isda *
+                             10000
+                         ),
+  "notional",            as.character(
+                           notional_isda
+                         ),
+  "recovery_rate",       as.character(
+                           recovery_rate_isda
+                         ),
+  "ois_discount_rate",   as.character(
+                           ois_discount_rate_isda
+                         )
+)
+
+GaussQuant::show_tbl_GQH(
+  isda_cds_input_tbl,
+  "ISDA CDS input assumptions",
+  n = 20
+)
+```
+
+## 15. 標準CDS2015 Schedule
+
+CDS2015ルールにより、Premium支払日は標準化された四半期日へ調整される。
+
+```{r chapter08-isda-schedule}
+cds_calendar_isda <- QuantLib::WeekendsOnly()
+
+cds_schedule_isda <- QuantLib::Schedule(
+  trade_date_isda,
+  maturity_date_isda,
+  GaussQuant::period_months_GQL(3),
+  cds_calendar_isda,
+  "Following",
+  "Unadjusted",
+  "CDS2015",
+  FALSE
+)
+
+GaussQuant::show_tbl_GQH(
+  GaussQuant::schedule_table_GQL(
+    cds_schedule_isda
+  ),
+  "CDS schedule: 5Y CDS2015 example",
+  n = 30
+)
+```
+
+## 16. ISDA用割引カーブ
+
+```{r chapter08-isda-discount-curve}
+discount_curve_isda <- GaussQuant::flat_curve_GQL(
+  reference_date = trade_date_isda,
+  rate = ois_discount_rate_isda,
+  day_counter = actual_365,
+  compounding = "Continuous"
+)
+
+discount_curve_handle_isda <- QuantLib::YieldTermStructureHandle(
+  discount_curve_isda
+)
+
+isda_discount_check_tbl <- tibble::tribble(
+  ~metric,                         ~value,
+  "ois_discount_rate",              ois_discount_rate_isda,
+  "discount_factor_at_maturity",    discount_curve_isda$discount(
+                                       maturity_date_isda
+                                     )
+)
+
+GaussQuant::show_tbl_GQH(
+  isda_discount_check_tbl,
+  "ISDA discount-curve check",
+  n = 20
+)
+```
+
+
+## 17. ISDA整合Hazard Rateの推定
+
+市場Spread 30.426bpをRunning Spreadとする標準CDSを作成し、ISDA EngineのNPVがゼロとなるフラットHazard Rateを推定する。
+
+```{r chapter08-isda-hazard-calibration}
+market_cds_isda <- GaussQuant::make_cds_GQL(
+  maturity_date = maturity_date_isda,
+  running_spread = market_spread_isda,
+  notional = notional_isda,
+  side = "buyer",
+  trade_date = trade_date_isda,
+  coupon_tenor = "3M",
+  day_counter = "Actual360",
+  date_generation_rule = "CDS2015"
+)
+
+isda_market_npv_at_hazard <- function(hazard_rate) {
+  probability_handle <- GaussQuant::flat_hazard_rate_GQL(
+    hazard_rate = hazard_rate,
+    reference_date = trade_date_isda,
+    day_counter = "Actual365Fixed"
+  )
+
+  engine <- GaussQuant::cds_isda_engine_GQL(
+    hazard_curve_handle = probability_handle,
+    recovery_rate = recovery_rate_isda,
+    discount_curve_handle = discount_curve_handle_isda
+  )
+
+  market_cds_isda$setPricingEngine(
+    engine
+  )
+
+  GaussQuant::cds_npv_GQL(
+    market_cds_isda
+  )
+}
+
+isda_hazard_calibration_result <- stats::uniroot(
+  isda_market_npv_at_hazard,
+  interval = c(
+    1e-8,
+    0.50
+  ),
+  tol = 1e-10
+)
+
+hazard_rate_isda <- isda_hazard_calibration_result$root
+
+hazard_curve_isda <- QuantLib::FlatHazardRate(
+  trade_date_isda,
+  GaussQuant::quote_handle_GQL(
+    hazard_rate_isda
+  ),
+  actual_365
+)
+
+hazard_curve_handle_isda <- QuantLib::DefaultProbabilityTermStructureHandle(
+  hazard_curve_isda
+)
+
+isda_hazard_check_tbl <- tibble::tribble(
+  ~metric,                         ~value,
+  "market_spread",                  market_spread_isda,
+  "recovery_rate",                  recovery_rate_isda,
+  "implied_hazard_rate",            hazard_rate_isda,
+  "simple_hazard_approximation",    market_spread_isda /
+                                      (
+                                        1 -
+                                          recovery_rate_isda
+                                      ),
+  "survival_probability_at_maturity",
+  hazard_curve_isda$survivalProbability(
+    maturity_date_isda
+  ),
+  "default_probability_to_maturity",
+  1 -
+    hazard_curve_isda$survivalProbability(
+      maturity_date_isda
+    )
+)
+
+GaussQuant::show_tbl_GQH(
+  isda_hazard_check_tbl,
+  "ISDA implied hazard-rate check",
+  n = 20
+)
+```
+
+市場SpreadとRecovery Rateから得られる単純近似と、ISDA EngineでゼロNPVとなるHazard Rateには差が生じる。標準CDSの日付、Accrual on default、割引および数値積分が評価へ反映されるためである。
+
+## 18. ISDA CDS Engine
+
+契約Couponを標準Coupon 100bpへ固定した5年物CDSを評価する。
+
+市場Spreadは30.426bpであり、契約Coupon 100bpより低い。プロテクション買い手は市場水準より高いPremiumを支払うため、Running Couponだけで評価すると一般に負のNPVとなる。
+
+```{r chapter08-isda-engine}
+isda_engine <- GaussQuant::cds_isda_engine_GQL(
+  hazard_curve_handle = hazard_curve_handle_isda,
+  recovery_rate = recovery_rate_isda,
+  discount_curve_handle = discount_curve_handle_isda
+)
+
+cds_isda <- GaussQuant::make_cds_GQL(
+  maturity_date = maturity_date_isda,
+  running_spread = contract_coupon_isda,
+  notional = notional_isda,
+  side = "buyer",
+  trade_date = trade_date_isda,
+  coupon_tenor = "3M",
+  day_counter = "Actual360",
+  date_generation_rule = "CDS2015",
+  pricing_engine = isda_engine
+)
+
+cds_isda_summary_base_tbl <- GaussQuant::cds_summary_GQL(
+  cds_isda
+)
+
+GaussQuant::show_tbl_GQH(
+  cds_isda_summary_base_tbl,
+  "ISDA CDS base summary",
+  n = 20
+)
+```
+
+## 19. Accrual rebateとNPV分解
+
+標準CDSでは、取引日が前回の標準Coupon日と次回Coupon日の間にある場合、契約開始時にAccrual rebateが発生することがある。
+
+この場合、プロテクション買い手から見たNPVは、
+
+$$
+V_{\mathrm{CDS}}
+=
+V_{\mathrm{coupon}}
++
+V_{\mathrm{default}}
++
+V_{\mathrm{accrual\ rebate}}
+$$
+
+となる。
+
+```{r chapter08-isda-npv-decomposition}
+coupon_leg_npv_isda <- cds_isda$couponLegNPV()
+default_leg_npv_isda <- cds_isda$defaultLegNPV()
+
+accrual_rebate_npv_isda <- tryCatch(
+  as.numeric(
+    cds_isda$accrualRebateNPV()
+  ),
+  error = function(e) NA_real_
+)
+
+three_component_sum_isda <- coupon_leg_npv_isda +
+  default_leg_npv_isda +
+  accrual_rebate_npv_isda
+
+isda_leg_check_tbl <- tibble::tribble(
+  ~metric,               ~value,
+  "coupon_leg_npv",       coupon_leg_npv_isda,
+  "default_leg_npv",      default_leg_npv_isda,
+  "accrual_rebate_npv",   accrual_rebate_npv_isda,
+  "three_component_sum",  three_component_sum_isda,
+  "reported_npv",         GaussQuant::cds_npv_GQL(
+                            cds_isda
+                          ),
+  "difference",           GaussQuant::cds_npv_GQL(
+                            cds_isda
+                          ) -
+                            three_component_sum_isda
+)
+
+GaussQuant::show_tbl_GQH(
+  isda_leg_check_tbl,
+  "ISDA CDS NPV decomposition",
+  n = 20
+)
+```
+
+## 20. Fair SpreadとFair Upfront
+
+Fair Spreadは、Upfrontを授受せずにCDS NPVをゼロとするRunning Spreadである。
+
+Fair Upfrontは、契約Couponを標準Couponへ固定したまま、契約価値を調整するために開始時点で授受するNotional比率である。
+
+```{r chapter08-fair-spread-upfront}
+fair_spread_isda <- GaussQuant::cds_fair_spread_GQL(
+  cds_isda
+)
+
+fair_upfront_isda <- tryCatch(
+  as.numeric(
+    cds_isda$fairUpfront()
+  ),
+  error = function(e) NA_real_
+)
+
+fair_upfront_amount_isda <- fair_upfront_isda *
+  notional_isda
+
+isda_cds_summary_tbl <- tibble::tribble(
+  ~metric,                  ~value,
+  "coupon_leg_npv",          coupon_leg_npv_isda,
+  "default_leg_npv",         default_leg_npv_isda,
+  "accrual_rebate_npv",      accrual_rebate_npv_isda,
+  "cds_npv",                 GaussQuant::cds_npv_GQL(
+                               cds_isda
+                             ),
+  "market_spread",           market_spread_isda,
+  "contract_coupon",         contract_coupon_isda,
+  "fair_spread",             fair_spread_isda,
+  "fair_upfront",            fair_upfront_isda,
+  "fair_upfront_amount",     fair_upfront_amount_isda,
+  "hazard_rate",             hazard_rate_isda
+)
+
+GaussQuant::show_tbl_GQH(
+  isda_cds_summary_tbl,
+  "CDS summary: ISDA engine",
+  n = 30
+)
+```
+
+この例では、契約Couponが市場Spreadより高いため、プロテクション買い手は市場より多くのPremiumを支払う。したがって、契約開始時の価値を調整するUpfrontが必要となる。
+
+Fair Upfrontの正負は、QuantLibにおけるBuyer／Sellerの符号規約と契約設定に依存する。符号だけで判断せず、CDS NPV、契約Coupon、Fair SpreadおよびUpfront金額を一緒に確認する必要がある。
+
+## 21. ISDA用キャッシュフロー表
+
+標準CDS2015 Schedule、ISDA整合Hazard Curveおよび割引カーブから、Premium期間ごとの確率情報を作成する。
+
+```{r chapter08-isda-cashflow-table}
+cds_cashflow_isda_tbl <- GaussQuant::cds_cashflow_table_GQL(
+  cds_schedule = cds_schedule_isda,
+  protection_start_date = cds_isda$protectionStartDate(),
+  coupon_rate = contract_coupon_isda,
+  hazard_curve = hazard_curve_isda,
+  discount_curve = discount_curve_isda,
+  trade_date = trade_date_isda,
+  notional = notional_isda
+)
+
+GaussQuant::show_tbl_GQH(
+  cds_cashflow_isda_tbl,
+  "CDS cash-flow table: CDS2015 example",
+  n = 30
+)
+```
+
+この表はCDSの経済構造を理解するためのMidPoint型分解である。ISDA Engineは、標準日付、Accrual on default、数値積分および曲線補間をより厳密に扱うため、この表から得られる単純近似と完全には一致しない。
+
+## 22. MidPoint型近似とISDA Engine
+
+ISDA用キャッシュフロー表から、Premium Leg、Protection Leg、RPV01およびFair Spreadを簡易計算する。
+
+```{r chapter08-isda-hand-approximation}
+premium_leg_hand_isda <- -sum(
+  cds_cashflow_isda_tbl$coupon_amount *
+    cds_cashflow_isda_tbl$discount_factor *
+    cds_cashflow_isda_tbl$midpoint_survival_probability,
+  na.rm = TRUE
+)
+
+protection_leg_per_unit_hand_isda <- (
+  1 -
+    recovery_rate_isda
+) *
+  sum(
+    cds_cashflow_isda_tbl$midpoint_discount_factor *
+      cds_cashflow_isda_tbl$default_probability,
+    na.rm = TRUE
+  )
+
+protection_leg_hand_isda <- notional_isda *
+  protection_leg_per_unit_hand_isda
+
+risky_pv01_hand_isda <- sum(
+  (
+    cds_cashflow_isda_tbl$accrual_days /
+      360
+  ) *
+    cds_cashflow_isda_tbl$discount_factor *
+    cds_cashflow_isda_tbl$midpoint_survival_probability,
+  na.rm = TRUE
+)
+
+fair_spread_hand_isda <- protection_leg_per_unit_hand_isda /
+  risky_pv01_hand_isda
+
+cds_npv_hand_isda <- premium_leg_hand_isda +
+  protection_leg_hand_isda +
+  accrual_rebate_npv_isda
+
+isda_hand_check_tbl <- tibble::tribble(
+  ~metric,              ~hand_value,                 ~isda_value,
+  "coupon_leg_npv",      premium_leg_hand_isda,        coupon_leg_npv_isda,
+  "default_leg_npv",     protection_leg_hand_isda,     default_leg_npv_isda,
+  "cds_npv",             cds_npv_hand_isda,            GaussQuant::cds_npv_GQL(
+                                                        cds_isda
+                                                      ),
+  "fair_spread",         fair_spread_hand_isda,        fair_spread_isda
+) |>
+  dplyr::mutate(
+    difference = .data$hand_value -
+      .data$isda_value
+  )
+
+GaussQuant::show_tbl_GQH(
+  isda_hand_check_tbl,
+  "MidPoint-style approximation and ISDA comparison",
+  n = 20
+)
+```
+
+## 23. MidPoint EngineとISDA Engineの比較
+
+同じHazard Curve、Recovery Rate、割引カーブおよび標準Couponを使用し、MidPoint EngineとISDA Engineの評価差を確認する。
+
+```{r chapter08-engine-comparison}
+midpoint_engine_isda_inputs <- GaussQuant::cds_midpoint_engine_GQL(
+  probability_handle = hazard_curve_handle_isda,
+  recovery_rate = recovery_rate_isda,
+  discount_handle = discount_curve_handle_isda
+)
+
+cds_midpoint_standard <- GaussQuant::make_cds_GQL(
+  maturity_date = maturity_date_isda,
+  running_spread = contract_coupon_isda,
+  notional = notional_isda,
+  side = "buyer",
+  trade_date = trade_date_isda,
+  coupon_tenor = "3M",
+  day_counter = "Actual360",
+  date_generation_rule = "CDS2015",
+  pricing_engine = midpoint_engine_isda_inputs
+)
+
+midpoint_standard_summary_tbl <- GaussQuant::cds_summary_GQL(
+  cds_midpoint_standard
+) |>
+  dplyr::mutate(
+    engine = "MidPoint"
+  )
+
+isda_standard_summary_tbl <- GaussQuant::cds_summary_GQL(
+  cds_isda
+) |>
+  dplyr::mutate(
+    engine = "ISDA"
+  )
+
+engine_comparison_tbl <- dplyr::bind_rows(
+  midpoint_standard_summary_tbl,
+  isda_standard_summary_tbl
+) |>
+  dplyr::relocate(
+    .data$engine
+  ) |>
+  tidyr::pivot_wider(
+    names_from = engine,
+    values_from = value
+  ) |>
+  dplyr::mutate(
+    difference_isda_minus_midpoint = .data$ISDA -
+      .data$MidPoint
+  )
+
+GaussQuant::show_tbl_GQH(
+  engine_comparison_tbl,
+  "MidPoint and ISDA CDS engine comparison",
+  n = 20
+)
+```
+
+MidPoint法は、各Premium期間内のデフォルト時点を期間中点へ集約する。ISDA Engineは標準市場規約に合わせて、より詳細な日付処理と積分を行う。そのため、同じカーブを用いてもLeg NPVとFair Spreadに差が生じる。
+
+## 24. まとめ
+
+CDSは、Premium LegとProtection Legから構成される。プロテクション買い手はPremiumを支払い、信用事由が発生した場合に損失補償を受け取る。
+
+Hazard Rateは、企業がその時点まで存続しているという条件の下での瞬間的なデフォルト強度である。フラットHazard Rateでは、生存確率は次式で表される。
+
+$$
+Q(t)
+=
+e^{-\lambda t}
+$$
+
+Recovery Rate \(R\) を仮定すると、CDS SpreadとHazard Rateには、
+
+$$
+\lambda
+\approx
+\frac{s}{1-R}
+$$
+
+という近似関係がある。ただし、厳密なHazard Rateは、Premium支払日、割引、Accrual on defaultおよび標準CDS規約を反映して推定する。
+
+Premium Legの単位Spread当たり現在価値がRisky PV01であり、Fair SpreadはProtection Legの単位Notional価値をRisky PV01で割って求められる。
+
+MidPoint Engineは、デフォルト時点を各期間の中点で近似するため、CDS評価の構造を理解しやすい。ISDA Engineは、標準CDS2015の日付、Accrual rebate、Accrual on defaultおよび市場規約をより厳密に扱う。
+
+標準Couponと市場Spreadが異なる場合、Running Couponだけでは契約価値がゼロにならない。この差を契約開始時に調整するものがFair Upfrontである。
+
+```{r chapter08-completion}
+chapter08_summary_tbl <- tibble::tribble(
+  ~section,                     ~main_result,
+  "Hazard Rate",                "Survival and cumulative default probabilities",
+  "MidPoint CDS",               "Premium and protection leg decomposition",
+  "Hazard calibration",         "Zero-NPV market CDS",
+  "CDS2015",                    "Standard maturity and coupon schedule",
+  "ISDA CDS",                   "Fair spread, upfront, and accrual rebate",
+  "Engine comparison",          "MidPoint approximation versus ISDA pricing"
+)
+
+GaussQuant::show_tbl_GQH(
+  chapter08_summary_tbl,
+  "Chapter II-8 summary",
+  n = 20
+)
+
+cat(
+  "\nChapter II-8 Credit risk and CDS completed successfully.\n"
+)
+```

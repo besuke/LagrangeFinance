@@ -1,0 +1,523 @@
+---
+title: "第II-1章 債券およびマーケットコンベンション"
+subtitle: "固定利付債の価格、利回りおよび金利リスク"
+format:
+  html:
+    toc: true
+    number-sections: true
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+# 第II-1章 債券およびマーケットコンベンション
+
+本章では、固定利付債を例として、クリーン価格、ダーティ価格、経過利子、最終利回り、デュレーションおよびコンベクシティを計算する。あわせて、日数計算規則、休日カレンダー、営業日調整、受渡日および利払スケジュールといったマーケットコンベンションを確認する。
+
+```{r setup}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(QuantLib)
+  library(GaussQuant)
+})
+```
+
+## 1. マーケットコンベンション
+
+債券評価では、価格や利回りの計算方法だけでなく、日付、利払頻度、休日および端数処理に関する市場慣行を確認する必要がある。同じ債券であっても、採用する日数計算規則や利回り表示方式が異なれば、経過利子、残存年数および計算価格も異なる。
+
+### 1.1 一般的な市場慣行
+
+日数計算規則（Day Count Convention）は、二つの日付の間の期間を年数へ換算する規則である。主な方式は次のとおりである。
+
+- **Actual/365 Fixed**
+  二つの日付間の実日数を365で除する。
+
+- **Actual/360**
+  二つの日付間の実日数を360で除する。短期金融市場や金利商品で広く用いられる。
+
+- **Actual/Actual ICMA**
+  実日数を、利払期間の実日数と年間利払回数に基づいて年換算する。固定利付債で用いられる代表的な方式である。
+
+- **Actual/Actual ISDA**
+  対象期間を平年部分と閏年部分に分け、それぞれ365または366で除する。
+
+- **30/360 Bond Basis**
+  1か月を30日、1年を360日として計算し、月末の日付には所定の調整を行う。
+
+- **30E/360**
+  開始日または終了日が31日の場合に30日へ調整し、1か月を30日、1年を360日として計算する。
+
+30/360方式は手計算を容易にするために考案された方式であり、半年、四半期および1か月をそれぞれ180日、90日および30日として扱える。一方、Actual方式では暦上の実日数を用いるため、同じ利率でも計算期間によって利息額が異なることがある。日数計算規則の違いは、経過利子だけでなく、割引期間や利回りにも影響する。詳細は[Day count convention](https://en.wikipedia.org/wiki/Day_count_convention)を参照されたい。
+
+受渡日や利払日が非営業日に当たる場合には、対象市場の休日カレンダーと営業日調整規則を用いる。代表的な規則には、次営業日へ移すFollowing、翌月へ越える場合には前営業日へ戻すModified Following、前営業日へ戻すPreceding、および日付を調整しないUnadjustedがある。
+
+### 1.2 日本の債券市場における慣行
+
+日本の公社債市場では、単価と複利利回りに加えて、単利利回りが広く用いられてきた。日本証券業協会の公社債店頭売買参考統計値でも、原則として報告された単利利回りから単価を求め、その単価から複利利回りを計算する手順が採用されている。
+
+利付債の経過利子に用いる経過日数は、直前利払期日から受渡日までの実日数を片端入れで数える。一方、最終利回りに用いる残存日数は、受渡日の翌日から償還日までを片端入れで数えるため、経過日数と残存日数を区別する必要がある。
+
+残存日数を \(N\)、残存年数を \(T\) とすると、残存年数は次式で求める。
+
+$$
+T=\frac{N}{365}
+$$
+
+日本市場の実務では、残存期間が1年以上の場合には、原則として期間中の2月29日を残存日数から除外する。残存期間が1年未満の場合には2月29日を含めるが、分母は365のままとする。
+
+さらに、計算された残存年数は小数点以下第8位で切り捨て、小数点以下第7位までの値を以後の計算に用いる。四捨五入ではなく切り捨てである点が重要である。
+
+額面100円、年間クーポン額を \(C\)、償還価格を \(R\)、単価を \(P\)、残存年数を \(T\) とすると、単利の最終利回り \(Y\) は次式で表される。
+
+$$
+Y=
+\frac{
+C+\dfrac{R-P}{T}
+}{
+P
+}
+\times 100
+$$
+
+この単利利回りは、将来の各キャッシュフローを支払時点ごとに割り引く複利利回りとは異なる。クーポンと償還差損益を残存年数で年換算する日本市場独自の表示方法であり、キャッシュフローごとの時間価値を直接には反映しない。
+
+利回りから単価を逆算する場合には、小数点以下第7位までに切り捨てた残存年数を使用する。算出された単価も、原則として小数点以下第4位を切り捨て、小数点以下第3位までとする。
+
+単価で約定する取引では、計算途中の端数が約定価格を直接変更する場面は限られる。しかし、単利利回りから単価を逆算する場合には、残存年数の切り捨てが償還差損益の年換算額を変化させ、さらに単価の切り捨てによって価格差が生じる。このため、日本の債券計算では、残存日数、残存年数および単価の端数処理を正確に再現する必要がある。
+
+なお、以下のコード例では一般的な債券評価の確認を目的として、30/360 Bond Basis、半年複利およびUnadjustedを採用している。したがって、この設定は日本国内債の単利利回り慣行をそのまま再現するものではない。
+
+以下では、日本の休日カレンダー、取引日から2営業日後の受渡日、30/360 Bond Basis、半年複利および年2回払いを設定する。
+
+```{r enums-calendars-counters}
+jp_calendar <- QuantLib::Japan()
+
+dc_a365 <- QuantLib::Actual365Fixed()
+dc_a360 <- QuantLib::Actual360()
+dc_30 <- GaussQuant::day_counter_GQL(
+  "Thirty360",
+  convention = "BondBasis"
+)
+
+cmpd_compounded <- QuantLib::Compounding_Compounded_get()
+cmpd_simple <- QuantLib::Compounding_Simple_get()
+
+freq_annual <- QuantLib::Frequency_Annual_get()
+freq_semiannual <- QuantLib::Frequency_Semiannual_get()
+
+trade_date_chr <- "2022-08-19"
+issue_date_chr <- "2022-07-28"
+maturity_date_chr <- "2025-07-28"
+
+trade_date <- GaussQuant::date_GQL(trade_date_chr)
+issue_date_ql <- GaussQuant::date_GQL(issue_date_chr)
+maturity_date_ql <- GaussQuant::date_GQL(maturity_date_chr)
+
+settlement_days <- 2L
+
+GaussQuant::set_eval_date_GQL(trade_date)
+
+settlement_date <- GaussQuant::advance_days_GQL(
+  calendar_obj = jp_calendar,
+  date_obj = trade_date,
+  n_days = settlement_days
+)
+
+settlement_date_chr <- as.character(settlement_date)
+settlement_date_ql <- GaussQuant::date_GQL(settlement_date)
+
+setup_tbl <- tibble::tibble(
+  item = c(
+    "trade_date",
+    "settlement_date",
+    "issue_date",
+    "maturity_date",
+    "settlement_days",
+    "day_counter",
+    "compounding",
+    "frequency"
+  ),
+  value = c(
+    trade_date_chr,
+    settlement_date_chr,
+    issue_date_chr,
+    maturity_date_chr,
+    as.character(settlement_days),
+    "Thirty360(BondBasis)",
+    "Compounded",
+    "Semiannual"
+  )
+)
+
+GaussQuant::show_tbl_GQH(setup_tbl, "Bond setup dates and conventions")
+```
+
+表示された表から、取引日、受渡日、発行日、満期日および評価に用いる市場慣行を確認する。受渡日は日本の休日カレンダーを用いて取引日から2営業日後に計算される。
+
+## 2. 固定利付債の設定
+
+額面100、年率0.37%、半年払い、満期2025年7月28日の固定利付債を作成する。利払スケジュールは満期日から発行日へ向かって6か月ごとに生成し、各利払日はUnadjustedとする。
+
+```{r fixed-rate-bond-setup}
+face_amount <- 100
+coupon_rate <- 0.00370
+clean_price_input <- 97.0
+
+bond_obj <- GaussQuant::fixed_rate_bond_GQL(
+  issue_date = issue_date_chr,
+  maturity_date = maturity_date_chr,
+  face_amount = face_amount,
+  coupon_rate = coupon_rate,
+  settlement_days = settlement_days,
+  calendar = jp_calendar,
+  accrual_day_counter = dc_30,
+  payment_convention = "Unadjusted",
+  schedule_convention = "Unadjusted",
+  maturity_convention = "Unadjusted",
+  date_generation = "Backward",
+  end_of_month = FALSE,
+  schedule_frequency = GaussQuant::period_months_GQL(6)
+)
+
+bond_schedule <- QuantLib::Schedule(
+  issue_date_ql,
+  maturity_date_ql,
+  GaussQuant::period_months_GQL(6),
+  jp_calendar,
+  "Unadjusted",
+  "Unadjusted",
+  "Backward",
+  FALSE
+)
+
+schedule_tbl <- GaussQuant::schedule_dates_GQL(bond_schedule)
+
+bond_setup_tbl <- tibble::tibble(
+  metric = c(
+    "bond_class",
+    "face_amount",
+    "coupon_rate",
+    "clean_price_input"
+  ),
+  value = list(
+    paste(class(bond_obj), collapse = ", "),
+    face_amount,
+    coupon_rate,
+    clean_price_input
+  )
+)
+
+GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(bond_setup_tbl), "Fixed-rate bond object")
+GaussQuant::show_tbl_GQH(schedule_tbl, "Bond schedule", n = 20)
+```
+
+債券オブジェクトの条件と、発行日から満期日までの利払日を確認する。
+
+## 3. クリーン価格から最終利回り
+
+市場で提示されるクリーン価格97から、将来キャッシュフローの現在価値がこの価格と一致する最終利回りを逆算する。
+
+```{r clean-price-to-yield}
+price_to_yield <- GaussQuant::bond_yield_from_clean_safe_GQL(
+  bond = bond_obj,
+  clean_price = clean_price_input,
+  day_counter = dc_30,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual
+)
+
+yield_tbl <- tibble::tibble(
+  metric = c(
+    "clean_price_input",
+    "yield_from_clean_price",
+    "yield_percent"
+  ),
+  value = list(
+    clean_price_input,
+    price_to_yield,
+    100 * price_to_yield
+  )
+)
+
+GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(yield_tbl), "Clean price -> yield")
+```
+
+債券価格が額面を下回っているため、算出される最終利回りはクーポンレートを上回る。
+
+## 4. 最終利回りから価格
+
+前節で求めた最終利回りを使って、クリーン価格、ダーティ価格および経過利子を計算する。両価格の関係は次式で表される。
+
+$$
+\text{Dirty Price}=\text{Clean Price}+\text{Accrued Interest}
+$$
+
+```{r yield-to-price}
+price_tbl <- GaussQuant::bond_price_measures_GQL(
+  bond = bond_obj,
+  yield = price_to_yield,
+  day_counter = dc_30,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual,
+  settlement_date = settlement_date_chr
+)
+
+price_tbl <- GaussQuant::complete_accrual_metrics_GQL(
+  price_tbl = price_tbl,
+  bond_schedule = bond_schedule,
+  settlement_date = settlement_date,
+  day_counter = dc_30
+)
+
+price_tbl_display <- GaussQuant::metric_tbl_display_GQH(price_tbl)
+
+GaussQuant::show_tbl_GQH(price_tbl_display, "Yield -> price summary")
+
+dirty_price_from_yield <- GaussQuant::get_metric_num_GQH(price_tbl, "dirty_price")
+clean_price_from_yield <- GaussQuant::get_metric_num_GQH(price_tbl, "clean_price")
+accrued_amount <- GaussQuant::get_metric_num_GQH(price_tbl, "accrued_amount")
+
+cat(
+  "clean price:",
+  sprintf("%.8f", clean_price_from_yield),
+  "\n",
+  "dirty price:",
+  sprintf("%.8f", dirty_price_from_yield),
+  "\n",
+  "accrued:",
+  sprintf("%.8f", accrued_amount),
+  "\n"
+)
+```
+
+再計算されたクリーン価格が入力価格97と一致することを確認する。ダーティ価格との差額は、前回利払日から受渡日までに発生した経過利子である。
+
+## 5. 金利リスク
+
+修正デュレーションは、利回りの小さな変化に対する債券価格の一次感応度を表す。コンベクシティは価格と利回りの非線形な関係を補正する二次感応度である。
+
+```{r risk-measures}
+risk_tbl <- GaussQuant::bond_risk_measures_GQL(
+  bond = bond_obj,
+  yield = price_to_yield,
+  day_counter = dc_30,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual
+)
+
+risk_tbl_display <- GaussQuant::metric_tbl_display_GQH(risk_tbl)
+
+GaussQuant::show_tbl_GQH(risk_tbl_display, "Bond risk measures")
+
+modified_duration <- GaussQuant::get_metric_num_GQH(risk_tbl, "modified_duration")
+convexity_value <- GaussQuant::get_metric_num_GQH(risk_tbl, "convexity")
+
+cat(
+  "modified duration:",
+  sprintf("%.8f", modified_duration),
+  "\n",
+  "convexity:",
+  sprintf("%.8f", convexity_value),
+  "\n"
+)
+```
+
+修正デュレーションが大きいほど、同じ利回り変化に対する価格変化も大きくなる。コンベクシティは、利回り変化が大きくなるほど重要になる。
+
+## 6. デュレーションとコンベクシティによる価格変化の近似
+
+利回り変化を $\Delta y$ とすると、債券価格の相対変化は修正デュレーションとコンベクシティを使って近似できる。
+
+$$
+\frac{\Delta P}{P}
+\approx
+-D_{\mathrm{mod}}\Delta y
++\frac{1}{2}C(\Delta y)^2
+$$
+
+```{r risk-handcalc}
+handcalc_tbl <- GaussQuant::bond_risk_handcalc_GQL(
+  bond = bond_obj,
+  yield = price_to_yield,
+  dirty_price = dirty_price_from_yield,
+  modified_duration = modified_duration,
+  convexity = convexity_value,
+  day_counter = dc_30,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual
+)
+
+handcalc_tbl_display <- GaussQuant::metric_tbl_display_GQH(handcalc_tbl)
+
+GaussQuant::show_tbl_GQH(handcalc_tbl_display, "Risk hand calculations")
+```
+
+一次近似と二次近似を比較し、コンベクシティを加えることで実際の価格変化に近づくことを確認する。
+
+## 7. キャッシュフローによる価格の検算
+
+各利払日のクーポンと満期時の元本を最終利回りで割り引き、ダーティ価格を手計算する。そこから経過利子を差し引くことでクリーン価格を求める。
+
+```{r manual-cashflow-pv}
+schedule_dates_chr <- schedule_tbl[[1]] |>
+  as.character()
+
+schedule_dates_chr <- schedule_dates_chr[!is.na(schedule_dates_chr)]
+
+future_dates_chr <- schedule_dates_chr[schedule_dates_chr > settlement_date_chr]
+
+coupon_per_period <- face_amount * coupon_rate / 2
+
+manual_cf_tbl <- tibble::tibble(
+  payment_date = future_dates_chr,
+  period_no = seq_along(future_dates_chr),
+  cashflow = coupon_per_period
+) |>
+  dplyr::mutate(
+    cashflow = ifelse(
+      .data$payment_date == maturity_date_chr,
+      .data$cashflow + face_amount,
+      .data$cashflow
+    ),
+    ql_date = purrr::map(payment_date, GaussQuant::date_GQL),
+    time = purrr::map_dbl(
+      ql_date,
+      ~ dc_30$yearFraction(settlement_date_ql, .x)
+    ),
+    discount_factor = 1 / (1 + price_to_yield / 2)^(2 * time),
+    pv = cashflow * discount_factor
+  ) |>
+  dplyr::select(-ql_date)
+
+manual_dirty_price <- sum(manual_cf_tbl$pv, na.rm = TRUE)
+manual_clean_price <- manual_dirty_price - accrued_amount
+
+manual_summary_tbl <- tibble::tibble(
+  metric = c(
+    "manual_dirty_price",
+    "manual_clean_price",
+    "wrapper_dirty_price",
+    "wrapper_clean_price",
+    "dirty_price_difference",
+    "clean_price_difference"
+  ),
+  value = list(
+    manual_dirty_price,
+    manual_clean_price,
+    dirty_price_from_yield,
+    clean_price_from_yield,
+    manual_dirty_price - dirty_price_from_yield,
+    manual_clean_price - clean_price_from_yield
+  )
+)
+
+GaussQuant::show_tbl_GQH(manual_cf_tbl, "Manual cashflow PV table")
+GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(manual_summary_tbl), "Manual PV check")
+```
+
+手計算と関数による価格との差が十分に小さいことを確認する。これにより、キャッシュフロー、割引期間および経過利子の関係を検算できる。
+
+## 8. フラットな利回りによる価格評価
+
+次に、最終利回りを一定とするフラットな割引曲線を構築し、割引エンジンから債券価格を計算する。
+
+```{r flat-yield-pricing}
+flat_yield_handle <- GaussQuant::bond_flat_forward_handle_GQL(
+  settlement_date = settlement_date_chr,
+  rate = price_to_yield,
+  day_counter = dc_30,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual
+)
+
+flat_engine <- QuantLib::DiscountingBondEngine(flat_yield_handle)
+
+QuantLib::Instrument_setPricingEngine(
+  bond_obj,
+  flat_engine
+)
+
+flat_dirty_price <- QuantLib::Instrument_NPV(bond_obj)
+
+flat_yield_tbl <- tibble::tibble(
+  metric = c(
+    "flat_yield",
+    "dirty_price_from_flat_engine",
+    "dirty_price_from_yield",
+    "difference"
+  ),
+  value = list(
+    price_to_yield,
+    flat_dirty_price,
+    dirty_price_from_yield,
+    flat_dirty_price - dirty_price_from_yield
+  )
+)
+
+GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(flat_yield_tbl), "Flat yield pricing")
+```
+
+フラットな利回りを使った割引価格と、最終利回りから直接求めたダーティ価格を比較する。
+
+## 9. 債券キャッシュフロー
+
+債券に含まれる将来のクーポンと元本償還を一覧で確認する。
+
+```{r bond-cashflow-table}
+bond_cf_tbl <- GaussQuant::bond_cashflow_table_GQL(
+  bond = bond_obj
+)
+
+GaussQuant::show_tbl_GQH(bond_cf_tbl, "Bond cashflow table", n = 30)
+```
+
+各行は支払日と支払額を表し、満期日のキャッシュフローには最終クーポンと元本償還が含まれる。
+
+## 10. 計算結果のまとめ
+
+これまでに設定した日付、価格、利回りおよび金利リスク指標を一つの表にまとめる。
+
+```{r bond-analysis-summary}
+summary_tbl <- tibble::tibble(
+  metric = c(
+    "trade_date",
+    "settlement_date",
+    "issue_date",
+    "maturity_date",
+    "clean_price_input",
+    "yield_from_clean_price",
+    "clean_price_from_yield",
+    "dirty_price_from_yield",
+    "accrued_amount",
+    "modified_duration",
+    "convexity"
+  ),
+  value = c(
+    GaussQuant::iso_GQL(trade_date),
+    settlement_date_chr,
+    issue_date_chr,
+    maturity_date_chr,
+    sprintf("%.8f", clean_price_input),
+    sprintf("%.8f", price_to_yield),
+    sprintf("%.8f", clean_price_from_yield),
+    sprintf("%.8f", dirty_price_from_yield),
+    sprintf("%.8f", accrued_amount),
+    sprintf("%.8f", modified_duration),
+    sprintf("%.8f", convexity_value)
+  )
+)
+
+GaussQuant::show_tbl_GQH(summary_tbl, "Bond analysis summary", n = 20)
+
+cat("\nchapter07 bonds stable rewrite completed successfully.\n")
+```
