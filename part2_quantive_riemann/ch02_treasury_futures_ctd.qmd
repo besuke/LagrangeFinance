@@ -1,6 +1,6 @@
 ---
-title: "Chapter 8: Treasury Futures and CTD"
-subtitle: "Deliverable basket, basis, implied repo, and CTD analysis with GaussQuant"
+title: "第II-2章 国債先物とCTD"
+subtitle: "受渡適格銘柄、変換係数、ベーシスおよびインプライド・レポ"
 format:
   html:
     toc: true
@@ -12,16 +12,17 @@ execute:
   message: false
 ---
 
-# Treasury futures and cheapest-to-deliver analysis
+# 第II-2章 国債先物とCTD
 
-This chapter studies a US Treasury futures deliverable basket with the current `GaussQuant` API.
+株価指数先物では、指数そのものを受け渡すことができないため、満期時には差金決済が行われる。これに対し、国債先物では、満期まで保有された建玉について、受渡適格銘柄に指定された国債を用いた現物受渡しが行われる。現物受渡しを通じて、先物市場と現物国債市場の価格連関が保たれている。
 
-The workflow is:
+国債先物の取引対象は、実際に発行された特定の国債ではなく、クーポンや償還期限を標準化した標準物である。この標準物は実在しないため、最終決済では、取引所が定めた複数の受渡適格銘柄のいずれかを用いて受渡しを行う。銘柄ごとにクーポン、残存期間および価格が異なるため、その価値の差は変換係数（Conversion Factor: CF）によって調整される。
 
-- build a Treasury bond and verify its price and accrued interest;
-- calculate gross basis, carry, net basis, and implied repo;
-- select the cheapest-to-deliver bond from the minimum net basis;
-- calculate the CTD-adjusted futures BPV.
+受渡銘柄を選択する権利は、国債を受け取る買方ではなく、国債を引き渡す売方にある。したがって売方は、受渡適格銘柄の中から、現物価格だけでなく、変換係数、経過利子、クーポン収入および受渡日までの資金調達費用を考慮し、最も低い経済的費用で受け渡すことのできる銘柄を選択する。この銘柄を最割安銘柄（Cheapest-to-Deliver: CTD）という。
+
+CTDは、単純に現物単価が最も低い債券ではない。先物価格に変換係数を乗じて求める受渡価値と、現物債を調達して受渡日まで保有する費用とを比較して決定される。
+
+本章では、受渡適格銘柄ごとに現物価格、グロスベーシス、キャリー、ネットベーシスおよびインプライド・レポを計算する。これらの比較を通じて、どのような経済計算によってCTDが選定されるのかを確認し、最後にCTDを基礎とする国債先物のBPVを求める。
 
 ```{r setup}
 knitr::opts_chunk$set(
@@ -38,7 +39,11 @@ suppressPackageStartupMessages({
 })
 ```
 
-# Calendar, dates, and conventions
+## 1. 計算条件と市場慣行
+
+本章では、米国国債先物を例として計算する。現物国債には米国政府債カレンダーとActual/Actual（Bond）を使用し、レポ期間にはActual/360を使用する。現物債の受渡日は取引日の1営業日後とする。
+
+米国国債先物の価格は、通常、額面100に対するポイントと32分の1で表示される。たとえば、コード中の `109 + 10 / 32` は、相場表示では109-10に相当する。
 
 ```{r treasury-futures-setup}
 cal_us_gov <- QuantLib::UnitedStates("GovernmentBond")
@@ -83,7 +88,11 @@ setup_tbl <- tibble::tribble(
 GaussQuant::show_tbl_GQH(setup_tbl, "Treasury futures setup")
 ```
 
-# US Treasury bond example
+## 2. 受渡適格国債の作成
+
+最初に、受渡適格銘柄の例となる米国国債を作成する。発行日、償還日、クーポンおよび利払スケジュールは、現物価格、経過利子、キャリーおよびBPVを計算する基礎となる。
+
+次のコードでは、年率4.125%、年2回払いの米国国債を作成し、利払スケジュールを確認する。あわせて、利回り6%を仮定した場合のクリーン価格を計算する。
 
 ```{r us-treasury-bond}
 bond_bundle <- GaussQuant::us_treasury_bond_GQL(
@@ -120,14 +129,25 @@ cat(
 )
 ```
 
-# Bond price from yield
+## 3. 現物債価格と経過利子
+
+CTD分析では、現物債を取得するために必要な資金を把握する必要がある。市場利回りからクリーン価格を求め、受渡日までの経過利子を加えると、実際の決済金額に対応するダーティ価格が得られる。
+
+$$
+\text{ダーティ価格}
+=
+\text{クリーン価格}
++
+\text{経過利子}
+$$
+
+先物価格には109-10、現物債の市場利回りには3.70%を用いる。
 
 ```{r bond-price-from-yield}
 bond_yield <- 3.70 / 100
 futures_price <- 109 + 10 / 32
 
 accrued_amount <- bond_obj$accruedAmount(settle_date_ql)
-
 clean_price <- GaussQuant::bond_clean_price_from_yield_safe_GQL(
   bond = bond_obj,
   yield_rate = bond_yield,
@@ -164,9 +184,11 @@ cat(
 )
 ```
 
-# Bond cashflow present-value illustration
+## 4. キャッシュフロー現在価値の確認
 
-The generic interest-rate discount factors below are illustrative. They do not exactly reproduce QuantLib bond-yield pricing because ActualActual(Bond) uses coupon reference periods.
+次の計算では、各キャッシュフローへ一般的な割引係数を適用し、現在価値の合計と債券価格を比較する。
+
+ただし、Actual/Actual（Bond）は利払参照期間を用いるため、ここで作成する一般的な割引係数は、QuantLibによる債券利回り計算を完全には再現しない。この表は、債券価格が将来キャッシュフローの現在価値から構成されることを確認するためのものであり、差額がゼロになることを目的とした検算ではない。
 
 ```{r bond-cashflow-pv}
 interest_rate_obj <- QuantLib::InterestRate(
@@ -222,7 +244,19 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-# Accrued interest hand calculation
+## 5. 経過利子の手計算
+
+経過利子は、直前利払日から受渡日までに発生したクーポンを日割りして求める。Actual/Actual（Bond）では、経過日数を利払期間の実日数で除してクーポンを按分する。
+
+$$
+\text{経過利子}
+=
+\text{1回分のクーポン}
+\times
+\frac{\text{経過日数}}{\text{利払期間の日数}}
+$$
+
+手計算結果とQuantLibの結果との差を確認する。
 
 ```{r accrued-interest-handcalc}
 previous_coupon_date <- GaussQuant::date_GQL("2023-03-30")
@@ -259,7 +293,25 @@ accrued_tbl <- tibble::tibble(
 GaussQuant::show_tbl_GQH(accrued_tbl, "Accrued interest hand calculation")
 ```
 
-# Deliverable basket
+## 6. 受渡適格銘柄と変換係数
+
+国債先物では、複数の受渡適格銘柄が存在する。各銘柄はクーポンや残存期間が異なるため、そのままでは同じ先物価格に対して比較できない。そこで、各銘柄へ変換係数を適用し、標準物に対する相対的な受渡価値を調整する。
+
+受渡時に買方が売方へ支払う金額は、概念的には次式で表される。
+
+$$
+\text{インボイス価格}
+=
+\text{先物価格}
+\times
+\text{変換係数}
++
+\text{受渡時経過利子}
+$$
+
+ここでいうCFはConversion Factorの略であり、キャッシュフローを意味するCFとは区別する。
+
+次の表では、3銘柄の発行日、償還日、クーポン、変換係数および市場利回りを設定する。
 
 ```{r deliverable-basket}
 deliverable_tbl <- tibble::tribble(
@@ -272,7 +324,47 @@ deliverable_tbl <- tibble::tribble(
 GaussQuant::show_tbl_GQH(deliverable_tbl, "Treasury futures deliverable basket")
 ```
 
-# Gross basis, net basis, and CTD
+## 7. ベーシス、キャリーおよびCTD
+
+### 7.1 グロスベーシス
+
+グロスベーシスは、現物債のクリーン価格と、変換係数で調整した先物価格との差である。
+
+$$
+\text{グロスベーシス}
+=
+\text{現物クリーン価格}
+-
+\text{先物価格}
+\times
+\text{変換係数}
+$$
+
+グロスベーシスが小さい銘柄ほど受渡しに有利に見えるが、この段階では受渡日までの資金調達費用、クーポン収入および経過利子の変化を考慮していない。
+
+### 7.2 キャリーとネットベーシス
+
+現物債を購入して受渡日まで保有する場合、レポによる資金調達費用が発生する一方、保有期間中にはクーポン収入や経過利子の増加が得られる。これらをまとめたものがキャリーである。
+
+概念的には、ネットベーシスは次式で表される。
+
+$$
+\text{ネットベーシス}
+=
+\text{グロスベーシス}
+-
+\text{キャリー}
+$$
+
+同一の前提条件で比較した場合、一般にネットベーシスが最も小さい銘柄がCTDとなる。
+
+### 7.3 インプライド・レポ
+
+インプライド・レポは、現物債を購入し、レポで資金調達して受渡日まで保有し、先物契約へ受け渡す取引から得られる収益率である。
+
+ネットベーシスが受渡コストの大きさを表すのに対し、インプライド・レポは同じ取引を収益率として表す。通常、ネットベーシスが最小となる銘柄と、インプライド・レポが最大となる銘柄は一致する。
+
+次のコードでは、各受渡適格銘柄について現物価格、BPV、グロスベーシス、キャリー、ネットベーシスおよびインプライド・レポを計算し、CTDを選定する。
 
 ```{r treasury-futures-ctd}
 repo_rate <- 5.10 / 100
@@ -363,7 +455,20 @@ GaussQuant::show_tbl_GQH(basket_display_tbl, "Deliverable basket summary", n = 2
 GaussQuant::show_tbl_GQH(ctd_display_tbl, "Cheapest-to-deliver bond", n = 20)
 ```
 
-# CTD-adjusted futures BPV
+結果では、現物価格だけでなく、変換係数とキャリーを反映したネットベーシスを比較する。`ctd` がTRUEとなった銘柄が、本章の条件における最割安銘柄である。インプライド・レポもあわせて確認し、CTD選定と整合しているかを見る。
+
+## 8. CTD調整後の先物BPV
+
+国債先物の金利感応度は、CTD債券のBPVを変換係数で調整して概算する。
+
+$$
+\text{先物BPV}
+\approx
+\frac{\text{CTD債券のBPV}}
+{\text{変換係数}}
+$$
+
+この計算は、金利が小幅に変化しても現在のCTDが変わらないことを前提とする。金利水準やイールドカーブの形状が大きく変化すると、別の受渡適格銘柄がCTDとなる可能性がある。そのため、国債先物のリスクは、現在のCTD債券の感応度だけでなく、CTDが切り替わる可能性にも依存する。
 
 ```{r ctd-futures-bpv}
 ctd_bond <- ctd_tbl$bond_obj[[1L]]
@@ -410,8 +515,12 @@ GaussQuant::show_tbl_GQH(
   GaussQuant::metric_tbl_display_GQH(ctd_summary_tbl),
   "CTD and futures BPV summary"
 )
-
-cat(
-  "\nChapter 08 treasury futures and CTD migrated to GaussQuant successfully.\n"
-)
 ```
+
+## 9. まとめ
+
+国債先物では、売方が複数の受渡適格銘柄から実際に引き渡す銘柄を選択する。銘柄間のクーポンや残存期間の差は変換係数によって調整されるが、変換係数だけで経済価値の差が完全に解消されるわけではない。
+
+そのため、CTDの選定では、現物価格と変換係数から求めるグロスベーシスに加え、レポ費用、クーポン収入および経過利子の変化を反映したキャリーを考慮する。ネットベーシスが最小、またはインプライド・レポが最大となる銘柄が、売方にとって最も有利な受渡銘柄となる。
+
+国債先物のBPVは、CTD債券のBPVと変換係数に依存する。ただし、市場環境の変化によってCTDが切り替わる可能性があるため、国債先物のリスク管理では受渡銘柄選択権も考慮する必要がある。

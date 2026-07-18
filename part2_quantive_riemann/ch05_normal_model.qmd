@@ -1,0 +1,898 @@
+---
+title: "第II-5章 Normal（Bachelier）モデル"
+subtitle: "フォワード金利、Normal volatilityおよび金利オプション"
+format:
+  html:
+    toc: true
+    number-sections: true
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
+
+# 第II-5章 Normal（Bachelier）モデル
+
+前章では、株価や為替レートのように、価格の変化率をウィーナー過程によって表現する対象について、Blackモデルを検討した。Blackモデルでは、原資産の変動幅がその時点の価格水準に比例する幾何ブラウン運動を仮定するため、原資産価格は常に正の値を取る。
+
+これに対して、本章では金利を原資産とするオプションを検討する。金利は株価や為替レートとは異なり、満期ごとに異なる期間構造を持ち、ゼロまたはマイナスの値を取る可能性もある。このため、金利を単一の幾何ブラウン運動によって表現することには限界がある。
+
+本章では、金利期間構造全体を確率モデルとして記述するのではなく、特定の将来期間に対応するフォワード金利を直接モデル化する。適切なフォワード測度の下では、フォワード金利をマルチンゲールとして扱うことができる。
+
+Blackモデルでは、フォワード金利の変化幅がその金利水準に比例すると仮定する。
+
+$$
+dF_t
+=
+\sigma_B F_t\,dW_t
+$$
+
+この場合、フォワード金利は理論上常に正の値を取り、ゼロまたはマイナスの金利を直接扱うことができない。
+
+そこで本章では、フォワード金利の変化額がウィーナー過程に従うNormalモデルを検討する。
+
+$$
+dF_t
+=
+\sigma_N\,dW_t
+$$
+
+このモデルでは、将来のフォワード金利は次のように表される。
+
+$$
+F_T
+=
+F_0
++
+\sigma_N\sqrt{T}Z
+$$
+
+ここで、\(Z\) は標準正規分布に従う確率変数である。フォワード金利の変化幅は現在の金利水準に依存しないため、将来金利はゼロまたはマイナスの値も取り得る。
+
+本章では、あえて金利期間構造全体の動学モデルを導入せず、各商品の評価に必要なフォワード金利を、それぞれに対応する測度の下でマルチンゲールとして直接モデル化する。この枠組みに基づき、金利先物オプション、Caplet、CapおよびSwaptionをNormalモデルによって評価する。
+
+```{r chapter05-setup}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  warning = FALSE,
+  message = FALSE
+)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(QuantLib)
+  library(GaussQuant)
+})
+```
+
+## 1. 金利モデルと測度
+
+金利デリバティブでは、すべてのフォワード金利を一つの確率過程で表現するとは限らない。単一のCapletを評価する場合、そのCapletが参照する期間のフォワード金利を、支払日を満期とするゼロクーポン債をNumeraireとしたフォワード測度の下で扱う。
+
+期間 \([T_1,T_2]\) のフォワード金利を \(L_t(T_1,T_2)\) とすると、\(T_2\)-forward measureの下で、これをマルチンゲールとして次のように置く。
+
+$$
+dL_t(T_1,T_2)
+=
+\sigma_N\,dW_t^{T_2}
+$$
+
+一方、Swaptionでは、原資産は単一期間のフォワード金利ではなく、複数期間から構成されるフォワードスワップレートである。この場合は、固定レグのアニュイティをNumeraireとするswap measureの下で、フォワードスワップレートをマルチンゲールとして扱う。
+
+したがって本章では、期間構造全体を確率的に生成するHJM、LMMまたは短期金利モデルへ進むのではなく、各商品の自然なフォワード変数に対して局所的なNormalモデルを適用する。
+
+現在価値を計算するためには割引係数が必要であるが、割引カーブ自体の動学はモデル化しない。本章では、与えられた割引係数または簡単な決定論的割引率を使用する。
+
+## 2. Bachelier価格公式
+
+Normalモデルの下で、満期時のフォワード金利は次の正規分布に従う。
+
+$$
+F_T
+\sim
+N\left(
+F_0,\,
+\sigma_N^2T
+\right)
+$$
+
+European callの価格は次式で与えられる。
+
+$$
+C_N
+=
+D(0,T)
+\left[
+(F_0-K)N(d)
++
+\sigma_N\sqrt{T}\phi(d)
+\right]
+$$
+
+European putの価格は次式となる。
+
+$$
+P_N
+=
+D(0,T)
+\left[
+(K-F_0)N(-d)
++
+\sigma_N\sqrt{T}\phi(d)
+\right]
+$$
+
+ここで、
+
+$$
+d
+=
+\frac{
+F_0-K
+}{
+\sigma_N\sqrt{T}
+}
+$$
+
+であり、\(D(0,T)\) は割引係数、\(N(\cdot)\) は標準正規分布の累積分布関数、\(\phi(\cdot)\) は標準正規分布の密度関数である。
+
+Black公式には \(\log(F_0/K)\) が含まれるが、Normal公式では差額 \(F_0-K\) だけを使用する。このため、フォワード金利または行使金利がゼロ以下であっても計算できる。
+
+## 3. Normal volatilityの単位
+
+Black volatilityは原資産価格に対する相対的な変化率であり、通常は百分率で表示される。
+
+これに対してNormal volatilityは、原資産と同じ単位を持つ。金利を小数で表す場合、Normal volatility 50bpは次の値である。
+
+$$
+50\text{ bp}
+=
+\frac{50}{10000}
+=
+0.0050
+$$
+
+したがって、`vol = 0.0050` は「0.5%のBlack volatility」ではなく、**年率50bpのNormal volatility**を意味する。
+
+Normalモデルでは、
+
+$$
+F_T-F_0
+=
+\sigma_N\sqrt{T}Z
+$$
+
+であるため、\(\sigma_N\sqrt{T}\) は満期までの金利変化額の標準偏差となる。
+
+```{r chapter05-volatility-unit}
+normal_volatility_bp <- 50
+normal_volatility <- normal_volatility_bp / 10000
+
+normal_volatility_tbl <- tibble::tribble(
+  ~metric,                        ~value,
+  "normal_volatility_bp",         normal_volatility_bp,
+  "normal_volatility_decimal",    normal_volatility,
+  "one_standard_deviation_1y_bp", normal_volatility * 10000
+)
+
+GaussQuant::show_tbl_GQH(
+  normal_volatility_tbl,
+  "Normal volatility units",
+  n = 20
+)
+```
+
+## 4. SOFR先物オプション
+
+### 4.1 先物価格から金利への変換
+
+短期金利先物は、一般に金利と反対方向に動く価格表示を使用する。本例では次の関係を用いる。
+
+$$
+\text{Futures Price}
+=
+100
+-
+100\times\text{Rate}
+$$
+
+したがって、先物価格94.54は金利5.46%に対応する。
+
+$$
+F_0
+=
+\frac{100-94.54}{100}
+=
+0.0546
+$$
+
+行使価格94.50は行使金利5.50%に対応する。
+
+$$
+K
+=
+\frac{100-94.50}{100}
+=
+0.0550
+$$
+
+先物価格のcallは、金利が低下して先物価格が上昇したときに価値を持つ。金利を原資産として表現すると、これはputに相当する。そのため、Normal公式では `option_sign = -1` を使用する。
+
+```{r chapter05-futures-option-inputs}
+trade_date <- as.Date("2023-09-26")
+maturity_date <- as.Date("2023-12-15")
+
+futures_price <- 94.54
+strike_futures_price <- 94.50
+
+forward_rate <- (100 - futures_price) / 100
+strike_rate <- (100 - strike_futures_price) / 100
+
+normal_volatility <- 50 / 10000
+risk_free_rate <- 5.4 / 100
+
+maturity_year_fraction <- as.numeric(
+  maturity_date - trade_date
+) / 365
+
+maturity_discount_factor <- exp(
+  -risk_free_rate * maturity_year_fraction
+)
+
+option_sign <- -1
+
+futures_option_input_tbl <- tibble::tribble(
+  ~input,                   ~value,
+  "trade_date",             as.character(trade_date),
+  "maturity_date",          as.character(maturity_date),
+  "futures_price",          as.character(futures_price),
+  "strike_futures_price",   as.character(strike_futures_price),
+  "forward_rate",           as.character(forward_rate),
+  "strike_rate",            as.character(strike_rate),
+  "normal_volatility",      as.character(normal_volatility),
+  "maturity_year_fraction", as.character(maturity_year_fraction),
+  "discount_factor",        as.character(maturity_discount_factor)
+)
+
+GaussQuant::show_tbl_GQH(
+  futures_option_input_tbl,
+  "Normal futures-option assumptions",
+  n = 20
+)
+```
+
+### 4.2 価格とGreeks
+
+Normalモデルによる価格とGreeksを計算する。
+
+```{r chapter05-futures-option-value}
+normal_greeks_tbl <- GaussQuant::normal_option_greeks_GQL(
+  option_sign = option_sign,
+  forward = forward_rate,
+  strike = strike_rate,
+  vol = normal_volatility,
+  maturity = maturity_year_fraction,
+  discount_factor = maturity_discount_factor,
+  risk_free_rate = risk_free_rate
+)
+
+normal_npv <- normal_greeks_tbl |>
+  dplyr::filter(.data$metric == "npv") |>
+  dplyr::pull(.data$value)
+
+contract_value_multiplier <- 100 * 2500
+
+normal_summary_tbl <- dplyr::bind_rows(
+  tibble::tibble(
+    metric = c(
+      "option_npv_rate_unit",
+      "contract_value_multiplier",
+      "delivery_amount"
+    ),
+    value = c(
+      normal_npv,
+      contract_value_multiplier,
+      normal_npv * contract_value_multiplier
+    )
+  ),
+  normal_greeks_tbl |>
+    dplyr::filter(.data$metric != "npv")
+)
+
+GaussQuant::show_tbl_GQH(
+  normal_summary_tbl,
+  "Normal futures-option summary",
+  n = 20
+)
+```
+
+`option_npv_rate_unit`は金利を小数表示した単位でのオプション価値である。金額換算は商品ごとの契約乗数に依存する。本例では、原章と同じ換算係数 `100 * 2500` を使用する。
+
+
+## 5. ゼロ金利とマイナス金利
+
+Normalモデルの重要な特徴は、フォワード金利がゼロまたはマイナスの場合でも価格公式を変更する必要がないことである。
+
+次の例では、フォワード金利をマイナス0.20%、行使金利を0%、Normal volatilityを60bpとする。
+
+```{r chapter05-negative-rate}
+negative_rate_example_tbl <- tibble::tribble(
+  ~option_type, ~option_sign, ~forward, ~strike,
+  "call",        1,           -0.0020,   0.0000,
+  "put",        -1,           -0.0020,   0.0000
+) |>
+  dplyr::mutate(
+    normal_volatility = 60 / 10000,
+    maturity = 1,
+    discount_factor = exp(-0.01),
+    npv = purrr::pmap_dbl(
+      list(
+        .data$option_sign,
+        .data$forward,
+        .data$strike,
+        .data$normal_volatility,
+        .data$maturity,
+        .data$discount_factor
+      ),
+      function(
+        option_sign,
+        forward,
+        strike,
+        normal_volatility,
+        maturity,
+        discount_factor
+      ) {
+        GaussQuant::normal_option_price_GQL(
+          option_sign = option_sign,
+          forward = forward,
+          strike = strike,
+          vol = normal_volatility,
+          maturity = maturity,
+          discount_factor = discount_factor
+        )
+      }
+    )
+  )
+
+GaussQuant::show_tbl_GQH(
+  negative_rate_example_tbl,
+  "Normal pricing with a negative forward rate",
+  n = 20
+)
+```
+
+Normal分布は下方に限界を持たないため、極端なマイナス金利も正の確率で許容する。これは計算上の柔軟性である一方、経済的には常に現実的とは限らない。
+
+## 6. インプライドNormalボラティリティ
+
+市場で観測されるオプション価格から、Normalモデルと整合するボラティリティを逆算したものがインプライドNormalボラティリティである。
+
+市場価格を \(V_{\mathrm{mkt}}\) とすると、次式を満たす \(\sigma_N\) を求める。
+
+$$
+V_N(
+F_0,
+K,
+T,
+D,
+\sigma_N
+)
+=
+V_{\mathrm{mkt}}
+$$
+
+GaussQuantには、Normal価格からボラティリティを直接逆算する関数が用意されている。
+
+```{r chapter05-implied-normal-volatility}
+target_npv <- 0.1133 / 100
+
+implied_normal_volatility <- GaussQuant::normal_vol_from_price_GQL(
+  option_sign = option_sign,
+  strike = strike_rate,
+  forward = forward_rate,
+  maturity = maturity_year_fraction,
+  option_npv = target_npv,
+  discount_factor = maturity_discount_factor
+)
+
+repriced_target <- GaussQuant::normal_option_price_GQL(
+  option_sign = option_sign,
+  forward = forward_rate,
+  strike = strike_rate,
+  vol = implied_normal_volatility,
+  maturity = maturity_year_fraction,
+  discount_factor = maturity_discount_factor
+)
+
+implied_volatility_tbl <- tibble::tribble(
+  ~metric,                        ~value,
+  "target_npv",                   target_npv,
+  "implied_normal_volatility",    implied_normal_volatility,
+  "implied_normal_volatility_bp", implied_normal_volatility * 10000,
+  "repriced_npv",                 repriced_target,
+  "repricing_difference",         repriced_target - target_npv
+)
+
+GaussQuant::show_tbl_GQH(
+  implied_volatility_tbl,
+  "Implied normal volatility",
+  n = 20
+)
+```
+
+再評価値と市場価格の差が数値誤差の範囲に収まれば、逆算結果が正しいことを確認できる。
+
+## 7. 金利・ボラティリティ・時間シナリオ
+
+Normalモデルでは、フォワード金利とNormal volatilityがいずれも絶対変化量で表される。このため、シナリオも1bp単位の加算として設定する方が分かりやすい。
+
+```{r chapter05-normal-calculator}
+normal_calculator_function <- GaussQuant::make_normal_calculator_GQL(
+  option_sign = option_sign,
+  strike = strike_rate,
+  maturity = maturity_year_fraction,
+  discount_factor = maturity_discount_factor,
+  forward = forward_rate,
+  vol = normal_volatility
+)
+
+normal_calculator_object <- GaussQuant::normal_calculator_GQL(
+  option_sign = option_sign,
+  strike = strike_rate,
+  maturity = maturity_year_fraction,
+  discount_factor = maturity_discount_factor,
+  forward = forward_rate,
+  vol = normal_volatility
+)
+
+forward_up_1bp <- forward_rate + 1 / 10000
+volatility_up_1bp <- normal_volatility + 1 / 10000
+
+maturity_after_one_day <- max(
+  maturity_year_fraction - 1 / 365,
+  0
+)
+
+discount_factor_after_one_day <- exp(
+  -risk_free_rate * maturity_after_one_day
+)
+
+closure_scenario_tbl <- tibble::tribble(
+  ~scenario,          ~npv,
+  "base",              normal_calculator_function(),
+  "forward_up_1bp",    normal_calculator_function(
+    forward_new = forward_up_1bp
+  ),
+  "normal_vol_up_1bp", normal_calculator_function(
+    vol_new = volatility_up_1bp
+  ),
+  "one_day_passed",    normal_calculator_function(
+    maturity_new = maturity_after_one_day,
+    discount_factor_new = discount_factor_after_one_day
+  )
+) |>
+  dplyr::mutate(
+    difference_from_base = .data$npv -
+      .data$npv[.data$scenario == "base"]
+  )
+
+class_style_tbl <- tibble::tribble(
+  ~scenario,          ~npv,
+  "base",              normal_calculator_object$npv(),
+  "forward_up_1bp",    normal_calculator_object$npv(
+    forward_new = forward_up_1bp
+  ),
+  "normal_vol_up_1bp", normal_calculator_object$npv(
+    vol_new = volatility_up_1bp
+  ),
+  "one_day_passed",    normal_calculator_object$npv(
+    maturity_new = maturity_after_one_day,
+    discount_factor_new = discount_factor_after_one_day
+  )
+)
+
+GaussQuant::show_tbl_GQH(
+  closure_scenario_tbl,
+  "Normal-model scenarios",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  class_style_tbl,
+  "Class-like normal calculator",
+  n = 20
+)
+```
+
+先物価格のcallを金利putとして評価しているため、金利が1bp上昇するとオプション価値は低下する。Normal volatilityが上昇すると、選択権の時間価値が増加する。
+
+## 8. CapletとCap
+
+Capletは、将来の単一期間のフォワード金利に対するcall optionである。期間 \([T_{i-1},T_i]\) のフォワード金利を \(F_i\)、行使金利を \(K\)、年率換算期間を \(\alpha_i\)、支払日の割引係数を \(P(0,T_i)\) とする。
+
+Capletの価格は次式となる。
+
+$$
+V_i^{\mathrm{caplet}}
+=
+N\alpha_iP(0,T_i)
+\left[
+(F_i-K)N(d_i)
++
+\sigma_{N,i}\sqrt{\tau_i}\phi(d_i)
+\right]
+$$
+
+ここで、
+
+$$
+d_i
+=
+\frac{
+F_i-K
+}{
+\sigma_{N,i}\sqrt{\tau_i}
+}
+$$
+
+である。Capは複数のCapletの合計として評価される。
+
+$$
+V^{\mathrm{cap}}
+=
+\sum_i
+V_i^{\mathrm{caplet}}
+$$
+
+本節では、期間構造モデルを構築せず、各Capletのフォワード金利、Fixingまでの時間および割引係数を外生的に与える。
+
+```{r chapter05-caplet-cap}
+cap_notional <- 10000000
+cap_strike <- 0.05
+flat_discount_rate <- 0.045
+
+caplet_input_tbl <- tibble::tribble(
+  ~caplet, ~fixing_time, ~payment_time, ~accrual_fraction, ~forward_rate, ~normal_vol_bp,
+  1L,       0.25,         0.50,          0.25,              0.0510,        80,
+  2L,       0.50,         0.75,          0.25,              0.0505,        82,
+  3L,       0.75,         1.00,          0.25,              0.0495,        84,
+  4L,       1.00,         1.25,          0.25,              0.0485,        86
+) |>
+  dplyr::mutate(
+    normal_volatility = .data$normal_vol_bp / 10000,
+    discount_factor = exp(
+      -flat_discount_rate * .data$payment_time
+    ),
+    option_value_per_rate_unit = purrr::pmap_dbl(
+      list(
+        .data$forward_rate,
+        .data$normal_volatility,
+        .data$fixing_time,
+        .data$discount_factor
+      ),
+      function(
+        forward_rate,
+        normal_volatility,
+        fixing_time,
+        discount_factor
+      ) {
+        GaussQuant::normal_option_price_GQL(
+          option_sign = 1,
+          forward = forward_rate,
+          strike = cap_strike,
+          vol = normal_volatility,
+          maturity = fixing_time,
+          discount_factor = discount_factor
+        )
+      }
+    ),
+    caplet_npv = cap_notional *
+      .data$accrual_fraction *
+      .data$option_value_per_rate_unit
+  )
+
+cap_summary_tbl <- tibble::tribble(
+  ~metric,       ~value,
+  "cap_notional", cap_notional,
+  "cap_strike",   cap_strike,
+  "cap_npv",      sum(caplet_input_tbl$caplet_npv)
+)
+
+GaussQuant::show_tbl_GQH(
+  caplet_input_tbl,
+  "Bachelier caplet decomposition",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  cap_summary_tbl,
+  "Bachelier cap summary",
+  n = 20
+)
+```
+
+各Capletは異なるFixing時点とフォワード金利を持つ。ここでは期間構造を動学的に生成せず、各フォワード金利をそれぞれの支払日フォワード測度の下で直接評価している。
+
+
+## 9. フォワードスワップレートとアニュイティ
+
+Swaptionの原資産は、将来開始する金利スワップのフォワードスワップレートである。
+
+固定レグ支払日を \(T_1,\ldots,T_n\)、年率換算期間を \(\alpha_i\) とすると、スワップアニュイティは次式である。
+
+$$
+A(0)
+=
+\sum_{i=1}^{n}
+\alpha_iP(0,T_i)
+$$
+
+スワップ開始日を \(T_0\)、満期を \(T_n\) とすると、単一カーブの簡略化されたフォワードスワップレートは次式となる。
+
+$$
+S_0
+=
+\frac{
+P(0,T_0)-P(0,T_n)
+}{
+A(0)
+}
+$$
+
+本節では決定論的な割引係数を与え、フォワードスワップレートとアニュイティを計算する。
+
+```{r chapter05-forward-swap}
+swap_exercise_time <- 1
+swap_start_time <- 1
+fixed_payment_times <- c(2, 3, 4)
+fixed_accrual_fractions <- rep(
+  1,
+  length(fixed_payment_times)
+)
+swap_flat_discount_rate <- 0.035
+
+swap_discount_tbl <- tibble::tibble(
+  payment_time = fixed_payment_times,
+  accrual_fraction = fixed_accrual_fractions,
+  discount_factor = exp(
+    -swap_flat_discount_rate * fixed_payment_times
+  )
+)
+
+swap_annuity <- sum(
+  swap_discount_tbl$accrual_fraction *
+    swap_discount_tbl$discount_factor
+)
+
+swap_start_discount_factor <- exp(
+  -swap_flat_discount_rate * swap_start_time
+)
+
+swap_end_discount_factor <- exp(
+  -swap_flat_discount_rate *
+    max(fixed_payment_times)
+)
+
+forward_swap_rate <- (
+  swap_start_discount_factor -
+    swap_end_discount_factor
+) / swap_annuity
+
+forward_swap_tbl <- tibble::tribble(
+  ~metric,                       ~value,
+  "swap_start_discount_factor",   swap_start_discount_factor,
+  "swap_end_discount_factor",     swap_end_discount_factor,
+  "swap_annuity",                 swap_annuity,
+  "forward_swap_rate",            forward_swap_rate
+)
+
+GaussQuant::show_tbl_GQH(
+  swap_discount_tbl,
+  "Underlying swap fixed-leg schedule",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  forward_swap_tbl,
+  "Forward swap rate and annuity",
+  n = 20
+)
+```
+
+## 10. Bachelier Swaption
+
+payer swaptionは、将来の固定金利支払いスワップへ入る権利である。フォワードスワップレートが行使金利を上回ると価値を持つため、フォワードスワップレートに対するcall optionとして評価できる。
+
+swap measureの下でフォワードスワップレートをマルチンゲールとし、Normalモデルを仮定する。
+
+$$
+dS_t
+=
+\sigma_S\,dW_t^A
+$$
+
+payer swaptionの価格は次式となる。
+
+$$
+V_{\mathrm{payer}}
+=
+NA(0)
+\left[
+(S_0-K)N(d)
++
+\sigma_S\sqrt{T_e}\phi(d)
+\right]
+$$
+
+ここで、
+
+$$
+d
+=
+\frac{
+S_0-K
+}{
+\sigma_S\sqrt{T_e}
+}
+$$
+
+である。receiver swaptionはput optionとして評価する。
+
+```{r chapter05-bachelier-swaption}
+swaption_notional <- 10000000
+swaption_strike <- 0.034
+swaption_normal_volatility <- 100 / 10000
+
+payer_option_value_per_annuity <- GaussQuant::normal_option_price_GQL(
+  option_sign = 1,
+  forward = forward_swap_rate,
+  strike = swaption_strike,
+  vol = swaption_normal_volatility,
+  maturity = swap_exercise_time,
+  discount_factor = 1
+)
+
+receiver_option_value_per_annuity <- GaussQuant::normal_option_price_GQL(
+  option_sign = -1,
+  forward = forward_swap_rate,
+  strike = swaption_strike,
+  vol = swaption_normal_volatility,
+  maturity = swap_exercise_time,
+  discount_factor = 1
+)
+
+swaption_tbl <- tibble::tribble(
+  ~option_type, ~option_sign, ~npv,
+  "payer",       1,           swaption_notional *
+                               swap_annuity *
+                               payer_option_value_per_annuity,
+  "receiver",   -1,           swaption_notional *
+                               swap_annuity *
+                               receiver_option_value_per_annuity
+) |>
+  dplyr::mutate(
+    forward_swap_rate = forward_swap_rate,
+    strike = swaption_strike,
+    annuity = swap_annuity,
+    normal_volatility = swaption_normal_volatility
+  ) |>
+  dplyr::relocate(
+    .data$option_type,
+    .data$forward_swap_rate,
+    .data$strike,
+    .data$annuity,
+    .data$normal_volatility,
+    .data$npv
+  )
+
+GaussQuant::show_tbl_GQH(
+  swaption_tbl,
+  "Bachelier swaption summary",
+  n = 20
+)
+```
+
+アニュイティ \(A(0)\) はすでに将来の固定レグ支払いを現在価値へ割り引いた量である。そのため、Normal公式側では割引係数を1とし、結果へ元本とアニュイティを掛けている。
+
+## 11. Black volatilityとNormal volatility
+
+Blackモデルでは、ATM付近のオプション価値は概ね次式に比例する。
+
+$$
+V_{\mathrm{Black,ATM}}
+\approx
+D(0,T)
+F_0\sigma_B\sqrt{T}\phi(0)
+$$
+
+Normalモデルでは次式となる。
+
+$$
+V_{\mathrm{Normal,ATM}}
+\approx
+D(0,T)
+\sigma_N\sqrt{T}\phi(0)
+$$
+
+したがって、ATM付近では両モデルのボラティリティに次の近似関係がある。
+
+$$
+\sigma_N
+\approx
+F_0\sigma_B
+$$
+
+Normal volatilityは金利水準と同じ単位を持つため、同じBlack volatilityであっても、金利水準が低下すると対応するNormal volatilityは小さくなる。
+
+```{r chapter05-black-normal-comparison}
+black_volatility <- 0.20
+
+black_normal_comparison_tbl <- tibble::tribble(
+  ~forward_rate, ~black_volatility,
+  0.0500,         black_volatility,
+  0.0200,         black_volatility,
+  0.0050,         black_volatility
+) |>
+  dplyr::mutate(
+    approximate_normal_volatility =
+      .data$forward_rate *
+      .data$black_volatility,
+    approximate_normal_volatility_bp =
+      .data$approximate_normal_volatility *
+      10000
+  )
+
+GaussQuant::show_tbl_GQH(
+  black_normal_comparison_tbl,
+  "Approximate ATM Black-to-Normal volatility conversion",
+  n = 20
+)
+```
+
+この関係はATM近似であり、StrikeがATMから離れる場合やボラティリティスマイルが存在する場合には、単純な換算だけでは十分でない。
+
+## 12. まとめ
+
+本章では、金利期間構造全体の確率モデルを与えず、各商品の評価に必要なフォワード金利またはフォワードスワップレートを、適切な測度の下でマルチンゲールとして直接モデル化した。
+
+Normalモデルでは、フォワード金利の変化額が正規分布に従う。
+
+$$
+dF_t
+=
+\sigma_N\,dW_t
+$$
+
+このため、フォワード金利がゼロまたはマイナスとなる場合でも、価格公式を変更せずに評価できる。
+
+Normal volatilityは相対変化率ではなく、金利と同じ単位を持つ。金利市場では通常、ベーシスポイント単位で表示される。Normal volatility 50bpは小数表示で0.0050である。
+
+金利先物オプションでは、先物価格から金利へ変換するとPayoffの向きが反転する。先物価格のcallは、金利を原資産とした場合にはputとして評価される。
+
+Capは複数のCapletの合計であり、各Capletは対応するフォワード金利を原資産とする。Swaptionはフォワードスワップレートを原資産とし、スワップアニュイティを価格倍率として使用する。
+
+Normalモデルはマイナス金利を扱える一方、金利水準にかかわらず同じ絶対変動幅を仮定し、極端な負の金利も許容する。実際の市場では、Black、Shifted Black、NormalおよびSABRなどを、金利水準とボラティリティ市場の慣行に応じて使い分ける。
+
+```{r chapter05-completion}
+chapter05_summary_tbl <- tibble::tribble(
+  ~section,                    ~main_result,
+  "Normal dynamics",           "Additive forward-rate process",
+  "Futures option",            "Rate conversion, price, and Greeks",
+  "Implied normal volatility", "Volatility inversion and repricing",
+  "Negative rates",            "Pricing without a logarithmic restriction",
+  "Cap",                       "Sum of Bachelier caplets",
+  "Swaption",                  "Forward swap rate times annuity"
+)
+
+GaussQuant::show_tbl_GQH(
+  chapter05_summary_tbl,
+  "Chapter II-5 summary",
+  n = 20
+)
+
+cat(
+  "\nChapter II-5 Normal Bachelier model completed successfully.\n"
+)
+```
