@@ -683,16 +683,665 @@ GaussQuant::show_tbl_GQH(
 
 両方のスワップは同じフォワードカーブから将来EURIBORを予測するが、シングルカーブ評価ではそのカーブを割引にも使用し、マルチカーブ評価では別のディスカウントカーブを使用する。割引係数が異なるため、同じ将来キャッシュフローであってもNPVおよびフェアレートが変化する。
 
-## 9. まとめ
+## 9. ケーススタディ1：OISスワップの構築と評価
 
-世界金融危機は、LIBORに含まれる信用リスクと流動性リスクを顕在化させ、単一カーブによる金利デリバティブ評価の前提を崩した。担保付取引と中央清算の拡大により、OISカーブを割引に用い、参照金利ごとのカーブから将来金利を予測するマルチカーブ評価が定着した。
+本ケーススタディでは、2012年12月11日のEONIA市場データからOISカーブを構築する。短期部分には翌日物預金と短期OISを用い、その先には日付指定OISと長期OISを用いる。
 
-その後、LIBOR不正操作問題と基礎取引の減少によってLIBORの持続可能性が失われ、TONAやSOFRなどの翌日物リスク・フリー・レートへの移行が進められた。すべてのLIBOR設定は2024年9月30日に恒久的に終了した。
+カーブ構築後、年末をまたぐ市場金利に含まれる流動性効果を分離し、年末ジャンプを組み込んだ最終的なEONIAカーブを作成する。さらに、カーブ構築に使用した5年OISの市場レートを契約固定金利としてOISを構築し、NPVとフェアレートを確認する。
 
-OISの変動レグでは、日々の翌日物金利を複利で積み上げる。評価日より前の金利には確定Fixingを使用し、評価日より後の金利にはカーブから求めたフォワード金利を使用する。後決め複利では、金利の公表と利息額の確定が期末近くになるため、Fixingの公表時刻や支払日までの処理期間も重要となる。
+### 9.1 評価日とEONIA市場データ
 
-マルチカーブ評価では、将来金利を予測するフォワードカーブと、キャッシュフローを現在価値へ変換するディスカウントカーブを分離する。この区別は、現代の金利デリバティブ評価における基本的な市場慣行である。
+評価日は2012年12月11日とする。市場データには、翌日物預金、短期OIS、日付指定OISおよび長期OISを使用する。
 
+```{r chapter03-case-study-eonia-market}
+case_evaluation_date <- "2012-12-11"
+
+GaussQuant::set_eval_date_GQL(
+  case_evaluation_date
+)
+
+case_eonia_quotes <- GaussQuant::ametrano_bianchetti_eonia_quotes_GQL()
+
+GaussQuant::show_tbl_GQH(
+  case_eonia_quotes,
+  "EONIA market quotes",
+  n = 40
+)
+```
+
+`rate_pct`はパーセント表示の市場レートであり、`rate`はQuantLibへ渡す小数表示の金利である。
+
+預金には1日の期間を設定し、評価日からスポット日までを接続するため、Fixing日数を0日、1日および2日とした。短期OISと長期OISにはスポット日から満期までの期間を指定し、日付指定OISには開始日と終了日を直接指定する。
+
+### 9.2 EONIAカーブの構築
+
+次に、市場レートからEONIAカーブを構築する。
+
+最初に対数割引係数を3次補間するカーブと、区分的に一定のフォワード金利を用いるカーブを構築する。後者を用いて年末部分のフォワード金利を確認し、年末ジャンプを推定する。
+
+```{r chapter03-case-study-eonia-bootstrap}
+case_eonia_benchmark <- GaussQuant::eonia_curve_benchmark_GQL(
+  quotes = case_eonia_quotes,
+  evaluation_date = case_evaluation_date
+)
+
+case_eonia_curve <- case_eonia_benchmark$final$curve
+case_eonia_handle <- case_eonia_benchmark$final$curve_handle
+
+case_jump_summary <- case_eonia_benchmark$jump_summary
+
+GaussQuant::show_tbl_GQH(
+  case_jump_summary,
+  "EONIA year-end jump",
+  n = 20
+)
+```
+
+年末ジャンプの推定では、2012年12月24日から2013年1月7日までのフォワード金利を確認する。次に、2013年1月3日の区分フォワード金利を前後のノードの平均へ置き換え、年末要因を含まないフォワードカーブを作成する。
+
+元のフォワード金利と調整後のフォワード金利の差を、2012年12月31日から2013年1月2日までの期間へ換算し、年末ジャンプを求める。
+
+### 9.3 ベンチマーク値の確認
+
+年末ジャンプを推定する過程で得られたフォワード金利を確認する。
+
+```{r chapter03-case-study-eonia-benchmark-check}
+case_benchmark_check_tbl <- tibble::tribble(
+  ~metric, ~reference_value_pct, ~r_value_pct,
+  "Original two-week forward", 0.082,
+  100 * case_jump_summary$original_forward[[1L]],
+  "Adjusted two-week forward", 0.067,
+  100 * case_jump_summary$clean_forward[[1L]],
+  "Year-end jump", 0.101,
+  100 * case_jump_summary$jump_rate[[1L]]
+) |>
+  dplyr::mutate(
+    difference_pct =
+      .data$r_value_pct -
+      .data$reference_value_pct
+  )
+
+GaussQuant::show_tbl_GQH(
+  case_benchmark_check_tbl,
+  "EONIA benchmark comparison",
+  n = 20
+)
+
+stopifnot(
+  all(
+    abs(case_benchmark_check_tbl$difference_pct) <= 0.0005
+  )
+)
+```
+
+基準値はパーセント単位で小数第3位まで表示されている。そのため、照合では表示桁の半分に相当する0.0005パーセントポイントを許容範囲とする。
+
+### 9.4 市場レートの再現性
+
+構築した最終カーブを用いて、各Rate Helperのインプライド・レートを求める。
+
+```{r chapter03-case-study-eonia-validation}
+case_eonia_validation <- case_eonia_benchmark$final_validation
+
+case_eonia_repricing_tbl <- case_eonia_validation$quote_repricing |>
+  dplyr::mutate(
+    quote_error_bp = 10000 * .data$quote_error
+  )
+
+GaussQuant::show_tbl_GQH(
+  case_eonia_repricing_tbl,
+  "EONIA quote repricing",
+  n = 40
+)
+
+stopifnot(
+  max(
+    abs(case_eonia_repricing_tbl$quote_error),
+    na.rm = TRUE
+  ) < 1e-8
+)
+```
+
+各商品のインプライド・レートと市場レートが一致することにより、預金、短期OIS、日付指定OISおよび長期OISが同じ期間構造上で再現されていることを確認できる。
+
+### 9.5 5年OISの構築
+
+市場データに含まれる5年OISを取り上げる。契約固定金利には、カーブ構築に用いた5年OISの市場レートを使用する。
+
+```{r chapter03-case-study-ois-contract}
+case_ois_tenor <- QuantLib::Period(
+  5,
+  "Years"
+)
+
+case_ois_fixed_rate <- case_eonia_quotes |>
+  dplyr::filter(
+    .data$quote_id == "OIS-5Y"
+  ) |>
+  dplyr::pull(
+    .data$rate
+  )
+
+case_eonia_index <- QuantLib::Eonia(
+  case_eonia_handle
+)
+
+case_ois_contract_tbl <- tibble::tibble(
+  evaluation_date = as.Date(case_evaluation_date),
+  index = "EONIA",
+  tenor = "5Y",
+  settlement_days = 2L,
+  contract_fixed_rate = case_ois_fixed_rate
+)
+
+GaussQuant::show_tbl_GQH(
+  case_ois_contract_tbl,
+  "Five-year EONIA OIS contract",
+  n = 20
+)
+```
+
+### 9.6 OISの構築と計算結果の照合
+
+最初に、QuantLibの`MakeOIS`を直接使用してOISを構築する。
+
+```{r chapter03-case-study-ois-quantlib}
+case_ois_builder_quantlib <- QuantLib::MakeOIS(
+  swapTenor = case_ois_tenor,
+  overnightIndex = case_eonia_index,
+  fixedRate = case_ois_fixed_rate
+)
+
+case_ois_quantlib <- QuantLib::MakeOIS_makeOIS(
+  case_ois_builder_quantlib
+)
+```
+
+次に、同じ期間、同じEONIAインデックスおよび同じ固定金利を用いてOISを構築する。
+
+```{r chapter03-case-study-ois-gaussquant}
+case_ois_gaussquant <- GaussQuant::build_ois_GQL(
+  swap_tenor = case_ois_tenor,
+  overnight_index = case_eonia_index,
+  fixed_rate = case_ois_fixed_rate
+)
+```
+
+両方のOISについて、NPV、固定レグの現在価値、翌日物レグの現在価値、フェアレートおよびフェアスプレッドを確認する。
+
+```{r chapter03-case-study-ois-comparison}
+case_ois_quantlib_summary <- GaussQuant::swap_summary_GQL(
+  case_ois_quantlib
+)
+
+case_ois_gaussquant_summary <- GaussQuant::swap_summary_GQL(
+  case_ois_gaussquant
+)
+
+case_ois_comparison_tbl <- dplyr::bind_rows(
+  case_ois_quantlib_summary |>
+    dplyr::mutate(
+      calculation_route = "QuantLib"
+    ),
+  case_ois_gaussquant_summary |>
+    dplyr::mutate(
+      calculation_route = "GaussQuant"
+    )
+) |>
+  dplyr::relocate(
+    .data$calculation_route
+  )
+
+GaussQuant::show_tbl_GQH(
+  case_ois_comparison_tbl,
+  "Five-year EONIA OIS valuation",
+  n = 20
+)
+
+case_ois_metrics <- c(
+  "npv",
+  "fixed_leg_npv",
+  "floating_leg_npv",
+  "fair_rate",
+  "fair_spread"
+)
+
+case_quantlib_values <- unlist(
+  case_ois_quantlib_summary |>
+    dplyr::select(
+      dplyr::all_of(case_ois_metrics)
+    ),
+  use.names = FALSE
+)
+
+case_gaussquant_values <- unlist(
+  case_ois_gaussquant_summary |>
+    dplyr::select(
+      dplyr::all_of(case_ois_metrics)
+    ),
+  use.names = FALSE
+)
+
+stopifnot(
+  isTRUE(
+    all.equal(
+      case_quantlib_values,
+      case_gaussquant_values,
+      tolerance = 1e-12
+    )
+  )
+)
+```
+
+### 9.7 市場固定金利とフェアレート
+
+カーブ構築に使用した5年OISの市場レートと、構築後のカーブから求めたフェアレートを比較する。
+
+```{r chapter03-case-study-ois-fair-rate}
+case_ois_rate_check_tbl <- tibble::tibble(
+  market_fixed_rate = case_ois_fixed_rate,
+  calculated_fair_rate =
+    case_ois_gaussquant_summary$fair_rate[[1L]],
+  difference_bp = 10000 * (
+    case_ois_gaussquant_summary$fair_rate[[1L]] -
+      case_ois_fixed_rate
+  ),
+  npv = case_ois_gaussquant_summary$npv[[1L]]
+)
+
+GaussQuant::show_tbl_GQH(
+  case_ois_rate_check_tbl,
+  "Five-year EONIA OIS rate check",
+  n = 20
+)
+
+stopifnot(
+  abs(
+    case_ois_gaussquant_summary$fair_rate[[1L]] -
+      case_ois_fixed_rate
+  ) < 1e-8
+)
+```
+
+5年OISはカーブ構築に使用した商品の一つであるため、市場固定金利とカーブから再計算したフェアレートは一致し、NPVはゼロに近い値となる。
+
+### 9.8 固定レグと翌日物レグ
+
+最後に、5年OISの固定レグと翌日物レグのキャッシュフローを確認する。
+
+```{r chapter03-case-study-ois-cashflows}
+case_ois_fixed_leg_tbl <- GaussQuant::leg_to_cashflow_tbl_GQL(
+  case_ois_gaussquant$fixedLeg()
+)
+
+case_ois_overnight_leg_tbl <- GaussQuant::leg_to_cashflow_tbl_GQL(
+  case_ois_gaussquant$overnightLeg()
+)
+
+GaussQuant::show_tbl_GQH(
+  case_ois_fixed_leg_tbl,
+  "Five-year EONIA OIS fixed leg",
+  n = 20
+)
+
+GaussQuant::show_tbl_GQH(
+  case_ois_overnight_leg_tbl,
+  "Five-year EONIA OIS overnight leg",
+  n = 20
+)
+```
+
+固定レグと翌日物レグは反対方向のキャッシュフローを持ち、市場固定金利がフェアレートと一致する場合には、両レグの現在価値が相殺される。
+## 10. ケーススタディ2：EONIA市場レートの変動と評価損益
+
+第9節では、2012年12月11日のEONIA市場データから期間構造を構築し、5年OISの市場固定金利とフェアレートが一致することを確認した。
+
+本ケーススタディでは、評価日とOISの約定条件を変更せず、カーブ構築に使用する市場レートだけを上下へ10ベーシスポイント変化させる。各シナリオについてEONIAカーブを再構築し、第9節と同じ5年OISを再評価する。
+
+比較するシナリオは、次の三つである。
+
+- EONIA市場レートを一律に10ベーシスポイント低下
+- 第9節と同じ基準市場レート
+- EONIA市場レートを一律に10ベーシスポイント上昇
+
+契約固定金利には、第9節で設定した5年OISの市場レート0.456%を引き続き使用する。したがって、各シナリオのNPVの差は、市場レートの変化による評価損益を表す。
+
+### 10.1 市場レートシナリオ
+
+最初に、基準となるEONIA市場レートへ、マイナス10ベーシスポイント、ゼロおよびプラス10ベーシスポイントのシフトを加える。
+
+ここでは構築済みのゼロカーブを直接動かすのではなく、預金、短期OIS、日付指定OISおよび長期OISの市場レートを変化させる。その後、それぞれの市場データからEONIAカーブを改めて構築する。
+
+```{r chapter03-case-study-eonia-rate-scenarios}
+case_rate_scenario_tbl <- tibble::tribble(
+  ~scenario, ~shift_bp,
+  "10bp低下", -10,
+  "基準",       0,
+  "10bp上昇",  10
+) |>
+  dplyr::mutate(
+    quotes = purrr::map(
+      .data$shift_bp,
+      function(shift_bp) {
+        case_eonia_quotes |>
+          dplyr::mutate(
+            rate = .data$rate + shift_bp / 10000,
+            rate_pct = 100 * .data$rate
+          )
+      }
+    )
+  )
+```
+
+10ベーシスポイントは、小数表示の金利では0.001、パーセント表示では0.1パーセントポイントに相当する。
+
+市場レートの変化を確認するため、翌日物預金、1か月OIS、5年OISおよび30年OISを取り出す。
+
+```{r chapter03-case-study-eonia-rate-scenario-quotes}
+case_rate_scenario_quote_tbl <- purrr::map2_dfr(
+  case_rate_scenario_tbl$scenario,
+  case_rate_scenario_tbl$quotes,
+  function(scenario, quotes) {
+    quotes |>
+      dplyr::filter(
+        .data$quote_id %in% c(
+          "DEP-ON-0D",
+          "OIS-1M",
+          "OIS-5Y",
+          "OIS-30Y"
+        )
+      ) |>
+      dplyr::transmute(
+        scenario = scenario,
+        quote_id = .data$quote_id,
+        instrument_type = .data$instrument_type,
+        rate_pct = .data$rate_pct,
+        rate = .data$rate
+      )
+  }
+)
+
+GaussQuant::show_tbl_GQH(
+  case_rate_scenario_quote_tbl,
+  "EONIA market-rate scenarios",
+  n = 20
+)
+```
+
+各商品のレートは、基準値から一律に10ベーシスポイント低下または上昇している。評価日、Fixing日数、期間、開始日および終了日などの市場慣行は変更しない。
+
+### 10.2 シナリオ別EONIAカーブ
+
+各シナリオの市場データから、年末ジャンプを含むEONIAカーブを再構築する。
+
+```{r chapter03-case-study-eonia-scenario-curves}
+case_rate_scenario_tbl <- case_rate_scenario_tbl |>
+  dplyr::mutate(
+    benchmark = purrr::map(
+      .data$quotes,
+      function(quotes) {
+        GaussQuant::eonia_curve_benchmark_GQL(
+          quotes = quotes,
+          evaluation_date = case_evaluation_date
+        )
+      }
+    ),
+    curve = purrr::map(
+      .data$benchmark,
+      ~ .x$final$curve
+    ),
+    curve_handle = purrr::map(
+      .data$benchmark,
+      ~ .x$final$curve_handle
+    ),
+    max_quote_error = purrr::map_dbl(
+      .data$benchmark,
+      function(benchmark) {
+        max(
+          abs(
+            benchmark$final_validation$
+              quote_repricing$
+              quote_error
+          ),
+          na.rm = TRUE
+        )
+      }
+    )
+  )
+
+case_curve_validation_tbl <- case_rate_scenario_tbl |>
+  dplyr::select(
+    .data$scenario,
+    .data$shift_bp,
+    .data$max_quote_error
+  )
+
+GaussQuant::show_tbl_GQH(
+  case_curve_validation_tbl,
+  "EONIA scenario-curve validation",
+  n = 20
+)
+
+stopifnot(
+  all(
+    case_curve_validation_tbl$max_quote_error < 1e-8
+  )
+)
+```
+
+すべてのシナリオについて、Rate Helperのインプライド・レートが入力した市場レートと一致することを確認する。これにより、評価損益の比較に使用する各カーブが、それぞれの市場データを再現していることが分かる。
+
+### 10.3 同一OISの再評価
+
+第9節と同じ5年OISを、各シナリオのEONIAカーブへ接続する。
+
+契約期間は5年、契約固定金利は0.456%のままとし、市場カーブだけを変更する。
+
+```{r chapter03-case-study-eonia-scenario-ois}
+case_rate_scenario_tbl <- case_rate_scenario_tbl |>
+  dplyr::mutate(
+    eonia_index = purrr::map(
+      .data$curve_handle,
+      QuantLib::Eonia
+    ),
+    ois = purrr::map(
+      .data$eonia_index,
+      function(eonia_index) {
+        GaussQuant::build_ois_GQL(
+          swap_tenor = case_ois_tenor,
+          overnight_index = eonia_index,
+          fixed_rate = case_ois_fixed_rate
+        )
+      }
+    ),
+    valuation = purrr::map(
+      .data$ois,
+      GaussQuant::swap_summary_GQL
+    )
+  )
+```
+
+各シナリオの評価結果を一つの表へまとめる。
+
+```{r chapter03-case-study-eonia-scenario-results}
+case_ois_scenario_result_tbl <- case_rate_scenario_tbl |>
+  dplyr::select(
+    .data$scenario,
+    .data$shift_bp,
+    .data$valuation
+  ) |>
+  tidyr::unnest(
+    cols = .data$valuation
+  )
+
+case_base_fair_rate <- case_ois_scenario_result_tbl |>
+  dplyr::filter(
+    .data$scenario == "基準"
+  ) |>
+  dplyr::pull(
+    .data$fair_rate
+  )
+
+case_base_npv <- case_ois_scenario_result_tbl |>
+  dplyr::filter(
+    .data$scenario == "基準"
+  ) |>
+  dplyr::pull(
+    .data$npv
+  )
+
+case_ois_scenario_result_tbl <- case_ois_scenario_result_tbl |>
+  dplyr::mutate(
+    contract_fixed_rate = case_ois_fixed_rate,
+    fair_rate_change_bp = 10000 * (
+      .data$fair_rate -
+        case_base_fair_rate
+    ),
+    payer_valuation_change =
+      .data$npv -
+      case_base_npv,
+    receiver_npv = -.data$npv,
+    receiver_valuation_change =
+      -(
+        .data$npv -
+          case_base_npv
+      )
+  ) |>
+  dplyr::select(
+    .data$scenario,
+    .data$shift_bp,
+    .data$contract_fixed_rate,
+    .data$fair_rate,
+    .data$fair_rate_change_bp,
+    payer_npv = .data$npv,
+    .data$payer_valuation_change,
+    .data$receiver_npv,
+    .data$receiver_valuation_change
+  )
+
+GaussQuant::show_tbl_GQH(
+  case_ois_scenario_result_tbl,
+  "Five-year EONIA OIS scenario valuation",
+  n = 20
+)
+```
+
+`payer_npv`は固定金利を支払うポジションのNPVであり、`receiver_npv`は固定金利を受け取る反対ポジションのNPVである。
+
+`payer_valuation_change`と`receiver_valuation_change`は、それぞれのシナリオのNPVから基準シナリオのNPVを差し引いた評価損益である。
+
+### 10.4 基準シナリオの照合
+
+基準シナリオは、第9節で使用した市場データと約定条件をそのまま使用している。そのため、基準シナリオのNPVとフェアレートは、第9節の計算結果と一致する。
+
+```{r chapter03-case-study-eonia-base-check}
+case_base_scenario_tbl <- case_ois_scenario_result_tbl |>
+  dplyr::filter(
+    .data$scenario == "基準"
+  )
+
+case_base_check_tbl <- tibble::tibble(
+  metric = c(
+    "NPV",
+    "Fair rate"
+  ),
+  chapter9_value = c(
+    case_ois_gaussquant_summary$npv[[1L]],
+    case_ois_gaussquant_summary$fair_rate[[1L]]
+  ),
+  chapter10_value = c(
+    case_base_scenario_tbl$payer_npv[[1L]],
+    case_base_scenario_tbl$fair_rate[[1L]]
+  )
+) |>
+  dplyr::mutate(
+    difference =
+      .data$chapter10_value -
+      .data$chapter9_value
+  )
+
+GaussQuant::show_tbl_GQH(
+  case_base_check_tbl,
+  "Base-scenario consistency check",
+  n = 20
+)
+
+stopifnot(
+  isTRUE(
+    all.equal(
+      case_base_check_tbl$chapter9_value,
+      case_base_check_tbl$chapter10_value,
+      tolerance = 1e-12
+    )
+  )
+)
+```
+
+この照合により、第9節の基準評価と、第10節の基準シナリオが同じ市場データ、評価日および約定条件に基づいていることを確認できる。
+
+### 10.5 市場レート変動と評価損益
+
+市場レートが低下すると、5年OISのフェアレートも低下する。この場合、固定金利支払側は、低下後の市場水準より高い0.456%を支払うため、既存契約の価値は低下する。
+
+一方、市場レートが上昇すると、固定金利支払側は市場水準より低い0.456%を支払う契約を保有することになるため、既存契約の価値は上昇する。
+
+固定金利受取側では、この関係が逆になる。固定金利支払側の利益は固定金利受取側の損失となり、両者のNPVと評価損益は符号が反対になる。
+
+### 10.6 1ベーシスポイント当たりの評価変化
+
+上下10ベーシスポイントの結果から、固定金利支払側について、1ベーシスポイント当たりの平均的なNPV変化を求める。
+
+```{r chapter03-case-study-eonia-bpv}
+case_npv_down <- case_ois_scenario_result_tbl |>
+  dplyr::filter(
+    .data$scenario == "10bp低下"
+  ) |>
+  dplyr::pull(
+    .data$payer_npv
+  )
+
+case_npv_up <- case_ois_scenario_result_tbl |>
+  dplyr::filter(
+    .data$scenario == "10bp上昇"
+  ) |>
+  dplyr::pull(
+    .data$payer_npv
+  )
+
+case_ois_bpv_tbl <- tibble::tibble(
+  position = "Fixed-rate payer",
+  npv_10bp_down = case_npv_down,
+  npv_base = case_base_npv,
+  npv_10bp_up = case_npv_up,
+  average_npv_change_per_bp =
+    (
+      case_npv_up -
+        case_npv_down
+    ) / 20
+)
+
+GaussQuant::show_tbl_GQH(
+  case_ois_bpv_tbl,
+  "Five-year EONIA OIS rate sensitivity",
+  n = 20
+)
+```
+
+`average_npv_change_per_bp`は、マイナス10ベーシスポイントからプラス10ベーシスポイントまでのNPV変化を20で除した値である。
+
+本ケーススタディでは名目元本を1としてOISを構築しているため、この値も単位元本当たりの評価変化を表す。実際の取引では、これに取引元本を乗じることによって、ポジション全体の金利感応度を求めることができる。
+## 11. まとめ
+本章では、世界金融危機とIBOR改革を背景として、金利デリバティブの評価がシングルカーブ方式からマルチカーブ方式へ移行した経緯を確認した。LIBORなどのIBORには銀行の信用リスクや資金流動性リスクが含まれるため、担保付取引の割引金利としてそのまま使用することは適切ではない。そこで、担保契約に対応するOISカーブを割引に用い、参照金利ごとのフォワードカーブから将来金利を予測する評価方法が定着した。
+
+OISでは、固定金利と、計算期間中の日々の翌日物金利を複利で積み上げた変動金利を交換する。評価日以前の翌日物金利には確定したFixingを使用し、評価日以後の金利には期間構造から求めた予測値を使用する。TONAとSOFRはいずれも翌日物金利であるが、その基礎となる市場や担保性は異なるため、対象通貨の市場慣行を正しく設定する必要がある。
+
+マルチカーブ評価では、将来の変動金利を求めるフォワードカーブと、将来キャッシュフローを現在価値へ変換するディスカウントカーブを分離する。同じ将来キャッシュフローであっても、使用する割引カーブが異なればNPVやフェアレートも変化する。したがって、金利スワップの評価では、参照インデックスがどのカーブへ接続され、価格計算エンジンがどのカーブを割引に使用しているかを明確にする必要がある。
+
+ケーススタディでは、期間構造ハンドルを翌日物金利インデックスへ接続し、`MakeOIS`を用いてOISを構築した。さらに、NPV、フェアレート、固定レグおよび翌日物レグのキャッシュフローを確認し、OISの契約条件と市場カーブが評価結果へどのように反映されるかを示した。
+
+また、契約固定金利を変更せずに市場カーブを上下へ平行シフトし、OISの評価損益を比較した。契約締結後も固定金利は変化しないが、市場カーブの変動によって将来の翌日物金利予測と割引係数が変化するため、OISのNPVは日々変動する。固定金利支払側と固定金利受取側では、同じ市場変動に対する評価損益の符号が反対になる。
+
+実際のリスク管理では、カーブ全体の平行シフトだけでなく、短期、中期および長期の金利を個別に変化させる必要がある。また、Fixingの確定、休日カレンダー、日数計算規則、支払ラグ、予測カーブおよび割引カーブの設定を総合的に確認することが、OISと金利スワップを正しく評価するための基本となる。
 ## 参考資料
 
 - Financial Conduct Authority, [The future of LIBOR](https://www.fca.org.uk/news/speeches/the-future-of-libor), 27 July 2017.
