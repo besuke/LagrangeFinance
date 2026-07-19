@@ -565,7 +565,48 @@ GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(flat_yield_tbl), "Fl
 ```
 
 フラットな利回りを使った割引価格と、最終利回りから直接求めたダーティ価格を比較する。
+### 8.1 Z-spreadによる価格調整
 
+Z-spreadは、基準となる割引カーブの各年限に一律に加えるスプレッドである。ここでは基準カーブに50ベーシスポイントを上乗せし、債券価格への影響を確認する。
+
+```{r z-spread-pricing}
+z_spread <- 50 / 10000
+
+zspread_result <- GaussQuant::bond_npv_with_zspread_GQL(
+  bond = bond_obj,
+  base_curve_handle = flat_yield_handle,
+  z_spread = z_spread,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual,
+  day_counter = dc_30
+)
+
+zspread_dirty_price <- zspread_result$npv
+
+zspread_tbl <- tibble::tibble(
+  metric = c(
+    "base_yield",
+    "z_spread_bp",
+    "dirty_price_before_spread",
+    "dirty_price_after_spread",
+    "price_difference"
+  ),
+  value = list(
+    price_to_yield,
+    10000 * z_spread,
+    flat_dirty_price,
+    zspread_dirty_price,
+    zspread_dirty_price - flat_dirty_price
+  )
+)
+
+GaussQuant::show_tbl_GQH(
+  GaussQuant::metric_tbl_display_GQH(zspread_tbl),
+  "Z-spread pricing"
+)
+```
+
+正のZ-spreadを加えると割引率が上昇するため、債券価格は低下する。Z-spreadには発行体の信用リスクだけでなく、流動性、市場需給および基準カーブとの相違も含まれ得るため、純粋なデフォルト確率を直接表す指標ではない。ここでは全期間への一律なスプレッドだけを扱い、年限別の非平行シフトは金利カーブの章で扱う。
 ## 9. 債券キャッシュフロー
 
 債券に含まれる将来のクーポンと元本償還を一覧で確認する。
