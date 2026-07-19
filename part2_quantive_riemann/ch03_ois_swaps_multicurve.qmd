@@ -113,21 +113,21 @@ curve_tbl_local <- function(curve_obj, n = 200, extrapolate = TRUE) {
   tibble::tibble(time = curve_times) |>
     dplyr::mutate(
       discount_factor = purrr::map_dbl(
-        .data$time,
+        time,
         function(x) curve_obj$discount(x)
       ),
       zero_rate = dplyr::if_else(
-        .data$time > 0,
-        -log(.data$discount_factor) / .data$time,
+        time > 0,
+        -log(discount_factor) / time,
         0
       ),
-      date = reference_date + round(.data$time * 365)
+      date = reference_date + round(time * 365)
     ) |>
     dplyr::select(
-      .data$date,
-      .data$time,
-      .data$discount_factor,
-      .data$zero_rate
+      date,
+      time,
+      discount_factor,
+      zero_rate
     )
 }
 ```
@@ -603,7 +603,7 @@ multi_curve_comparison_tbl <- tibble::tibble(
 ) |>
   dplyr::mutate(
     forecast_discount_factor = purrr::map_dbl(
-      as.character(.data$date),
+      as.character(date),
       function(x) {
         forecast_curve$discount(
           GaussQuant::date_GQL(x)
@@ -611,7 +611,7 @@ multi_curve_comparison_tbl <- tibble::tibble(
       }
     ),
     ois_discount_factor = purrr::map_dbl(
-      as.character(.data$date),
+      as.character(date),
       function(x) {
         discount_curve$discount(
           GaussQuant::date_GQL(x)
@@ -672,7 +672,7 @@ curve_valuation_comparison_tbl <- dplyr::bind_rows(
   multi_curve_summary |>
     dplyr::mutate(valuation_method = "multi_curve")
 ) |>
-  dplyr::relocate(.data$valuation_method)
+  dplyr::relocate(valuation_method)
 
 GaussQuant::show_tbl_GQH(
   curve_valuation_comparison_tbl,
@@ -757,8 +757,8 @@ case_benchmark_check_tbl <- tibble::tribble(
 ) |>
   dplyr::mutate(
     difference_pct =
-      .data$r_value_pct -
-      .data$reference_value_pct
+      r_value_pct -
+      reference_value_pct
   )
 
 GaussQuant::show_tbl_GQH(
@@ -785,7 +785,7 @@ case_eonia_validation <- case_eonia_benchmark$final_validation
 
 case_eonia_repricing_tbl <- case_eonia_validation$quote_repricing |>
   dplyr::mutate(
-    quote_error_bp = 10000 * .data$quote_error
+    quote_error_bp = 10000 * quote_error
   )
 
 GaussQuant::show_tbl_GQH(
@@ -816,10 +816,10 @@ case_ois_tenor <- QuantLib::Period(
 
 case_ois_fixed_rate <- case_eonia_quotes |>
   dplyr::filter(
-    .data$quote_id == "OIS-5Y"
+    quote_id == "OIS-5Y"
   ) |>
   dplyr::pull(
-    .data$rate
+    rate
   )
 
 case_eonia_index <- QuantLib::Eonia(
@@ -889,7 +889,7 @@ case_ois_comparison_tbl <- dplyr::bind_rows(
     )
 ) |>
   dplyr::relocate(
-    .data$calculation_route
+    calculation_route
   )
 
 GaussQuant::show_tbl_GQH(
@@ -1021,12 +1021,12 @@ case_rate_scenario_tbl <- tibble::tribble(
 ) |>
   dplyr::mutate(
     quotes = purrr::map(
-      .data$shift_bp,
+      shift_bp,
       function(shift_bp) {
         case_eonia_quotes |>
           dplyr::mutate(
-            rate = .data$rate + shift_bp / 10000,
-            rate_pct = 100 * .data$rate
+            rate = rate + shift_bp / 10000,
+            rate_pct = 100 * rate
           )
       }
     )
@@ -1044,7 +1044,7 @@ case_rate_scenario_quote_tbl <- purrr::map2_dfr(
   function(scenario, quotes) {
     quotes |>
       dplyr::filter(
-        .data$quote_id %in% c(
+        quote_id %in% c(
           "DEP-ON-0D",
           "OIS-1M",
           "OIS-5Y",
@@ -1053,10 +1053,10 @@ case_rate_scenario_quote_tbl <- purrr::map2_dfr(
       ) |>
       dplyr::transmute(
         scenario = scenario,
-        quote_id = .data$quote_id,
-        instrument_type = .data$instrument_type,
-        rate_pct = .data$rate_pct,
-        rate = .data$rate
+        quote_id = quote_id,
+        instrument_type = instrument_type,
+        rate_pct = rate_pct,
+        rate = rate
       )
   }
 )
@@ -1078,7 +1078,7 @@ GaussQuant::show_tbl_GQH(
 case_rate_scenario_tbl <- case_rate_scenario_tbl |>
   dplyr::mutate(
     benchmark = purrr::map(
-      .data$quotes,
+      quotes,
       function(quotes) {
         GaussQuant::eonia_curve_benchmark_GQL(
           quotes = quotes,
@@ -1087,15 +1087,15 @@ case_rate_scenario_tbl <- case_rate_scenario_tbl |>
       }
     ),
     curve = purrr::map(
-      .data$benchmark,
+      benchmark,
       ~ .x$final$curve
     ),
     curve_handle = purrr::map(
-      .data$benchmark,
+      benchmark,
       ~ .x$final$curve_handle
     ),
     max_quote_error = purrr::map_dbl(
-      .data$benchmark,
+      benchmark,
       function(benchmark) {
         max(
           abs(
@@ -1111,9 +1111,9 @@ case_rate_scenario_tbl <- case_rate_scenario_tbl |>
 
 case_curve_validation_tbl <- case_rate_scenario_tbl |>
   dplyr::select(
-    .data$scenario,
-    .data$shift_bp,
-    .data$max_quote_error
+    scenario,
+    shift_bp,
+    max_quote_error
   )
 
 GaussQuant::show_tbl_GQH(
@@ -1141,11 +1141,11 @@ stopifnot(
 case_rate_scenario_tbl <- case_rate_scenario_tbl |>
   dplyr::mutate(
     eonia_index = purrr::map(
-      .data$curve_handle,
+      curve_handle,
       QuantLib::Eonia
     ),
     ois = purrr::map(
-      .data$eonia_index,
+      eonia_index,
       function(eonia_index) {
         GaussQuant::build_ois_GQL(
           swap_tenor = case_ois_tenor,
@@ -1155,7 +1155,7 @@ case_rate_scenario_tbl <- case_rate_scenario_tbl |>
       }
     ),
     valuation = purrr::map(
-      .data$ois,
+      ois,
       GaussQuant::swap_summary_GQL
     )
   )
@@ -1166,57 +1166,57 @@ case_rate_scenario_tbl <- case_rate_scenario_tbl |>
 ```{r chapter03-case-study-eonia-scenario-results}
 case_ois_scenario_result_tbl <- case_rate_scenario_tbl |>
   dplyr::select(
-    .data$scenario,
-    .data$shift_bp,
-    .data$valuation
+    scenario,
+    shift_bp,
+    valuation
   ) |>
   tidyr::unnest(
-    cols = .data$valuation
+    cols = valuation
   )
 
 case_base_fair_rate <- case_ois_scenario_result_tbl |>
   dplyr::filter(
-    .data$scenario == "基準"
+    scenario == "基準"
   ) |>
   dplyr::pull(
-    .data$fair_rate
+    fair_rate
   )
 
 case_base_npv <- case_ois_scenario_result_tbl |>
   dplyr::filter(
-    .data$scenario == "基準"
+    scenario == "基準"
   ) |>
   dplyr::pull(
-    .data$npv
+    npv
   )
 
 case_ois_scenario_result_tbl <- case_ois_scenario_result_tbl |>
   dplyr::mutate(
     contract_fixed_rate = case_ois_fixed_rate,
     fair_rate_change_bp = 10000 * (
-      .data$fair_rate -
+      fair_rate -
         case_base_fair_rate
     ),
     payer_valuation_change =
-      .data$npv -
+      npv -
       case_base_npv,
-    receiver_npv = -.data$npv,
+    receiver_npv = -npv,
     receiver_valuation_change =
       -(
-        .data$npv -
+        npv -
           case_base_npv
       )
   ) |>
   dplyr::select(
-    .data$scenario,
-    .data$shift_bp,
-    .data$contract_fixed_rate,
-    .data$fair_rate,
-    .data$fair_rate_change_bp,
-    payer_npv = .data$npv,
-    .data$payer_valuation_change,
-    .data$receiver_npv,
-    .data$receiver_valuation_change
+    scenario,
+    shift_bp,
+    contract_fixed_rate,
+    fair_rate,
+    fair_rate_change_bp,
+    payer_npv = npv,
+    payer_valuation_change,
+    receiver_npv,
+    receiver_valuation_change
   )
 
 GaussQuant::show_tbl_GQH(
@@ -1237,7 +1237,7 @@ GaussQuant::show_tbl_GQH(
 ```{r chapter03-case-study-eonia-base-check}
 case_base_scenario_tbl <- case_ois_scenario_result_tbl |>
   dplyr::filter(
-    .data$scenario == "基準"
+    scenario == "基準"
   )
 
 case_base_check_tbl <- tibble::tibble(
@@ -1256,8 +1256,8 @@ case_base_check_tbl <- tibble::tibble(
 ) |>
   dplyr::mutate(
     difference =
-      .data$chapter10_value -
-      .data$chapter9_value
+      chapter10_value -
+      chapter9_value
   )
 
 GaussQuant::show_tbl_GQH(
@@ -1294,18 +1294,18 @@ stopifnot(
 ```{r chapter03-case-study-eonia-bpv}
 case_npv_down <- case_ois_scenario_result_tbl |>
   dplyr::filter(
-    .data$scenario == "10bp低下"
+    scenario == "10bp低下"
   ) |>
   dplyr::pull(
-    .data$payer_npv
+    payer_npv
   )
 
 case_npv_up <- case_ois_scenario_result_tbl |>
   dplyr::filter(
-    .data$scenario == "10bp上昇"
+    scenario == "10bp上昇"
   ) |>
   dplyr::pull(
-    .data$payer_npv
+    payer_npv
   )
 
 case_ois_bpv_tbl <- tibble::tibble(
