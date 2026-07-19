@@ -20,7 +20,7 @@ book:
 
     - part: "第II部 金融工学と金融数学"
       chapters:
-        - part2_quantive_riemann/ch01_bonds.qmd
+        - part2_quantive_riemann/ch01_deterministic_cashflow_valuation.qmd
         - part2_quantive_riemann/ch02_treasury_futures_ctd.qmd
         - part2_quantive_riemann/ch03_ois_swaps_multicurve.qmd
         - part2_quantive_riemann/ch04_black_model.qmd
