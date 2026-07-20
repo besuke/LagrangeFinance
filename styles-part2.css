@@ -1,0 +1,33 @@
+﻿body {
+  font-family: Cambria, "MS UI Gothic", sans-serif;
+}
+
+p,
+li,
+td,
+th,
+figcaption,
+caption {
+  font-family: Cambria, "MS UI Gothic", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: Cambria, "MS UI Gothic", sans-serif;
+  font-weight: 600;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: Consolas, "MS Gothic", monospace;
+}
+
+.math {
+  font-family: "Cambria Math", Cambria, serif;
+}

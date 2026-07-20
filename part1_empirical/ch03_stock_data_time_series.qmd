@@ -1,512 +1,1638 @@
 # 第3章 株式データと時系列分析
 
-## tidyverseと株式データの読み込み
+本章では、月次株式データから株式リターン、超過リターン、時価総額を作成し、年次財務データと結合する。前章で整理した財務データを利用し、株式データと会計データを一つの分析用データセットへ統合することが目的である。
+
+本章では次の処理を順番に行う。
+
+1. 株式データの構造とパネルキーを確認する
+2. 株価、配当、調整係数から月次リターンを計算する
+3. 時価総額と超過リターンを作成する
+4. 月次リターンを年次リターンへ集約する
+5. 前章の財務データと結合する
+6. リターンの分布、累積リターン、回帰分析を確認する
+7. 第4章以降で使用するデータを保存する
+
+反復処理には `for` 文を使わず、`purrr::map()` 系を利用する。パイプ演算子は native pipe の `|>` に統一する。
+
+## パッケージの準備
+
+本章では `tidyverse` と `broom` を利用する。`broom` は、回帰分析の結果を tidy なデータフレームへ変換するためのパッケージである。
 
 ```{r}
-#| eval: false
+#| label: load-packages
 #| message: false
 #| warning: false
 
 library(tidyverse)
-stock_data <- read_csv("ch05_stock_data.csv")
-```
-
-## 株式データの目視
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-print(stock_data)
-```
-
-## 配当支払いや発行済株式数変化の例
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data %>% 
-  filter(firm_ID == 1 & month_ID %in% 27:30)
-```
-
-## 調整係数が1以外の値を取る例
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data %>% 
-  filter(firm_ID == 74 & month_ID %in% 29:32)
-```
-
-## 時価総額の追加
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data <- stock_data %>% 
-  mutate(ME = stock_price * shares_outstanding)
-```
-
-## 時価総額の分布をヒストグラムで可視化
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-library(scales)
-
-ggplot(stock_data) +
-  geom_histogram(aes(x = ME)) +
-  labs(x = "Market Equity", y = "Count") + 
-  scale_x_continuous(limits = c(0, quantile(stock_data$ME, 0.95)), # x軸の上限を95%点に設定
-                     labels = label_comma(scale = 1e-6)) + # 単位を100万円にした上で桁区切りのカンマを追加
-  scale_y_continuous(expand = c(0, 0)) + 
-  theme_classic()
-```
-
-## 前月の株価を追加
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data %>% 
-  group_by(firm_ID) %>% # firm_IDに関してグループ化
-  mutate(lagged_stock_price = lag(stock_price)) %>% 
-  ungroup()
-```
-
-## 月次リターンの追加
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data <- stock_data %>% 
-  group_by(firm_ID) %>% 
-  mutate(lagged_stock_price = lag(stock_price)) %>% 
-  ungroup() %>% 
-  mutate(R = ((stock_price + DPS) * adjustment_coefficient - lagged_stock_price) / lagged_stock_price) # (5.1)式に従って月次リターンを計算
-```
-
-## 月次超過リターンの追加
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data <- stock_data %>%
-  mutate(Re = R - R_F) # 月次超過リターンを計算
-```
-
-## 月次リターンの要約統計量を確認
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-summary(stock_data$R)
-
-##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-## -0.3803 -0.0406  0.0103  0.0159  0.0648  0.5150    1515 
-```
-
-## 月次リターンの標準偏差と分散を計算
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-sd(stock_data$R, na.rm = TRUE) # na.rm = TRUEを忘れると計算結果はNAに
-
-var(stock_data$R, na.rm = TRUE)
-
-```
-
-## 月次リターンの歪度を計算
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-skewness <- function(x) (1 / length(x)) * sum(((x - mean(x)) / sd(x))^3) # 歪度を計算する関数の定義
-
-skewness(na.omit(stock_data$R)) # 欠損値を削除した上で代入
-
-
-```
-
-## 月次リターンの尖度を計算
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-kurtosis <- function(x) (1 / length(x)) * sum(((x - mean(x)) / sd(x))^4) # 尖度を計算する関数の定義
-
-kurtosis(na.omit(stock_data$R)) # 欠損値を削除した上で代入
-
-
-```
-
-## 月次リターンの分布をヒストグラムで可視化
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-ggplot(stock_data) + 
-  geom_histogram(aes(x = R)) + 
-  labs(x = "Monthly Stock Return", y = "Count") + 
-  scale_y_continuous(expand = c(0, 0)) +
-  theme_classic()
-```
-
-## 月次リターンを累積して年次リターンを計算 (1)
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-annual_stock_data <- stock_data %>% 
-  group_by(firm_ID, year) %>% # firm_IDとyearのペアでグループ化
-  summarize(R = prod(1 + R) - 1, # バイ・アンド・ホールドの年次リターン
-            R_F = prod(1 + R_F) - 1) %>%
-  mutate(Re = R - R_F) %>%
-  select(firm_ID, year, R, Re, R_F) %>%
-  ungroup()
-```
-
-## 月次リターンを累積して年次リターンを計算 (2)
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data %>% 
-  group_by(firm_ID, year) %>% 
-  summarize(simple_cumulative_R = sum(R)) %>% # 元本が一定となるよう毎月リバランスした場合の年次リターン
-  ungroup()
-```
-
-## 財務データと株式データの行数を確認
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-financial_data <- read_csv("ch04_output.csv")
-
-nrow(financial_data) # 年次財務データの行数
-
-nrow(annual_stock_data) # 年次リターン・データの行数
-
-nrow(stock_data) # 月次リターン・データの行数
-
-```
-
-## 年次リターン・データと財務データの結合 (1)
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-annual_data <- annual_stock_data %>%
-  full_join(financial_data, by = c("firm_ID", "year")) # firm_IDとyearのペアをキーとして設定
-```
-
-## 年次リターン・データと財務データの結合 (2)
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-annual_data <- annual_stock_data %>% 
-  full_join(financial_data) # キーを省略した場合, 列名が同じ変数がキーに
-
-## Joining, by = c("firm_ID", "year")
-```
-
-## 月次リターン・データと財務データの結合
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-monthly_data  <- stock_data %>%
-  full_join(financial_data, by = c("firm_ID", "year"))
-```
-
-## full_join()関数による欠損値の処理
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-A <- tibble(firm_ID = c(1, 2), stock_price = c(120, 500)) # データセットの作成
-B <- tibble(firm_ID = c(1, 3), DPS = c(5, 10))
-
-full_join(A, B, by = "firm_ID") # A %>% full_join(B, by = "firm_ID")と書いても同じ
-```
-
-## inner_join()関数による欠損値の処理
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-inner_join(A, B, by = "firm_ID")
-```
-
-## left_join()関数，及びright_join()関数による欠損値の処理
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-left_join(A, B, by = "firm_ID")
-right_join(A, B, by = "firm_ID")
-```
-
-## 年度末の時価総額を年次データに追加
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-annual_data <- stock_data %>% 
-  filter(month == 12) %>% # 12月のデータのみを抽出
-  select(year, firm_ID, ME) %>% # 追加したい列のみ選択
-  full_join(annual_data, ., by = c("year", "firm_ID")) %>% # 年次データと結合
-  mutate(ME = ME / 1e6) # 時価総額の単位を百万円に
-```
-
-## 売上高・当期純利益・時価総額をバブルチャートで可視化
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-annual_data %>% 
-  filter(year == 2015,
-         firm_ID %in% 2:20, # firm_IDが2から20のデータを抽出
-         X > 0) %>% # 対数を取るため当期純利益（X）が正のデータのみ抽出
-  ggplot() + 
-  geom_point(aes(x = log(sales), y = log(X), size = ME), alpha = 0.4) + # バブルチャートを描くにはsize引数を指定
-  scale_size(range = c(1, 20), name = "Market Equity") + # range引数でバブルの最小・最大面積を指定
-  scale_x_continuous(limits = c(8, 14)) + # 両軸の範囲を指定
-  scale_y_continuous(limits = c(2, 11)) +
-  theme_classic()
-```
-
-## firm_IDが1の企業の月次超過リターンを折れ線グラフで可視化
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data %>%
-  filter(firm_ID == 1) %>% # firm_IDが1の企業のデータのみ抽出
-  ggplot() + 
-  geom_line(aes(x = month_ID, y = Re)) + # x軸にmonth_ID, y軸に月次超過リターンを表示
-  labs(x = "Month ID", y = "Firm 1's Monthly Excess Return") + 
-  scale_x_continuous(expand = c(0.01, 0)) + # 折れ線グラフとy軸の間の空白を指定
-  theme_classic()
-```
-
-## firm_IDが1の企業の月次超過リターンをヒストグラムで可視化
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data %>%
-  filter(firm_ID == 1) %>% 
-  ggplot() + 
-  geom_histogram(aes(x = Re)) + 
-  labs(x = "Firm 1's Monthly Excess Return", y = "Count") +
-  scale_y_continuous(expand = c(0, 0)) + 
-  theme_classic()
-```
-
-## firm_IDが1の企業の平均月次超過リターンを計算
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-stock_data %>% 
-  filter(firm_ID == 1) %>% 
-  select(Re) %>%
-  unlist() %>% # データフレームからベクトルに変換
-  mean(na.rm = TRUE) # 第一引数は月次超過リターンのベクトル
-
-
-```
-
-## 月次超過リターンの期待値に関するt検定 (1)
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-Re_firm_ID_1 <- stock_data %>%
-  filter(firm_ID == 1) %>% # firm_IDが1の企業のみ抽出
-  select(Re) %>% # 月次超過リターンのみ抽出
-  drop_na() %>% # 欠損値を削除
-  unlist() # データフレームからベクトルに変換
-
-mu0 <- 0 # 帰無仮説を期待値0と設定
-n <- length(Re_firm_ID_1) # 標本サイズ
-
-t_value <- (mean(Re_firm_ID_1) - mu0) / sqrt(var(Re_firm_ID_1) / n) # 定義に従ってt値を計算
-
-
-```
-
-## 月次超過リターンの期待値に関するt検定 (2)
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-t.test(Re_firm_ID_1) # t.test()関数で第二引数以降を省略
-```
-
-## 簿価時価比率と株式リターンの関係を可視化
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-lm_sample_data <- annual_data %>% 
-  group_by(firm_ID) %>%
-  mutate(lagged_BEME = lagged_BE / lag(ME)) %>% # 企業ごとに前年度の簿価時価比率を計算
-  ungroup() %>%
-  filter(year == 2016, # firm_IDが1から10までの企業の2016年のデータを抽出
-         firm_ID <= 10) %>%
-  select(firm_ID, year, Re, lagged_BEME) %>% # 必要な列のみ抽出
-  drop_na() # 欠損データを削除 
-
-ggplot(lm_sample_data) + 
-  geom_point(aes(x = lagged_BEME, y = Re)) + # x軸に簿価時価比率, y軸に超過リターン
-  labs(x = "BE/ME at the End of Year t", y = "Excess Return for Year t + 1") + 
-  theme_classic()
-```
-
-## 簿価時価比率と株式リターンの散布図に回帰直線を追加
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-ggplot(lm_sample_data) + 
-  geom_point(aes(x = lagged_BEME, y = Re)) + 
-  geom_smooth(aes(x = lagged_BEME, y = Re), method = "lm", se = FALSE, color = "black") + # 回帰直線を追加するにはgeom_smooth()関数を用いる
-  labs(x = "BE/ME at the End of Year t", y = "Excess Return for Year t + 1") + 
-  theme_classic()
-```
-
-## lm()関数を用いた線形回帰
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-lm_results <- lm(Re ~ lagged_BEME, data = lm_sample_data) # ~の左に従属変数, 右に独立変数を記す
-names(lm_results)
-
-
-```
-
-## lm()関数で計算した回帰係数
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-print(lm_results$coefficients)
-
-## (Intercept) lagged_BEME 
-## 0.05513385  0.07552921 
-```
-
-## broomパッケージのtidy()関数で係数の推定値に関する結果を確認
-
-```{r}
-#| eval: false
-#| message: false
-#| warning: false
-
-install.packages("broom")
 library(broom)
-
-tidy(lm_results)
 ```
 
-## broomパッケージのglance()関数でモデル全体の当てはまりを確認
+パッケージをまだインストールしていない場合だけ、次のコードをRコンソールで実行する。
 
 ```{r}
+#| label: install-packages
 #| eval: false
-#| message: false
-#| warning: false
 
-glance(lm_results)
+install.packages(c("tidyverse", "broom"))
 ```
 
-## 線形・対数モデルによる推定
+## プロジェクトとデータディレクトリ
+
+RStudioでチャンクを個別に実行する場合と、Quartoで章全体をレンダリングする場合では、作業ディレクトリが異なることがある。そのため、プロジェクトルートを実行時に確認する。
 
 ```{r}
-#| eval: false
-#| message: false
-#| warning: false
+#| label: resolve-project-directory
 
-tidy(lm(Re ~ log(lagged_BEME), data = lm_sample_data)) # 右辺のみlog()関数で自然対数を取る
+project_candidates <- unique(c(
+  Sys.getenv("QUARTO_PROJECT_DIR"),
+  getwd(),
+  dirname(getwd())
+))
+
+project_candidates <- project_candidates[nzchar(project_candidates)]
+
+project_matches <- project_candidates[
+  file.exists(file.path(project_candidates, "_quarto.yml"))
+]
+
+if (length(project_matches) == 0) {
+  stop("LagrangeFinanceのプロジェクトルートを確認できません。")
+}
+
+project_dir <- normalizePath(
+  project_matches[1],
+  winslash = "/",
+  mustWork = TRUE
+)
+
+data_dir <- file.path(project_dir, "simulation_data")
+derived_data_dir <- file.path(data_dir, "derived")
+
+if (!dir.exists(data_dir)) {
+  stop("simulation_dataディレクトリが見つかりません: ", data_dir)
+}
+
+project_dir
+data_dir
+derived_data_dir
 ```
 
-## データの保存
+`simulation_data` 以下にあるCSVファイルを確認する。
 
 ```{r}
-#| eval: false
-#| message: false
-#| warning: false
+#| label: list-simulation-data
 
-write_csv(monthly_data, "ch05_output1.csv")
-write_csv(annual_data, "ch05_output2.csv")
+csv_paths <- list.files(
+  path = data_dir,
+  pattern = "\\.csv$",
+  full.names = TRUE,
+  recursive = TRUE
+)
+
+normalized_data_dir <- normalizePath(
+  data_dir,
+  winslash = "/",
+  mustWork = TRUE
+)
+
+normalized_csv_paths <- normalizePath(
+  csv_paths,
+  winslash = "/",
+  mustWork = FALSE
+)
+
+csv_catalog <- tibble(
+  file_name = basename(csv_paths),
+  relative_path = substring(
+    normalized_csv_paths,
+    first = nchar(normalized_data_dir) + 2
+  )
+) |>
+  arrange(relative_path)
+
+csv_catalog
 ```
+
+## 株式データの読み込み
+
+株式データは `ch05_stock_data.csv` に保存されている。ファイル名は旧教材の章番号に由来するが、本書では第3章の入力データとして使用する。
+
+```{r}
+#| label: read-stock-data
+
+stock_data_candidates <- csv_paths[
+  basename(csv_paths) == "ch05_stock_data.csv"
+]
+
+if (length(stock_data_candidates) == 0) {
+  stop("ch05_stock_data.csvがsimulation_data以下に見つかりません。")
+}
+
+if (length(stock_data_candidates) > 1) {
+  stop(
+    "ch05_stock_data.csvが複数見つかりました: ",
+    paste(stock_data_candidates, collapse = ", ")
+  )
+}
+
+stock_data_path <- stock_data_candidates[1]
+
+stock_data_raw <- readr::read_csv(
+  stock_data_path,
+  show_col_types = FALSE
+)
+
+stock_data_path
+stock_data_raw
+```
+
+データの行数、列数、企業数、対象期間を確認する。
+
+```{r}
+#| label: stock-data-overview
+
+stock_data_overview <- stock_data_raw |>
+  summarise(
+    observations = n(),
+    variables = ncol(stock_data_raw),
+    firms = n_distinct(firm_ID),
+    first_year = min(year, na.rm = TRUE),
+    last_year = max(year, na.rm = TRUE),
+    first_month_ID = min(month_ID, na.rm = TRUE),
+    last_month_ID = max(month_ID, na.rm = TRUE)
+  )
+
+stock_data_overview
+```
+
+データ型と列名を確認する。
+
+```{r}
+#| label: inspect-stock-data
+
+glimpse(stock_data_raw)
+
+tibble(
+  position = seq_along(names(stock_data_raw)),
+  variable = names(stock_data_raw),
+  class = map_chr(stock_data_raw, \(x) class(x)[1])
+)
+```
+
+## 必須列の確認
+
+本章の計算には次の列が必要である。
+
+```{r}
+#| label: validate-stock-columns
+
+required_stock_columns <- c(
+  "year",
+  "month",
+  "month_ID",
+  "firm_ID",
+  "stock_price",
+  "shares_outstanding",
+  "DPS",
+  "adjustment_coefficient",
+  "R_F"
+)
+
+missing_stock_columns <- setdiff(
+  required_stock_columns,
+  names(stock_data_raw)
+)
+
+if (length(missing_stock_columns) > 0) {
+  stop(
+    "株式データに必要な列が不足しています: ",
+    paste(missing_stock_columns, collapse = ", ")
+  )
+}
+```
+
+## 欠損値の確認
+
+各変数について欠損数と欠損率を計算する。`across()` に複数の関数を渡し、結果を `pivot_longer()` で縦長に整理する。
+
+```{r}
+#| label: stock-missing-summary
+
+stock_missing_summary <- stock_data_raw |>
+  summarise(
+    across(
+      everything(),
+      list(
+        missing = \(x) sum(is.na(x)),
+        missing_rate = \(x) mean(is.na(x))
+      ),
+      .names = "{.col}__{.fn}"
+    )
+  ) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = c("variable", ".value"),
+    names_sep = "__"
+  ) |>
+  arrange(desc(missing_rate), variable)
+
+stock_missing_summary
+```
+
+## データ型と並び順の整理
+
+企業ID、年、月、月IDを整数型に統一する。企業ごとの時系列計算を正しく行うため、`firm_ID` と `month_ID` の順に並べる。
+
+```{r}
+#| label: prepare-stock-data
+
+stock_data <- stock_data_raw |>
+  mutate(
+    firm_ID = as.integer(firm_ID),
+    year = as.integer(year),
+    month = as.integer(month),
+    month_ID = as.integer(month_ID),
+    month_date = lubridate::make_date(year, month, 1)
+  ) |>
+  arrange(firm_ID, month_ID)
+
+glimpse(stock_data)
+```
+
+## パネルキーの確認
+
+月次株式データでは、`firm_ID` と `month_ID` の組合せが各行を一意に識別する。
+
+```{r}
+#| label: check-stock-panel-key
+
+stock_key_duplicates <- stock_data |>
+  count(firm_ID, month_ID, name = "observations") |>
+  filter(observations > 1)
+
+stock_key_duplicates
+```
+
+重複があれば、`lag()` による前月値の計算や財務データとの結合が不安定になるため、ここで停止する。
+
+```{r}
+#| label: assert-stock-panel-key
+
+if (nrow(stock_key_duplicates) > 0) {
+  stop("firm_IDとmonth_IDの組合せに重複があります。")
+}
+```
+
+月IDと年月の対応も一意であることを確認する。
+
+```{r}
+#| label: check-month-calendar
+
+month_calendar_check <- stock_data |>
+  distinct(month_ID, year, month, month_date) |>
+  count(month_ID, name = "calendar_rows") |>
+  filter(calendar_rows > 1)
+
+month_calendar_check
+
+if (nrow(month_calendar_check) > 0) {
+  stop("同じmonth_IDに複数の年月が対応しています。")
+}
+```
+
+## 月次観測数の確認
+
+年度別の企業数と観測数を確認する。
+
+```{r}
+#| label: stock-observations-by-year
+
+stock_observations_by_year <- stock_data |>
+  group_by(year) |>
+  summarise(
+    firms = n_distinct(firm_ID),
+    observations = n(),
+    first_month_ID = min(month_ID),
+    last_month_ID = max(month_ID),
+    .groups = "drop"
+  ) |>
+  arrange(year)
+
+stock_observations_by_year
+```
+
+企業ごとの観測月数を確認する。
+
+```{r}
+#| label: observations-by-firm
+
+observations_by_firm <- stock_data |>
+  count(firm_ID, name = "months") |>
+  arrange(desc(months), firm_ID)
+
+observations_by_firm
+```
+
+## 配当と調整係数
+
+株式リターンを計算する際には、株価変化だけでなく配当と株式分割等の調整係数も考慮する。
+
+配当が支払われた観測を確認する。
+
+```{r}
+#| label: inspect-dividend-observations
+
+dividend_observations <- stock_data |>
+  filter(!is.na(DPS), DPS != 0) |>
+  select(
+    firm_ID,
+    year,
+    month,
+    month_ID,
+    stock_price,
+    DPS,
+    adjustment_coefficient
+  ) |>
+  arrange(firm_ID, month_ID)
+
+dividend_observations |>
+  slice_head(n = 20)
+```
+
+調整係数が1と異なる観測を確認する。
+
+```{r}
+#| label: inspect-adjustment-observations
+
+adjustment_observations <- stock_data |>
+  filter(
+    !is.na(adjustment_coefficient),
+    !near(adjustment_coefficient, 1)
+  ) |>
+  select(
+    firm_ID,
+    year,
+    month,
+    month_ID,
+    stock_price,
+    DPS,
+    adjustment_coefficient
+  ) |>
+  arrange(firm_ID, month_ID)
+
+adjustment_observations |>
+  slice_head(n = 20)
+```
+
+配当と調整係数の件数を集計する。
+
+```{r}
+#| label: corporate-action-summary
+
+corporate_action_summary <- stock_data |>
+  summarise(
+    observations = n(),
+    dividend_observations = sum(
+      !is.na(DPS) & DPS != 0
+    ),
+    adjusted_observations = sum(
+      !is.na(adjustment_coefficient) &
+        !near(adjustment_coefficient, 1)
+    )
+  )
+
+corporate_action_summary
+```
+
+## 時価総額の計算
+
+企業 $i$ の月 $t$ における時価総額 $ME_{i,t}$ は、株価 $P_{i,t}$ と発行済株式数 $N_{i,t}$ の積である。
+
+$$
+ME_{i,t}=P_{i,t}N_{i,t}
+$$
+
+```{r}
+#| label: calculate-market-equity
+
+stock_data <- stock_data |>
+  mutate(
+    ME = stock_price * shares_outstanding
+  )
+
+stock_data |>
+  select(
+    firm_ID,
+    month_date,
+    stock_price,
+    shares_outstanding,
+    ME
+  ) |>
+  slice_head(n = 10)
+```
+
+時価総額が有限かつ正である観測を確認する。
+
+```{r}
+#| label: validate-market-equity
+
+invalid_market_equity <- stock_data |>
+  filter(
+    !is.na(ME),
+    !is.finite(ME) | ME <= 0
+  ) |>
+  select(
+    firm_ID,
+    month_ID,
+    stock_price,
+    shares_outstanding,
+    ME
+  )
+
+invalid_market_equity
+```
+
+時価総額は右に長い分布を持つため、横軸を対数目盛りにして可視化する。
+
+```{r}
+#| label: plot-market-equity
+#| fig-width: 8
+#| fig-height: 5
+
+stock_data |>
+  filter(is.finite(ME), ME > 0) |>
+  ggplot(aes(x = ME)) +
+  geom_histogram(bins = 50) +
+  scale_x_log10(
+    labels = scales::label_comma()
+  ) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.05))
+  ) +
+  labs(
+    x = "Market Equity (log scale)",
+    y = "Count",
+    title = "Distribution of Market Equity"
+  ) +
+  theme_classic()
+```
+
+## 前月株価の追加
+
+企業ごとに `lag()` を適用し、前月株価を作成する。
+
+```{r}
+#| label: add-lagged-price
+
+stock_data <- stock_data |>
+  group_by(firm_ID) |>
+  arrange(month_ID, .by_group = TRUE) |>
+  mutate(
+    lagged_stock_price = lag(stock_price),
+    lagged_month_ID = lag(month_ID)
+  ) |>
+  ungroup()
+```
+
+連続する月IDから取得した前月株価かどうかを確認する。
+
+```{r}
+#| label: validate-lagged-price
+
+stock_data <- stock_data |>
+  mutate(
+    consecutive_month = month_ID - lagged_month_ID == 1L,
+    lagged_stock_price = if_else(
+      consecutive_month,
+      lagged_stock_price,
+      NA_real_
+    )
+  )
+
+stock_data |>
+  select(
+    firm_ID,
+    month_ID,
+    stock_price,
+    lagged_stock_price,
+    consecutive_month
+  ) |>
+  slice_head(n = 12)
+```
+
+## 月次株式リターン
+
+企業 $i$ の月 $t$ における月次株式リターン $R_{i,t}$ を、次式で計算する。
+
+$$
+R_{i,t}
+=
+\frac{
+  (P_{i,t}+D_{i,t})A_{i,t}-P_{i,t-1}
+}{
+  P_{i,t-1}
+}
+$$
+
+ここで、$P_{i,t}$ は株価、$D_{i,t}$ は一株当たり配当、$A_{i,t}$ は調整係数である。
+
+```{r}
+#| label: calculate-monthly-return
+
+stock_data <- stock_data |>
+  mutate(
+    R = case_when(
+      is.na(lagged_stock_price) ~ NA_real_,
+      lagged_stock_price <= 0 ~ NA_real_,
+      is.na(stock_price) ~ NA_real_,
+      is.na(DPS) ~ NA_real_,
+      is.na(adjustment_coefficient) ~ NA_real_,
+      TRUE ~ (
+        (stock_price + DPS) * adjustment_coefficient -
+          lagged_stock_price
+      ) / lagged_stock_price
+    ),
+    R = if_else(is.finite(R), R, NA_real_)
+  )
+```
+
+計算例を確認する。
+
+```{r}
+#| label: inspect-monthly-return
+
+stock_data |>
+  select(
+    firm_ID,
+    month_date,
+    lagged_stock_price,
+    stock_price,
+    DPS,
+    adjustment_coefficient,
+    R
+  ) |>
+  filter(!is.na(R)) |>
+  slice_head(n = 15)
+```
+
+## 無リスク金利の整合性
+
+同じ月の無リスク金利はすべての企業に共通であることを確認する。
+
+```{r}
+#| label: validate-risk-free-rate
+
+#| label: validate-risk-free-rate
+
+monthly_rate <- function(x) {
+  values <- x[is.finite(x)]
+
+  if (length(values) == 0) {
+    return(NA_real_)
+  }
+
+  median(values)
+}
+
+risk_free_rate_by_month <- stock_data |>
+  group_by(
+    month_ID,
+    year,
+    month,
+    month_date
+  ) |>
+  summarise(
+    observations = n(),
+    valid_rates = sum(is.finite(R_F)),
+    distinct_rates = n_distinct(R_F[is.finite(R_F)]),
+    minimum_R_F = {
+      values <- R_F[is.finite(R_F)]
+
+      if (length(values) == 0) {
+        NA_real_
+      } else {
+        min(values)
+      }
+    },
+    maximum_R_F = {
+      values <- R_F[is.finite(R_F)]
+
+      if (length(values) == 0) {
+        NA_real_
+      } else {
+        max(values)
+      }
+    },
+    R_F_month = monthly_rate(R_F),
+    .groups = "drop"
+  ) |>
+  mutate(
+    R_F_spread = maximum_R_F - minimum_R_F
+  ) |>
+  arrange(month_ID)
+
+risk_free_rate_diagnostics <- risk_free_rate_by_month |>
+  filter(distinct_rates > 1) |>
+  select(
+    month_ID,
+    year,
+    month,
+    observations,
+    valid_rates,
+    distinct_rates,
+    minimum_R_F,
+    maximum_R_F,
+    R_F_spread,
+    R_F_month
+  )
+
+risk_free_rate_diagnostics
+#| label: standardize-risk-free-rate
+
+stock_data <- stock_data |>
+  select(-R_F) |>
+  left_join(
+    risk_free_rate_by_month |>
+      select(
+        month_ID,
+        R_F = R_F_month
+      ),
+    by = "month_ID"
+  )
+
+missing_monthly_risk_free_rate <- stock_data |>
+  distinct(month_ID, R_F) |>
+  filter(!is.finite(R_F))
+
+missing_monthly_risk_free_rate
+
+if (nrow(missing_monthly_risk_free_rate) > 0) {
+  stop("月次無リスク金利を作成できないmonth_IDがあります。")
+}
+```
+
+## 月次超過リターン
+
+月次超過リターン $R^e_{i,t}$ は、株式リターンから無リスク金利を引いて計算する。
+
+$$
+R^e_{i,t}=R_{i,t}-R_{F,t}
+$$
+
+```{r}
+#| label: calculate-excess-return
+
+stock_data <- stock_data |>
+  mutate(
+    Re = R - R_F,
+    Re = if_else(is.finite(Re), Re, NA_real_)
+  )
+```
+
+## 月次リターンの要約統計量
+
+歪度と尖度を計算する関数を定義する。
+
+```{r}
+#| label: define-return-moments
+
+calculate_skewness <- function(x) {
+  values <- x[is.finite(x)]
+
+  if (length(values) < 3 || near(sd(values), 0)) {
+    return(NA_real_)
+  }
+
+  mean(
+    ((values - mean(values)) / sd(values))^3
+  )
+}
+
+calculate_kurtosis <- function(x) {
+  values <- x[is.finite(x)]
+
+  if (length(values) < 4 || near(sd(values), 0)) {
+    return(NA_real_)
+  }
+
+  mean(
+    ((values - mean(values)) / sd(values))^4
+  )
+}
+```
+
+月次リターンと月次超過リターンを縦長に変換し、同じ処理で集計する。
+
+```{r}
+#| label: monthly-return-summary
+
+monthly_return_summary <- stock_data |>
+  select(R, Re) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "return_type",
+    values_to = "return"
+  ) |>
+  filter(is.finite(return)) |>
+  group_by(return_type) |>
+  summarise(
+    observations = n(),
+    mean = mean(return),
+    median = median(return),
+    standard_deviation = sd(return),
+    minimum = min(return),
+    first_quartile = quantile(return, 0.25),
+    third_quartile = quantile(return, 0.75),
+    maximum = max(return),
+    skewness = calculate_skewness(return),
+    kurtosis = calculate_kurtosis(return),
+    .groups = "drop"
+  )
+
+monthly_return_summary
+```
+
+企業ごとの要約統計量を `purrr::map_dfr()` で計算する。ここでは観測数が多い企業から6社を選ぶ。
+
+```{r}
+#| label: firm-return-summary-map
+
+sample_firm_ids <- stock_data |>
+  filter(is.finite(R)) |>
+  count(firm_ID, sort = TRUE) |>
+  slice_head(n = 6) |>
+  pull(firm_ID)
+
+firm_return_summary <- sample_firm_ids |>
+  map_dfr(
+    \(firm_id) {
+      firm_returns <- stock_data |>
+        filter(
+          firm_ID == firm_id,
+          is.finite(R)
+        ) |>
+        pull(R)
+
+      tibble(
+        firm_ID = firm_id,
+        observations = length(firm_returns),
+        mean_return = mean(firm_returns),
+        volatility = sd(firm_returns),
+        minimum_return = min(firm_returns),
+        maximum_return = max(firm_returns)
+      )
+    }
+  )
+
+firm_return_summary
+```
+
+## 月次リターンの分布
+
+極端な値によって分布の中心が見えにくくならないよう、1%点から99%点の範囲を表示する。
+
+```{r}
+#| label: plot-monthly-return
+#| fig-width: 8
+#| fig-height: 5
+
+return_plot_limits <- quantile(
+  stock_data$R,
+  probs = c(0.01, 0.99),
+  na.rm = TRUE
+)
+
+stock_data |>
+  filter(is.finite(R)) |>
+  ggplot(aes(x = R)) +
+  geom_histogram(bins = 60) +
+  coord_cartesian(xlim = return_plot_limits) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.05))
+  ) +
+  labs(
+    x = "Monthly Stock Return",
+    y = "Count",
+    title = "Distribution of Monthly Stock Returns"
+  ) +
+  theme_classic()
+```
+
+## 累積リターン
+
+月次グロスリターン $1+R_{i,t}$ を時系列方向に掛け合わせることで、累積グロスリターンを求める。
+
+$$
+G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
+$$
+
+```{r}
+#| label: calculate-cumulative-return
+
+cumulative_return_data <- stock_data |>
+  filter(
+    firm_ID %in% sample_firm_ids,
+    is.finite(R)
+  ) |>
+  group_by(firm_ID) |>
+  arrange(month_ID, .by_group = TRUE) |>
+  mutate(
+    cumulative_gross_return = cumprod(1 + R),
+    cumulative_return = cumulative_gross_return - 1
+  ) |>
+  ungroup()
+```
+
+代表企業の累積リターンを可視化する。
+
+```{r}
+#| label: plot-cumulative-return
+#| fig-width: 9
+#| fig-height: 5
+
+cumulative_return_data |>
+  mutate(firm_ID = as.factor(firm_ID)) |>
+  ggplot(
+    aes(
+      x = month_date,
+      y = cumulative_gross_return,
+      linetype = firm_ID
+    )
+  ) +
+  geom_line(linewidth = 0.7) +
+  geom_hline(
+    yintercept = 1,
+    linetype = "dotted"
+  ) +
+  labs(
+    x = NULL,
+    y = "Cumulative Gross Return",
+    linetype = "Firm ID",
+    title = "Cumulative Returns of Selected Firms"
+  ) +
+  theme_classic()
+```
+
+## 月次リターンから年次リターンへの集約
+
+欠損値を除き、グロスリターンを掛け合わせる関数を定義する。
+
+```{r}
+#| label: define-compound-return
+
+compound_return <- function(x) {
+  values <- x[is.finite(x)]
+
+  if (length(values) == 0) {
+    return(NA_real_)
+  }
+
+  prod(1 + values) - 1
+}
+```
+
+企業・年度ごとに月次株式リターンと無リスク金利を累積する。
+
+```{r}
+#| label: calculate-annual-return
+
+annual_stock_data <- stock_data |>
+  group_by(firm_ID, year) |>
+  summarise(
+    months = n(),
+    valid_return_months = sum(is.finite(R)),
+    R = compound_return(R),
+    R_F = compound_return(R_F),
+    .groups = "drop"
+  ) |>
+  mutate(
+    Re = R - R_F,
+    Re = if_else(is.finite(Re), Re, NA_real_)
+  ) |>
+  arrange(firm_ID, year)
+
+annual_stock_data
+```
+
+年次リターンの要約統計量を確認する。
+
+```{r}
+#| label: annual-return-summary
+
+annual_return_summary <- annual_stock_data |>
+  summarise(
+    observations = sum(is.finite(R)),
+    mean_return = mean(R, na.rm = TRUE),
+    median_return = median(R, na.rm = TRUE),
+    volatility = sd(R, na.rm = TRUE),
+    minimum_return = min(R, na.rm = TRUE),
+    maximum_return = max(R, na.rm = TRUE)
+  )
+
+annual_return_summary
+```
+
+年度別に年次超過リターンの分布を確認する。
+
+```{r}
+#| label: annual-return-by-year
+
+annual_return_by_year <- annual_stock_data |>
+  group_by(year) |>
+  summarise(
+    firms = sum(is.finite(Re)),
+    mean_excess_return = mean(Re, na.rm = TRUE),
+    median_excess_return = median(Re, na.rm = TRUE),
+    volatility = sd(Re, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+annual_return_by_year
+```
+
+```{r}
+#| label: plot-annual-return-by-year
+#| fig-width: 8
+#| fig-height: 5
+
+annual_return_by_year |>
+  ggplot(
+    aes(
+      x = year,
+      y = mean_excess_return
+    )
+  ) +
+  geom_col() +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_x_continuous(
+    breaks = annual_return_by_year$year
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = "Year",
+    y = "Mean Annual Excess Return",
+    title = "Mean Annual Excess Return by Year"
+  ) +
+  theme_classic()
+```
+
+## 年度末時価総額
+
+各企業・各年度について、最後に観測された月の時価総額を年度末時価総額として取得する。
+
+```{r}
+#| label: year-end-market-equity
+
+year_end_market_equity <- stock_data |>
+  filter(is.finite(ME), ME > 0) |>
+  group_by(firm_ID, year) |>
+  slice_max(
+    order_by = month_ID,
+    n = 1,
+    with_ties = FALSE
+  ) |>
+  ungroup() |>
+  transmute(
+    firm_ID,
+    year,
+    year_end_month_ID = month_ID,
+    ME
+  )
+
+year_end_market_equity
+```
+
+## 前章の財務データ
+
+第2章で作成した `simulation_data/derived/ch04_output.csv` を読み込む。
+
+```{r}
+#| label: read-financial-output
+
+financial_output_path <- file.path(
+  derived_data_dir,
+  "ch04_output.csv"
+)
+
+if (!file.exists(financial_output_path)) {
+  stop(
+    "第2章の出力が見つかりません。第2章を先に実行してください: ",
+    financial_output_path
+  )
+}
+
+financial_data <- readr::read_csv(
+  financial_output_path,
+  show_col_types = FALSE
+) |>
+  mutate(
+    firm_ID = as.integer(firm_ID),
+    year = as.integer(year),
+    industry_ID = as.integer(industry_ID)
+  ) |>
+  arrange(firm_ID, year)
+
+financial_output_path
+glimpse(financial_data)
+```
+
+結合に必要な財務変数を確認する。
+
+```{r}
+#| label: validate-financial-columns
+
+required_financial_columns <- c(
+  "firm_ID",
+  "year",
+  "industry_ID",
+  "sales",
+  "X",
+  "BE",
+  "lagged_BE",
+  "ROE"
+)
+
+missing_financial_columns <- setdiff(
+  required_financial_columns,
+  names(financial_data)
+)
+
+if (length(missing_financial_columns) > 0) {
+  stop(
+    "第2章の出力に必要な列が不足しています: ",
+    paste(missing_financial_columns, collapse = ", ")
+  )
+}
+```
+
+財務データの `firm_ID` と `year` の組合せが一意であることを再確認する。
+
+```{r}
+#| label: validate-financial-key
+
+financial_key_duplicates <- financial_data |>
+  count(firm_ID, year, name = "observations") |>
+  filter(observations > 1)
+
+financial_key_duplicates
+
+if (nrow(financial_key_duplicates) > 0) {
+  stop("財務データのfirm_IDとyearの組合せに重複があります。")
+}
+```
+
+## 結合前のキー診断
+
+株式データに存在するが財務データに存在しない企業・年度を確認する。
+
+```{r}
+#| label: stock-keys-without-financial-data
+
+stock_keys_without_financial_data <- annual_stock_data |>
+  distinct(firm_ID, year) |>
+  anti_join(
+    financial_data |>
+      distinct(firm_ID, year),
+    by = c("firm_ID", "year")
+  )
+
+stock_keys_without_financial_data
+```
+
+財務データに存在するが年次株式データに存在しない企業・年度も確認する。
+
+```{r}
+#| label: financial-keys-without-stock-data
+
+financial_keys_without_stock_data <- financial_data |>
+  distinct(firm_ID, year) |>
+  anti_join(
+    annual_stock_data |>
+      distinct(firm_ID, year),
+    by = c("firm_ID", "year")
+  )
+
+financial_keys_without_stock_data
+```
+
+結合前の診断結果をまとめる。
+
+```{r}
+#| label: join-key-diagnostics
+
+join_key_diagnostics <- tribble(
+  ~item, ~observations,
+  "stock keys without financial data",
+  nrow(stock_keys_without_financial_data),
+  "financial keys without stock data",
+  nrow(financial_keys_without_stock_data)
+)
+
+join_key_diagnostics
+```
+
+## 年次データの結合
+
+年次株式データを基準に、財務データと年度末時価総額を結合する。
+
+```{r}
+#| label: join-annual-data
+
+annual_data <- annual_stock_data |>
+  left_join(
+    financial_data,
+    by = c("firm_ID", "year")
+  ) |>
+  left_join(
+    year_end_market_equity,
+    by = c("firm_ID", "year")
+  ) |>
+  arrange(firm_ID, year)
+
+glimpse(annual_data)
+```
+
+結合後もパネルキーが一意であることを確認する。
+
+```{r}
+#| label: validate-annual-data-key
+
+annual_data_duplicates <- annual_data |>
+  count(firm_ID, year, name = "observations") |>
+  filter(observations > 1)
+
+annual_data_duplicates
+
+if (nrow(annual_data_duplicates) > 0) {
+  stop("annual_dataのfirm_IDとyearの組合せに重複があります。")
+}
+```
+
+## 月次データの結合
+
+月次株式データに年次財務データを結合する。同じ年度の財務情報が、各月の行へ付与される。
+
+```{r}
+#| label: join-monthly-data
+
+monthly_data <- stock_data |>
+  left_join(
+    financial_data,
+    by = c("firm_ID", "year")
+  ) |>
+  arrange(firm_ID, month_ID)
+
+glimpse(monthly_data)
+```
+
+結合前後で月次データの行数が変化していないことを確認する。
+
+```{r}
+#| label: validate-monthly-row-count
+
+stopifnot(
+  nrow(monthly_data) == nrow(stock_data)
+)
+
+tibble(
+  stock_rows = nrow(stock_data),
+  monthly_rows = nrow(monthly_data),
+  annual_rows = nrow(annual_data)
+)
+```
+
+## 売上高・利益・時価総額の可視化
+
+最新年度の企業について、売上高、当期純利益、時価総額の関係をバブルチャートで確認する。
+
+```{r}
+#| label: prepare-bubble-chart-data
+
+latest_analysis_year <- annual_data |>
+  filter(
+    is.finite(sales),
+    sales > 0,
+    is.finite(X),
+    X > 0,
+    is.finite(ME),
+    ME > 0
+  ) |>
+  summarise(
+    latest_year = max(year)
+  ) |>
+  pull(latest_year)
+
+bubble_chart_data <- annual_data |>
+  filter(
+    year == latest_analysis_year,
+    is.finite(sales),
+    sales > 0,
+    is.finite(X),
+    X > 0,
+    is.finite(ME),
+    ME > 0
+  )
+
+bubble_chart_data
+```
+
+```{r}
+#| label: plot-sales-earnings-market-equity
+#| fig-width: 8
+#| fig-height: 5
+
+bubble_chart_data |>
+  ggplot(
+    aes(
+      x = log(sales),
+      y = log(X),
+      size = ME
+    )
+  ) +
+  geom_point(alpha = 0.35) +
+  scale_size(
+    range = c(1, 12),
+    name = "Market Equity"
+  ) +
+  labs(
+    x = "Log Sales",
+    y = "Log Net Income",
+    title = paste(
+      "Sales, Earnings and Market Equity in",
+      latest_analysis_year
+    )
+  ) +
+  theme_classic()
+```
+
+## 一標本t検定
+
+観測数が最も多い企業を選び、月次超過リターンの平均が0と異なるかを検定する。
+
+```{r}
+#| label: select-firm-for-t-test
+
+test_firm_id <- stock_data |>
+  filter(is.finite(Re)) |>
+  count(firm_ID, sort = TRUE) |>
+  slice_head(n = 1) |>
+  pull(firm_ID)
+
+test_firm_returns <- stock_data |>
+  filter(
+    firm_ID == test_firm_id,
+    is.finite(Re)
+  ) |>
+  pull(Re)
+
+tibble(
+  firm_ID = test_firm_id,
+  observations = length(test_firm_returns),
+  mean_excess_return = mean(test_firm_returns),
+  standard_deviation = sd(test_firm_returns)
+)
+```
+
+t値を定義から計算する。
+
+$$
+t
+=
+\frac{\bar{R}^e-0}
+{s(R^e)/\sqrt{n}}
+$$
+
+```{r}
+#| label: calculate-t-value
+
+manual_t_value <- (
+  mean(test_firm_returns) - 0
+) / (
+  sd(test_firm_returns) /
+    sqrt(length(test_firm_returns))
+)
+
+manual_t_value
+```
+
+`t.test()` の結果を `broom::tidy()` で整理する。
+
+```{r}
+#| label: run-t-test
+
+t_test_result <- t.test(
+  test_firm_returns,
+  mu = 0
+)
+
+broom::tidy(t_test_result)
+```
+
+## 簿価時価比率と株式リターン
+
+前年度末の時価総額を作成し、期首株主資本を前年度末時価総額で割って簿価時価比率を計算する。
+
+```{r}
+#| label: calculate-lagged-beme
+
+annual_data <- annual_data |>
+  group_by(firm_ID) |>
+  arrange(year, .by_group = TRUE) |>
+  mutate(
+    lagged_ME = lag(ME),
+    lagged_BEME = lagged_BE / lagged_ME,
+    lagged_BEME = if_else(
+      is.finite(lagged_BEME) &
+        lagged_BEME > 0,
+      lagged_BEME,
+      NA_real_
+    )
+  ) |>
+  ungroup()
+```
+
+回帰に使用できる年度別観測数を確認する。
+
+```{r}
+#| label: regression-observations-by-year
+
+regression_observations_by_year <- annual_data |>
+  filter(
+    is.finite(Re),
+    is.finite(lagged_BEME)
+  ) |>
+  count(year, name = "observations") |>
+  arrange(year)
+
+regression_observations_by_year
+```
+
+最新の利用可能年度を回帰対象にする。
+
+```{r}
+#| label: prepare-cross-sectional-regression
+
+regression_year <- regression_observations_by_year |>
+  filter(observations >= 30) |>
+  summarise(year = max(year)) |>
+  pull(year)
+
+lm_sample_data <- annual_data |>
+  filter(
+    year == regression_year,
+    is.finite(Re),
+    is.finite(lagged_BEME)
+  ) |>
+  select(
+    firm_ID,
+    year,
+    Re,
+    lagged_BEME
+  )
+
+lm_sample_data
+```
+
+散布図と回帰直線を描く。
+
+```{r}
+#| label: plot-beme-return-regression
+#| fig-width: 8
+#| fig-height: 5
+
+beme_plot_limit <- quantile(
+  lm_sample_data$lagged_BEME,
+  0.99,
+  na.rm = TRUE
+)
+
+lm_sample_data |>
+  ggplot(
+    aes(
+      x = lagged_BEME,
+      y = Re
+    )
+  ) +
+  geom_point(alpha = 0.35) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE
+  ) +
+  coord_cartesian(
+    xlim = c(0, beme_plot_limit)
+  ) +
+  labs(
+    x = "Lagged Book-to-Market Ratio",
+    y = "Annual Excess Return",
+    title = paste(
+      "Book-to-Market Ratio and Excess Return in",
+      regression_year
+    )
+  ) +
+  theme_classic()
+```
+
+線形回帰を推定する。
+
+```{r}
+#| label: estimate-cross-sectional-regression
+
+lm_result <- lm(
+  Re ~ lagged_BEME,
+  data = lm_sample_data
+)
+
+broom::tidy(lm_result)
+```
+
+モデル全体の結果を確認する。
+
+```{r}
+#| label: inspect-regression-fit
+
+broom::glance(lm_result)
+```
+
+## 年度別回帰とpurrr
+
+年度ごとの回帰を `nest()` と `purrr::map()` で実行する。明示的なループは使用しない。
+
+```{r}
+#| label: yearly-regressions-with-purrr
+
+yearly_regression_models <- annual_data |>
+  filter(
+    is.finite(Re),
+    is.finite(lagged_BEME)
+  ) |>
+  group_by(year) |>
+  filter(n() >= 30) |>
+  ungroup() |>
+  nest(data = -year) |>
+  mutate(
+    model = map(
+      data,
+      \(data) lm(
+        Re ~ lagged_BEME,
+        data = data
+      )
+    ),
+    coefficients = map(
+      model,
+      broom::tidy
+    ),
+    fit = map(
+      model,
+      broom::glance
+    )
+  )
+
+yearly_regression_models
+```
+
+年度別の回帰係数を一つのデータフレームへ展開する。
+
+```{r}
+#| label: yearly-regression-coefficients
+
+yearly_regression_coefficients <- yearly_regression_models |>
+  select(year, coefficients) |>
+  unnest(coefficients) |>
+  arrange(year, term)
+
+yearly_regression_coefficients
+```
+
+決定係数と標本数をまとめる。
+
+```{r}
+#| label: yearly-regression-fit
+
+yearly_regression_fit <- yearly_regression_models |>
+  select(year, fit) |>
+  unnest(fit) |>
+  select(
+    year,
+    r.squared,
+    adj.r.squared,
+    sigma,
+    statistic,
+    p.value,
+    nobs
+  ) |>
+  arrange(year)
+
+yearly_regression_fit
+```
+
+## 分析用データの保存
+
+第4章以降で使用するため、月次データと年次データを `simulation_data/derived` に保存する。元の入力CSVは上書きしない。
+
+```{r}
+#| label: prepare-output-directory
+
+if (!dir.exists(derived_data_dir)) {
+  dir.create(
+    derived_data_dir,
+    recursive = TRUE
+  )
+}
+
+monthly_output_path <- file.path(
+  derived_data_dir,
+  "ch05_output1.csv"
+)
+
+annual_output_path <- file.path(
+  derived_data_dir,
+  "ch05_output2.csv"
+)
+```
+
+`purrr::walk2()` を用いて2つのデータフレームを保存する。
+
+```{r}
+#| label: save-stock-outputs
+
+output_data <- list(
+  monthly = monthly_data,
+  annual = annual_data
+)
+
+output_paths <- c(
+  monthly = monthly_output_path,
+  annual = annual_output_path
+)
+
+walk2(
+  output_data,
+  output_paths,
+  \(data, path) {
+    readr::write_csv(
+      data,
+      path
+    )
+  }
+)
+
+output_paths
+```
+
+保存したファイルを読み直し、行数と列名を検証する。
+
+```{r}
+#| label: verify-stock-outputs
+
+output_verification <- imap_dfr(
+  output_data,
+  \(expected_data, data_name) {
+    output_path <- output_paths[[data_name]]
+
+    output_check <- readr::read_csv(
+      output_path,
+      show_col_types = FALSE
+    )
+
+    stopifnot(
+      nrow(output_check) ==
+        nrow(expected_data)
+    )
+
+    stopifnot(
+      identical(
+        names(output_check),
+        names(expected_data)
+      )
+    )
+
+    tibble(
+      data = data_name,
+      output_file = output_path,
+      rows = nrow(output_check),
+      columns = ncol(output_check),
+      size_bytes = file.info(output_path)$size
+    )
+  }
+)
+
+output_verification
+```
+
+## まとめ
+
+本章では、株価、配当、調整係数から月次リターンを作成し、無リスク金利を差し引いて超過リターンを計算した。さらに、月次リターンを年次リターンへ集約し、第2章で作成した財務データと結合した。
+
+分析用データは次の2ファイルに保存される。
+
+```text
+simulation_data/derived/ch05_output1.csv
+simulation_data/derived/ch05_output2.csv
+```
+
+第4章では、この月次データと年次データを利用して、市場ポートフォリオ、ポートフォリオ・ソート、CAPM、Fama--Frenchの3ファクター・モデルを構築する。

@@ -14,3 +14,13 @@ __pycache__/
 .ipynb_checkpoints/
 .quarto/
 **/*.quarto_ipynb
+
+/.quarto/
+
+simulation_data/derived/
+*.bak
+*.bak_*
+*.tmp
+*.patch
+part1_empirical/PV.png
+part1_empirical/IRR.pdf

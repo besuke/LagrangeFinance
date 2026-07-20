@@ -41,7 +41,7 @@ suppressPackageStartupMessages({
 
 債券価格は、将来の各キャッシュフローを支払時点に対応する割引係数で現在価値へ換算し、その合計として求める。個別債券の評価に入る前に、金利期間構造をスポットレート、割引係数およびフォワードレートの三つの側面から確認する。
 
-```{r eonia-spot-discount-forward-curves, fig-width=9, fig-height=5.5}
+```{r eonia-spot-discount-forward-curves, fig.width=9, fig.height=5.5}
 eonia_benchmark <- GaussQuant::eonia_curve_benchmark_GQL()
 
 eonia_curve_tbl <- eonia_benchmark$final_validation$quote_repricing |>
@@ -164,7 +164,7 @@ print(forward_curve_plot)
 
 利付債の経過利子に用いる経過日数は、直前利払期日から受渡日までの実日数を片端入れで数える。一方、最終利回りに用いる残存日数は、受渡日の翌日から償還日までを片端入れで数えるため、経過日数と残存日数を区別する必要がある。
 
-残存日数を \(N\)、残存年数を \(T\) とすると、残存年数は次式で求める。
+残存日数を $N$、残存年数を $T$ とすると、残存年数は次式で求める。
 
 $$
 T=\frac{N}{365}
@@ -174,7 +174,7 @@ $$
 
 さらに、計算された残存年数は小数点以下第8位で切り捨て、小数点以下第7位までの値を以後の計算に用いる。四捨五入ではなく切り捨てである点が重要である。
 
-額面100円、年間クーポン額を \(C\)、償還価格を \(R\)、単価を \(P\)、残存年数を \(T\) とすると、単利の最終利回り \(Y\) は次式で表される。
+額面100円、年間クーポン額を $C$、償還価格を $R$、単価を $P$、残存年数を $T$ とすると、単利の最終利回り $Y$ は次式で表される。
 
 $$
 Y=

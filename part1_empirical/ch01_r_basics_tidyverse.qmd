@@ -1,849 +1,1140 @@
-# 第1章 Rとtidyverse入門
+---
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
 
-## 無リスク金利の値を格納する変数Rを作成
+# 第1章 Rによるデータ分析の基礎
+
+本章では、Rによるデータ分析に必要な基本操作を、Base Rからtidyverseへ段階的に学ぶ。前半では、オブジェクト、ベクトル、行列、リスト、データフレーム、関数、条件判定、記述統計および確率分布を扱う。後半では、`dplyr`、`stringr`、`tidyr`、`purrr`、`ggplot2`を用いて、データの読込み、整形、集計、反復処理、可視化を一つの流れとして組み立てる。
+
+Base Rの項目構成は、Positが公開している[Base R Cheatsheet](https://github.com/rstudio/cheatsheets/blob/main/base-r.pdf)を参考にしている。本章のコードでは、反復処理に明示的なループを使わず、ベクトル化または`purrr::map()`系関数を用いる。また、パイプ演算子はすべて`|>`に統一する。
+
+## 1.1 使用するパッケージ
+
+本章ではtidyverseを使用する。tidyverseには、データ操作の`dplyr`、文字列処理の`stringr`、データ整形の`tidyr`、反復処理の`purrr`、可視化の`ggplot2`などが含まれる。
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: load-packages
 
-R <- 0.1
-print(R) 
-
-
+library(tidyverse)
 ```
 
-## 2次元の無リスク金利ベクトルを作成
+パッケージが未導入の場合は、RStudioのConsoleで一度だけ次を実行する。
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-R <- c(0.1, 0.2)
-
-
-```
-
-## 11次元の無リスク金利ベクトルを作成
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-R <- seq(0.1, 0.2, 0.01)
-
-R <- seq(from = 0.1, to = 0.2, length = 11)
-
-```
-
-## ベクトルの要素へのアクセス
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-# 第2要素へのアクセス
-R[2] 
-i <- 2
-R[i]
-
-# 第2-第5要素へのアクセス
-R[2:5]
-
-# 第2-第11要素へのアクセス
-R[2:length(R)] # length(R)はRの次元11を返す
-R[-1]
-
-```
-
-## 1年後の確実な100万円の現在価値
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-PV <- 100 / (1 + R)
-
-##  [1] 90.90909 90.09009 89.28571 88.49558 87.71930 86.95652 86.20690 85.47009 84.74576 84.03361 83.33333
-```
-
-## 次元が一致するベクトル同士の割り算
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-CF <- seq(from = 110, to = 120, length = 11) # CFを11次元の等差数列として定義
-
-PV <- CF / (1 + R)
-##  [1] 100 100 100 100 100 100 100 100 100 100 100
-```
-
-## 割引率と現在価値の関係を描画
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-PV <- 100 / (1 + R)
-plot(PV)
-```
-
-## 割引率と現在価値の関係を表した図の見栄えを改善
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-PV <- 100 / (1 + R)
-plot(x = R,
-     y = PV, 
-     xlab = "Discount Rate",
-     ylab = "Present Value",
-     type = "l",
-     main = "Figure: Effect of Discount Rate on Present Value")
-```
-
-## 割引率と現在価値の関係を表した図をPNG形式で出力
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-png("PV.png", 
-    pointsize = 12, 
-    width = 20, 
-    height = 10, 
-    units = "cm", 
-    res = 200)
-
-plot(x = R, 
-     y = PV, 
-     xlab = "Discount Rate", 
-     ylab = "Present Value",
-     type = "l",
-     main = "Figure: Effect of Discount Rate on Present Value")
-
-dev.off()
-```
-
-## 3行2列の行列の作成
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-x <- matrix(1:6, nrow = 3, ncol = 2)
-
-##      [,1] [,2]
-
-```
-
-## 文字を要素とする行列の作成
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-y <- matrix(c("a", "b", "c", "d"), nrow = 2, ncol = 2)
-
-##      [,1] [,2]
-
-```
-
-## リストの作成
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-x <- list(10:11, "ABC")
-
-x[[1]]
-
-x[[2]]
-
-```
-
-## データフレームの作成
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-ID <- c(1001, 1002, 1003)
-name <- c("Firm A", "Firm B", "Firm C")
-ROE <- c(0.08, 0.12, 0.15)
-x <- data.frame(ID, name, ROE)
-
-##     ID   name  ROE
-## 1 1001 Firm A 0.08
-## 2 1002 Firm B 0.12
-## 3 1003 Firm C 0.15
-```
-
-## 割引率を0.1とする場合のプロジェクトXのNPVの計算
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-R <- 0.1
-NPV <- -100 + 50 / (1 + R) + 50 / (1 + R)^2 + 50 / (1 + R)^3
-
-
-```
-
-## for文を用いたプロジェクトXのNPVの計算 (1)
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-R <- 0.1
-NPV <- -100
-for (i in 1:3) {
-  NPV <- NPV + 50 / (1 + R)^i
-}
-print(NPV)
-```
-
-## for文を用いたプロジェクトXのNPVの計算 (2)
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-R <- 0.1
-NPV <- -100
-for (i in 1:3) {
-  print(NPV) # ここにprint()関数を挿入
-  NPV <- NPV + 50 / (1 + R)^i
-}
-print(NPV)
-
-
-```
-
-## NPVに基づく投資判断
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-if (NPV >= 0) {
-  print("プロジェクトを実行！")
-}
-```
-
-## 異なる割引率に対してプロジェクトXのNPVを計算した上で折れ線グラフに可視化
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-R <- seq(0.1, 0.2, length = 11) # 11次元のRベクトルを用意
-NPV <- rep(NA, length(R)) # 対応するNPVをNAで初期化（NAは欠損値の意味）
-
-for (i in 1:length(R)) { # 外側のfor文で特定の割引率を固定
-  NPV[i] <- -100
-  for (j in 1:3) { # 内側のfor文で各年度の将来キャッシュフローの現在価値を累積
-    NPV[i] <- NPV[i] + 50 / (1 + R[i])^j
-  }
-}
-
-plot(x = R, 
-     y = NPV, 
-     xlab = "Discount Rate",
-     ylab = "Present Value", 
-     type = "l",
-     main = "Figure: Discount Rate and NPV")
-```
-
-## ベクトル化によるNPVの計算
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-R <- 0.1
-CF <- c(-100, 50, 50, 50)
-years <- 0:3
-PV_CF <- CF / (1 + R)^years
-NPV <- sum(PV_CF)
-
-
-```
-
-## 任意の割引率に対して1年後に受け取る100万円の現在価値を計算する独自関数
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-calculate_PV <- function(R) {
-  PV <- 100 / (1 + R)
-  return(PV)
-}
-
-calculate_PV(0.1)
-
-
-```
-
-## よりシンプルにcalculate_PV()を定義した場合
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-calculate_PV <- function(R) 100 / (1 + R) 
-
-calculate_PV(0.1)
-
-
-```
-
-## 二つの割引率に対して現在価値を計算できるようcalculate_PV()を拡張
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-calculate_PV <- function(R1, R2 = 0) {
-  PV1 <- 100 / (1 + R1)
-  PV2 <- 100 / (1 + R2)
-  c(PV1, PV2)
-}
-
-calculate_PV(0.1, 0.2)
-
-calculate_PV(0.1)
-
-```
-
-## 任意の割引率とキャッシュフローに対して現在価値を計算できるようcalculate_PV()を拡張
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-calculate_PV <- function(R, CF) {
-  N <- length(CF) # キャッシュフローの発生する回数をNとして定義
-  PV <- CF[1]
-  for (i in 2:N) {
-    PV <- PV + CF[i] / (1 + R)^(i - 1)
-  }
-  return(PV)
-}
-
-calculate_PV(0.1, c(-100, 40, 50, 60))
-
-
-```
-
-## コメントが詳細で分かりやすいコードの例
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-# 2021年1月1日作成
-# 現在価値の計算
-
-# 任意の割引率に対して現在価値を計算するcalculate_PV()を定義
-calculate_PV <- function(R) 100 / (1 + R)
-
-# 割引率を0.1とする例
-calculate_PV(0.1)
-```
-
-## 関数内でグローバル変数の変更を試みた例
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-calculate_PV <- function(R) {
-  PV <- 100 / (1 + R)
-  R <- R + 0.01
-  return(PV)
-}
-
-R <- 0.1
-for (i in 1:11) print(calculate_PV(R))
-
-## （同じ計算結果が全部で11回繰り返し表示される）
-```
-
-## polyroot()関数に基づく3次方程式の数値解
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-polyroot(c(60, 50, 40, -100))
-
-
-```
-
-## 数値解の中から実数解を目視で選んでIRRを計算
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-solutions <- polyroot(c(60, 50, 40, -100))
-Y <- Re(solutions[3])
-IRR <- Y - 1
-
-
-```
-
-## Im()関数を用いて虚部のみ抽出
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-Im(solutions)
-
-
-```
-
-## 等価演算子==を用いて実数解かどうかを判定
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-Im(solutions) == 0
-
-
-```
-
-## 数値的誤差を許容して実数解かどうかを判定
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-error_tolerance <- 1e-10
-
-abs(Im(solutions)) # abs()関数は絶対値を返す
-
-abs(Im(solutions)) < error_tolerance
-
-```
-
-## 数値解の中から実数解を機械的に抽出
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-is_real <- (abs(Im(solutions)) < error_tolerance)
-Re(solutions[is_real]) # Re()関数は複素数の実部を返す
-
-
-```
-
-## 任意のCFに対してIRRを計算するcalculate_IRR()関数を定義
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-calculate_IRR <- function(CF) {
-  N <- length(CF) # キャッシュフローの発生する回数をNとして定義
-  solutions <- polyroot(CF[N:1]) # CFベクトルの順序を逆転させた上でpolyroot()関数に代入
-  error_tolerance <- 1e-10
-  is_real <- (abs(Im(solutions)) < error_tolerance)
-  Re(solutions[is_real]) - 1
-}
-```
-
-## calculate_IRR()関数の実行例
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-CF <- c(-100, 40, 50, 60)
-calculate_IRR(CF)
-
-# [1] 0.2164779
-```
-
-## calculate_IRR()関数の完成版（エラーメッセージ付き）
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-calculate_IRR <- function(CF) {
-  N <- length(CF) 
-  solutions <- polyroot(CF[N:1]) 
-  error_tolerance <- 1e-10
-  is_real <- (abs(Im(solutions)) < error_tolerance)
-  if (sum(is_real) != 1) stop("IRR法の適用を再考！") # !=は「左辺と右辺が等しくなければ」の意味
-  Re(solutions[is_real]) - 1
-}
-```
-
-## エラーメッセージが表示される例
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-CF <- c(-100, 100, 120, -120)
-result <- calculate_IRR(CF)
-
-##   calculate_IRR(CF) でエラー: IRR法の適用を再考！
-```
-
-## CSVファイルの読み込み
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-daily_stock_return  <- read.csv("ch03_daily_stock_return.csv") 
-```
-
-## データフレームの冒頭を確認
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-head(daily_stock_return)
-```
-
-## データフレームの行数を確認
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-nrow(daily_stock_return)
-
-
-```
-
-## データフレームの内部構造を確認
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-str(daily_stock_return)
-
-## 'data.frame':	21 obs. of  3 variables:
-## $ date : chr  "2020-04-01" "2020-04-02" "2020-04-03" "2020-04-06" ...
-## $ firm1: num  -0.03948 0.00598 0.05579 0.04193 -0.02019 ...
-## $ firm2: num  0.07696 -0.00725 -0.0173 0.00217 0.07555 ...
-```
-
-## 日次リターンの平均値を計算
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-mean(daily_stock_return$firm1)
-
-mean(daily_stock_return$firm2)
-
-```
-
-## 日次リターンの標準偏差と相関を計算
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-sd(daily_stock_return$firm1) # sdはstandard deviation（標準偏差）の略
-
-cor(daily_stock_return$firm1, daily_stock_return$firm2) # corはcorrelation（相関）の略
-
-```
-
-## 最も日次リターンが低い日付を抽出
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-worst_day_ID <- which.min(daily_stock_return$firm1) # which.min()関数で行番号を取得
-
-daily_stock_return$date[worst_day_ID] # 取得した行番号を代入して日付を取得
-
-```
-
-## 日次リターンがプラスである日付のみを抽出
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-daily_stock_return[daily_stock_return$firm1 > 0, ]$date # 企業1のみで条件付け
-# 2次元目の要素を空白とすると，全ての列が選択される
-# daily_stock_return$date[daily_stock_return$firm1 > 0]と書いても同じ
-
-
-daily_stock_return[daily_stock_return$firm1 > 0 & daily_stock_return$firm2 > 0, ]$date # 企業1と2の両方で条件付け
-
-
-```
-
-## データフレームにおける列の作成・書き換え・削除
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-daily_stock_return$difference <- daily_stock_return$firm1 - daily_stock_return$firm2  # 両銘柄の差分を計算して新しい列に保存
-daily_stock_return$firm1 <- 1 + daily_stock_return$firm1  # 企業1のネットリターンをグロスリターンに変換
-daily_stock_return$firm2 <- NULL  # 企業2のデータを削除
-```
-
-## データフレームをCSVファイルに出力
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-write.csv(daily_stock_return, "ch03_output.csv")
-```
-
-## industry列を文字型として定義
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-firm_ID <- c(1, 2, 3)
-name <- c("Firm A", "Firm B", "Firm C")
-industry <- c("Machinery", "Chemicals", "Machinery")
-
-firm_data <- data.frame(firm_ID, name, industry) 
-```
-
-## industry列をファクター型に変換
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-firm_data$industry <- as.factor(firm_data$industry)
-str(firm_data)
-
-## 'data.frame':	3 obs. of  3 variables:
-##  $ firm_ID : num  1 2 3
-##  $ name    : chr  "Firm A" "Firm B" "Firm C"
-##  $ industry: Factor w/ 2 levels "Chemicals","Machinery": 2 1 2
-```
-
-## date列を文字型として定義
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-date <- c("2021/4/1", "2021/4/2", "2021/4/5")
-stock_return <- c(0.02, -0.01, -0.02)
-
-stock_return_data <- data.frame(date, stock_return) 
-str(stock_return_data)
-
-## 'data.frame':	3 obs. of  2 variables:
-## $ date        : chr  "2021/4/1" "2021/4/2" "2021/4/5"
-## $ stock_return: num  0.02 -0.01 -0.02
-```
-
-## date列を日付型に変換
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-stock_return_data$date <- as.Date(stock_return_data$date)
-str(stock_return_data)
-
-## 'data.frame':	3 obs. of  2 variables:
-##  $ date        : Date, format: "2021-04-01" "2021-04-02" "2021-04-05"
-##  $ stock_return: num  0.02 -0.01 -0.02 
-```
-
-## 日付型の変数に対する足し算の例
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
-
-stock_return_data$date <- stock_return_data$date + 1 # 文字型の変数に足し算するとエラーになる
-head(stock_return_data)
-
-##         date stock_return
-## 1 2021-04-02         0.02
-## 2 2021-04-03        -0.01
-## 3 2021-04-06        -0.02 
-```
-
-## tidyverseのインストール
-
-```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: install-packages
+#| eval: false
 
 install.packages("tidyverse")
 ```
 
-## dplyrに含まれるnear()関数
+## 1.2 Rの基本操作
+
+### オブジェクトと代入
+
+Rでは、計算結果やデータをオブジェクトとして保存する。代入には`<-`を用いる。
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: object-assignment
 
-dplyr::near(c(1, 2, 1 + 1e-16), 1) # tidyverse::near()だとエラーになる
+risk_free_rate <- 0.01
+future_cash_flow <- 100
 
+present_value <- future_cash_flow / (1 + risk_free_rate)
 
+present_value
 ```
 
-## tidyverseの読み込み
+オブジェクト名には、内容が分かる英単語を用いる。本書では複数の単語をアンダースコアで結ぶsnake_caseを基本とする。
+
+### 四則演算と代表的な数学関数
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: arithmetic-functions
 
-library("tidyverse")
-near(c(1, 2, 1 + 1e-16), 1) # dplyr::を省略できる
+2 + 3
+10 - 4
+6 * 7
+100 / 4
+2^5
 
-
+sqrt(16)
+log(exp(1))
+abs(-3)
+round(pi, digits = 3)
+signif(pi, digits = 4)
 ```
 
-## 異なる初期投資額に対して内部収益率をそれぞれ計算
+### オブジェクトの型と構造
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: object-types
 
-initial_cost <- seq(80, 100, by = 1) # 21次元のinitial_costベクトルを用意
-IRR <- rep(NA, length(initial_cost)) # 対応するIRRをNAで初期化
+numeric_value <- 10.5
+integer_value <- 10L
+character_value <- "Finance"
+logical_value <- TRUE
 
-for (i in 1:length(initial_cost)) {
-  IRR[i] <- calculate_IRR(c(-initial_cost[i], 100)) # 各initial_costに対応してIRRを計算
+class(numeric_value)
+class(integer_value)
+class(character_value)
+class(logical_value)
+
+typeof(numeric_value)
+str(numeric_value)
+```
+
+### 欠損値
+
+欠損値は`NA`で表す。欠損値の有無は`is.na()`で確認する。
+
+```{r}
+#| label: missing-values
+
+returns_with_na <- c(0.02, NA, -0.01, 0.03)
+
+is.na(returns_with_na)
+sum(is.na(returns_with_na))
+
+mean(returns_with_na, na.rm = TRUE)
+```
+
+## 1.3 ベクトル
+
+### ベクトルの作成
+
+```{r}
+#| label: vector-creation
+
+interest_rates <- c(0.01, 0.015, 0.02)
+year_sequence <- 1:5
+fine_grid <- seq(from = 0, to = 1, by = 0.25)
+repeated_values <- rep(100, times = 5)
+
+interest_rates
+year_sequence
+fine_grid
+repeated_values
+```
+
+### ベクトルの要素
+
+Rの添字は1から始まる。
+
+```{r}
+#| label: vector-indexing
+
+interest_rates[1]
+interest_rates[2:3]
+interest_rates[-1]
+
+interest_rates[interest_rates >= 0.015]
+```
+
+### 名前付きベクトル
+
+```{r}
+#| label: named-vector
+
+portfolio_weights <- c(stock = 0.6, bond = 0.3, cash = 0.1)
+
+portfolio_weights
+portfolio_weights["bond"]
+sum(portfolio_weights)
+```
+
+### ベクトル化
+
+Rでは、多くの計算をベクトル全体に一度に適用できる。
+
+```{r}
+#| label: vectorization
+
+discount_rates <- seq(0.01, 0.05, by = 0.01)
+cash_flow <- 100
+
+present_values <- cash_flow / (1 + discount_rates)
+
+tibble(discount_rates, present_values)
+```
+
+## 1.4 行列、リスト、データフレーム
+
+### 行列
+
+```{r}
+#| label: matrix-basics
+
+return_matrix <- matrix(
+  c(0.01, 0.02, -0.01, 0.03, 0.00, 0.01),
+  nrow = 3,
+  ncol = 2,
+  byrow = TRUE
+)
+
+colnames(return_matrix) <- c("stock_a", "stock_b")
+rownames(return_matrix) <- c("month_1", "month_2", "month_3")
+
+return_matrix
+return_matrix[, "stock_a"]
+colMeans(return_matrix)
+```
+
+### リスト
+
+リストには、型や長さの異なるオブジェクトをまとめて保存できる。
+
+```{r}
+#| label: list-basics
+
+analysis_result <- list(
+  model_name = "simple return model",
+  coefficients = c(alpha = 0.001, beta = 1.05),
+  observations = 60L,
+  converged = TRUE
+)
+
+analysis_result$model_name
+analysis_result$coefficients
+analysis_result[["observations"]]
+```
+
+### データフレーム
+
+```{r}
+#| label: data-frame-basics
+
+firm_data_base <- data.frame(
+  firm_id = 1:3,
+  firm_name = c("Firm A", "Firm B", "Firm C"),
+  roe = c(0.08, 0.12, 0.15)
+)
+
+firm_data_base
+str(firm_data_base)
+```
+
+tidyverseでは、データフレームを拡張した`tibble`を用いる。
+
+```{r}
+#| label: tibble-basics
+
+firm_data <- tibble(
+  firm_id = 1:3,
+  firm_name = c("Firm A", "Firm B", "Firm C"),
+  roe = c(0.08, 0.12, 0.15)
+)
+
+firm_data
+```
+
+少量のデータを行単位で記述する場合は`tribble()`が便利である。
+
+```{r}
+#| label: tribble-basics
+
+project_data <- tribble(
+  ~project, ~initial_cost, ~cash_flow,
+  "A",             100,         120,
+  "B",             150,         175,
+  "C",             200,         215
+)
+
+project_data
+```
+
+## 1.5 条件判定と独自関数
+
+### 条件判定
+
+```{r}
+#| label: conditional-logic
+
+npv <- 5.2
+
+investment_decision <- if (npv >= 0) {
+  "投資を実行する"
+} else {
+  "投資を見送る"
 }
 
-figure_data <- data.frame(initial_cost, IRR) # 計算結果をデータフレームに格納
-head(figure_data)
+investment_decision
 ```
 
-## ggplot2を用いて初期投資額と内部収益率の関係を描画
+ベクトルに対する複数の条件分岐には`case_when()`を用いる。
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: case-when-introduction
 
-ggplot(data = figure_data) + geom_line(mapping = aes(x = initial_cost, y = IRR)) # ggplot()関数で描画オブジェクトを作成し, geom_line()関数で折れ線グラフを描画
+credit_scores <- tibble(score = c(85, 72, 58, 91))
+
+credit_scores |>
+  mutate(
+    rating = case_when(
+      score >= 80 ~ "A",
+      score >= 65 ~ "B",
+      TRUE ~ "C"
+    )
+  )
 ```
 
-## 折れ線グラフの上に点グラフを追加
+### 独自関数
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: custom-function
 
-ggplot(data = figure_data) + 
-  geom_line(mapping = aes(x = initial_cost, y = IRR)) + 
-  geom_point(mapping = aes(x = initial_cost, y = IRR)) # geom_point()関数で点グラフを描画
+calculate_present_value <- function(cash_flow, discount_rate, years = 1) {
+  cash_flow / (1 + discount_rate)^years
+}
+
+calculate_present_value(cash_flow = 100, discount_rate = 0.02, years = 3)
 ```
 
-## ggplot2で作成した図の見栄えを改善
+関数はベクトルをそのまま受け取れるように設計すると再利用しやすい。
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: vectorized-function
 
-ggplot(data = figure_data) +
-  geom_line(mapping = aes(x = initial_cost, y = IRR)) +
-  geom_point(mapping = aes(x = initial_cost, y = IRR)) +
-  labs(x = "Initial Cost", y = "IRR", title = "Initial Cost and IRR") + # 両軸の変数名やタイトルを設定
-  theme_classic() # 背景などグラフ全体の体裁（テーマ）を設定
+calculate_present_value(
+  cash_flow = c(100, 100, 100),
+  discount_rate = 0.02,
+  years = 1:3
+)
 ```
 
-## 初期投資額が100の点を強調
+## 1.6 記述統計
+
+### 代表値と散らばり
 
 ```{r}
-#| eval: true
-#| message: false
-#| warning: false
+#| label: descriptive-statistics
 
-ggplot(data = figure_data) +
-  geom_line(mapping = aes(x = initial_cost, y = IRR)) +
-  geom_point(mapping = aes(x = initial_cost, y = IRR)) +
-  labs(x = "Initial Cost", y = "IRR", title = "Initial Cost and IRR") +
-  theme_classic() +
-  annotate(geom = "text", x = 99, y = 0.05, label = "Initial Cost 100") + # 位置を指定して文字列を追加
-  annotate(geom = "segment", x = 100, xend = 100, y = 0.04, yend = 0.01, color = "black", linewidth = 0.5, arrow = arrow(length = unit(0.3, "cm"))) # 始点や終点などを指定して矢印を追加
+sample_returns <- c(0.01, 0.03, -0.02, 0.00, 0.04, 0.02)
 
-ggsave("IRR.pdf", width = 20, height = 10, units = "cm") # 完成した図をPDF型式で保存
+mean(sample_returns)
+median(sample_returns)
+min(sample_returns)
+max(sample_returns)
+range(sample_returns)
+var(sample_returns)
+sd(sample_returns)
+quantile(sample_returns)
 ```
+
+### 共分散と相関
+
+```{r}
+#| label: covariance-correlation
+
+stock_a <- c(0.01, 0.03, -0.02, 0.02, 0.04)
+stock_b <- c(0.00, 0.02, -0.01, 0.01, 0.03)
+
+cov(stock_a, stock_b)
+cor(stock_a, stock_b)
+```
+
+### 順位
+
+```{r}
+#| label: ranking
+
+firm_returns <- c(0.08, 0.12, -0.03, 0.05)
+
+rank(firm_returns)
+rank(-firm_returns)
+order(firm_returns, decreasing = TRUE)
+```
+
+## 1.7 確率分布
+
+Rの確率分布関数には共通した命名規則がある。
+
+| 接頭辞 | 内容 |
+|---|---|
+| `r` | 乱数を生成する |
+| `d` | 確率密度または確率質量を求める |
+| `p` | 累積確率を求める |
+| `q` | 累積確率に対応する分位点を求める |
+
+### 一様分布
+
+```{r}
+#| label: uniform-distribution
+
+set.seed(1234)
+
+uniform_random <- runif(n = 10, min = 0, max = 1)
+
+uniform_random
+dunif(0.5, min = 0, max = 1)
+punif(0.5, min = 0, max = 1)
+qunif(0.95, min = 0, max = 1)
+```
+
+### 正規分布
+
+```{r}
+#| label: normal-distribution
+
+set.seed(1234)
+
+normal_random <- rnorm(n = 10, mean = 0, sd = 1)
+
+normal_random
+dnorm(0, mean = 0, sd = 1)
+pnorm(1.96, mean = 0, sd = 1)
+qnorm(0.975, mean = 0, sd = 1)
+```
+
+`dnorm()`は正規分布の密度、`pnorm()`は指定した値以下となる確率、`qnorm()`は指定した累積確率に対応する分位点を返す。
+
+```{r}
+#| label: normal-probability-example
+
+probability_below <- pnorm(-0.02, mean = 0.01, sd = 0.03)
+value_at_risk_95 <- qnorm(0.05, mean = 0.01, sd = 0.03)
+
+probability_below
+value_at_risk_95
+```
+
+### 二項分布
+
+```{r}
+#| label: binomial-distribution
+
+set.seed(1234)
+
+binomial_random <- rbinom(n = 10, size = 20, prob = 0.6)
+
+binomial_random
+dbinom(12, size = 20, prob = 0.6)
+pbinom(12, size = 20, prob = 0.6)
+qbinom(0.95, size = 20, prob = 0.6)
+```
+
+### ポアソン分布
+
+```{r}
+#| label: poisson-distribution
+
+set.seed(1234)
+
+poisson_random <- rpois(n = 10, lambda = 3)
+
+poisson_random
+dpois(2, lambda = 3)
+ppois(2, lambda = 3)
+qpois(0.95, lambda = 3)
+```
+
+### 分布関数の比較
+
+```{r}
+#| label: distribution-function-table
+
+distribution_functions <- tribble(
+  ~distribution, ~random_function, ~density_function, ~cumulative_function, ~quantile_function,
+  "一様分布",    "runif()",        "dunif()",         "punif()",            "qunif()",
+  "正規分布",    "rnorm()",        "dnorm()",         "pnorm()",            "qnorm()",
+  "二項分布",    "rbinom()",       "dbinom()",        "pbinom()",           "qbinom()",
+  "ポアソン分布","rpois()",        "dpois()",         "ppois()",            "qpois()"
+)
+
+distribution_functions
+```
+
+## 1.8 プロジェクト内のデータを読み込む
+
+本書で使用するデータは、プロジェクトルートの`simulation_data`ディレクトリに置かれている。絶対パスをコードへ直接書くと、プロジェクトを別の場所へ移したときに動かなくなる。そのため、現在の作業ディレクトリと`_quarto.yml`を利用してプロジェクトルートを確認する。
+
+```{r}
+#| label: resolve-project-directory
+
+project_candidates <- unique(c(
+  Sys.getenv("QUARTO_PROJECT_DIR"),
+  getwd(),
+  dirname(getwd())
+))
+
+project_candidates <- project_candidates[nzchar(project_candidates)]
+
+project_matches <- project_candidates[
+  file.exists(file.path(project_candidates, "_quarto.yml"))
+]
+
+if (length(project_matches) == 0) {
+  stop("LagrangeFinanceのプロジェクトルートを確認できません。")
+}
+
+project_dir <- normalizePath(project_matches[1], winslash = "/", mustWork = TRUE)
+data_dir <- file.path(project_dir, "simulation_data")
+
+if (!dir.exists(data_dir)) {
+  stop("simulation_dataディレクトリが見つかりません: ", data_dir)
+}
+
+project_dir
+data_dir
+```
+
+`simulation_data`以下のCSVファイルを再帰的に確認する。
+
+```{r}
+#| label: list-simulation-data
+
+csv_paths <- list.files(
+  path = data_dir,
+  pattern = "\\.csv$",
+  full.names = TRUE,
+  recursive = TRUE
+)
+
+normalized_data_dir <- normalizePath(data_dir, winslash = "/", mustWork = TRUE)
+normalized_csv_paths <- normalizePath(csv_paths, winslash = "/", mustWork = FALSE)
+
+csv_catalog <- tibble(
+  file_name = basename(csv_paths),
+  relative_path = substring(
+    normalized_csv_paths,
+    first = nchar(normalized_data_dir) + 2
+  )
+) |>
+  arrange(relative_path)
+
+csv_catalog
+```
+
+第1章では、従来から使用している`ch03_daily_stock_return.csv`を読み込む。ファイルが`simulation_data`内のサブディレクトリに置かれていても検索できる。
+
+```{r}
+#| label: read-daily-stock-return
+
+daily_return_candidates <- csv_paths[
+  basename(csv_paths) == "ch03_daily_stock_return.csv"
+]
+
+if (length(daily_return_candidates) == 0) {
+  stop("ch03_daily_stock_return.csvがsimulation_data以下に見つかりません。")
+}
+
+daily_return_path <- daily_return_candidates[1]
+
+daily_stock_return <- readr::read_csv(
+  daily_return_path,
+  show_col_types = FALSE
+)
+
+required_columns <- c("date", "firm1", "firm2")
+missing_columns <- setdiff(required_columns, names(daily_stock_return))
+
+if (length(missing_columns) > 0) {
+  stop(
+    "必要な列が不足しています: ",
+    paste(missing_columns, collapse = ", ")
+  )
+}
+
+daily_stock_return <- daily_stock_return |>
+  mutate(date = as.Date(date))
+
+daily_stock_return
+```
+
+### データの構造を確認する
+
+```{r}
+#| label: inspect-daily-stock-return
+
+glimpse(daily_stock_return)
+summary(daily_stock_return)
+nrow(daily_stock_return)
+ncol(daily_stock_return)
+names(daily_stock_return)
+```
+
+## 1.9 dplyrによるデータ操作
+
+### 列を選ぶ
+
+```{r}
+#| label: dplyr-select
+
+daily_stock_return |>
+  select(date, firm1)
+```
+
+### 行を抽出する
+
+```{r}
+#| label: dplyr-filter
+
+daily_stock_return |>
+  filter(firm1 > 0)
+```
+
+複数の条件を同時に指定できる。
+
+```{r}
+#| label: dplyr-filter-multiple
+
+daily_stock_return |>
+  filter(firm1 > 0, firm2 > 0)
+```
+
+### 列を追加する
+
+```{r}
+#| label: dplyr-mutate
+
+return_data <- daily_stock_return |>
+  mutate(
+    spread = firm1 - firm2,
+    firm1_gross_return = 1 + firm1,
+    firm2_gross_return = 1 + firm2,
+    market_direction = case_when(
+      firm1 > 0 & firm2 > 0 ~ "both_positive",
+      firm1 < 0 & firm2 < 0 ~ "both_negative",
+      TRUE ~ "mixed"
+    )
+  )
+
+return_data
+```
+
+### 並べ替える
+
+```{r}
+#| label: dplyr-arrange
+
+return_data |>
+  arrange(firm1)
+
+return_data |>
+  arrange(desc(firm1))
+```
+
+### 要約する
+
+```{r}
+#| label: dplyr-summarise
+
+return_data |>
+  summarise(
+    observations = n(),
+    mean_firm1 = mean(firm1),
+    sd_firm1 = sd(firm1),
+    mean_firm2 = mean(firm2),
+    sd_firm2 = sd(firm2),
+    correlation = cor(firm1, firm2)
+  )
+```
+
+### グループごとに集計する
+
+```{r}
+#| label: dplyr-group-by
+
+return_data |>
+  group_by(market_direction) |>
+  summarise(
+    observations = n(),
+    mean_firm1 = mean(firm1),
+    mean_firm2 = mean(firm2),
+    .groups = "drop"
+  ) |>
+  arrange(desc(observations))
+```
+
+### 件数を数える
+
+```{r}
+#| label: dplyr-count
+
+return_data |>
+  count(market_direction, sort = TRUE)
+```
+
+### データを結合する
+
+```{r}
+#| label: dplyr-join
+
+firm_master <- tribble(
+  ~firm,  ~firm_name, ~industry,
+  "firm1", "Firm A",  "Machinery",
+  "firm2", "Firm B",  "Chemicals"
+)
+
+return_summary <- return_data |>
+  summarise(
+    firm1 = mean(firm1),
+    firm2 = mean(firm2)
+  ) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "firm",
+    values_to = "mean_return"
+  )
+
+return_summary |>
+  left_join(firm_master, by = "firm")
+```
+
+## 1.10 stringrによる文字列処理
+
+文字列処理では、関数名が`str_`で始まる`stringr`を使用する。
+
+```{r}
+#| label: stringr-basics
+
+company_names <- tibble(
+  raw_name = c(
+    "  Alpha Holdings Co., Ltd. ",
+    "Beta Financial Group",
+    "Gamma Industries"
+  )
+)
+
+company_names <- company_names |>
+  mutate(
+    clean_name = str_squish(raw_name),
+    lower_name = str_to_lower(clean_name),
+    name_length = str_length(clean_name),
+    contains_group = str_detect(clean_name, regex("group", ignore_case = TRUE)),
+    first_word = str_extract(clean_name, "^[A-Za-z]+")
+  )
+
+company_names
+```
+
+### 置換と結合
+
+```{r}
+#| label: stringr-replace-combine
+
+company_names |>
+  mutate(
+    short_name = str_remove(clean_name, regex(" co\\., ltd\\.$", ignore_case = TRUE)),
+    display_name = str_c(first_word, " / ", name_length, " characters")
+  ) |>
+  select(clean_name, short_name, display_name)
+```
+
+## 1.11 tidyrによるデータ整形
+
+### wide形式からlong形式へ変換する
+
+元のデータでは、`firm1`と`firm2`が別々の列に格納されている。`pivot_longer()`を使うと、企業名とリターンをそれぞれ一つの列へまとめられる。
+
+```{r}
+#| label: pivot-longer
+
+return_long <- daily_stock_return |>
+  pivot_longer(
+    cols = c(firm1, firm2),
+    names_to = "firm",
+    values_to = "return"
+  )
+
+return_long
+```
+
+### long形式からwide形式へ戻す
+
+```{r}
+#| label: pivot-wider
+
+return_long |>
+  pivot_wider(
+    names_from = firm,
+    values_from = return
+  )
+```
+
+### 文字列を複数列へ分ける
+
+```{r}
+#| label: separate-wider-delim
+
+security_codes <- tibble(
+  security_id = c("JP-1001", "JP-1002", "US-2001")
+)
+
+security_codes |>
+  separate_wider_delim(
+    security_id,
+    delim = "-",
+    names = c("country", "code")
+  )
+```
+
+### 欠損値を処理する
+
+```{r}
+#| label: tidyr-missing-values
+
+missing_data <- tibble(
+  firm = c("A", "B", "C"),
+  return = c(0.02, NA, -0.01)
+)
+
+missing_data |>
+  replace_na(list(return = 0))
+
+missing_data |>
+  drop_na()
+```
+
+## 1.12 purrrによる反復処理
+
+### map()と型を指定するmap系関数
+
+`map()`は結果をリストとして返す。数値ベクトルが必要な場合は`map_dbl()`を用いる。
+
+```{r}
+#| label: purrr-map
+
+discount_rates <- c(0.01, 0.02, 0.03, 0.04)
+
+discount_rates |>
+  map(\(rate) calculate_present_value(100, rate))
+```
+
+```{r}
+#| label: purrr-map-dbl
+
+present_value_table <- tibble(
+  discount_rate = discount_rates,
+  present_value = discount_rates |>
+    map_dbl(\(rate) calculate_present_value(100, rate))
+)
+
+present_value_table
+```
+
+### map2()で二つのベクトルを同時に処理する
+
+```{r}
+#| label: purrr-map2
+
+cash_flows <- c(100, 120, 150)
+years <- c(1, 2, 3)
+
+map2_dbl(
+  cash_flows,
+  years,
+  \(cash_flow, year) calculate_present_value(cash_flow, 0.02, year)
+)
+```
+
+### pmap()で複数の列を処理する
+
+```{r}
+#| label: purrr-pmap
+
+cash_flow_scenarios <- tribble(
+  ~cash_flow, ~discount_rate, ~years,
+         100,           0.01,      1,
+         120,           0.02,      2,
+         150,           0.03,      3
+)
+
+cash_flow_scenarios |>
+  mutate(
+    present_value = pmap_dbl(
+      list(cash_flow, discount_rate, years),
+      \(cash_flow, discount_rate, years) {
+        calculate_present_value(cash_flow, discount_rate, years)
+      }
+    )
+  )
+```
+
+### 複数列へ同じ集計を適用する
+
+```{r}
+#| label: purrr-column-summary
+
+return_columns <- c("firm1", "firm2")
+
+return_columns |>
+  map_dfr(
+    \(column_name) {
+      values <- daily_stock_return[[column_name]]
+
+      tibble(
+        firm = column_name,
+        observations = length(values),
+        mean = mean(values),
+        standard_deviation = sd(values),
+        minimum = min(values),
+        maximum = max(values)
+      )
+    }
+  )
+```
+
+### 複数の確率分布を同じ形式で生成する
+
+```{r}
+#| label: purrr-distribution-simulation
+
+set.seed(1234)
+
+distribution_specs <- tribble(
+  ~distribution, ~generator,
+  "uniform",      \(n) runif(n, min = -1, max = 1),
+  "normal",       \(n) rnorm(n, mean = 0, sd = 1),
+  "poisson",      \(n) rpois(n, lambda = 3)
+)
+
+simulated_distributions <- distribution_specs |>
+  mutate(values = map(generator, \(generator) generator(1000))) |>
+  select(-generator) |>
+  unnest_longer(values)
+
+simulated_distributions
+```
+
+### walk()で副作用だけを実行する
+
+`walk()`は、返り値を保存するのではなく、表示などの副作用だけを順番に実行するときに使う。
+
+```{r}
+#| label: purrr-walk
+
+c("firm1", "firm2") |>
+  walk(\(firm) print(str_c("集計対象: ", firm)))
+```
+
+## 1.13 ggplot2による可視化
+
+`ggplot2`では、データを`ggplot()`へ渡し、`aes()`で変数と視覚要素の対応を指定し、`geom_*()`で図形を追加する。
+
+### 折れ線グラフ
+
+```{r}
+#| label: ggplot-line
+#| fig-width: 8
+#| fig-height: 5
+
+return_long |>
+  ggplot(aes(x = date, y = return, linetype = firm)) +
+  geom_line(linewidth = 0.7) +
+  labs(
+    x = "Date",
+    y = "Daily Return",
+    linetype = "Firm"
+  ) +
+  theme_classic()
+```
+
+### ヒストグラム
+
+```{r}
+#| label: ggplot-histogram
+#| fig-width: 8
+#| fig-height: 5
+
+return_long |>
+  ggplot(aes(x = return)) +
+  geom_histogram(bins = 10, boundary = 0) +
+  facet_wrap(vars(firm), ncol = 1) +
+  labs(
+    x = "Daily Return",
+    y = "Count"
+  ) +
+  theme_classic()
+```
+
+### 密度関数
+
+```{r}
+#| label: ggplot-density
+#| fig-width: 8
+#| fig-height: 5
+
+return_long |>
+  ggplot(aes(x = return, linetype = firm)) +
+  geom_density(linewidth = 0.8) +
+  labs(
+    x = "Daily Return",
+    y = "Density",
+    linetype = "Firm"
+  ) +
+  theme_classic()
+```
+
+### 正規分布の密度と累積分布
+
+```{r}
+#| label: ggplot-normal-functions
+#| fig-width: 8
+#| fig-height: 5
+
+normal_curve <- tibble(
+  x = seq(-4, 4, length.out = 401),
+  density = dnorm(x),
+  cumulative_probability = pnorm(x)
+)
+
+normal_curve |>
+  pivot_longer(
+    cols = c(density, cumulative_probability),
+    names_to = "function_type",
+    values_to = "value"
+  ) |>
+  ggplot(aes(x = x, y = value)) +
+  geom_line(linewidth = 0.8) +
+  facet_wrap(vars(function_type), scales = "free_y", ncol = 1) +
+  labs(
+    x = "x",
+    y = NULL
+  ) +
+  theme_classic()
+```
+
+### シミュレーション結果を比較する
+
+```{r}
+#| label: ggplot-simulated-distributions
+#| fig-width: 8
+#| fig-height: 5
+
+simulated_distributions |>
+  ggplot(aes(x = values)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(vars(distribution), scales = "free") +
+  labs(
+    x = "Simulated Value",
+    y = "Count"
+  ) +
+  theme_classic()
+```
+
+## 1.14 総合演習
+
+最後に、`simulation_data`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
+
+### 分析用データを作る
+
+```{r}
+#| label: integrated-analysis-data
+
+analysis_data <- daily_stock_return |>
+  pivot_longer(
+    cols = c(firm1, firm2),
+    names_to = "firm",
+    values_to = "return"
+  ) |>
+  mutate(
+    gross_return = 1 + return,
+    direction = case_when(
+      return > 0 ~ "positive",
+      return < 0 ~ "negative",
+      TRUE ~ "zero"
+    )
+  ) |>
+  arrange(firm, date)
+
+analysis_data
+```
+
+### 企業別の要約統計量を計算する
+
+```{r}
+#| label: integrated-analysis-summary
+
+firm_summary <- analysis_data |>
+  group_by(firm) |>
+  summarise(
+    observations = n(),
+    mean_return = mean(return),
+    standard_deviation = sd(return),
+    minimum_return = min(return),
+    maximum_return = max(return),
+    positive_ratio = mean(return > 0),
+    .groups = "drop"
+  )
+
+firm_summary
+```
+
+### 累積リターンを計算する
+
+```{r}
+#| label: integrated-analysis-cumulative
+
+cumulative_return_data <- analysis_data |>
+  group_by(firm) |>
+  mutate(
+    cumulative_gross_return = cumprod(gross_return),
+    cumulative_return = cumulative_gross_return - 1
+  ) |>
+  ungroup()
+
+cumulative_return_data
+```
+
+### purrrで企業別の統計量を再計算する
+
+```{r}
+#| label: integrated-analysis-purrr
+
+firm_names <- unique(analysis_data$firm)
+
+firm_names |>
+  map_dfr(
+    \(firm_name) {
+      firm_returns <- analysis_data |>
+        filter(firm == firm_name) |>
+        pull(return)
+
+      tibble(
+        firm = firm_name,
+        mean_return = mean(firm_returns),
+        volatility = sd(firm_returns),
+        lower_5_percent = quantile(firm_returns, 0.05),
+        upper_95_percent = quantile(firm_returns, 0.95)
+      )
+    }
+  )
+```
+
+### 累積リターンを可視化する
+
+```{r}
+#| label: integrated-analysis-plot
+#| fig-width: 8
+#| fig-height: 5
+
+cumulative_return_data |>
+  ggplot(aes(x = date, y = cumulative_return, linetype = firm)) +
+  geom_line(linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  labs(
+    x = "Date",
+    y = "Cumulative Return",
+    linetype = "Firm"
+  ) +
+  theme_classic()
+```
+
+## 1.15 まとめ
+
+本章では、Base Rの基本的なデータ構造と関数から出発し、記述統計、確率分布、tidyverseによるデータ分析までを一通り確認した。重要な点は次のとおりである。
+
+- オブジェクト名には内容を表すsnake_caseを用いる。
+- 同じ計算を複数の値へ適用するときは、まずベクトル化を検討する。
+- 反復処理が必要な場合は`purrr::map()`系関数を用いる。
+- データ操作は`dplyr`、文字列処理は`stringr`、整形は`tidyr`を用いる。
+- パイプ演算子は`|>`に統一する。
+- グラフは`ggplot2`でデータ、変数、図形を分けて組み立てる。
+- データファイルは絶対パスではなく、プロジェクトルートを基準に読み込む。
+
+次章以降では、本章で学んだ操作を用いて、財務データと株式データの分析を進める。
