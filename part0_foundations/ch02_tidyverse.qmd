@@ -1,3 +1,0 @@
-# Ch02 tidyverse
-
-dplyr, tidyr, stringr, lubridate, purrr, ggplot2.

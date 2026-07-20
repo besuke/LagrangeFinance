@@ -1,3 +1,0 @@
-# Ch03 Financial Data Structures
-
-tibble, date, time series, cash-flow tables.

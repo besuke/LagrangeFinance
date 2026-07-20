@@ -24,3 +24,13 @@ simulation_data/derived/
 *.patch
 part1_empirical/PV.png
 part1_empirical/IRR.pdf
+
+# Local cleanup and rendering intermediates
+_render_single/
+commit_and_clean_lagrangefinance*.ps1
+clean_lagrangefinance_local*.ps1
+render_html*.log
+index.aux
+index.log
+index.tex
+index.toc
