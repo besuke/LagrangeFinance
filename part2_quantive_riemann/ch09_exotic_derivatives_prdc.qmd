@@ -34,12 +34,13 @@ $$
 
 ここで、
 
-- \(S_t\) はCoupon決定日における為替レート
-- \(S_0\) はCoupon計算上の基準為替レート
-- \(a\) は為替連動係数
-- \(b\) は固定控除率
-- \(C_{\min}\) はCoupon Floor
-- \(C_{\max}\) はCoupon Cap
+- $S_t$ はCoupon決定日における為替レート
+- $S_0$ はCoupon計算上の基準為替レート
+- $a$ は為替連動係数
+- $b$ は固定控除率
+- $C_{\min}$ はCoupon Floor
+
+- $C_{\max}$ はCoupon Cap
 
 である。
 
@@ -618,7 +619,7 @@ E[C(S_{t_i})]
 C(S_{t_i}^{(j)})
 $$
 
-ここで、\(M\)はパス数、\(S_{t_i}^{(j)}\)はパス \(j\) におけるCoupon日 \(t_i\) のFX Rateである。
+ここで、$M$はパス数、$S_{t_i}^{(j)}$はパス $j$ におけるCoupon日 $t_i$ のFX Rateである。
 
 各Coupon cash flowは、
 
@@ -1048,7 +1049,7 @@ print(volatility_sensitivity_plot)
 
 Monte Carlo推定値には統計誤差が存在する。各パスについて全CouponとRedemptionの現在価値を計算し、標本平均、標準偏差、標準誤差および信頼区間を求める。
 
-標準誤差は、パス現在価値の標準偏差を \(\widehat{\sigma}_{PV}\)、パス数を \(M\) とすると、
+標準誤差は、パス現在価値の標準偏差を $\widehat{\sigma}_{PV}$、パス数を $M$ とすると、
 
 $$
 SE
