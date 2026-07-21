@@ -21,8 +21,16 @@
 #| message: false
 #| warning: false
 
-library(tidyverse)
-library(broom)
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(ggthemes)
+  library(QuantLib)
+  library(GaussQuant)
+  library(tidyverse)
+  library(broom)
+})
+
 ```
 
 パッケージをまだインストールしていない場合だけ、次のコードをRコンソールで実行する。

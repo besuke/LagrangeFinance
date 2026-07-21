@@ -57,10 +57,14 @@ knitr::opts_chunk$set(
   message = FALSE
 )
 
+
 suppressPackageStartupMessages({
   library(tidyverse)
+  library(ggthemes)
   library(QuantLib)
   library(GaussQuant)
+  library(tidyverse)
+  library(broom)
 })
 ```
 

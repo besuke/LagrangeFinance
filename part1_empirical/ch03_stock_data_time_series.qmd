@@ -23,6 +23,13 @@
 #| message: false
 #| warning: false
 
+
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(ggthemes)
+  library(QuantLib)
+  library(GaussQuant)
+})
 library(tidyverse)
 library(broom)
 ```

@@ -20,7 +20,13 @@ Base Rの項目構成は、Positが公開している[Base R Cheatsheet](https:/
 ```{r}
 #| label: load-packages
 
-library(tidyverse)
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(ggthemes)
+  library(QuantLib)
+  library(GaussQuant)
+})
+
 ```
 
 パッケージが未導入の場合は、RStudioのConsoleで一度だけ次を実行する。

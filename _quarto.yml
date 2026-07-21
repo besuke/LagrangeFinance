@@ -1,9 +1,9 @@
 project:
   type: book
-
+  execute-dir: project
 book:
   title: "ラグランジェ・ファイナンス"
-  subtitle: "金融工学システム構築入門"
+  subtitle: "First Step in Quant Technology"
   author: "Eiichi Horigome"
 
   chapters:

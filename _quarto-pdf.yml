@@ -1,0 +1,50 @@
+book:
+  title: "ラグランジェ・ファイナンス"
+  subtitle: "Quant Technology 1st Step"
+  author: "Eiichi Horigome"
+  output-file: "lagrange-finance"
+
+format:
+  pdf:
+    pdf-engine: lualatex
+    documentclass: ltjsbook
+    papersize: a4
+    toc: true
+    number-sections: false
+    keep-tex: true
+
+    classoption:
+      - openany
+
+    include-in-header:
+      text: |
+        \usepackage[haranoaji]{luatexja-preset}
+        \usepackage{titling}
+
+        \pretitle{%
+          \begin{center}
+          \fontsize{30}{36}\selectfont
+          \bfseries
+        }
+
+        \posttitle{%
+          \par
+          \end{center}
+          \vskip 1.5em
+        }
+
+        \preauthor{%
+          \begin{center}
+          \large
+        }
+
+        \postauthor{%
+          \par
+          \end{center}
+        }
+
+    geometry:
+      - top=25mm
+      - bottom=25mm
+      - left=25mm
+      - right=25mm
