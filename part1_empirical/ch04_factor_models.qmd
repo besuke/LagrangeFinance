@@ -14,7 +14,7 @@
 
 反復処理には明示的な `for` 文を使わず、`purrr::map()` 系を利用する。パイプ演算子は native pipe の `|>` に統一する。
 
-## パッケージの準備
+## 4.1 パッケージの準備
 
 ```{r}
 #| label: load-packages
@@ -42,7 +42,7 @@ suppressPackageStartupMessages({
 install.packages(c("tidyverse", "broom"))
 ```
 
-## プロジェクトとデータディレクトリ
+## 4.2 プロジェクトとデータディレクトリ
 
 RStudioでチャンクを個別実行する場合と、Quartoで章全体をレンダリングする場合の両方に対応するため、プロジェクトルートを実行時に確認する。
 
@@ -90,7 +90,7 @@ data_dir
 derived_data_dir
 ```
 
-## 第3章の出力を読み込む
+## 4.3 第3章の出力を読み込む
 
 第3章では次の2ファイルを作成した。
 
@@ -185,7 +185,7 @@ input_data_overview <- tribble(
 input_data_overview
 ```
 
-## 必須列とパネルキー
+## 4.4 必須列とパネルキー
 
 ```{r}
 #| label: validate-input-columns
@@ -247,7 +247,7 @@ if (nrow(annual_key_duplicates) > 0) {
 }
 ```
 
-## 補助関数
+## 4.5 補助関数
 
 ```{r}
 #| label: define-summary-helpers
@@ -296,7 +296,7 @@ significance_stars <- function(p_value) {
 }
 ```
 
-## 前年度情報の準備
+## 4.6 前年度情報の準備
 
 ポートフォリオ形成には、リターンが実現する年度より前に利用可能な情報だけを使う。本章では、年度 $t$ の月次リターンに対して、年度 $t-1$ 末の時価総額と株主資本を用いる。
 
@@ -354,7 +354,7 @@ lagged_variable_availability <- annual_data |>
 lagged_variable_availability
 ```
 
-## 市場ポートフォリオ
+## 4.7 市場ポートフォリオ
 
 年度 $t$ の企業 $i$ の市場ポートフォリオ・ウェイト $w^M_{i,t}$ は、前年度末時価総額から計算する。
 
@@ -530,7 +530,7 @@ market_return_data |>
   theme_classic()
 ```
 
-## ポートフォリオ形成データ
+## 4.8 ポートフォリオ形成データ
 
 企業規模と簿価時価比率の両方が利用可能な企業を共通の形成ユニバースとする。
 
@@ -662,7 +662,7 @@ if (nrow(empty_portfolios) > 0) {
 ```
 
 
-## 企業規模10分位ポートフォリオ
+## 4.9 企業規模10分位ポートフォリオ
 
 企業規模10分位ごとに、等加重リターンと前年度末時価総額加重リターンを計算する。
 
@@ -800,7 +800,7 @@ size_decile_summary |>
   theme_classic()
 ```
 
-## 簿価時価比率10分位ポートフォリオ
+## 4.10 簿価時価比率10分位ポートフォリオ
 
 ```{r}
 #| label: calculate-beme-decile-returns
@@ -918,7 +918,7 @@ BEME_decile_summary |>
   theme_classic()
 ```
 
-## CAPMの推定
+## 4.11 CAPMの推定
 
 CAPMでは、ポートフォリオ $p$ の超過リターンを市場超過リターンで説明する。
 
@@ -1148,7 +1148,7 @@ security_market_line_data |>
   theme_classic()
 ```
 
-## 2×3 Size--BE/MEポートフォリオ
+## 4.12 2×3 Size--BE/MEポートフォリオ
 
 Fama--French型のSMBとHMLを作成するため、企業規模をSmallとBigの2群、簿価時価比率をLow、Neutral、Highの3群に分ける。
 
@@ -1320,7 +1320,7 @@ FF_portfolio_returns |>
   theme_classic()
 ```
 
-## SMBとHML
+## 4.13 SMBとHML
 
 SMBはSmallポートフォリオの平均リターンからBigポートフォリオの平均リターンを引いて計算する。
 
@@ -1451,7 +1451,7 @@ if (nrow(invalid_factor_rows) > 0) {
 ```
 
 
-## ファクターの要約統計量
+## 4.14 ファクターの要約統計量
 
 複数のファクターを `map_dfr()` で同じ形式に集計する。
 
@@ -1550,7 +1550,7 @@ factor_data |>
   theme_classic()
 ```
 
-## FF3モデルの推定
+## 4.15 FF3モデルの推定
 
 Fama--Frenchの3ファクター・モデルは、ポートフォリオの超過リターンを市場、SMB、HMLで説明する。
 
@@ -1726,7 +1726,7 @@ FF3_alpha |>
   theme_classic()
 ```
 
-## CAPMとFF3の比較
+## 4.16 CAPMとFF3の比較
 
 ```{r}
 #| label: compare-model-alpha
@@ -1848,7 +1848,7 @@ model_fit_comparison |>
   theme_classic()
 ```
 
-## ファクター・データの保存
+## 4.17 ファクター・データの保存
 
 第5章以降で使用するファクター・データを、`simulation_data/derived/ch06_output.csv` に保存する。
 
@@ -1932,7 +1932,7 @@ tibble(
 )
 ```
 
-## まとめ
+## 4.18 まとめ
 
 本章では、前年度末時価総額を用いて市場ポートフォリオと企業規模ポートフォリオを構築した。さらに、企業規模と簿価時価比率による独立2×3ソートから6ポートフォリオを作成し、SMBとHMLを計算した。
 

@@ -1,0 +1,399 @@
+lagrange-finance.tex:147: trailing whitespace.
+[32m+[m[41m [m
+lagrange-finance.tex:627: trailing whitespace.
+[32m+[m[32mstock  bond  cash[m[41m [m
+lagrange-finance.tex:628: trailing whitespace.
+[32m+[m[32m  0.6   0.3   0.1[m[41m [m
+lagrange-finance.tex:638: trailing whitespace.
+[32m+[m[32mbond[m[41m [m
+lagrange-finance.tex:639: trailing whitespace.
+[32m+[m[32m 0.3[m[41m [m
+lagrange-finance.tex:713: trailing whitespace.
+[32m+[m[32mmonth_1 month_2 month_3[m[41m [m
+lagrange-finance.tex:714: trailing whitespace.
+[32m+[m[32m   0.01   -0.01    0.00[m[41m [m
+lagrange-finance.tex:724: trailing whitespace.
+[32m+[m[32mstock_a stock_b[m[41m [m
+lagrange-finance.tex:725: trailing whitespace.
+[32m+[m[32m   0.00    0.02[m[41m [m
+lagrange-finance.tex:756: trailing whitespace.
+[32m+[m[32malpha  beta[m[41m [m
+lagrange-finance.tex:757: trailing whitespace.
+[32m+[m[32m0.001 1.050[m[41m [m
+lagrange-finance.tex:894: trailing whitespace.
+[32m+[m[32m  <dbl> <chr>[m[41m [m
+lagrange-finance.tex:895: trailing whitespace.
+[32m+[m[32m1    85 A[m[41m     [m
+lagrange-finance.tex:896: trailing whitespace.
+[32m+[m[32m2    72 B[m[41m     [m
+lagrange-finance.tex:897: trailing whitespace.
+[32m+[m[32m3    58 C[m[41m     [m
+lagrange-finance.tex:898: trailing whitespace.
+[32m+[m[32m4    91 A[m[41m     [m
+lagrange-finance.tex:1016: trailing whitespace.
+[32m+[m[32m     0%     25%     50%     75%    100%[m[41m [m
+lagrange-finance.tex:1017: trailing whitespace.
+[32m+[m[32m-0.0200  0.0025  0.0150  0.0275  0.0400[m[41m [m
+lagrange-finance.tex:1328: trailing whitespace.
+[32m+[m[32m  <chr>        <chr>           <chr>            <chr>[m[41m              [m
+lagrange-finance.tex:1329: trailing whitespace.
+[32m+[m[32m1 一様分布     runif()         dunif()          punif()[m[41m            [m
+lagrange-finance.tex:1330: trailing whitespace.
+[32m+[m[32m2 正規分布     rnorm()         dnorm()          pnorm()[m[41m            [m
+lagrange-finance.tex:1331: trailing whitespace.
+[32m+[m[32m3 二項分布     rbinom()        dbinom()         pbinom()[m[41m           [m
+lagrange-finance.tex:1332: trailing whitespace.
+[32m+[m[32m4 ポアソン分布 rpois()         dpois()          ppois()[m[41m            [m
+lagrange-finance.tex:1413: trailing whitespace.
+[32m+[m[32m   file_name                    relative_path[m[41m               [m
+lagrange-finance.tex:1414: trailing whitespace.
+[32m+[m[32m   <chr>                        <chr>[m[41m                       [m
+lagrange-finance.tex:1415: trailing whitespace.
+[32m+[m[32m 1 ch03_daily_stock_return.csv  ch03_daily_stock_return.csv[m[41m [m
+lagrange-finance.tex:1416: trailing whitespace.
+[32m+[m[32m 2 ch03_output.csv              ch03_output.csv[m[41m             [m
+lagrange-finance.tex:1417: trailing whitespace.
+[32m+[m[32m 3 ch04_financial_data.csv      ch04_financial_data.csv[m[41m     [m
+lagrange-finance.tex:1418: trailing whitespace.
+[32m+[m[32m 4 ch04_output.csv              ch04_output.csv[m[41m             [m
+lagrange-finance.tex:1421: trailing whitespace.
+[32m+[m[32m 7 ch05_messy_stock_return.csv  ch05_messy_stock_return.csv[m[41m [m
+lagrange-finance.tex:1422: trailing whitespace.
+[32m+[m[32m 8 ch05_output1.csv             ch05_output1.csv[m[41m            [m
+lagrange-finance.tex:1423: trailing whitespace.
+[32m+[m[32m 9 ch05_output2.csv             ch05_output2.csv[m[41m            [m
+lagrange-finance.tex:1424: trailing whitespace.
+[32m+[m[32m10 ch05_stock_data.csv          ch05_stock_data.csv[m[41m         [m
+lagrange-finance.tex:1468: trailing whitespace.
+[32m+[m[32m 1 2020-04-01 -0.0395   0.0770[m[41m [m
+lagrange-finance.tex:1470: trailing whitespace.
+[32m+[m[32m 3 2020-04-03  0.0558  -0.0173[m[41m [m
+lagrange-finance.tex:1472: trailing whitespace.
+[32m+[m[32m 5 2020-04-07 -0.0202   0.0755[m[41m [m
+lagrange-finance.tex:1473: trailing whitespace.
+[32m+[m[32m 6 2020-04-08 -0.00229 -0.0962[m[41m [m
+lagrange-finance.tex:1474: trailing whitespace.
+[32m+[m[32m 7 2020-04-09  0.0817   0.0788[m[41m [m
+lagrange-finance.tex:1475: trailing whitespace.
+[32m+[m[32m 8 2020-04-10  0.0346   0.0215[m[41m [m
+lagrange-finance.tex:1476: trailing whitespace.
+[32m+[m[32m 9 2020-04-13  0.0326   0.135[m[41m  [m
+lagrange-finance.tex:1477: trailing whitespace.
+[32m+[m[32m10 2020-04-14 -0.0377   0.0380[m[41m [m
+lagrange-finance.tex:1504: trailing whitespace.
+[32m+[m[32m      date                firm1               firm2[m[41m           [m
+lagrange-finance.tex:1505: trailing whitespace.
+[32m+[m[32m Min.   :2020-04-01   Min.   :-0.072071   Min.   :-0.0962117[m[41m  [m
+lagrange-finance.tex:1506: trailing whitespace.
+[32m+[m[32m 1st Qu.:2020-04-08   1st Qu.:-0.027029   1st Qu.:-0.0196147[m[41m  [m
+lagrange-finance.tex:1507: trailing whitespace.
+[32m+[m[32m Median :2020-04-15   Median : 0.005979   Median :-0.0003056[m[41m  [m
+lagrange-finance.tex:1508: trailing whitespace.
+[32m+[m[32m Mean   :2020-04-15   Mean   : 0.014161   Mean   : 0.0080253[m[41m  [m
+lagrange-finance.tex:1509: trailing whitespace.
+[32m+[m[32m 3rd Qu.:2020-04-22   3rd Qu.: 0.044812   3rd Qu.: 0.0379793[m[41m  [m
+lagrange-finance.tex:1510: trailing whitespace.
+[32m+[m[32m Max.   :2020-04-30   Max.   : 0.171297   Max.   : 0.1352008[m[41m  [m
+lagrange-finance.tex:1559: trailing whitespace.
+[32m+[m[32m 1 2020-04-01 -0.0395[m[41m [m
+lagrange-finance.tex:1561: trailing whitespace.
+[32m+[m[32m 3 2020-04-03  0.0558[m[41m [m
+lagrange-finance.tex:1562: trailing whitespace.
+[32m+[m[32m 4 2020-04-06  0.0419[m[41m [m
+lagrange-finance.tex:1563: trailing whitespace.
+[32m+[m[32m 5 2020-04-07 -0.0202[m[41m [m
+lagrange-finance.tex:1565: trailing whitespace.
+[32m+[m[32m 7 2020-04-09  0.0817[m[41m [m
+lagrange-finance.tex:1566: trailing whitespace.
+[32m+[m[32m 8 2020-04-10  0.0346[m[41m [m
+lagrange-finance.tex:1567: trailing whitespace.
+[32m+[m[32m 9 2020-04-13  0.0326[m[41m [m
+lagrange-finance.tex:1568: trailing whitespace.
+[32m+[m[32m10 2020-04-14 -0.0377[m[41m [m
+lagrange-finance.tex:1586: trailing whitespace.
+[32m+[m[32m 2 2020-04-03 0.0558  -0.0173[m[41m [m
+lagrange-finance.tex:1588: trailing whitespace.
+[32m+[m[32m 4 2020-04-09 0.0817   0.0788[m[41m [m
+lagrange-finance.tex:1589: trailing whitespace.
+[32m+[m[32m 5 2020-04-10 0.0346   0.0215[m[41m [m
+lagrange-finance.tex:1590: trailing whitespace.
+[32m+[m[32m 6 2020-04-13 0.0326   0.135[m[41m  [m
+lagrange-finance.tex:1591: trailing whitespace.
+[32m+[m[32m 7 2020-04-15 0.00988  0.0114[m[41m [m
+lagrange-finance.tex:1592: trailing whitespace.
+[32m+[m[32m 8 2020-04-17 0.171    0.0395[m[41m [m
+lagrange-finance.tex:1593: trailing whitespace.
+[32m+[m[32m 9 2020-04-20 0.0463   0.0373[m[41m [m
+lagrange-finance.tex:1594: trailing whitespace.
+[32m+[m[32m10 2020-04-22 0.0515  -0.0538[m[41m [m
+lagrange-finance.tex:1595: trailing whitespace.
+[32m+[m[32m11 2020-04-27 0.00454 -0.0196[m[41m [m
+lagrange-finance.tex:1596: trailing whitespace.
+[32m+[m[32m12 2020-04-30 0.0448  -0.0134[m[41m [m
+lagrange-finance.tex:1613: trailing whitespace.
+[32m+[m[32m2 2020-04-09 0.0817  0.0788[m[41m [m
+lagrange-finance.tex:1614: trailing whitespace.
+[32m+[m[32m3 2020-04-10 0.0346  0.0215[m[41m [m
+lagrange-finance.tex:1615: trailing whitespace.
+[32m+[m[32m4 2020-04-13 0.0326  0.135[m[41m  [m
+lagrange-finance.tex:1616: trailing whitespace.
+[32m+[m[32m5 2020-04-15 0.00988 0.0114[m[41m [m
+lagrange-finance.tex:1617: trailing whitespace.
+[32m+[m[32m6 2020-04-17 0.171   0.0395[m[41m [m
+lagrange-finance.tex:1618: trailing whitespace.
+[32m+[m[32m7 2020-04-20 0.0463  0.0373[m[41m [m
+lagrange-finance.tex:1645: trailing whitespace.
+[32m+[m[32m 1 2020-04-01 -0.0395   0.0770  -0.116                0.961              1.08[m[41m [m
+lagrange-finance.tex:1648: trailing whitespace.
+[32m+[m[32m 4 2020-04-06  0.0419   0.00217  0.0398               1.04               1.00[m[41m [m
+lagrange-finance.tex:1649: trailing whitespace.
+[32m+[m[32m 5 2020-04-07 -0.0202   0.0755  -0.0957               0.980              1.08[m[41m [m
+lagrange-finance.tex:1651: trailing whitespace.
+[32m+[m[32m 7 2020-04-09  0.0817   0.0788   0.00286              1.08               1.08[m[41m [m
+lagrange-finance.tex:1652: trailing whitespace.
+[32m+[m[32m 8 2020-04-10  0.0346   0.0215   0.0130               1.03               1.02[m[41m [m
+lagrange-finance.tex:1653: trailing whitespace.
+[32m+[m[32m 9 2020-04-13  0.0326   0.135   -0.103                1.03               1.14[m[41m [m
+lagrange-finance.tex:1654: trailing whitespace.
+[32m+[m[32m10 2020-04-14 -0.0377   0.0380  -0.0756               0.962              1.04[m[41m [m
+lagrange-finance.tex:1674: trailing whitespace.
+[32m+[m[32m 3 2020-04-01 -0.0395   0.0770   -0.116                0.961              1.08[m[41m [m
+lagrange-finance.tex:1675: trailing whitespace.
+[32m+[m[32m 4 2020-04-14 -0.0377   0.0380   -0.0756               0.962              1.04[m[41m [m
+lagrange-finance.tex:1678: trailing whitespace.
+[32m+[m[32m 7 2020-04-07 -0.0202   0.0755   -0.0957               0.980              1.08[m[41m [m
+lagrange-finance.tex:1697: trailing whitespace.
+[32m+[m[32m 1 2020-04-17 0.171    0.0395   0.132                 1.17              1.04[m[41m [m
+lagrange-finance.tex:1698: trailing whitespace.
+[32m+[m[32m 2 2020-04-09 0.0817   0.0788   0.00286               1.08              1.08[m[41m [m
+lagrange-finance.tex:1701: trailing whitespace.
+[32m+[m[32m 5 2020-04-20 0.0463   0.0373   0.00905               1.05              1.04[m[41m [m
+lagrange-finance.tex:1703: trailing whitespace.
+[32m+[m[32m 7 2020-04-06 0.0419   0.00217  0.0398                1.04              1.00[m[41m [m
+lagrange-finance.tex:1704: trailing whitespace.
+[32m+[m[32m 8 2020-04-10 0.0346   0.0215   0.0130                1.03              1.02[m[41m [m
+lagrange-finance.tex:1705: trailing whitespace.
+[32m+[m[32m 9 2020-04-13 0.0326   0.135   -0.103                 1.03              1.14[m[41m [m
+lagrange-finance.tex:1706: trailing whitespace.
+[32m+[m[32m10 2020-04-15 0.00988  0.0114  -0.00155               1.01              1.01[m[41m [m
+lagrange-finance.tex:1755: trailing whitespace.
+[32m+[m[32m2 both_positive               7    0.0598     0.0466[m[41m [m
+lagrange-finance.tex:1756: trailing whitespace.
+[32m+[m[32m3 both_negative               6   -0.0310    -0.0394[m[41m [m
+lagrange-finance.tex:1805: trailing whitespace.
+[32m+[m[32m  firm  mean_return firm_name industry[m[41m [m
+lagrange-finance.tex:1806: trailing whitespace.
+[32m+[m[32m  <chr>       <dbl> <chr>     <chr>[m[41m    [m
+lagrange-finance.tex:1842: trailing whitespace.
+[32m+[m[32m  <chr>              <chr>      <chr>            <int> <lgl>          <chr>[m[41m     [m
+lagrange-finance.tex:1843: trailing whitespace.
+[32m+[m[32m1 "  Alpha Holdings~ Alpha Hol~ alpha hol~          24 FALSE          Alpha[m[41m     [m
+lagrange-finance.tex:1844: trailing whitespace.
+[32m+[m[32m2 "Beta Financial G~ Beta Fina~ beta fina~          20 TRUE           Beta[m[41m      [m
+lagrange-finance.tex:1845: trailing whitespace.
+[32m+[m[32m3 "Gamma Industries" Gamma Ind~ gamma ind~          16 FALSE          Gamma[m[41m     [m
+lagrange-finance.tex:1863: trailing whitespace.
+[32m+[m[32m  clean_name               short_name           display_name[m[41m         [m
+lagrange-finance.tex:1864: trailing whitespace.
+[32m+[m[32m  <chr>                    <chr>                <chr>[m[41m                [m
+lagrange-finance.tex:1866: trailing whitespace.
+[32m+[m[32m2 Beta Financial Group     Beta Financial Group Beta / 20 characters[m[41m [m
+lagrange-finance.tex:1894: trailing whitespace.
+[32m+[m[32m 1 2020-04-01 firm1 -0.0395[m[41m [m
+lagrange-finance.tex:1895: trailing whitespace.
+[32m+[m[32m 2 2020-04-01 firm2  0.0770[m[41m [m
+lagrange-finance.tex:1898: trailing whitespace.
+[32m+[m[32m 5 2020-04-03 firm1  0.0558[m[41m [m
+lagrange-finance.tex:1899: trailing whitespace.
+[32m+[m[32m 6 2020-04-03 firm2 -0.0173[m[41m [m
+lagrange-finance.tex:1900: trailing whitespace.
+[32m+[m[32m 7 2020-04-06 firm1  0.0419[m[41m [m
+lagrange-finance.tex:1902: trailing whitespace.
+[32m+[m[32m 9 2020-04-07 firm1 -0.0202[m[41m [m
+lagrange-finance.tex:1903: trailing whitespace.
+[32m+[m[32m10 2020-04-07 firm2  0.0755[m[41m [m
+lagrange-finance.tex:1923: trailing whitespace.
+[32m+[m[32m 1 2020-04-01 -0.0395   0.0770[m[41m [m
+lagrange-finance.tex:1925: trailing whitespace.
+[32m+[m[32m 3 2020-04-03  0.0558  -0.0173[m[41m [m
+lagrange-finance.tex:1927: trailing whitespace.
+[32m+[m[32m 5 2020-04-07 -0.0202   0.0755[m[41m [m
+lagrange-finance.tex:1928: trailing whitespace.
+[32m+[m[32m 6 2020-04-08 -0.00229 -0.0962[m[41m [m
+lagrange-finance.tex:1929: trailing whitespace.
+[32m+[m[32m 7 2020-04-09  0.0817   0.0788[m[41m [m
+lagrange-finance.tex:1930: trailing whitespace.
+[32m+[m[32m 8 2020-04-10  0.0346   0.0215[m[41m [m
+lagrange-finance.tex:1931: trailing whitespace.
+[32m+[m[32m 9 2020-04-13  0.0326   0.135[m[41m  [m
+lagrange-finance.tex:1932: trailing whitespace.
+[32m+[m[32m10 2020-04-14 -0.0377   0.0380[m[41m [m
+lagrange-finance.tex:1955: trailing whitespace.
+[32m+[m[32m  country code[m[41m [m
+lagrange-finance.tex:1957: trailing whitespace.
+[32m+[m[32m1 JP      1001[m[41m [m
+lagrange-finance.tex:1958: trailing whitespace.
+[32m+[m[32m2 JP      1002[m[41m [m
+lagrange-finance.tex:1959: trailing whitespace.
+[32m+[m[32m3 US      2001[m[41m [m
+lagrange-finance.tex:1981: trailing whitespace.
+[32m+[m[32m2 B       0[m[41m   [m
+lagrange-finance.tex:2099: trailing whitespace.
+[32m+[m[32m2       120          0.02     2         115.[m[41m [m
+lagrange-finance.tex:2100: trailing whitespace.
+[32m+[m[32m3       150          0.03     3         137.[m[41m [m
+lagrange-finance.tex:2161: trailing whitespace.
+[32m+[m[32m 1 uniform      -0.773[m[41m [m
+lagrange-finance.tex:2162: trailing whitespace.
+[32m+[m[32m 2 uniform       0.245[m[41m [m
+lagrange-finance.tex:2163: trailing whitespace.
+[32m+[m[32m 3 uniform       0.219[m[41m [m
+lagrange-finance.tex:2164: trailing whitespace.
+[32m+[m[32m 4 uniform       0.247[m[41m [m
+lagrange-finance.tex:2165: trailing whitespace.
+[32m+[m[32m 5 uniform       0.722[m[41m [m
+lagrange-finance.tex:2166: trailing whitespace.
+[32m+[m[32m 6 uniform       0.281[m[41m [m
+lagrange-finance.tex:2167: trailing whitespace.
+[32m+[m[32m 7 uniform      -0.981[m[41m [m
+lagrange-finance.tex:2168: trailing whitespace.
+[32m+[m[32m 8 uniform      -0.535[m[41m [m
+lagrange-finance.tex:2169: trailing whitespace.
+[32m+[m[32m 9 uniform       0.332[m[41m [m
+lagrange-finance.tex:2327: trailing whitespace.
+[32m+[m[32m   <date>     <chr>    <dbl>        <dbl> <chr>[m[41m    [m
+lagrange-finance.tex:2328: trailing whitespace.
+[32m+[m[32m 1 2020-04-01 firm1 -0.0395         0.961 negative[m[41m [m
+lagrange-finance.tex:2329: trailing whitespace.
+[32m+[m[32m 2 2020-04-02 firm1  0.00598        1.01  positive[m[41m [m
+lagrange-finance.tex:2330: trailing whitespace.
+[32m+[m[32m 3 2020-04-03 firm1  0.0558         1.06  positive[m[41m [m
+lagrange-finance.tex:2331: trailing whitespace.
+[32m+[m[32m 4 2020-04-06 firm1  0.0419         1.04  positive[m[41m [m
+lagrange-finance.tex:2332: trailing whitespace.
+[32m+[m[32m 5 2020-04-07 firm1 -0.0202         0.980 negative[m[41m [m
+lagrange-finance.tex:2333: trailing whitespace.
+[32m+[m[32m 6 2020-04-08 firm1 -0.00229        0.998 negative[m[41m [m
+lagrange-finance.tex:2334: trailing whitespace.
+[32m+[m[32m 7 2020-04-09 firm1  0.0817         1.08  positive[m[41m [m
+lagrange-finance.tex:2335: trailing whitespace.
+[32m+[m[32m 8 2020-04-10 firm1  0.0346         1.03  positive[m[41m [m
+lagrange-finance.tex:2336: trailing whitespace.
+[32m+[m[32m 9 2020-04-13 firm1  0.0326         1.03  positive[m[41m [m
+lagrange-finance.tex:2337: trailing whitespace.
+[32m+[m[32m10 2020-04-14 firm1 -0.0377         0.962 negative[m[41m [m
+lagrange-finance.tex:2392: trailing whitespace.
+[32m+[m[32m 3 2020-04-03 firm1  0.0558         1.06  positive                    1.02[m[41m [m
+lagrange-finance.tex:2393: trailing whitespace.
+[32m+[m[32m 4 2020-04-06 firm1  0.0419         1.04  positive                    1.06[m[41m [m
+lagrange-finance.tex:2394: trailing whitespace.
+[32m+[m[32m 5 2020-04-07 firm1 -0.0202         0.980 negative                    1.04[m[41m [m
+lagrange-finance.tex:2395: trailing whitespace.
+[32m+[m[32m 6 2020-04-08 firm1 -0.00229        0.998 negative                    1.04[m[41m [m
+lagrange-finance.tex:2396: trailing whitespace.
+[32m+[m[32m 7 2020-04-09 firm1  0.0817         1.08  positive                    1.12[m[41m [m
+lagrange-finance.tex:2397: trailing whitespace.
+[32m+[m[32m 8 2020-04-10 firm1  0.0346         1.03  positive                    1.16[m[41m [m
+lagrange-finance.tex:2398: trailing whitespace.
+[32m+[m[32m 9 2020-04-13 firm1  0.0326         1.03  positive                    1.20[m[41m [m
+lagrange-finance.tex:2399: trailing whitespace.
+[32m+[m[32m10 2020-04-14 firm1 -0.0377         0.962 negative                    1.16[m[41m [m
+lagrange-finance.tex:2604: trailing whitespace.
+[32m+[m[32m   file_name                    relative_path[m[41m               [m
+lagrange-finance.tex:2605: trailing whitespace.
+[32m+[m[32m   <chr>                        <chr>[m[41m                       [m
+lagrange-finance.tex:2606: trailing whitespace.
+[32m+[m[32m 1 ch03_daily_stock_return.csv  ch03_daily_stock_return.csv[m[41m [m
+lagrange-finance.tex:2607: trailing whitespace.
+[32m+[m[32m 2 ch03_output.csv              ch03_output.csv[m[41m             [m
+lagrange-finance.tex:2608: trailing whitespace.
+[32m+[m[32m 3 ch04_financial_data.csv      ch04_financial_data.csv[m[41m     [m
+lagrange-finance.tex:2609: trailing whitespace.
+[32m+[m[32m 4 ch04_output.csv              ch04_output.csv[m[41m             [m
+lagrange-finance.tex:2612: trailing whitespace.
+[32m+[m[32m 7 ch05_messy_stock_return.csv  ch05_messy_stock_return.csv[m[41m [m
+lagrange-finance.tex:2613: trailing whitespace.
+[32m+[m[32m 8 ch05_output1.csv             ch05_output1.csv[m[41m            [m
+lagrange-finance.tex:2614: trailing whitespace.
+[32m+[m[32m 9 ch05_output2.csv             ch05_output2.csv[m[41m            [m
+lagrange-finance.tex:2615: trailing whitespace.
+[32m+[m[32m10 ch05_stock_data.csv          ch05_stock_data.csv[m[41m         [m
+lagrange-finance.tex:2785: trailing whitespace.
+[32m+[m[32m 2 FA                0     0[m[41m       [m
+lagrange-finance.tex:2786: trailing whitespace.
+[32m+[m[32m 3 FO                0     0[m[41m       [m
+lagrange-finance.tex:2787: trailing whitespace.
+[32m+[m[32m 4 OA                0     0[m[41m       [m
+lagrange-finance.tex:2788: trailing whitespace.
+[32m+[m[32m 5 OL                0     0[m[41m       [m
+lagrange-finance.tex:2789: trailing whitespace.
+[32m+[m[32m 6 OX                0     0[m[41m       [m
+lagrange-finance.tex:2790: trailing whitespace.
+[32m+[m[32m 7 X                 0     0[m[41m       [m
+lagrange-finance.tex:2791: trailing whitespace.
+[32m+[m[32m 8 firm_ID           0     0[m[41m       [m
+lagrange-finance.tex:2792: trailing whitespace.
+[32m+[m[32m 9 industry_ID       0     0[m[41m       [m
+lagrange-finance.tex:2793: trailing whitespace.
+[32m+[m[32m10 sales             0     0[m[41m       [m
+lagrange-finance.tex:2794: trailing whitespace.
+[32m+[m[32m11 year              0     0[m[41m       [m
+lagrange-finance.tex:3083: trailing whitespace.
+[32m+[m[32m 1 1       1            2015 287.   9695.       NA  NA[m[41m     [m
+lagrange-finance.tex:3089: trailing whitespace.
+[32m+[m[32m 7 2       1            2015  40.1  1055.       NA  NA[m[41m     [m
+lagrange-finance.tex:3173: trailing whitespace.
+[32m+[m[32m 1 2              40          186   0.108      0.103[m[41m [m
+lagrange-finance.tex:3354: trailing whitespace.
+[32m+[m[32m 1 1        2015 NA      NA      0.0832 NA         NA      NA         NA[m[41m     [m
+lagrange-finance.tex:3360: trailing whitespace.
+[32m+[m[32m 7 2        2015 NA      NA      0.0131 NA         NA      NA         NA[m[41m     [m
+lagrange-finance.tex:3417: trailing whitespace.
+[32m+[m[32m 2 2                    186    0.0378       2.41      0.109[m[41m [m
+lagrange-finance.tex:7227: trailing whitespace.
+[32m+[m[32m\NormalTok{monthly\_data }\OtherTok{\textless{}{-}}\NormalTok{ monthly\_data }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7231: trailing whitespace.
+[32m+[m[32m  \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7237: trailing whitespace.
+[32m+[m[32m  \FunctionTok{select}\NormalTok{(year, firm\_ID) }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7251: trailing whitespace.
+[32m+[m[32m\NormalTok{monthly\_data }\OtherTok{\textless{}{-}}\NormalTok{ monthly\_data }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7258: trailing whitespace.
+[32m+[m[41m  [m
+lagrange-finance.tex:7259: trailing whitespace.
+[32m+[m[32m\NormalTok{  FF3\_results[[i]] }\OtherTok{\textless{}{-}}\NormalTok{ monthly\_data }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7262: trailing whitespace.
+[32m+[m[32m    \FunctionTok{tidy}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7265: trailing whitespace.
+[32m+[m[41m    [m
+lagrange-finance.tex:7277: trailing whitespace.
+[32m+[m[32m\NormalTok{FF3\_loadings }\OtherTok{\textless{}{-}}\NormalTok{ FF3\_results }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7308: trailing whitespace.
+[32m+[m[32m\FunctionTok{ggplot}\NormalTok{(FF3\_cost\_of\_capital) }\SpecialCharTok{+}[m[41m [m
+lagrange-finance.tex:7309: trailing whitespace.
+[32m+[m[32m  \FunctionTok{geom\_histogram}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ cost\_of\_capital)) }\SpecialCharTok{+}[m[41m [m
+lagrange-finance.tex:7311: trailing whitespace.
+[32m+[m[32m  \FunctionTok{scale\_y\_discrete}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{)) }\SpecialCharTok{+}[m[41m [m
+lagrange-finance.tex:7322: trailing whitespace.
+[32m+[m[32m  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{lagged\_ME =} \FunctionTok{lag}\NormalTok{(ME)) }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7328: trailing whitespace.
+[32m+[m[32m                                     \AttributeTok{Large =} \StringTok{"2"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7334: trailing whitespace.
+[32m+[m[32m  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"FF3 Cost of Capital"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Estimated Density"}\NormalTok{, }\AttributeTok{linetype =} \StringTok{"Firm Type"}\NormalTok{)  }\SpecialCharTok{+}[m[41m [m
+lagrange-finance.tex:7344: trailing whitespace.
+[32m+[m[32m\NormalTok{dividend\_yield\_2020 }\OtherTok{\textless{}{-}}\NormalTok{ monthly\_data }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7358: trailing whitespace.
+[32m+[m[32m\NormalTok{dividend\_yield\_2020 }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7383: trailing whitespace.
+[32m+[m[32m\NormalTok{investment\_universe }\OtherTok{\textless{}{-}}\NormalTok{  annual\_data }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7386: trailing whitespace.
+[32m+[m[32m  \FunctionTok{select}\NormalTok{(firm\_ID) }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7402: trailing whitespace.
+[32m+[m[32m  \FunctionTok{group\_by}\NormalTok{(firm\_ID) }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7404: trailing whitespace.
+[32m+[m[32m  \FunctionTok{select}\NormalTok{(epsilon\_variance) }\SpecialCharTok{\%\textgreater{}\%}[m[41m [m
+lagrange-finance.tex:7517: trailing whitespace.
+[32m+[m[32m\FunctionTok{ggplot}\NormalTok{(MV\_frontier) }\SpecialCharTok{+}[m[41m [m
+lagrange-finance.tex:7520: trailing whitespace.
+[32m+[m[32m  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Expected Return"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Risk"}\NormalTok{) }\SpecialCharTok{+}[m[41m [m
+scripts/theme_lagrange_economist.R:162: new blank line at EOF.
