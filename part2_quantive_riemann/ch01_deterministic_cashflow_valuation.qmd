@@ -562,7 +562,7 @@ GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(flat_yield_tbl), "Fl
 ```
 
 フラットな利回りを使った割引価格と、最終利回りから直接求めたダーティ価格を比較する。
-### 1.9.1 Z-spreadによる価格調整
+### 1.4.1 Z-spreadによる価格調整
 
 Z-spreadは、基準となる割引カーブの各年限に一律に加えるスプレッドである。ここでは基準カーブに50ベーシスポイントを上乗せし、債券価格への影響を確認する。
 
