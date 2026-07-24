@@ -1,10 +1,5 @@
 ---
 title: "第II-8章 信用リスクとCDS"
-subtitle: "Hazard Rate、回収率、Premium LegおよびProtection Leg"
-format:
-  html:
-    toc: true
-    number-sections: true
 execute:
   eval: true
   echo: true
@@ -12,7 +7,6 @@ execute:
   message: false
 ---
 
-# 第II-8章 信用リスクとCDS
 
 前章までの評価では、将来の市場価格、金利またはボラティリティの変動を扱った。本章では、契約相手または参照企業が債務を履行できなくなる信用リスクを検討する。
 
@@ -58,7 +52,9 @@ suppressPackageStartupMessages({
 })
 ```
 
-## 1. デフォルト時刻と生存確率
+## 8.1 信用リスクとCDSの基礎
+
+### 8.1.1 デフォルト時刻と生存確率
 
 デフォルトが発生する確率時刻を $\tau$ とする。時点 $t$ まで企業がデフォルトせずに存続する確率を、生存確率と呼ぶ。
 
@@ -117,7 +113,7 @@ $$
 
 であり、厳密には2%と一致しない。
 
-## 2. Recovery RateとLoss Given Default
+### 8.1.2 Recovery RateとLoss Given Default
 
 デフォルトが発生した場合でも、債権価値のすべてが失われるとは限らない。デフォルト後に回収できる元本比率をRecovery Rate $R$ とする。
 
@@ -141,7 +137,7 @@ $$
 
 Recovery Rateが高いほどデフォルト時の損失は小さくなり、同じデフォルト確率であればCDS Spreadは低くなる。
 
-## 3. CDS SpreadとHazard Rateの近似
+### 8.1.3 CDS SpreadとHazard Rateの近似
 
 連続的なPremium支払い、一定Hazard Rate、一定Recovery Rateおよび単純な割引を仮定すると、CDS Spread $s$ とHazard Rate $\lambda$ には次の近似関係がある。
 
@@ -163,7 +159,9 @@ $$
 
 この近似はCDSの信用水準を理解するために有用である。ただし、実際の評価では、四半期ごとの支払い、Accrual on default、割引、標準日付およびカーブ補間が影響するため、厳密なHazard Rateとは一致しない。
 
-## 4. フラットカーブによる1年物CDS
+## 8.2 フラットカーブによるCDS評価
+
+### 8.2.1 フラットカーブによる1年物CDS
 
 1年物CDSを考える。
 
@@ -211,7 +209,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 5. Hazard Rate近似と確率曲線
+### 8.2.2 Hazard Rate近似と確率曲線
 
 市場Spread 130bpとRecovery Rate 40%から、フラットHazard Rateを近似する。
 
@@ -293,7 +291,7 @@ GaussQuant::show_tbl_GQH(
 print(flat_probability_plot)
 ```
 
-## 6. CDS Scheduleとカーブ
+### 8.2.3 CDS Scheduleとカーブ
 
 Premiumは四半期ごとに支払われるものとする。単純な教育用例として、評価日の翌日から満期までのForward Scheduleを作成する。
 
@@ -364,7 +362,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 7. MidPoint CDS Engine
+### 8.2.4 MidPoint CDS Engine
 
 MidPoint法では、各Premium期間中に発生するデフォルトを、その期間の中点で発生したものとして近似する。
 
@@ -427,7 +425,7 @@ GaussQuant::show_tbl_GQH(
 
 プロテクション買い手から見て、Premium Legは負、Protection Legは正となる。契約CouponがFair Spreadより低ければ、プロテクション買い手に有利となり、CDS NPVは一般に正となる。
 
-## 8. CDSキャッシュフローと確率表
+### 8.2.5 CDSキャッシュフローと確率表
 
 GaussQuantの`cds_cashflow_table_GQL()`を利用し、各Premium期間の割引係数、生存確率、デフォルト確率および期間中点の情報を確認する。
 
@@ -450,7 +448,9 @@ GaussQuant::show_tbl_GQH(
 ```
 
 
-## 9. Premium Legの手計算
+## 8.3 Premium LegとProtection Leg
+
+### 8.3.1 Premium Legの手計算
 
 Premium Legは、参照企業が各支払日まで存続した場合に支払われる。
 
@@ -479,7 +479,7 @@ premium_leg_hand_flat <- -sum(
 
 この近似では期間中点の生存確率を使用している。実際のCDSでは、期間中にデフォルトした場合の経過PremiumであるAccrual on defaultも考慮される。
 
-## 10. Protection Legの手計算
+### 8.3.2 Protection Legの手計算
 
 期間 $(t_{i-1},t_i]$ にデフォルトする確率を、
 
@@ -516,7 +516,7 @@ protection_leg_hand_flat <- notional_flat *
   protection_leg_per_unit_hand_flat
 ```
 
-## 11. Risky PV01とFair Spread
+### 8.3.3 Risky PV01とFair Spread
 
 Risky PV01は、CDS Spreadを1単位支払うPremium Legの現在価値に相当する。
 
@@ -603,7 +603,9 @@ GaussQuant::show_tbl_GQH(
 
 手計算とMidPoint Engineは近い値となるが、厳密には一致しない。差にはAccrual on default、日付規則、Protection開始日およびQuantLib内部の計算規約が含まれる。
 
-## 12. Zero-NPV CDSからHazard Rateを推定する
+## 8.4 Hazard Rate推定と感応度
+
+### 8.4.1 Zero-NPV CDSからHazard Rateを推定する
 
 市場Spreadを契約Couponとして設定したCDSは、契約開始時点でNPVがゼロとなるようにHazard Rateを調整できる。
 
@@ -682,7 +684,7 @@ GaussQuant::show_tbl_GQH(
 
 単純近似 $\lambda\approx s/(1-R)$ とカリブレーション結果は近いが、支払頻度と割引の影響により差が生じる。
 
-## 13. SpreadとRecovery Rateの感応度
+### 8.4.2 SpreadとRecovery Rateの感応度
 
 単純近似の下では、Spreadが高いほどHazard Rateは高くなる。また、同じSpreadでRecovery Rateを高く仮定すると、デフォルト時損失が小さくなるため、そのSpreadを説明するために必要なHazard Rateは高くなる。
 
@@ -724,7 +726,9 @@ GaussQuant::show_tbl_GQH(
 
 Recovery RateとHazard Rateは、CDS Spreadだけから完全に独立して識別できない。実務ではRecovery Rateを外生的に仮定し、その仮定の下でDefault Probability Curveを構築することが多い。
 
-## 14. 標準CDSとCDS2015満期
+## 8.5 標準CDS2015とISDAカーブ
+
+### 8.5.1 標準CDSとCDS2015満期
 
 標準CDSでは、満期を単純に取引日から5年後とするのではなく、CDS IMM日とCDS2015ルールに従って決定する。
 
@@ -797,7 +801,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 15. 標準CDS2015 Schedule
+### 8.5.2 標準CDS2015 Schedule
 
 CDS2015ルールにより、Premium支払日は標準化された四半期日へ調整される。
 
@@ -824,7 +828,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 16. ISDA用割引カーブ
+### 8.5.3 ISDA用割引カーブ
 
 ```{r chapter08-isda-discount-curve}
 discount_curve_isda <- GaussQuant::flat_curve_GQL(
@@ -854,7 +858,7 @@ GaussQuant::show_tbl_GQH(
 ```
 
 
-## 17. ISDA整合Hazard Rateの推定
+### 8.5.4 ISDA整合Hazard Rateの推定
 
 市場Spread 30.426bpをRunning Spreadとする標準CDSを作成し、ISDA EngineのNPVがゼロとなるフラットHazard Rateを推定する。
 
@@ -945,7 +949,9 @@ GaussQuant::show_tbl_GQH(
 
 市場SpreadとRecovery Rateから得られる単純近似と、ISDA EngineでゼロNPVとなるHazard Rateには差が生じる。標準CDSの日付、Accrual on default、割引および数値積分が評価へ反映されるためである。
 
-## 18. ISDA CDS Engine
+## 8.6 ISDA Engineと評価比較
+
+### 8.6.1 ISDA CDS Engine
 
 契約Couponを標準Coupon 100bpへ固定した5年物CDSを評価する。
 
@@ -981,7 +987,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 19. Accrual rebateとNPV分解
+### 8.6.2 Accrual rebateとNPV分解
 
 標準CDSでは、取引日が前回の標準Coupon日と次回Coupon日の間にある場合、契約開始時にAccrual rebateが発生することがある。
 
@@ -1036,7 +1042,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 20. Fair SpreadとFair Upfront
+### 8.6.3 Fair SpreadとFair Upfront
 
 Fair Spreadは、Upfrontを授受せずにCDS NPVをゼロとするRunning Spreadである。
 
@@ -1084,7 +1090,7 @@ GaussQuant::show_tbl_GQH(
 
 Fair Upfrontの正負は、QuantLibにおけるBuyer／Sellerの符号規約と契約設定に依存する。符号だけで判断せず、CDS NPV、契約Coupon、Fair SpreadおよびUpfront金額を一緒に確認する必要がある。
 
-## 21. ISDA用キャッシュフロー表
+### 8.6.4 ISDA用キャッシュフロー表
 
 標準CDS2015 Schedule、ISDA整合Hazard Curveおよび割引カーブから、Premium期間ごとの確率情報を作成する。
 
@@ -1108,7 +1114,7 @@ GaussQuant::show_tbl_GQH(
 
 この表はCDSの経済構造を理解するためのMidPoint型分解である。ISDA Engineは、標準日付、Accrual on default、数値積分および曲線補間をより厳密に扱うため、この表から得られる単純近似と完全には一致しない。
 
-## 22. MidPoint型近似とISDA Engine
+### 8.6.5 MidPoint型近似とISDA Engine
 
 ISDA用キャッシュフロー表から、Premium Leg、Protection Leg、RPV01およびFair Spreadを簡易計算する。
 
@@ -1171,7 +1177,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 23. MidPoint EngineとISDA Engineの比較
+### 8.6.6 MidPoint EngineとISDA Engineの比較
 
 同じHazard Curve、Recovery Rate、割引カーブおよび標準Couponを使用し、MidPoint EngineとISDA Engineの評価差を確認する。
 
@@ -1233,7 +1239,7 @@ GaussQuant::show_tbl_GQH(
 
 MidPoint法は、各Premium期間内のデフォルト時点を期間中点へ集約する。ISDA Engineは標準市場規約に合わせて、より詳細な日付処理と積分を行う。そのため、同じカーブを用いてもLeg NPVとFair Spreadに差が生じる。
 
-## 24. まとめ
+## 8.7 まとめ
 
 CDSは、Premium LegとProtection Legから構成される。プロテクション買い手はPremiumを支払い、信用事由が発生した場合に損失補償を受け取る。
 

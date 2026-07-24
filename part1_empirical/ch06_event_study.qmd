@@ -14,7 +14,9 @@
 
 反復処理には明示的なループを使わず、`purrr::map()`、`pmap_dfr()`、`walk2()` を使用する。パイプ演算子は native pipe の `|>` に統一する。
 
-## 6.1 イベントスタディの考え方
+## 6.1 イベントスタディの基礎と分析環境
+
+### 6.1.1 イベントスタディの考え方
 
 企業 $i$ の日 $t$ における実現リターンを $R_{i,t}$、市場リターンを $R_{M,t}$ とする。推定期間では、次のマーケット・モデルを推定する。
 
@@ -56,7 +58,7 @@ CAR_{i,t}
 \sum_{\tau=T_1}^{t} AR_{i,\tau}
 $$
 
-## 6.2 パッケージの準備
+### 6.1.2 パッケージの準備
 
 ```{r}
 #| label: load-packages
@@ -83,7 +85,7 @@ suppressPackageStartupMessages({
 install.packages(c("tidyverse", "broom"))
 ```
 
-## 6.3 プロジェクトとデータディレクトリ
+### 6.1.3 プロジェクトとデータディレクトリ
 
 ```{r}
 #| label: resolve-project-directory
@@ -122,7 +124,9 @@ data_dir
 derived_data_dir
 ```
 
-## 6.4 入力ファイルの確認
+## 6.2 入力データの整備と検証
+
+### 6.2.1 入力ファイルの確認
 
 本章では次の3ファイルを使用する。
 
@@ -215,7 +219,7 @@ input_paths <- input_file_names |>
 input_paths
 ```
 
-## 6.5 データの読み込み
+### 6.2.2 データの読み込み
 
 ```{r}
 #| label: read-event-study-data
@@ -240,7 +244,7 @@ market_return_data_raw
 event_data_raw
 ```
 
-## 6.6 必須列の確認
+### 6.2.3 必須列の確認
 
 ```{r}
 #| label: validate-input-columns
@@ -301,7 +305,7 @@ if (length(missing_event_columns) > 0) {
 }
 ```
 
-## 6.7 データ型の整理
+### 6.2.4 データ型の整理
 
 ```{r}
 #| label: prepare-input-data
@@ -371,7 +375,7 @@ if (
 }
 ```
 
-## 6.8 データの概要
+### 6.2.5 データの概要
 
 ```{r}
 #| label: input-data-overview
@@ -398,7 +402,7 @@ input_data_overview <- tribble(
 input_data_overview
 ```
 
-## 6.9 キーの重複確認
+### 6.2.6 キーの重複確認
 
 ```{r}
 #| label: validate-input-keys
@@ -443,7 +447,7 @@ if (nrow(event_key_duplicates) > 0) {
 }
 ```
 
-## 6.10 欠損値の確認
+### 6.2.7 欠損値の確認
 
 ```{r}
 #| label: summarize-missing-values
@@ -491,7 +495,9 @@ missing_summary <- list(
 missing_summary
 ```
 
-## 6.11 決算サプライズ
+## 6.3 決算サプライズとイベント日の設定
+
+### 6.3.1 決算サプライズ
 
 旧章では予想利益から実現利益を引いていたが、本章では解釈を明確にするため、実現利益から予想利益を引く。
 
@@ -603,7 +609,7 @@ invalid_surprise_events <- event_data |>
 invalid_surprise_events
 ```
 
-## 6.12 取引日カレンダー
+### 6.3.2 取引日カレンダー
 
 市場リターンの日付を取引日カレンダーとして使用する。
 
@@ -685,7 +691,7 @@ market_dates_without_returns
 ```
 
 
-## 6.13 イベント日0の設定
+### 6.3.3 イベント日0の設定
 
 決算発表は取引終了後に行われると仮定する。そのため、発表日が取引日であっても、次の取引日をイベント日0とする。発表日が休日の場合は、最初の翌取引日がイベント日0となる。
 
@@ -765,7 +771,9 @@ if (nrow(event_firms_without_returns) > 0) {
 }
 ```
 
-## 6.14 推定期間とイベント期間
+## 6.4 推定期間とマーケット・モデル
+
+### 6.4.1 推定期間とイベント期間
 
 本章では、イベント日0を基準として次の期間を使用する。
 
@@ -820,7 +828,7 @@ tibble(
 )
 ```
 
-## 6.15 イベント・パネルの作成
+### 6.4.2 イベント・パネルの作成
 
 各イベントについて、推定期間の開始からイベント期間の終了までの相対取引日を作成する。
 
@@ -907,7 +915,7 @@ tibble(
 )
 ```
 
-## 6.16 データ利用可能性の診断
+### 6.4.3 データ利用可能性の診断
 
 イベントごとに、推定期間とイベント期間で利用できる観測数を確認する。
 
@@ -997,7 +1005,7 @@ event_coverage_summary <- event_data_coverage |>
 event_coverage_summary
 ```
 
-## 6.17 マーケット・モデルの推定
+### 6.4.4 マーケット・モデルの推定
 
 推定期間のデータだけを抽出する。
 
@@ -1199,7 +1207,7 @@ market_model_parameters |>
   theme_classic()
 ```
 
-## 6.18 完全なイベント期間を持つイベント
+### 6.4.5 完全なイベント期間を持つイベント
 
 マーケット・モデルを推定でき、かつ61取引日のイベント期間で個別株と市場リターンがすべて観測できるイベントだけを採用する。
 
@@ -1262,7 +1270,9 @@ if (nrow(insufficient_event_groups) > 0) {
 }
 ```
 
-## 6.19 異常リターンとCAR
+## 6.5 異常リターンと日次集計
+
+### 6.5.1 異常リターンとCAR
 
 イベント期間のデータにマーケット・モデルの推定値を結合する。
 
@@ -1356,7 +1366,7 @@ event_window_data |>
 ```
 
 
-## 6.20 AARとCAAR
+### 6.5.2 AARとCAAR
 
 イベント強度別に、平均異常リターン（AAR）と平均累積異常リターン（CAAR）を計算する。
 
@@ -1514,7 +1524,7 @@ overall_daily_statistics <- event_window_data |>
 overall_daily_statistics
 ```
 
-### イベント強度別CAAR
+#### イベント強度別CAAR
 
 ```{r}
 #| label: plot-caar-by-event-strength
@@ -1554,7 +1564,7 @@ daily_event_statistics |>
   theme_classic()
 ```
 
-### イベント日前後のAAR
+#### イベント日前後のAAR
 
 ```{r}
 #| label: plot-aar-around-event
@@ -1631,7 +1641,9 @@ strongest_event_daily_table <- daily_event_statistics |>
 strongest_event_daily_table
 ```
 
-## 6.21 複数のイベント・ウィンドウ
+## 6.6 イベント・ウィンドウ分析と結果保存
+
+### 6.6.1 複数のイベント・ウィンドウ
 
 日次のCARだけでなく、実務でよく利用される複数のイベント・ウィンドウについて、イベント単位の累積異常リターンを計算する。
 
@@ -1822,7 +1834,7 @@ overall_window_summary <- event_level_window_returns |>
 overall_window_summary
 ```
 
-### 短期CARの分布
+#### 短期CARの分布
 
 ```{r}
 #| label: plot-short-window-car
@@ -1855,7 +1867,7 @@ event_level_window_returns |>
   theme_classic()
 ```
 
-### ウィンドウ別平均CAR
+#### ウィンドウ別平均CAR
 
 ```{r}
 #| label: plot-window-mean-car
@@ -1889,7 +1901,7 @@ event_window_summary |>
   theme_classic()
 ```
 
-## 6.22 決算サプライズと短期CAR
+### 6.6.2 決算サプライズと短期CAR
 
 イベント強度は決算サプライズの順位情報だけを使用する。ここでは連続変数としての決算サプライズと、短期CAR `[-1,+1]` の関係を回帰分析で確認する。
 
@@ -1951,7 +1963,7 @@ surprise_regression_data |>
   theme_classic()
 ```
 
-## 6.23 結果の保存
+### 6.6.3 結果の保存
 
 イベント単位の結果を作成する。各イベント・ウィンドウのCARを横持ちに変換し、マーケット・モデルの推定値と結合する。
 
@@ -2117,7 +2129,7 @@ output_verification <- imap_dfr(
 output_verification
 ```
 
-## 6.24 まとめ
+## 6.7 まとめ
 
 本章では、決算発表の翌取引日をイベント日0として、マーケット・モデルによるイベントスタディを実施した。推定期間にはイベント日の130取引日前から31取引日前までの100日を使用し、イベント期間には30取引日前から30取引日後までの61日を使用した。
 

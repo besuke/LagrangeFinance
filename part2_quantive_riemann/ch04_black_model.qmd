@@ -1,10 +1,5 @@
 ---
 title: "第II-4章 Blackモデル"
-subtitle: "Black-76、Black–Scholes–Mertonおよび数値評価法"
-format:
-  html:
-    toc: true
-    number-sections: true
 execute:
   eval: true
   echo: true
@@ -12,7 +7,6 @@ execute:
   message: false
 ---
 
-# 第II-4章 Blackモデル
 
 1973年に公表されたBlack–Scholes–Mertonモデルは、株式オプションの理論価格を求めるための基本モデルとして、金融工学の発展に大きな影響を与えた。このモデルでは、株価が幾何ブラウン運動に従い、将来の株価が対数正規分布に従うと仮定する。
 
@@ -43,9 +37,9 @@ suppressPackageStartupMessages({
 })
 ```
 
-## 1. Black–Scholes–MertonとBlack-76
+## 4.1 Black–Scholes–MertonとBlack-76
 
-### 1.1 Black–Scholes–Mertonモデル
+### 4.1.1 Black–Scholes–Mertonモデル
 
 リスク中立測度の下で、株価 $S_t$ は次の確率微分方程式に従うと仮定する。
 
@@ -69,7 +63,7 @@ $$
 
 したがって、Black–Scholes–Mertonモデルは現物価格を出発点として、金利と配当を通じてフォワード価格を内生的に求めるモデルとみることができる。
 
-### 1.2 Black-76モデル
+### 4.1.2 Black-76モデル
 
 Black-76では、フォワード価格 $F_0$ を直接入力する。European callの価格は次式で与えられる。
 
@@ -115,7 +109,7 @@ $$
 
 金利が決定論的である場合、同一満期の先物価格とフォワード価格は一致するため、Black-76は先物オプションとフォワードオプションの双方に用いられる。
 
-## 2. Black-76の入力条件
+### 4.1.3 Black-76の入力条件
 
 本節では、債券先物オプションを意識した価格表示を使用する。フォワード価格は107と32分の6.75、行使価格は107.5、ボラティリティは5.2%、無リスク金利は5%とする。
 
@@ -159,7 +153,9 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 3. Black公式による価格とGreeks
+## 4.2 Black-76による解析評価
+
+### 4.2.1 Black公式による価格とGreeks
 
 `BlackCalculator`は、フォワード価格、行使価格、総標準偏差および割引係数から、オプション価格とGreeksを直接計算する。
 
@@ -208,7 +204,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 4. Black過程によるEuropean option評価
+### 4.2.2 Black過程によるEuropean option評価
 
 前節ではBlack公式を直接使用した。本節では、同じ入力条件からBlack processを構築し、European optionへ解析的Pricing Engineを設定する。
 
@@ -244,7 +240,133 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 5. 擬似乱数Monte Carlo評価
+## 4.3 Black–Scholes–MertonとEuropean option
+
+### 4.3.1 Black–Scholes–Mertonモデルの入力条件
+
+ここからは現物株価を原資産とするBlack–Scholes–Mertonモデルを扱う。現物価格100、行使価格100、満期1年、ボラティリティ20%、無リスク金利5%、配当利回り0%とする。
+
+Black–Scholes–Merton processでは、現物価格に加えて、無リスク金利カーブ、配当利回りカーブおよびボラティリティカーブを設定する。
+
+```{r chapter04-bsm-inputs}
+bsm_input_tbl <- tibble::tribble(
+  ~input,           ~value,
+  "trade_date",     "2024-03-01",
+  "maturity",       "1Y",
+  "spot_price",     as.character(100),
+  "strike_price",   as.character(100),
+  "volatility",     as.character(0.20),
+  "risk_free_rate", as.character(0.05),
+  "dividend_rate",  as.character(0)
+)
+
+trade_date_bsm <- GaussQuant::date_GQL("2024-03-01")
+calendar_bsm <- QuantLib::TARGET()
+
+maturity_date_bsm <- calendar_bsm$advance(
+  trade_date_bsm,
+  1L,
+  "Years"
+)
+
+spot_price_bsm <- 100
+strike_price_bsm <- 100
+volatility_bsm <- 0.20
+risk_free_rate_bsm <- 0.05
+dividend_rate_bsm <- 0
+
+GaussQuant::set_eval_date_GQL(
+  trade_date_bsm
+)
+
+bsm_bundle <- GaussQuant::bsm_process_bundle_GQL(
+  valuation_date = trade_date_bsm,
+  spot = spot_price_bsm,
+  risk_free_rate = risk_free_rate_bsm,
+  dividend_rate = dividend_rate_bsm,
+  volatility = volatility_bsm,
+  day_counter = day_counter,
+  calendar = calendar_bsm
+)
+
+GaussQuant::show_tbl_GQH(
+  bsm_input_tbl,
+  "Black-Scholes-Merton assumptions",
+  n = 20
+)
+```
+
+### 4.3.2 European putの解析解と二項Tree
+
+Europeanオプションは満期時にのみ行使できるため、Black–Scholes–Mertonモデルの解析解を利用できる。
+
+二項Treeでは、連続時間の価格過程を有限個の時間ステップへ分割する。ステップ数を増やすほど、理論上は連続時間モデルの解析値へ近づく。
+
+ここでは、25、100および500ステップのCox–Ross–Rubinstein Treeを解析解と比較する。
+
+```{r chapter04-european-put}
+european_put <- GaussQuant::make_european_option_GQL(
+  spot = spot_price_bsm,
+  strike = strike_price_bsm,
+  maturity_date = maturity_date_bsm,
+  option_type = "put",
+  valuation_date = trade_date_bsm,
+  risk_free_rate = risk_free_rate_bsm,
+  dividend_yield = dividend_rate_bsm,
+  volatility = volatility_bsm,
+  day_counter = day_counter,
+  calendar = calendar_bsm
+)
+
+european_engines <- list(
+  crr_25 = QuantLib::BinomialCRRVanillaEngine(
+    bsm_bundle$process,
+    25L
+  ),
+  analytic = QuantLib::AnalyticEuropeanEngine(
+    bsm_bundle$process
+  ),
+  crr_100 = QuantLib::BinomialCRRVanillaEngine(
+    bsm_bundle$process,
+    100L
+  ),
+  crr_500 = QuantLib::BinomialCRRVanillaEngine(
+    bsm_bundle$process,
+    500L
+  )
+)
+
+european_comparison_tbl <- purrr::imap_dfr(
+  european_engines,
+  function(engine, method) {
+    european_put$setPricingEngine(engine)
+
+    tibble::tibble(
+      method = method,
+      npv = european_put$NPV()
+    )
+  }
+)
+
+analytic_put_npv <- european_comparison_tbl |>
+  dplyr::filter(.data$method == "analytic") |>
+  dplyr::pull(.data$npv)
+
+european_comparison_tbl <- european_comparison_tbl |>
+  dplyr::mutate(
+    difference_from_analytic = .data$npv - analytic_put_npv
+  )
+
+GaussQuant::show_tbl_GQH(
+  european_comparison_tbl,
+  "European put engine comparison",
+  n = 20
+)
+```
+
+## 4.4 Monte Carlo評価
+
+### 4.4.1 擬似乱数Monte Carlo評価
 
 リスク中立評価では、オプション価格は満期Payoffの割引期待値として表される。
 
@@ -310,7 +432,7 @@ GaussQuant::show_tbl_GQH(
 
 標準誤差は、有限本数のパスを用いたことによるMonte Carlo推定値の不確実性を表す。解析値との差が標準誤差と同程度であれば、シミュレーション結果は統計的に整合的と判断できる。
 
-## 6. Monte Carloパスの可視化
+### 4.4.2 Monte Carloパスの可視化
 
 Black processでは、フォワード価格は対数正規分布に従う。したがって、各パスの価格は常に正であり、満期価格の分布は左右対称にはならない。
 
@@ -372,7 +494,7 @@ print(path_plot)
 print(terminal_plot)
 ```
 
-## 7. Black過程の1パス
+### 4.4.3 Black過程の1パス
 
 Black processのフォワード価格は、時間幅 $\Delta t$ ごとに次式で更新できる。
 
@@ -450,129 +572,7 @@ GaussQuant::show_tbl_GQH(
 
 差が数値誤差の範囲に収まれば、PathGeneratorがBlack過程の離散化式に従っていることを確認できる。
 
-## 8. Black–Scholes–Mertonモデル
-
-ここからは現物株価を原資産とするBlack–Scholes–Mertonモデルを扱う。現物価格100、行使価格100、満期1年、ボラティリティ20%、無リスク金利5%、配当利回り0%とする。
-
-Black–Scholes–Merton processでは、現物価格に加えて、無リスク金利カーブ、配当利回りカーブおよびボラティリティカーブを設定する。
-
-```{r chapter04-bsm-inputs}
-bsm_input_tbl <- tibble::tribble(
-  ~input,           ~value,
-  "trade_date",     "2024-03-01",
-  "maturity",       "1Y",
-  "spot_price",     as.character(100),
-  "strike_price",   as.character(100),
-  "volatility",     as.character(0.20),
-  "risk_free_rate", as.character(0.05),
-  "dividend_rate",  as.character(0)
-)
-
-trade_date_bsm <- GaussQuant::date_GQL("2024-03-01")
-calendar_bsm <- QuantLib::TARGET()
-
-maturity_date_bsm <- calendar_bsm$advance(
-  trade_date_bsm,
-  1L,
-  "Years"
-)
-
-spot_price_bsm <- 100
-strike_price_bsm <- 100
-volatility_bsm <- 0.20
-risk_free_rate_bsm <- 0.05
-dividend_rate_bsm <- 0
-
-GaussQuant::set_eval_date_GQL(
-  trade_date_bsm
-)
-
-bsm_bundle <- GaussQuant::bsm_process_bundle_GQL(
-  valuation_date = trade_date_bsm,
-  spot = spot_price_bsm,
-  risk_free_rate = risk_free_rate_bsm,
-  dividend_rate = dividend_rate_bsm,
-  volatility = volatility_bsm,
-  day_counter = day_counter,
-  calendar = calendar_bsm
-)
-
-GaussQuant::show_tbl_GQH(
-  bsm_input_tbl,
-  "Black-Scholes-Merton assumptions",
-  n = 20
-)
-```
-
-## 9. European putの解析解と二項Tree
-
-Europeanオプションは満期時にのみ行使できるため、Black–Scholes–Mertonモデルの解析解を利用できる。
-
-二項Treeでは、連続時間の価格過程を有限個の時間ステップへ分割する。ステップ数を増やすほど、理論上は連続時間モデルの解析値へ近づく。
-
-ここでは、25、100および500ステップのCox–Ross–Rubinstein Treeを解析解と比較する。
-
-```{r chapter04-european-put}
-european_put <- GaussQuant::make_european_option_GQL(
-  spot = spot_price_bsm,
-  strike = strike_price_bsm,
-  maturity_date = maturity_date_bsm,
-  option_type = "put",
-  valuation_date = trade_date_bsm,
-  risk_free_rate = risk_free_rate_bsm,
-  dividend_yield = dividend_rate_bsm,
-  volatility = volatility_bsm,
-  day_counter = day_counter,
-  calendar = calendar_bsm
-)
-
-european_engines <- list(
-  crr_25 = QuantLib::BinomialCRRVanillaEngine(
-    bsm_bundle$process,
-    25L
-  ),
-  analytic = QuantLib::AnalyticEuropeanEngine(
-    bsm_bundle$process
-  ),
-  crr_100 = QuantLib::BinomialCRRVanillaEngine(
-    bsm_bundle$process,
-    100L
-  ),
-  crr_500 = QuantLib::BinomialCRRVanillaEngine(
-    bsm_bundle$process,
-    500L
-  )
-)
-
-european_comparison_tbl <- purrr::imap_dfr(
-  european_engines,
-  function(engine, method) {
-    european_put$setPricingEngine(engine)
-
-    tibble::tibble(
-      method = method,
-      npv = european_put$NPV()
-    )
-  }
-)
-
-analytic_put_npv <- european_comparison_tbl |>
-  dplyr::filter(.data$method == "analytic") |>
-  dplyr::pull(.data$npv)
-
-european_comparison_tbl <- european_comparison_tbl |>
-  dplyr::mutate(
-    difference_from_analytic = .data$npv - analytic_put_npv
-  )
-
-GaussQuant::show_tbl_GQH(
-  european_comparison_tbl,
-  "European put engine comparison",
-  n = 20
-)
-```
-
-## 10. American putの早期行使価値
+## 4.5 American putの早期行使価値
 
 Americanオプションは満期までの任意の時点で行使できる。したがって、その価値は同じ条件のEuropeanオプション以上となる。
 
@@ -653,7 +653,9 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 11. Sobol系列によるパス生成
+## 4.6 準Monte CarloとLongstaff–Schwartz法
+
+### 4.6.1 Sobol系列によるパス生成
 
 擬似乱数は乱数生成器によって確率的な点列を作る。これに対しSobol系列は、積分領域をできるだけ均等に覆うように構成された低乖離列である。
 
@@ -704,7 +706,7 @@ GaussQuant::show_tbl_GQH(
 print(sobol_plot)
 ```
 
-## 12. Longstaff–Schwartz法
+### 4.6.2 Longstaff–Schwartz法
 
 Americanオプションでは、各行使可能時点において、即時行使価値と保有を継続する価値を比較する必要がある。
 
@@ -796,7 +798,7 @@ GaussQuant::show_tbl_GQH(
 
 Longstaff–Schwartz法の価格は、パス数、時間ステップ、基底関数および回帰誤差に依存する。したがって、二項Treeとの差が完全にゼロになることを目的とするのではなく、早期行使判断をMonte Carloパス上でどのように近似するかを確認する。
 
-## 13. まとめ
+## 4.7 まとめ
 
 Black-76とBlack–Scholes–Mertonは、原資産が対数正規分布に従うという共通の仮定を持つ。Black–Scholes–Mertonは現物価格から出発し、Black-76はフォワード価格または先物価格を直接入力する。
 

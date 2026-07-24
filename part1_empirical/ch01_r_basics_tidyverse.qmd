@@ -13,7 +13,9 @@ execute:
 
 Base Rの項目構成は、Positが公開している[Base R Cheatsheet](https://github.com/rstudio/cheatsheets/blob/main/base-r.pdf)を参考にしている。本章のコードでは、反復処理に明示的なループを使わず、ベクトル化または`purrr::map()`系関数を用いる。また、パイプ演算子はすべて`|>`に統一する。
 
-## 1.1 使用するパッケージ
+## 1.1 R環境と基本操作
+
+### 1.1.1 使用するパッケージ
 
 本章ではtidyverseを使用する。tidyverseには、データ操作の`dplyr`、文字列処理の`stringr`、データ整形の`tidyr`、反復処理の`purrr`、可視化の`ggplot2`などが含まれる。
 
@@ -38,9 +40,9 @@ suppressPackageStartupMessages({
 install.packages("tidyverse")
 ```
 
-## 1.2 Rの基本操作
+### 1.1.2 Rの基本操作
 
-### オブジェクトと代入
+#### オブジェクトと代入
 
 Rでは、計算結果やデータをオブジェクトとして保存する。代入には`<-`を用いる。
 
@@ -57,7 +59,7 @@ present_value
 
 オブジェクト名には、内容が分かる英単語を用いる。本書では複数の単語をアンダースコアで結ぶsnake_caseを基本とする。
 
-### 四則演算と代表的な数学関数
+#### 四則演算と代表的な数学関数
 
 ```{r}
 #| label: arithmetic-functions
@@ -75,7 +77,7 @@ round(pi, digits = 3)
 signif(pi, digits = 4)
 ```
 
-### オブジェクトの型と構造
+#### オブジェクトの型と構造
 
 ```{r}
 #| label: object-types
@@ -94,7 +96,7 @@ typeof(numeric_value)
 str(numeric_value)
 ```
 
-### 欠損値
+#### 欠損値
 
 欠損値は`NA`で表す。欠損値の有無は`is.na()`で確認する。
 
@@ -109,9 +111,11 @@ sum(is.na(returns_with_na))
 mean(returns_with_na, na.rm = TRUE)
 ```
 
-## 1.3 ベクトル
+## 1.2 ベクトルとデータ構造
 
-### ベクトルの作成
+### 1.2.1 ベクトル
+
+#### ベクトルの作成
 
 ```{r}
 #| label: vector-creation
@@ -127,7 +131,7 @@ fine_grid
 repeated_values
 ```
 
-### ベクトルの要素
+#### ベクトルの要素
 
 Rの添字は1から始まる。
 
@@ -141,7 +145,7 @@ interest_rates[-1]
 interest_rates[interest_rates >= 0.015]
 ```
 
-### 名前付きベクトル
+#### 名前付きベクトル
 
 ```{r}
 #| label: named-vector
@@ -153,7 +157,7 @@ portfolio_weights["bond"]
 sum(portfolio_weights)
 ```
 
-### ベクトル化
+#### ベクトル化
 
 Rでは、多くの計算をベクトル全体に一度に適用できる。
 
@@ -168,9 +172,9 @@ present_values <- cash_flow / (1 + discount_rates)
 tibble(discount_rates, present_values)
 ```
 
-## 1.4 行列、リスト、データフレーム
+### 1.2.2 行列、リスト、データフレーム
 
-### 行列
+#### 行列
 
 ```{r}
 #| label: matrix-basics
@@ -190,7 +194,7 @@ return_matrix[, "stock_a"]
 colMeans(return_matrix)
 ```
 
-### リスト
+#### リスト
 
 リストには、型や長さの異なるオブジェクトをまとめて保存できる。
 
@@ -209,7 +213,7 @@ analysis_result$coefficients
 analysis_result[["observations"]]
 ```
 
-### データフレーム
+#### データフレーム
 
 ```{r}
 #| label: data-frame-basics
@@ -253,9 +257,11 @@ project_data <- tribble(
 project_data
 ```
 
-## 1.5 条件判定と独自関数
+## 1.3 関数・統計・確率分布
 
-### 条件判定
+### 1.3.1 条件判定と独自関数
+
+#### 条件判定
 
 ```{r}
 #| label: conditional-logic
@@ -288,7 +294,7 @@ credit_scores |>
   )
 ```
 
-### 独自関数
+#### 独自関数
 
 ```{r}
 #| label: custom-function
@@ -312,9 +318,9 @@ calculate_present_value(
 )
 ```
 
-## 1.6 記述統計
+### 1.3.2 記述統計
 
-### 代表値と散らばり
+#### 代表値と散らばり
 
 ```{r}
 #| label: descriptive-statistics
@@ -331,7 +337,7 @@ sd(sample_returns)
 quantile(sample_returns)
 ```
 
-### 共分散と相関
+#### 共分散と相関
 
 ```{r}
 #| label: covariance-correlation
@@ -343,7 +349,7 @@ cov(stock_a, stock_b)
 cor(stock_a, stock_b)
 ```
 
-### 順位
+#### 順位
 
 ```{r}
 #| label: ranking
@@ -355,7 +361,7 @@ rank(-firm_returns)
 order(firm_returns, decreasing = TRUE)
 ```
 
-## 1.7 確率分布
+### 1.3.3 確率分布
 
 Rの確率分布関数には共通した命名規則がある。
 
@@ -366,7 +372,7 @@ Rの確率分布関数には共通した命名規則がある。
 | `p` | 累積確率を求める |
 | `q` | 累積確率に対応する分位点を求める |
 
-### 一様分布
+#### 一様分布
 
 ```{r}
 #| label: uniform-distribution
@@ -381,7 +387,7 @@ punif(0.5, min = 0, max = 1)
 qunif(0.95, min = 0, max = 1)
 ```
 
-### 正規分布
+#### 正規分布
 
 ```{r}
 #| label: normal-distribution
@@ -408,7 +414,7 @@ probability_below
 value_at_risk_95
 ```
 
-### 二項分布
+#### 二項分布
 
 ```{r}
 #| label: binomial-distribution
@@ -423,7 +429,7 @@ pbinom(12, size = 20, prob = 0.6)
 qbinom(0.95, size = 20, prob = 0.6)
 ```
 
-### ポアソン分布
+#### ポアソン分布
 
 ```{r}
 #| label: poisson-distribution
@@ -438,7 +444,7 @@ ppois(2, lambda = 3)
 qpois(0.95, lambda = 3)
 ```
 
-### 分布関数の比較
+#### 分布関数の比較
 
 ```{r}
 #| label: distribution-function-table
@@ -454,7 +460,9 @@ distribution_functions <- tribble(
 distribution_functions
 ```
 
-## 1.8 プロジェクト内のデータを読み込む
+## 1.4 データ読込みとdplyr
+
+### 1.4.1 プロジェクト内のデータを読み込む
 
 本書で使用するデータは、プロジェクトルートの`simulation_data`ディレクトリに置かれている。絶対パスをコードへ直接書くと、プロジェクトを別の場所へ移したときに動かなくなる。そのため、現在の作業ディレクトリと`_quarto.yml`を利用してプロジェクトルートを確認する。
 
@@ -551,7 +559,7 @@ daily_stock_return <- daily_stock_return |>
 daily_stock_return
 ```
 
-### データの構造を確認する
+#### データの構造を確認する
 
 ```{r}
 #| label: inspect-daily-stock-return
@@ -563,9 +571,9 @@ ncol(daily_stock_return)
 names(daily_stock_return)
 ```
 
-## 1.9 dplyrによるデータ操作
+### 1.4.2 dplyrによるデータ操作
 
-### 列を選ぶ
+#### 列を選ぶ
 
 ```{r}
 #| label: dplyr-select
@@ -574,7 +582,7 @@ daily_stock_return |>
   select(date, firm1)
 ```
 
-### 行を抽出する
+#### 行を抽出する
 
 ```{r}
 #| label: dplyr-filter
@@ -592,7 +600,7 @@ daily_stock_return |>
   filter(firm1 > 0, firm2 > 0)
 ```
 
-### 列を追加する
+#### 列を追加する
 
 ```{r}
 #| label: dplyr-mutate
@@ -612,7 +620,7 @@ return_data <- daily_stock_return |>
 return_data
 ```
 
-### 並べ替える
+#### 並べ替える
 
 ```{r}
 #| label: dplyr-arrange
@@ -624,7 +632,7 @@ return_data |>
   arrange(desc(firm1))
 ```
 
-### 要約する
+#### 要約する
 
 ```{r}
 #| label: dplyr-summarise
@@ -640,7 +648,7 @@ return_data |>
   )
 ```
 
-### グループごとに集計する
+#### グループごとに集計する
 
 ```{r}
 #| label: dplyr-group-by
@@ -656,7 +664,7 @@ return_data |>
   arrange(desc(observations))
 ```
 
-### 件数を数える
+#### 件数を数える
 
 ```{r}
 #| label: dplyr-count
@@ -665,7 +673,7 @@ return_data |>
   count(market_direction, sort = TRUE)
 ```
 
-### データを結合する
+#### データを結合する
 
 ```{r}
 #| label: dplyr-join
@@ -691,7 +699,9 @@ return_summary |>
   left_join(firm_master, by = "firm")
 ```
 
-## 1.10 stringrによる文字列処理
+## 1.5 stringr・tidyr・purrr
+
+### 1.5.1 stringrによる文字列処理
 
 文字列処理では、関数名が`str_`で始まる`stringr`を使用する。
 
@@ -718,7 +728,7 @@ company_names <- company_names |>
 company_names
 ```
 
-### 置換と結合
+#### 置換と結合
 
 ```{r}
 #| label: stringr-replace-combine
@@ -731,9 +741,9 @@ company_names |>
   select(clean_name, short_name, display_name)
 ```
 
-## 1.11 tidyrによるデータ整形
+### 1.5.2 tidyrによるデータ整形
 
-### wide形式からlong形式へ変換する
+#### wide形式からlong形式へ変換する
 
 元のデータでは、`firm1`と`firm2`が別々の列に格納されている。`pivot_longer()`を使うと、企業名とリターンをそれぞれ一つの列へまとめられる。
 
@@ -750,7 +760,7 @@ return_long <- daily_stock_return |>
 return_long
 ```
 
-### long形式からwide形式へ戻す
+#### long形式からwide形式へ戻す
 
 ```{r}
 #| label: pivot-wider
@@ -762,7 +772,7 @@ return_long |>
   )
 ```
 
-### 文字列を複数列へ分ける
+#### 文字列を複数列へ分ける
 
 ```{r}
 #| label: separate-wider-delim
@@ -779,7 +789,7 @@ security_codes |>
   )
 ```
 
-### 欠損値を処理する
+#### 欠損値を処理する
 
 ```{r}
 #| label: tidyr-missing-values
@@ -796,9 +806,9 @@ missing_data |>
   drop_na()
 ```
 
-## 1.12 purrrによる反復処理
+### 1.5.3 purrrによる反復処理
 
-### map()と型を指定するmap系関数
+#### map()と型を指定するmap系関数
 
 `map()`は結果をリストとして返す。数値ベクトルが必要な場合は`map_dbl()`を用いる。
 
@@ -823,7 +833,7 @@ present_value_table <- tibble(
 present_value_table
 ```
 
-### map2()で二つのベクトルを同時に処理する
+#### map2()で二つのベクトルを同時に処理する
 
 ```{r}
 #| label: purrr-map2
@@ -838,7 +848,7 @@ map2_dbl(
 )
 ```
 
-### pmap()で複数の列を処理する
+#### pmap()で複数の列を処理する
 
 ```{r}
 #| label: purrr-pmap
@@ -861,7 +871,7 @@ cash_flow_scenarios |>
   )
 ```
 
-### 複数列へ同じ集計を適用する
+#### 複数列へ同じ集計を適用する
 
 ```{r}
 #| label: purrr-column-summary
@@ -885,7 +895,7 @@ return_columns |>
   )
 ```
 
-### 複数の確率分布を同じ形式で生成する
+#### 複数の確率分布を同じ形式で生成する
 
 ```{r}
 #| label: purrr-distribution-simulation
@@ -907,7 +917,7 @@ simulated_distributions <- distribution_specs |>
 simulated_distributions
 ```
 
-### walk()で副作用だけを実行する
+#### walk()で副作用だけを実行する
 
 `walk()`は、返り値を保存するのではなく、表示などの副作用だけを順番に実行するときに使う。
 
@@ -918,11 +928,13 @@ c("firm1", "firm2") |>
   walk(\(firm) print(str_c("集計対象: ", firm)))
 ```
 
-## 1.13 ggplot2による可視化
+## 1.6 可視化と総合演習
+
+### 1.6.1 ggplot2による可視化
 
 `ggplot2`では、データを`ggplot()`へ渡し、`aes()`で変数と視覚要素の対応を指定し、`geom_*()`で図形を追加する。
 
-### 折れ線グラフ
+#### 折れ線グラフ
 
 ```{r}
 #| label: ggplot-line
@@ -940,7 +952,7 @@ return_long |>
   theme_classic()
 ```
 
-### ヒストグラム
+#### ヒストグラム
 
 ```{r}
 #| label: ggplot-histogram
@@ -958,7 +970,7 @@ return_long |>
   theme_classic()
 ```
 
-### 密度関数
+#### 密度関数
 
 ```{r}
 #| label: ggplot-density
@@ -976,7 +988,7 @@ return_long |>
   theme_classic()
 ```
 
-### 正規分布の密度と累積分布
+#### 正規分布の密度と累積分布
 
 ```{r}
 #| label: ggplot-normal-functions
@@ -1005,7 +1017,7 @@ normal_curve |>
   theme_classic()
 ```
 
-### シミュレーション結果を比較する
+#### シミュレーション結果を比較する
 
 ```{r}
 #| label: ggplot-simulated-distributions
@@ -1023,11 +1035,11 @@ simulated_distributions |>
   theme_classic()
 ```
 
-## 1.14 総合演習
+### 1.6.2 総合演習
 
 最後に、`simulation_data`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
 
-### 分析用データを作る
+#### 分析用データを作る
 
 ```{r}
 #| label: integrated-analysis-data
@@ -1051,7 +1063,7 @@ analysis_data <- daily_stock_return |>
 analysis_data
 ```
 
-### 企業別の要約統計量を計算する
+#### 企業別の要約統計量を計算する
 
 ```{r}
 #| label: integrated-analysis-summary
@@ -1071,7 +1083,7 @@ firm_summary <- analysis_data |>
 firm_summary
 ```
 
-### 累積リターンを計算する
+#### 累積リターンを計算する
 
 ```{r}
 #| label: integrated-analysis-cumulative
@@ -1087,7 +1099,7 @@ cumulative_return_data <- analysis_data |>
 cumulative_return_data
 ```
 
-### purrrで企業別の統計量を再計算する
+#### purrrで企業別の統計量を再計算する
 
 ```{r}
 #| label: integrated-analysis-purrr
@@ -1112,7 +1124,7 @@ firm_names |>
   )
 ```
 
-### 累積リターンを可視化する
+#### 累積リターンを可視化する
 
 ```{r}
 #| label: integrated-analysis-plot
@@ -1131,7 +1143,7 @@ cumulative_return_data |>
   theme_classic()
 ```
 
-## 1.15 まとめ
+## 1.7 まとめ
 
 本章では、Base Rの基本的なデータ構造と関数から出発し、記述統計、確率分布、tidyverseによるデータ分析までを一通り確認した。重要な点は次のとおりである。
 
