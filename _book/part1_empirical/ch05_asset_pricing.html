@@ -207,7 +207,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -257,26 +257,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#外部パッケージの読み込みとデータの準備" id="toc-外部パッケージの読み込みとデータの準備" class="nav-link active" data-scroll-target="#外部パッケージの読み込みとデータの準備">5.1 外部パッケージの読み込みとデータの準備</a></li>
-  <li><a href="#ff3モデルの推定-1" id="toc-ff3モデルの推定-1" class="nav-link" data-scroll-target="#ff3モデルの推定-1">5.2 FF3モデルの推定 (1)</a></li>
-  <li><a href="#ff3モデルの推定-2" id="toc-ff3モデルの推定-2" class="nav-link" data-scroll-target="#ff3モデルの推定-2">5.3 FF3モデルの推定 (2)</a></li>
-  <li><a href="#ファクターリスクプレミアムの計算" id="toc-ファクターリスクプレミアムの計算" class="nav-link" data-scroll-target="#ファクターリスクプレミアムの計算">5.4 ファクター・リスクプレミアムの計算</a></li>
-  <li><a href="#fama-frenchの3ファクターモデルに基づいて株式資本コストを推定" id="toc-fama-frenchの3ファクターモデルに基づいて株式資本コストを推定" class="nav-link" data-scroll-target="#fama-frenchの3ファクターモデルに基づいて株式資本コストを推定">5.5 Fama-Frenchの3ファクター・モデルに基づいて株式資本コストを推定</a></li>
-  <li><a href="#株式資本コストの推定値をヒストグラムで可視化" id="toc-株式資本コストの推定値をヒストグラムで可視化" class="nav-link" data-scroll-target="#株式資本コストの推定値をヒストグラムで可視化">5.6 株式資本コストの推定値をヒストグラムで可視化</a></li>
-  <li><a href="#時価総額別に株式資本コストの推定値を可視化" id="toc-時価総額別に株式資本コストの推定値を可視化" class="nav-link" data-scroll-target="#時価総額別に株式資本コストの推定値を可視化">5.7 時価総額別に株式資本コストの推定値を可視化</a></li>
-  <li><a href="#配当利回りの計算" id="toc-配当利回りの計算" class="nav-link" data-scroll-target="#配当利回りの計算">5.8 配当利回りの計算</a></li>
-  <li><a href="#潜在配当成長率の推定" id="toc-潜在配当成長率の推定" class="nav-link" data-scroll-target="#潜在配当成長率の推定">5.9 潜在配当成長率の推定</a></li>
-  <li><a href="#ファクターの分散共分散行列の推定" id="toc-ファクターの分散共分散行列の推定" class="nav-link" data-scroll-target="#ファクターの分散共分散行列の推定">5.10 ファクターの分散共分散行列の推定</a></li>
-  <li><a href="#投資対象企業の選定" id="toc-投資対象企業の選定" class="nav-link" data-scroll-target="#投資対象企業の選定">5.11 投資対象企業の選定</a></li>
-  <li><a href="#誤差項の分散共分散行列の推定" id="toc-誤差項の分散共分散行列の推定" class="nav-link" data-scroll-target="#誤差項の分散共分散行列の推定">5.12 誤差項の分散共分散行列の推定</a></li>
-  <li><a href="#リターンの分散共分散行列を準備" id="toc-リターンの分散共分散行列を準備" class="nav-link" data-scroll-target="#リターンの分散共分散行列を準備">5.13 リターンの分散共分散行列を準備</a></li>
-  <li><a href="#期待リターンのベクトルを準備" id="toc-期待リターンのベクトルを準備" class="nav-link" data-scroll-target="#期待リターンのベクトルを準備">5.14 期待リターンのベクトルを準備</a></li>
-  <li><a href="#quadprogパッケージのインストール" id="toc-quadprogパッケージのインストール" class="nav-link" data-scroll-target="#quadprogパッケージのインストール">5.15 quadprogパッケージのインストール</a></li>
-  <li><a href="#solve.qp関数を利用した平均分散ポートフォリオの計算-1" id="toc-solve.qp関数を利用した平均分散ポートフォリオの計算-1" class="nav-link" data-scroll-target="#solve.qp関数を利用した平均分散ポートフォリオの計算-1">5.16 solve.QP()関数を利用した平均分散ポートフォリオの計算 (1)</a></li>
-  <li><a href="#solve.qp関数を利用した平均分散ポートフォリオの計算-2" id="toc-solve.qp関数を利用した平均分散ポートフォリオの計算-2" class="nav-link" data-scroll-target="#solve.qp関数を利用した平均分散ポートフォリオの計算-2">5.17 solve.QP()関数を利用した平均分散ポートフォリオの計算 (2)</a></li>
-  <li><a href="#solve.qp関数を利用した平均分散ポートフォリオの計算-3" id="toc-solve.qp関数を利用した平均分散ポートフォリオの計算-3" class="nav-link" data-scroll-target="#solve.qp関数を利用した平均分散ポートフォリオの計算-3">5.18 solve.QP()関数を利用した平均分散ポートフォリオの計算 (3)</a></li>
-  <li><a href="#平均分散ポートフォリオの描画-1" id="toc-平均分散ポートフォリオの描画-1" class="nav-link" data-scroll-target="#平均分散ポートフォリオの描画-1">5.19 平均分散ポートフォリオの描画 (1)</a></li>
-  <li><a href="#平均分散ポートフォリオの描画-2" id="toc-平均分散ポートフォリオの描画-2" class="nav-link" data-scroll-target="#平均分散ポートフォリオの描画-2">5.20 平均分散ポートフォリオの描画 (2)</a></li>
+  <li><a href="#分析環境とデータ準備" id="toc-分析環境とデータ準備" class="nav-link active" data-scroll-target="#分析環境とデータ準備">5.1 分析環境とデータ準備</a>
+  <ul class="collapse">
+  <li><a href="#外部パッケージの読み込みとデータの準備" id="toc-外部パッケージの読み込みとデータの準備" class="nav-link" data-scroll-target="#外部パッケージの読み込みとデータの準備">5.1.1 外部パッケージの読み込みとデータの準備</a></li>
+  </ul></li>
+  <li><a href="#ff3モデルと株式資本コスト" id="toc-ff3モデルと株式資本コスト" class="nav-link" data-scroll-target="#ff3モデルと株式資本コスト">5.2 FF3モデルと株式資本コスト</a>
+  <ul class="collapse">
+  <li><a href="#ff3モデルの推定" id="toc-ff3モデルの推定" class="nav-link" data-scroll-target="#ff3モデルの推定">5.2.1 FF3モデルの推定</a></li>
+  <li><a href="#ファクターローディングの整理" id="toc-ファクターローディングの整理" class="nav-link" data-scroll-target="#ファクターローディングの整理">5.2.2 ファクター・ローディングの整理</a></li>
+  <li><a href="#ファクターリスクプレミアムの計算" id="toc-ファクターリスクプレミアムの計算" class="nav-link" data-scroll-target="#ファクターリスクプレミアムの計算">5.2.3 ファクター・リスクプレミアムの計算</a></li>
+  <li><a href="#ff3モデルによる株式資本コストの推定" id="toc-ff3モデルによる株式資本コストの推定" class="nav-link" data-scroll-target="#ff3モデルによる株式資本コストの推定">5.2.4 FF3モデルによる株式資本コストの推定</a></li>
+  </ul></li>
+  <li><a href="#株式資本コストと配当成長" id="toc-株式資本コストと配当成長" class="nav-link" data-scroll-target="#株式資本コストと配当成長">5.3 株式資本コストと配当成長</a>
+  <ul class="collapse">
+  <li><a href="#株式資本コストの分布" id="toc-株式資本コストの分布" class="nav-link" data-scroll-target="#株式資本コストの分布">5.3.1 株式資本コストの分布</a></li>
+  <li><a href="#時価総額別の株式資本コスト" id="toc-時価総額別の株式資本コスト" class="nav-link" data-scroll-target="#時価総額別の株式資本コスト">5.3.2 時価総額別の株式資本コスト</a></li>
+  <li><a href="#配当利回りの計算" id="toc-配当利回りの計算" class="nav-link" data-scroll-target="#配当利回りの計算">5.3.3 配当利回りの計算</a></li>
+  <li><a href="#潜在配当成長率の推定" id="toc-潜在配当成長率の推定" class="nav-link" data-scroll-target="#潜在配当成長率の推定">5.3.4 潜在配当成長率の推定</a></li>
+  </ul></li>
+  <li><a href="#リスクモデルと投資ユニバース" id="toc-リスクモデルと投資ユニバース" class="nav-link" data-scroll-target="#リスクモデルと投資ユニバース">5.4 リスクモデルと投資ユニバース</a>
+  <ul class="collapse">
+  <li><a href="#ファクターの分散共分散行列" id="toc-ファクターの分散共分散行列" class="nav-link" data-scroll-target="#ファクターの分散共分散行列">5.4.1 ファクターの分散共分散行列</a></li>
+  <li><a href="#投資対象企業の選定" id="toc-投資対象企業の選定" class="nav-link" data-scroll-target="#投資対象企業の選定">5.4.2 投資対象企業の選定</a></li>
+  <li><a href="#誤差項の分散共分散行列" id="toc-誤差項の分散共分散行列" class="nav-link" data-scroll-target="#誤差項の分散共分散行列">5.4.3 誤差項の分散共分散行列</a></li>
+  <li><a href="#リターンの分散共分散行列" id="toc-リターンの分散共分散行列" class="nav-link" data-scroll-target="#リターンの分散共分散行列">5.4.4 リターンの分散共分散行列</a></li>
+  <li><a href="#期待リターンのベクトル" id="toc-期待リターンのベクトル" class="nav-link" data-scroll-target="#期待リターンのベクトル">5.4.5 期待リターンのベクトル</a></li>
+  </ul></li>
+  <li><a href="#平均分散ポートフォリオ" id="toc-平均分散ポートフォリオ" class="nav-link" data-scroll-target="#平均分散ポートフォリオ">5.5 平均分散ポートフォリオ</a>
+  <ul class="collapse">
+  <li><a href="#quadprogパッケージの準備" id="toc-quadprogパッケージの準備" class="nav-link" data-scroll-target="#quadprogパッケージの準備">5.5.1 quadprogパッケージの準備</a></li>
+  <li><a href="#平均分散最適化問題の設定" id="toc-平均分散最適化問題の設定" class="nav-link" data-scroll-target="#平均分散最適化問題の設定">5.5.2 平均分散最適化問題の設定</a></li>
+  <li><a href="#最適化結果の構造" id="toc-最適化結果の構造" class="nav-link" data-scroll-target="#最適化結果の構造">5.5.3 最適化結果の構造</a></li>
+  <li><a href="#最適保有比率とポートフォリオリスク" id="toc-最適保有比率とポートフォリオリスク" class="nav-link" data-scroll-target="#最適保有比率とポートフォリオリスク">5.5.4 最適保有比率とポートフォリオ・リスク</a></li>
+  </ul></li>
+  <li><a href="#効率的フロンティア" id="toc-効率的フロンティア" class="nav-link" data-scroll-target="#効率的フロンティア">5.6 効率的フロンティア</a>
+  <ul class="collapse">
+  <li><a href="#複数の目標期待リターンによる最適化" id="toc-複数の目標期待リターンによる最適化" class="nav-link" data-scroll-target="#複数の目標期待リターンによる最適化">5.6.1 複数の目標期待リターンによる最適化</a></li>
+  <li><a href="#効率的フロンティアの描画" id="toc-効率的フロンティアの描画" class="nav-link" data-scroll-target="#効率的フロンティアの描画">5.6.2 効率的フロンティアの描画</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">5.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -302,8 +321,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="外部パッケージの読み込みとデータの準備" class="level2">
-<h2 class="anchored" data-anchor-id="外部パッケージの読み込みとデータの準備">5.1 外部パッケージの読み込みとデータの準備</h2>
+<section id="分析環境とデータ準備" class="level2">
+<h2 class="anchored" data-anchor-id="分析環境とデータ準備">5.1 分析環境とデータ準備</h2>
+<section id="外部パッケージの読み込みとデータの準備" class="level3">
+<h3 class="anchored" data-anchor-id="外部パッケージの読み込みとデータの準備">5.1.1 外部パッケージの読み込みとデータの準備</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom)</span>
@@ -327,8 +348,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(annual_data, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"firm_ID"</span>)) <span class="co"># annual_dataとmonthly_dataでyearとfirm_IDのペアを整合的に</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ff3モデルの推定-1" class="level2">
-<h2 class="anchored" data-anchor-id="ff3モデルの推定-1">5.2 FF3モデルの推定 (1)</h2>
+</section>
+<section id="ff3モデルと株式資本コスト" class="level2">
+<h2 class="anchored" data-anchor-id="ff3モデルと株式資本コスト">5.2 FF3モデルと株式資本コスト</h2>
+<section id="ff3モデルの推定" class="level3">
+<h3 class="anchored" data-anchor-id="ff3モデルの推定">5.2.1 FF3モデルの推定</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>firm_ID_set <span class="ot">&lt;-</span> <span class="fu">unique</span>(monthly_data<span class="sc">$</span>firm_ID) <span class="co"># firm_IDの固有要素を抽出</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>N_firms <span class="ot">&lt;-</span> <span class="fu">length</span>(firm_ID_set) <span class="co"># firm_ID_setの要素数をカウント</span></span>
@@ -353,33 +377,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>FF3_results <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, FF3_results) <span class="co"># do.call()関数を用いて複数のデータフレームから構成されるリストを一つのデータフレームに統合</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ff3モデルの推定-2" class="level2">
-<h2 class="anchored" data-anchor-id="ff3モデルの推定-2">5.3 FF3モデルの推定 (2)</h2>
+<section id="ファクターローディングの整理" class="level3">
+<h3 class="anchored" data-anchor-id="ファクターローディングの整理">5.2.2 ファクター・ローディングの整理</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>FF3_loadings <span class="ot">&lt;-</span> FF3_results <span class="sc">%&gt;%</span> </span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">id_cols =</span> <span class="st">"firm_ID"</span>, <span class="at">names_from =</span> <span class="st">"term"</span>, <span class="at">values_from =</span> <span class="st">"estimate"</span>) <span class="sc">%&gt;%</span> <span class="co"># term列の値に応じて新しく列を定義</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">beta_M =</span> R_Me, <span class="at">beta_SMB =</span> SMB, <span class="at">beta_HML =</span> HML) <span class="co"># 列名を変更</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ファクターリスクプレミアムの計算" class="level2">
-<h2 class="anchored" data-anchor-id="ファクターリスクプレミアムの計算">5.4 ファクター・リスクプレミアムの計算</h2>
+<section id="ファクターリスクプレミアムの計算" class="level3">
+<h3 class="anchored" data-anchor-id="ファクターリスクプレミアムの計算">5.2.3 ファクター・リスクプレミアムの計算</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>factor_risk_premium <span class="ot">&lt;-</span> <span class="fu">apply</span>(factor_data[ , <span class="dv">4</span><span class="sc">:</span><span class="dv">6</span>], <span class="dv">2</span>, mean) <span class="sc">*</span> <span class="dv">12</span> <span class="co"># 12を掛けて年次プレミアムに換算</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="do">##       R_Me        SMB        HML </span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="do">## 0.04800514 0.07858358 0.08328208 </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="do">## 0.04800514 0.07858358 0.08328208 </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="fama-frenchの3ファクターモデルに基づいて株式資本コストを推定" class="level2">
-<h2 class="anchored" data-anchor-id="fama-frenchの3ファクターモデルに基づいて株式資本コストを推定">5.5 Fama-Frenchの3ファクター・モデルに基づいて株式資本コストを推定</h2>
+<section id="ff3モデルによる株式資本コストの推定" class="level3">
+<h3 class="anchored" data-anchor-id="ff3モデルによる株式資本コストの推定">5.2.4 FF3モデルによる株式資本コストの推定</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>expected_R_FF3 <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(FF3_loadings[ , <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>]) <span class="sc">%*%</span> factor_risk_premium <span class="co"># Fama-Frenchの3ファクター・モデルに基づいて期待リターンを計算</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>FF3_cost_of_capital <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">firm_ID =</span> FF3_loadings<span class="sc">$</span>firm_ID, <span class="at">cost_of_capital =</span> <span class="fu">as.vector</span>(expected_R_FF3)) <span class="co"># 行列からデータフレームに変換してfirm_ID列を追加</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="株式資本コストの推定値をヒストグラムで可視化" class="level2">
-<h2 class="anchored" data-anchor-id="株式資本コストの推定値をヒストグラムで可視化">5.6 株式資本コストの推定値をヒストグラムで可視化</h2>
+</section>
+<section id="株式資本コストと配当成長" class="level2">
+<h2 class="anchored" data-anchor-id="株式資本コストと配当成長">5.3 株式資本コストと配当成長</h2>
+<section id="株式資本コストの分布" class="level3">
+<h3 class="anchored" data-anchor-id="株式資本コストの分布">5.3.1 株式資本コストの分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(FF3_cost_of_capital) <span class="sc">+</span> </span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="fu">aes</span>(<span class="at">x =</span> cost_of_capital)) <span class="sc">+</span> </span>
@@ -388,8 +416,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="時価総額別に株式資本コストの推定値を可視化" class="level2">
-<h2 class="anchored" data-anchor-id="時価総額別に株式資本コストの推定値を可視化">5.7 時価総額別に株式資本コストの推定値を可視化</h2>
+<section id="時価総額別の株式資本コスト" class="level3">
+<h3 class="anchored" data-anchor-id="時価総額別の株式資本コスト">5.3.2 時価総額別の株式資本コスト</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>annual_data_2020 <span class="ot">&lt;-</span> annual_data <span class="sc">%&gt;%</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(firm_ID) <span class="sc">%&gt;%</span> <span class="co"># 企業ごとに時価総額を計算</span></span>
@@ -410,8 +438,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="配当利回りの計算" class="level2">
-<h2 class="anchored" data-anchor-id="配当利回りの計算">5.8 配当利回りの計算</h2>
+<section id="配当利回りの計算" class="level3">
+<h3 class="anchored" data-anchor-id="配当利回りの計算">5.3.3 配当利回りの計算</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>dividend_yield_2020 <span class="ot">&lt;-</span> monthly_data <span class="sc">%&gt;%</span> </span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">==</span> <span class="dv">2020</span>) <span class="sc">%&gt;%</span></span>
@@ -422,27 +450,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(dividend_yield <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="co"># 無配の企業を落とす</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="潜在配当成長率の推定" class="level2">
-<h2 class="anchored" data-anchor-id="潜在配当成長率の推定">5.9 潜在配当成長率の推定</h2>
+<section id="潜在配当成長率の推定" class="level3">
+<h3 class="anchored" data-anchor-id="潜在配当成長率の推定">5.3.4 潜在配当成長率の推定</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>dividend_yield_2020 <span class="sc">%&gt;%</span> </span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(FF3_cost_of_capital, <span class="at">by =</span> <span class="st">"firm_ID"</span>) <span class="sc">%&gt;%</span> <span class="co"># 株式資本コストの推定値を追加</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">implied_dividend_growth =</span> (cost_of_capital <span class="sc">-</span> dividend_yield) <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> dividend_yield)) <span class="co"># 配当割引モデルから潜在配当成長率を逆算</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ファクターの分散共分散行列の推定" class="level2">
-<h2 class="anchored" data-anchor-id="ファクターの分散共分散行列の推定">5.10 ファクターの分散共分散行列の推定</h2>
+</section>
+<section id="リスクモデルと投資ユニバース" class="level2">
+<h2 class="anchored" data-anchor-id="リスクモデルと投資ユニバース">5.4 リスクモデルと投資ユニバース</h2>
+<section id="ファクターの分散共分散行列" class="level3">
+<h3 class="anchored" data-anchor-id="ファクターの分散共分散行列">5.4.1 ファクターの分散共分散行列</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Sigma_FF3 <span class="ot">&lt;-</span> <span class="dv">12</span> <span class="sc">*</span> <span class="fu">cov</span>(factor_data[ , <span class="dv">4</span><span class="sc">:</span><span class="dv">6</span>]) <span class="co"># 12を掛けて年次データに換算</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="do">##              R_Me          SMB          HML</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="do">## R_Me  0.020685969 -0.003901607  0.001529890</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="do">## SMB  -0.003901607  0.006268377 -0.001886351</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="do">## HML   0.001529890 -0.001886351  0.003915638</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="do">## R_Me  0.020685969 -0.003901607  0.001529890</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="do">## SMB  -0.003901607  0.006268377 -0.001886351</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="do">## HML   0.001529890 -0.001886351  0.003915638</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="投資対象企業の選定" class="level2">
-<h2 class="anchored" data-anchor-id="投資対象企業の選定">5.11 投資対象企業の選定</h2>
+<section id="投資対象企業の選定" class="level3">
+<h3 class="anchored" data-anchor-id="投資対象企業の選定">5.4.2 投資対象企業の選定</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>N_portfolio_firms <span class="ot">&lt;-</span> <span class="dv">100</span> <span class="co"># 投資対象の企業を100社に限定</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -455,8 +489,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(investment_universe) <span class="ot">&lt;-</span> <span class="cn">NULL</span> <span class="co"># firm_IDという列名を消去</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="誤差項の分散共分散行列の推定" class="level2">
-<h2 class="anchored" data-anchor-id="誤差項の分散共分散行列の推定">5.12 誤差項の分散共分散行列の推定</h2>
+<section id="誤差項の分散共分散行列" class="level3">
+<h3 class="anchored" data-anchor-id="誤差項の分散共分散行列">5.4.3 誤差項の分散共分散行列</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>Sigma_epsilon <span class="ot">&lt;-</span> monthly_data <span class="sc">%&gt;%</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(firm_ID <span class="sc">%in%</span> investment_universe) <span class="sc">%&gt;%</span> <span class="co"># 投資対象に含まれるデータのみを抽出</span></span>
@@ -470,8 +504,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">diag</span>() <span class="co"># ベクトルから対角行列を作成</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="リターンの分散共分散行列を準備" class="level2">
-<h2 class="anchored" data-anchor-id="リターンの分散共分散行列を準備">5.13 リターンの分散共分散行列を準備</h2>
+<section id="リターンの分散共分散行列" class="level3">
+<h3 class="anchored" data-anchor-id="リターンの分散共分散行列">5.4.4 リターンの分散共分散行列</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>beta <span class="ot">&lt;-</span> FF3_loadings <span class="sc">%&gt;%</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(firm_ID <span class="sc">%in%</span> investment_universe) <span class="sc">%&gt;%</span> <span class="co"># 投資対象に含まれるデータのみを抽出</span></span>
@@ -481,8 +515,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>Sigma <span class="ot">&lt;-</span> beta <span class="sc">%*%</span> Sigma_FF3 <span class="sc">%*%</span> <span class="fu">t</span>(beta) <span class="sc">+</span> Sigma_epsilon <span class="co"># 分解式に基づいて分散共分散行列を計算</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="期待リターンのベクトルを準備" class="level2">
-<h2 class="anchored" data-anchor-id="期待リターンのベクトルを準備">5.14 期待リターンのベクトルを準備</h2>
+<section id="期待リターンのベクトル" class="level3">
+<h3 class="anchored" data-anchor-id="期待リターンのベクトル">5.4.5 期待リターンのベクトル</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> FF3_cost_of_capital <span class="sc">%&gt;%</span> <span class="co"># 7.1.2節の推定結果をそのまま利用</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(firm_ID <span class="sc">%in%</span> investment_universe) <span class="sc">%&gt;%</span> <span class="co"># 投資対象に含まれるデータのみを抽出</span></span>
@@ -494,14 +528,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="do">##   [1]  0.203791678 -0.001750860  0.071846430  …（中略）…  0.088872719  0.153100331  0.361662758</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="quadprogパッケージのインストール" class="level2">
-<h2 class="anchored" data-anchor-id="quadprogパッケージのインストール">5.15 quadprogパッケージのインストール</h2>
+</section>
+<section id="平均分散ポートフォリオ" class="level2">
+<h2 class="anchored" data-anchor-id="平均分散ポートフォリオ">5.5 平均分散ポートフォリオ</h2>
+<section id="quadprogパッケージの準備" class="level3">
+<h3 class="anchored" data-anchor-id="quadprogパッケージの準備">5.5.1 quadprogパッケージの準備</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"quadprog"</span>) <span class="co"># quadprogはquadratic programming（二次計画法）の略</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="solve.qp関数を利用した平均分散ポートフォリオの計算-1" class="level2">
-<h2 class="anchored" data-anchor-id="solve.qp関数を利用した平均分散ポートフォリオの計算-1">5.16 solve.QP()関数を利用した平均分散ポートフォリオの計算 (1)</h2>
+<section id="平均分散最適化問題の設定" class="level3">
+<h3 class="anchored" data-anchor-id="平均分散最適化問題の設定">5.5.2 平均分散最適化問題の設定</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(quadprog) <span class="co"># quadprogの読み込み</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -515,14 +552,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>MV_portfolio <span class="ot">&lt;-</span> <span class="fu">solve.QP</span>(Dmat, dvec, Amat, bvec, <span class="at">meq =</span> <span class="dv">2</span>) <span class="co"># 等号制約の数をmeq引数で表す</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="solve.qp関数を利用した平均分散ポートフォリオの計算-2" class="level2">
-<h2 class="anchored" data-anchor-id="solve.qp関数を利用した平均分散ポートフォリオの計算-2">5.17 solve.QP()関数を利用した平均分散ポートフォリオの計算 (2)</h2>
+<section id="最適化結果の構造" class="level3">
+<h3 class="anchored" data-anchor-id="最適化結果の構造">5.5.3 最適化結果の構造</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(MV_portfolio) <span class="co"># solve.QP()関数の返り値の構造を確認</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="solve.qp関数を利用した平均分散ポートフォリオの計算-3" class="level2">
-<h2 class="anchored" data-anchor-id="solve.qp関数を利用した平均分散ポートフォリオの計算-3">5.18 solve.QP()関数を利用した平均分散ポートフォリオの計算 (3)</h2>
+<section id="最適保有比率とポートフォリオリスク" class="level3">
+<h3 class="anchored" data-anchor-id="最適保有比率とポートフォリオリスク">5.5.4 最適保有比率とポートフォリオ・リスク</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>optimal_weight <span class="ot">&lt;-</span> MV_portfolio<span class="sc">$</span>solution <span class="co"># 最適保有比率を保存</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(optimal_weight[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>]) <span class="co"># 最初の10社のみ表示</span></span>
@@ -531,8 +568,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(minimized_risk)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="平均分散ポートフォリオの描画-1" class="level2">
-<h2 class="anchored" data-anchor-id="平均分散ポートフォリオの描画-1">5.19 平均分散ポートフォリオの描画 (1)</h2>
+</section>
+<section id="効率的フロンティア" class="level2">
+<h2 class="anchored" data-anchor-id="効率的フロンティア">5.6 効率的フロンティア</h2>
+<section id="複数の目標期待リターンによる最適化" class="level3">
+<h3 class="anchored" data-anchor-id="複数の目標期待リターンによる最適化">5.6.1 複数の目標期待リターンによる最適化</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>target_return <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="fl">0.1</span>, <span class="fl">0.4</span>, <span class="at">length =</span> <span class="dv">100</span>) <span class="co"># -0.1から0.4の範囲を離散化して目標期待リターンを100次元のベクトルで準備</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>N_points <span class="ot">&lt;-</span> <span class="fu">length</span>(target_return) <span class="co"># target_returnの次元100をN_pointsと定義</span></span>
@@ -552,8 +592,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(minimized_risk[N_points]) <span class="co"># target_return = 0.4のときの平均分散ポートフォリオのリスク</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="平均分散ポートフォリオの描画-2" class="level2">
-<h2 class="anchored" data-anchor-id="平均分散ポートフォリオの描画-2">5.20 平均分散ポートフォリオの描画 (2)</h2>
+<section id="効率的フロンティアの描画" class="level3">
+<h3 class="anchored" data-anchor-id="効率的フロンティアの描画">5.6.2 効率的フロンティアの描画</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>MV_frontier <span class="ot">&lt;-</span> <span class="fu">tibble</span>(target_return, minimized_risk)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -563,6 +603,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Expected Return"</span>, <span class="at">y =</span> <span class="st">"Risk"</span>) <span class="sc">+</span> </span>
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">5.7 まとめ</h2>
+<p>本章では、Fama–Frenchの3ファクター・モデルを用いて、企業別のファクター・ローディングと株式資本コストを推定した。</p>
+<p>さらに、ファクターと誤差項から株式リターンの分散共分散行列を構築し、二次計画法による平均分散ポートフォリオと効率的フロンティアを確認した。</p>
 
 
 </section>

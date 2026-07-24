@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>15&nbsp; 第II-8章 信用リスクとCDS – ラグランジェ・ファイナンス</title>
+<title>第II-8章 信用リスクとCDS – ラグランジェ・ファイナンス</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,33 +286,48 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#第ii-8章-信用リスクとcds" id="toc-第ii-8章-信用リスクとcds" class="nav-link active" data-scroll-target="#第ii-8章-信用リスクとcds"><span class="header-section-number">16</span> 第II-8章 信用リスクとCDS</a>
+  <li><a href="#信用リスクとcdsの基礎" id="toc-信用リスクとcdsの基礎" class="nav-link active" data-scroll-target="#信用リスクとcdsの基礎">8.1 信用リスクとCDSの基礎</a>
   <ul class="collapse">
-  <li><a href="#デフォルト時刻と生存確率" id="toc-デフォルト時刻と生存確率" class="nav-link" data-scroll-target="#デフォルト時刻と生存確率"><span class="header-section-number">16.1</span> 1. デフォルト時刻と生存確率</a></li>
-  <li><a href="#recovery-rateとloss-given-default" id="toc-recovery-rateとloss-given-default" class="nav-link" data-scroll-target="#recovery-rateとloss-given-default"><span class="header-section-number">16.2</span> 2. Recovery RateとLoss Given Default</a></li>
-  <li><a href="#cds-spreadとhazard-rateの近似" id="toc-cds-spreadとhazard-rateの近似" class="nav-link" data-scroll-target="#cds-spreadとhazard-rateの近似"><span class="header-section-number">16.3</span> 3. CDS SpreadとHazard Rateの近似</a></li>
-  <li><a href="#フラットカーブによる1年物cds" id="toc-フラットカーブによる1年物cds" class="nav-link" data-scroll-target="#フラットカーブによる1年物cds"><span class="header-section-number">16.4</span> 4. フラットカーブによる1年物CDS</a></li>
-  <li><a href="#hazard-rate近似と確率曲線" id="toc-hazard-rate近似と確率曲線" class="nav-link" data-scroll-target="#hazard-rate近似と確率曲線"><span class="header-section-number">16.5</span> 5. Hazard Rate近似と確率曲線</a></li>
-  <li><a href="#cds-scheduleとカーブ" id="toc-cds-scheduleとカーブ" class="nav-link" data-scroll-target="#cds-scheduleとカーブ"><span class="header-section-number">16.6</span> 6. CDS Scheduleとカーブ</a></li>
-  <li><a href="#midpoint-cds-engine" id="toc-midpoint-cds-engine" class="nav-link" data-scroll-target="#midpoint-cds-engine"><span class="header-section-number">16.7</span> 7. MidPoint CDS Engine</a></li>
-  <li><a href="#cdsキャッシュフローと確率表" id="toc-cdsキャッシュフローと確率表" class="nav-link" data-scroll-target="#cdsキャッシュフローと確率表"><span class="header-section-number">16.8</span> 8. CDSキャッシュフローと確率表</a></li>
-  <li><a href="#premium-legの手計算" id="toc-premium-legの手計算" class="nav-link" data-scroll-target="#premium-legの手計算"><span class="header-section-number">16.9</span> 9. Premium Legの手計算</a></li>
-  <li><a href="#protection-legの手計算" id="toc-protection-legの手計算" class="nav-link" data-scroll-target="#protection-legの手計算"><span class="header-section-number">16.10</span> 10. Protection Legの手計算</a></li>
-  <li><a href="#risky-pv01とfair-spread" id="toc-risky-pv01とfair-spread" class="nav-link" data-scroll-target="#risky-pv01とfair-spread"><span class="header-section-number">16.11</span> 11. Risky PV01とFair Spread</a></li>
-  <li><a href="#zero-npv-cdsからhazard-rateを推定する" id="toc-zero-npv-cdsからhazard-rateを推定する" class="nav-link" data-scroll-target="#zero-npv-cdsからhazard-rateを推定する"><span class="header-section-number">16.12</span> 12. Zero-NPV CDSからHazard Rateを推定する</a></li>
-  <li><a href="#spreadとrecovery-rateの感応度" id="toc-spreadとrecovery-rateの感応度" class="nav-link" data-scroll-target="#spreadとrecovery-rateの感応度"><span class="header-section-number">16.13</span> 13. SpreadとRecovery Rateの感応度</a></li>
-  <li><a href="#標準cdsとcds2015満期" id="toc-標準cdsとcds2015満期" class="nav-link" data-scroll-target="#標準cdsとcds2015満期"><span class="header-section-number">16.14</span> 14. 標準CDSとCDS2015満期</a></li>
-  <li><a href="#標準cds2015-schedule" id="toc-標準cds2015-schedule" class="nav-link" data-scroll-target="#標準cds2015-schedule"><span class="header-section-number">16.15</span> 15. 標準CDS2015 Schedule</a></li>
-  <li><a href="#isda用割引カーブ" id="toc-isda用割引カーブ" class="nav-link" data-scroll-target="#isda用割引カーブ"><span class="header-section-number">16.16</span> 16. ISDA用割引カーブ</a></li>
-  <li><a href="#isda整合hazard-rateの推定" id="toc-isda整合hazard-rateの推定" class="nav-link" data-scroll-target="#isda整合hazard-rateの推定"><span class="header-section-number">16.17</span> 17. ISDA整合Hazard Rateの推定</a></li>
-  <li><a href="#isda-cds-engine" id="toc-isda-cds-engine" class="nav-link" data-scroll-target="#isda-cds-engine"><span class="header-section-number">16.18</span> 18. ISDA CDS Engine</a></li>
-  <li><a href="#accrual-rebateとnpv分解" id="toc-accrual-rebateとnpv分解" class="nav-link" data-scroll-target="#accrual-rebateとnpv分解"><span class="header-section-number">16.19</span> 19. Accrual rebateとNPV分解</a></li>
-  <li><a href="#fair-spreadとfair-upfront" id="toc-fair-spreadとfair-upfront" class="nav-link" data-scroll-target="#fair-spreadとfair-upfront"><span class="header-section-number">16.20</span> 20. Fair SpreadとFair Upfront</a></li>
-  <li><a href="#isda用キャッシュフロー表" id="toc-isda用キャッシュフロー表" class="nav-link" data-scroll-target="#isda用キャッシュフロー表"><span class="header-section-number">16.21</span> 21. ISDA用キャッシュフロー表</a></li>
-  <li><a href="#midpoint型近似とisda-engine" id="toc-midpoint型近似とisda-engine" class="nav-link" data-scroll-target="#midpoint型近似とisda-engine"><span class="header-section-number">16.22</span> 22. MidPoint型近似とISDA Engine</a></li>
-  <li><a href="#midpoint-engineとisda-engineの比較" id="toc-midpoint-engineとisda-engineの比較" class="nav-link" data-scroll-target="#midpoint-engineとisda-engineの比較"><span class="header-section-number">16.23</span> 23. MidPoint EngineとISDA Engineの比較</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ"><span class="header-section-number">16.24</span> 24. まとめ</a></li>
+  <li><a href="#デフォルト時刻と生存確率" id="toc-デフォルト時刻と生存確率" class="nav-link" data-scroll-target="#デフォルト時刻と生存確率">8.1.1 デフォルト時刻と生存確率</a></li>
+  <li><a href="#recovery-rateとloss-given-default" id="toc-recovery-rateとloss-given-default" class="nav-link" data-scroll-target="#recovery-rateとloss-given-default">8.1.2 Recovery RateとLoss Given Default</a></li>
+  <li><a href="#cds-spreadとhazard-rateの近似" id="toc-cds-spreadとhazard-rateの近似" class="nav-link" data-scroll-target="#cds-spreadとhazard-rateの近似">8.1.3 CDS SpreadとHazard Rateの近似</a></li>
   </ul></li>
+  <li><a href="#フラットカーブによるcds評価" id="toc-フラットカーブによるcds評価" class="nav-link" data-scroll-target="#フラットカーブによるcds評価">8.2 フラットカーブによるCDS評価</a>
+  <ul class="collapse">
+  <li><a href="#フラットカーブによる1年物cds" id="toc-フラットカーブによる1年物cds" class="nav-link" data-scroll-target="#フラットカーブによる1年物cds">8.2.1 フラットカーブによる1年物CDS</a></li>
+  <li><a href="#hazard-rate近似と確率曲線" id="toc-hazard-rate近似と確率曲線" class="nav-link" data-scroll-target="#hazard-rate近似と確率曲線">8.2.2 Hazard Rate近似と確率曲線</a></li>
+  <li><a href="#cds-scheduleとカーブ" id="toc-cds-scheduleとカーブ" class="nav-link" data-scroll-target="#cds-scheduleとカーブ">8.2.3 CDS Scheduleとカーブ</a></li>
+  <li><a href="#midpoint-cds-engine" id="toc-midpoint-cds-engine" class="nav-link" data-scroll-target="#midpoint-cds-engine">8.2.4 MidPoint CDS Engine</a></li>
+  <li><a href="#cdsキャッシュフローと確率表" id="toc-cdsキャッシュフローと確率表" class="nav-link" data-scroll-target="#cdsキャッシュフローと確率表">8.2.5 CDSキャッシュフローと確率表</a></li>
+  </ul></li>
+  <li><a href="#premium-legとprotection-leg" id="toc-premium-legとprotection-leg" class="nav-link" data-scroll-target="#premium-legとprotection-leg">8.3 Premium LegとProtection Leg</a>
+  <ul class="collapse">
+  <li><a href="#premium-legの手計算" id="toc-premium-legの手計算" class="nav-link" data-scroll-target="#premium-legの手計算">8.3.1 Premium Legの手計算</a></li>
+  <li><a href="#protection-legの手計算" id="toc-protection-legの手計算" class="nav-link" data-scroll-target="#protection-legの手計算">8.3.2 Protection Legの手計算</a></li>
+  <li><a href="#risky-pv01とfair-spread" id="toc-risky-pv01とfair-spread" class="nav-link" data-scroll-target="#risky-pv01とfair-spread">8.3.3 Risky PV01とFair Spread</a></li>
+  </ul></li>
+  <li><a href="#hazard-rate推定と感応度" id="toc-hazard-rate推定と感応度" class="nav-link" data-scroll-target="#hazard-rate推定と感応度">8.4 Hazard Rate推定と感応度</a>
+  <ul class="collapse">
+  <li><a href="#zero-npv-cdsからhazard-rateを推定する" id="toc-zero-npv-cdsからhazard-rateを推定する" class="nav-link" data-scroll-target="#zero-npv-cdsからhazard-rateを推定する">8.4.1 Zero-NPV CDSからHazard Rateを推定する</a></li>
+  <li><a href="#spreadとrecovery-rateの感応度" id="toc-spreadとrecovery-rateの感応度" class="nav-link" data-scroll-target="#spreadとrecovery-rateの感応度">8.4.2 SpreadとRecovery Rateの感応度</a></li>
+  </ul></li>
+  <li><a href="#標準cds2015とisdaカーブ" id="toc-標準cds2015とisdaカーブ" class="nav-link" data-scroll-target="#標準cds2015とisdaカーブ">8.5 標準CDS2015とISDAカーブ</a>
+  <ul class="collapse">
+  <li><a href="#標準cdsとcds2015満期" id="toc-標準cdsとcds2015満期" class="nav-link" data-scroll-target="#標準cdsとcds2015満期">8.5.1 標準CDSとCDS2015満期</a></li>
+  <li><a href="#標準cds2015-schedule" id="toc-標準cds2015-schedule" class="nav-link" data-scroll-target="#標準cds2015-schedule">8.5.2 標準CDS2015 Schedule</a></li>
+  <li><a href="#isda用割引カーブ" id="toc-isda用割引カーブ" class="nav-link" data-scroll-target="#isda用割引カーブ">8.5.3 ISDA用割引カーブ</a></li>
+  <li><a href="#isda整合hazard-rateの推定" id="toc-isda整合hazard-rateの推定" class="nav-link" data-scroll-target="#isda整合hazard-rateの推定">8.5.4 ISDA整合Hazard Rateの推定</a></li>
+  </ul></li>
+  <li><a href="#isda-engineと評価比較" id="toc-isda-engineと評価比較" class="nav-link" data-scroll-target="#isda-engineと評価比較">8.6 ISDA Engineと評価比較</a>
+  <ul class="collapse">
+  <li><a href="#isda-cds-engine" id="toc-isda-cds-engine" class="nav-link" data-scroll-target="#isda-cds-engine">8.6.1 ISDA CDS Engine</a></li>
+  <li><a href="#accrual-rebateとnpv分解" id="toc-accrual-rebateとnpv分解" class="nav-link" data-scroll-target="#accrual-rebateとnpv分解">8.6.2 Accrual rebateとNPV分解</a></li>
+  <li><a href="#fair-spreadとfair-upfront" id="toc-fair-spreadとfair-upfront" class="nav-link" data-scroll-target="#fair-spreadとfair-upfront">8.6.3 Fair SpreadとFair Upfront</a></li>
+  <li><a href="#isda用キャッシュフロー表" id="toc-isda用キャッシュフロー表" class="nav-link" data-scroll-target="#isda用キャッシュフロー表">8.6.4 ISDA用キャッシュフロー表</a></li>
+  <li><a href="#midpoint型近似とisda-engine" id="toc-midpoint型近似とisda-engine" class="nav-link" data-scroll-target="#midpoint型近似とisda-engine">8.6.5 MidPoint型近似とISDA Engine</a></li>
+  <li><a href="#midpoint-engineとisda-engineの比較" id="toc-midpoint-engineとisda-engineの比較" class="nav-link" data-scroll-target="#midpoint-engineとisda-engineの比較">8.6.6 MidPoint EngineとISDA Engineの比較</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">8.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -322,7 +337,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学と金融数学</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch08_credit_risk_cds.html"><span class="chapter-title">第II-8章 信用リスクとCDS</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">第II-8章 信用リスクとCDS</span></h1>
-<p class="subtitle lead">Hazard Rate、回収率、Premium LegおよびProtection Leg</p>
 </div>
 
 
@@ -339,8 +353,6 @@ window.Quarto = {
 </header>
 
 
-<section id="第ii-8章-信用リスクとcds" class="level1" data-number="16">
-<h1 data-number="16"><span class="header-section-number">16</span> 第II-8章 信用リスクとCDS</h1>
 <p>前章までの評価では、将来の市場価格、金利またはボラティリティの変動を扱った。本章では、契約相手または参照企業が債務を履行できなくなる信用リスクを検討する。</p>
 <p>Credit Default Swap（CDS）は、参照企業などに信用事由が発生した場合に、プロテクションの売り手が買い手へ損失補償を支払う契約である。プロテクションの買い手は、その対価として契約期間中に定期的なPremiumを支払う。</p>
 <p>したがって、CDSは二つのレグから構成される。</p>
@@ -377,8 +389,10 @@ V_{\mathrm{premium}}
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(broom)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="デフォルト時刻と生存確率" class="level2" data-number="16.1">
-<h2 data-number="16.1" class="anchored" data-anchor-id="デフォルト時刻と生存確率"><span class="header-section-number">16.1</span> 1. デフォルト時刻と生存確率</h2>
+<section id="信用リスクとcdsの基礎" class="level2">
+<h2 class="anchored" data-anchor-id="信用リスクとcdsの基礎">8.1 信用リスクとCDSの基礎</h2>
+<section id="デフォルト時刻と生存確率" class="level3">
+<h3 class="anchored" data-anchor-id="デフォルト時刻と生存確率">8.1.1 デフォルト時刻と生存確率</h3>
 <p>デフォルトが発生する確率時刻を <span class="math inline">\(\tau\)</span> とする。時点 <span class="math inline">\(t\)</span> まで企業がデフォルトせずに存続する確率を、生存確率と呼ぶ。</p>
 <p><span class="math display">\[
 Q(t)
@@ -422,8 +436,8 @@ Q(t)
 \]</span></p>
 <p>であり、厳密には2%と一致しない。</p>
 </section>
-<section id="recovery-rateとloss-given-default" class="level2" data-number="16.2">
-<h2 data-number="16.2" class="anchored" data-anchor-id="recovery-rateとloss-given-default"><span class="header-section-number">16.2</span> 2. Recovery RateとLoss Given Default</h2>
+<section id="recovery-rateとloss-given-default" class="level3">
+<h3 class="anchored" data-anchor-id="recovery-rateとloss-given-default">8.1.2 Recovery RateとLoss Given Default</h3>
 <p>デフォルトが発生した場合でも、債権価値のすべてが失われるとは限らない。デフォルト後に回収できる元本比率をRecovery Rate <span class="math inline">\(R\)</span> とする。</p>
 <p>損失率Loss Given Defaultは、</p>
 <p><span class="math display">\[
@@ -439,8 +453,8 @@ N(1-R)
 <p>となる。</p>
 <p>Recovery Rateが高いほどデフォルト時の損失は小さくなり、同じデフォルト確率であればCDS Spreadは低くなる。</p>
 </section>
-<section id="cds-spreadとhazard-rateの近似" class="level2" data-number="16.3">
-<h2 data-number="16.3" class="anchored" data-anchor-id="cds-spreadとhazard-rateの近似"><span class="header-section-number">16.3</span> 3. CDS SpreadとHazard Rateの近似</h2>
+<section id="cds-spreadとhazard-rateの近似" class="level3">
+<h3 class="anchored" data-anchor-id="cds-spreadとhazard-rateの近似">8.1.3 CDS SpreadとHazard Rateの近似</h3>
 <p>連続的なPremium支払い、一定Hazard Rate、一定Recovery Rateおよび単純な割引を仮定すると、CDS Spread <span class="math inline">\(s\)</span> とHazard Rate <span class="math inline">\(\lambda\)</span> には次の近似関係がある。</p>
 <p><span class="math display">\[
 s
@@ -456,8 +470,11 @@ s
 <p>となる。</p>
 <p>この近似はCDSの信用水準を理解するために有用である。ただし、実際の評価では、四半期ごとの支払い、Accrual on default、割引、標準日付およびカーブ補間が影響するため、厳密なHazard Rateとは一致しない。</p>
 </section>
-<section id="フラットカーブによる1年物cds" class="level2" data-number="16.4">
-<h2 data-number="16.4" class="anchored" data-anchor-id="フラットカーブによる1年物cds"><span class="header-section-number">16.4</span> 4. フラットカーブによる1年物CDS</h2>
+</section>
+<section id="フラットカーブによるcds評価" class="level2">
+<h2 class="anchored" data-anchor-id="フラットカーブによるcds評価">8.2 フラットカーブによるCDS評価</h2>
+<section id="フラットカーブによる1年物cds" class="level3">
+<h3 class="anchored" data-anchor-id="フラットカーブによる1年物cds">8.2.1 フラットカーブによる1年物CDS</h3>
 <p>1年物CDSを考える。</p>
 <ul>
 <li>評価日：2022年9月19日</li>
@@ -513,8 +530,8 @@ s
 <span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 recovery_rate   0.4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="hazard-rate近似と確率曲線" class="level2" data-number="16.5">
-<h2 data-number="16.5" class="anchored" data-anchor-id="hazard-rate近似と確率曲線"><span class="header-section-number">16.5</span> 5. Hazard Rate近似と確率曲線</h2>
+<section id="hazard-rate近似と確率曲線" class="level3">
+<h3 class="anchored" data-anchor-id="hazard-rate近似と確率曲線">8.2.2 Hazard Rate近似と確率曲線</h3>
 <p>市場Spread 130bpとRecovery Rate 40%から、フラットHazard Rateを近似する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>hazard_rate_approximation <span class="ot">&lt;-</span> market_spread_flat <span class="sc">/</span></span>
@@ -622,8 +639,8 @@ s
 </div>
 </div>
 </section>
-<section id="cds-scheduleとカーブ" class="level2" data-number="16.6">
-<h2 data-number="16.6" class="anchored" data-anchor-id="cds-scheduleとカーブ"><span class="header-section-number">16.6</span> 6. CDS Scheduleとカーブ</h2>
+<section id="cds-scheduleとカーブ" class="level3">
+<h3 class="anchored" data-anchor-id="cds-scheduleとカーブ">8.2.3 CDS Scheduleとカーブ</h3>
 <p>Premiumは四半期ごとに支払われるものとする。単純な教育用例として、評価日の翌日から満期までのForward Scheduleを作成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>cds_schedule_flat <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">Schedule</span>(</span>
@@ -707,8 +724,8 @@ s
 <span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 hazard_rate_at_maturity          0.0217</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="midpoint-cds-engine" class="level2" data-number="16.7">
-<h2 data-number="16.7" class="anchored" data-anchor-id="midpoint-cds-engine"><span class="header-section-number">16.7</span> 7. MidPoint CDS Engine</h2>
+<section id="midpoint-cds-engine" class="level3">
+<h3 class="anchored" data-anchor-id="midpoint-cds-engine">8.2.4 MidPoint CDS Engine</h3>
 <p>MidPoint法では、各Premium期間中に発生するデフォルトを、その期間の中点で発生したものとして近似する。</p>
 <p>100bp CouponのCDSを作成し、GaussQuantのMidPoint CDS Engineで評価する。</p>
 <div class="cell">
@@ -783,8 +800,8 @@ s
 </div>
 <p>プロテクション買い手から見て、Premium Legは負、Protection Legは正となる。契約CouponがFair Spreadより低ければ、プロテクション買い手に有利となり、CDS NPVは一般に正となる。</p>
 </section>
-<section id="cdsキャッシュフローと確率表" class="level2" data-number="16.8">
-<h2 data-number="16.8" class="anchored" data-anchor-id="cdsキャッシュフローと確率表"><span class="header-section-number">16.8</span> 8. CDSキャッシュフローと確率表</h2>
+<section id="cdsキャッシュフローと確率表" class="level3">
+<h3 class="anchored" data-anchor-id="cdsキャッシュフローと確率表">8.2.5 CDSキャッシュフローと確率表</h3>
 <p>GaussQuantの<code>cds_cashflow_table_GQL()</code>を利用し、各Premium期間の割引係数、生存確率、デフォルト確率および期間中点の情報を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cds_cashflow_flat_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">cds_cashflow_table_GQL</span>(</span>
@@ -816,8 +833,11 @@ s
 <span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   midpoint_discount_factor &lt;dbl&gt;, midpoint_survival_probability &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="premium-legの手計算" class="level2" data-number="16.9">
-<h2 data-number="16.9" class="anchored" data-anchor-id="premium-legの手計算"><span class="header-section-number">16.9</span> 9. Premium Legの手計算</h2>
+</section>
+<section id="premium-legとprotection-leg" class="level2">
+<h2 class="anchored" data-anchor-id="premium-legとprotection-leg">8.3 Premium LegとProtection Leg</h2>
+<section id="premium-legの手計算" class="level3">
+<h3 class="anchored" data-anchor-id="premium-legの手計算">8.3.1 Premium Legの手計算</h3>
 <p>Premium Legは、参照企業が各支払日まで存続した場合に支払われる。</p>
 <p>単純化した現在価値は次式で表される。</p>
 <p><span class="math display">\[
@@ -840,8 +860,8 @@ Q(t_i)
 </div>
 <p>この近似では期間中点の生存確率を使用している。実際のCDSでは、期間中にデフォルトした場合の経過PremiumであるAccrual on defaultも考慮される。</p>
 </section>
-<section id="protection-legの手計算" class="level2" data-number="16.10">
-<h2 data-number="16.10" class="anchored" data-anchor-id="protection-legの手計算"><span class="header-section-number">16.10</span> 10. Protection Legの手計算</h2>
+<section id="protection-legの手計算" class="level3">
+<h3 class="anchored" data-anchor-id="protection-legの手計算">8.3.2 Protection Legの手計算</h3>
 <p>期間 <span class="math inline">\((t_{i-1},t_i]\)</span> にデフォルトする確率を、</p>
 <p><span class="math display">\[
 \Delta PD_i
@@ -872,8 +892,8 @@ D(0,m_i)
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  protection_leg_per_unit_hand_flat</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="risky-pv01とfair-spread" class="level2" data-number="16.11">
-<h2 data-number="16.11" class="anchored" data-anchor-id="risky-pv01とfair-spread"><span class="header-section-number">16.11</span> 11. Risky PV01とFair Spread</h2>
+<section id="risky-pv01とfair-spread" class="level3">
+<h3 class="anchored" data-anchor-id="risky-pv01とfair-spread">8.3.3 Risky PV01とFair Spread</h3>
 <p>Risky PV01は、CDS Spreadを1単位支払うPremium Legの現在価値に相当する。</p>
 <p><span class="math display">\[
 RPV01
@@ -969,8 +989,11 @@ RPV01
 </div>
 <p>手計算とMidPoint Engineは近い値となるが、厳密には一致しない。差にはAccrual on default、日付規則、Protection開始日およびQuantLib内部の計算規約が含まれる。</p>
 </section>
-<section id="zero-npv-cdsからhazard-rateを推定する" class="level2" data-number="16.12">
-<h2 data-number="16.12" class="anchored" data-anchor-id="zero-npv-cdsからhazard-rateを推定する"><span class="header-section-number">16.12</span> 12. Zero-NPV CDSからHazard Rateを推定する</h2>
+</section>
+<section id="hazard-rate推定と感応度" class="level2">
+<h2 class="anchored" data-anchor-id="hazard-rate推定と感応度">8.4 Hazard Rate推定と感応度</h2>
+<section id="zero-npv-cdsからhazard-rateを推定する" class="level3">
+<h3 class="anchored" data-anchor-id="zero-npv-cdsからhazard-rateを推定する">8.4.1 Zero-NPV CDSからHazard Rateを推定する</h3>
 <p>市場Spreadを契約Couponとして設定したCDSは、契約開始時点でNPVがゼロとなるようにHazard Rateを調整できる。</p>
 <p>ここでは、市場Spread 130bpのCDSについて、MidPoint EngineのNPVがゼロとなるフラットHazard Rateを<code>uniroot()</code>で推定する。</p>
 <div class="cell">
@@ -1054,8 +1077,8 @@ RPV01
 </div>
 <p>単純近似 <span class="math inline">\(\lambda\approx s/(1-R)\)</span> とカリブレーション結果は近いが、支払頻度と割引の影響により差が生じる。</p>
 </section>
-<section id="spreadとrecovery-rateの感応度" class="level2" data-number="16.13">
-<h2 data-number="16.13" class="anchored" data-anchor-id="spreadとrecovery-rateの感応度"><span class="header-section-number">16.13</span> 13. SpreadとRecovery Rateの感応度</h2>
+<section id="spreadとrecovery-rateの感応度" class="level3">
+<h3 class="anchored" data-anchor-id="spreadとrecovery-rateの感応度">8.4.2 SpreadとRecovery Rateの感応度</h3>
 <p>単純近似の下では、Spreadが高いほどHazard Rateは高くなる。また、同じSpreadでRecovery Rateを高く仮定すると、デフォルト時損失が小さくなるため、そのSpreadを説明するために必要なHazard Rateは高くなる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>credit_sensitivity_input_tbl <span class="ot">&lt;-</span> tidyr<span class="sc">::</span><span class="fu">crossing</span>(</span>
@@ -1108,8 +1131,11 @@ RPV01
 </div>
 <p>Recovery RateとHazard Rateは、CDS Spreadだけから完全に独立して識別できない。実務ではRecovery Rateを外生的に仮定し、その仮定の下でDefault Probability Curveを構築することが多い。</p>
 </section>
-<section id="標準cdsとcds2015満期" class="level2" data-number="16.14">
-<h2 data-number="16.14" class="anchored" data-anchor-id="標準cdsとcds2015満期"><span class="header-section-number">16.14</span> 14. 標準CDSとCDS2015満期</h2>
+</section>
+<section id="標準cds2015とisdaカーブ" class="level2">
+<h2 class="anchored" data-anchor-id="標準cds2015とisdaカーブ">8.5 標準CDS2015とISDAカーブ</h2>
+<section id="標準cdsとcds2015満期" class="level3">
+<h3 class="anchored" data-anchor-id="標準cdsとcds2015満期">8.5.1 標準CDSとCDS2015満期</h3>
 <p>標準CDSでは、満期を単純に取引日から5年後とするのではなく、CDS IMM日とCDS2015ルールに従って決定する。</p>
 <p>次の5年物CDSを考える。</p>
 <ul>
@@ -1190,8 +1216,8 @@ RPV01
 <span id="cb12-66"><a href="#cb12-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 ois_discount_rate  0.0025</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="標準cds2015-schedule" class="level2" data-number="16.15">
-<h2 data-number="16.15" class="anchored" data-anchor-id="標準cds2015-schedule"><span class="header-section-number">16.15</span> 15. 標準CDS2015 Schedule</h2>
+<section id="標準cds2015-schedule" class="level3">
+<h3 class="anchored" data-anchor-id="標準cds2015-schedule">8.5.2 標準CDS2015 Schedule</h3>
 <p>CDS2015ルールにより、Premium支払日は標準化された四半期日へ調整される。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>cds_calendar_isda <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">WeekendsOnly</span>()</span>
@@ -1230,8 +1256,8 @@ RPV01
 <span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 11 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="isda用割引カーブ" class="level2" data-number="16.16">
-<h2 data-number="16.16" class="anchored" data-anchor-id="isda用割引カーブ"><span class="header-section-number">16.16</span> 16. ISDA用割引カーブ</h2>
+<section id="isda用割引カーブ" class="level3">
+<h3 class="anchored" data-anchor-id="isda用割引カーブ">8.5.3 ISDA用割引カーブ</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>discount_curve_isda <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">flat_curve_GQL</span>(</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference_date =</span> trade_date_isda,</span>
@@ -1264,8 +1290,8 @@ RPV01
 <span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 discount_factor_at_maturity 0.988</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="isda整合hazard-rateの推定" class="level2" data-number="16.17">
-<h2 data-number="16.17" class="anchored" data-anchor-id="isda整合hazard-rateの推定"><span class="header-section-number">16.17</span> 17. ISDA整合Hazard Rateの推定</h2>
+<section id="isda整合hazard-rateの推定" class="level3">
+<h3 class="anchored" data-anchor-id="isda整合hazard-rateの推定">8.5.4 ISDA整合Hazard Rateの推定</h3>
 <p>市場Spread 30.426bpをRunning Spreadとする標準CDSを作成し、ISDA EngineのNPVがゼロとなるフラットHazard Rateを推定する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>market_cds_isda <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">make_cds_GQL</span>(</span>
@@ -1362,8 +1388,11 @@ RPV01
 </div>
 <p>市場SpreadとRecovery Rateから得られる単純近似と、ISDA EngineでゼロNPVとなるHazard Rateには差が生じる。標準CDSの日付、Accrual on default、割引および数値積分が評価へ反映されるためである。</p>
 </section>
-<section id="isda-cds-engine" class="level2" data-number="16.18">
-<h2 data-number="16.18" class="anchored" data-anchor-id="isda-cds-engine"><span class="header-section-number">16.18</span> 18. ISDA CDS Engine</h2>
+</section>
+<section id="isda-engineと評価比較" class="level2">
+<h2 class="anchored" data-anchor-id="isda-engineと評価比較">8.6 ISDA Engineと評価比較</h2>
+<section id="isda-cds-engine" class="level3">
+<h3 class="anchored" data-anchor-id="isda-cds-engine">8.6.1 ISDA CDS Engine</h3>
 <p>契約Couponを標準Coupon 100bpへ固定した5年物CDSを評価する。</p>
 <p>市場Spreadは30.426bpであり、契約Coupon 100bpより低い。プロテクション買い手は市場水準より高いPremiumを支払うため、Running Couponだけで評価すると一般に負のNPVとなる。</p>
 <div class="cell">
@@ -1403,8 +1432,8 @@ RPV01
 <span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 default_leg_npv  146485.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="accrual-rebateとnpv分解" class="level2" data-number="16.19">
-<h2 data-number="16.19" class="anchored" data-anchor-id="accrual-rebateとnpv分解"><span class="header-section-number">16.19</span> 19. Accrual rebateとNPV分解</h2>
+<section id="accrual-rebateとnpv分解" class="level3">
+<h3 class="anchored" data-anchor-id="accrual-rebateとnpv分解">8.6.2 Accrual rebateとNPV分解</h3>
 <p>標準CDSでは、取引日が前回の標準Coupon日と次回Coupon日の間にある場合、契約開始時にAccrual rebateが発生することがある。</p>
 <p>この場合、プロテクション買い手から見たNPVは、</p>
 <p><span class="math display">\[
@@ -1463,8 +1492,8 @@ V_{\mathrm{accrual\ rebate}}
 <span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 difference                0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="fair-spreadとfair-upfront" class="level2" data-number="16.20">
-<h2 data-number="16.20" class="anchored" data-anchor-id="fair-spreadとfair-upfront"><span class="header-section-number">16.20</span> 20. Fair SpreadとFair Upfront</h2>
+<section id="fair-spreadとfair-upfront" class="level3">
+<h3 class="anchored" data-anchor-id="fair-spreadとfair-upfront">8.6.3 Fair SpreadとFair Upfront</h3>
 <p>Fair Spreadは、Upfrontを授受せずにCDS NPVをゼロとするRunning Spreadである。</p>
 <p>Fair Upfrontは、契約Couponを標準Couponへ固定したまま、契約価値を調整するために開始時点で授受するNotional比率である。</p>
 <div class="cell">
@@ -1520,8 +1549,8 @@ V_{\mathrm{accrual\ rebate}}
 <p>この例では、契約Couponが市場Spreadより高いため、プロテクション買い手は市場より多くのPremiumを支払う。したがって、契約開始時の価値を調整するUpfrontが必要となる。</p>
 <p>Fair Upfrontの正負は、QuantLibにおけるBuyer／Sellerの符号規約と契約設定に依存する。符号だけで判断せず、CDS NPV、契約Coupon、Fair SpreadおよびUpfront金額を一緒に確認する必要がある。</p>
 </section>
-<section id="isda用キャッシュフロー表" class="level2" data-number="16.21">
-<h2 data-number="16.21" class="anchored" data-anchor-id="isda用キャッシュフロー表"><span class="header-section-number">16.21</span> 21. ISDA用キャッシュフロー表</h2>
+<section id="isda用キャッシュフロー表" class="level3">
+<h3 class="anchored" data-anchor-id="isda用キャッシュフロー表">8.6.4 ISDA用キャッシュフロー表</h3>
 <p>標準CDS2015 Schedule、ISDA整合Hazard Curveおよび割引カーブから、Premium期間ごとの確率情報を作成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>cds_cashflow_isda_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">cds_cashflow_table_GQL</span>(</span>
@@ -1560,8 +1589,8 @@ V_{\mathrm{accrual\ rebate}}
 </div>
 <p>この表はCDSの経済構造を理解するためのMidPoint型分解である。ISDA Engineは、標準日付、Accrual on default、数値積分および曲線補間をより厳密に扱うため、この表から得られる単純近似と完全には一致しない。</p>
 </section>
-<section id="midpoint型近似とisda-engine" class="level2" data-number="16.22">
-<h2 data-number="16.22" class="anchored" data-anchor-id="midpoint型近似とisda-engine"><span class="header-section-number">16.22</span> 22. MidPoint型近似とISDA Engine</h2>
+<section id="midpoint型近似とisda-engine" class="level3">
+<h3 class="anchored" data-anchor-id="midpoint型近似とisda-engine">8.6.5 MidPoint型近似とISDA Engine</h3>
 <p>ISDA用キャッシュフロー表から、Premium Leg、Protection Leg、RPV01およびFair Spreadを簡易計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>premium_leg_hand_isda <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">sum</span>(</span>
@@ -1629,8 +1658,8 @@ V_{\mathrm{accrual\ rebate}}
 <span id="cb20-63"><a href="#cb20-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 fair_spread           0.00294       0.00304  -0.000102</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="midpoint-engineとisda-engineの比較" class="level2" data-number="16.23">
-<h2 data-number="16.23" class="anchored" data-anchor-id="midpoint-engineとisda-engineの比較"><span class="header-section-number">16.23</span> 23. MidPoint EngineとISDA Engineの比較</h2>
+<section id="midpoint-engineとisda-engineの比較" class="level3">
+<h3 class="anchored" data-anchor-id="midpoint-engineとisda-engineの比較">8.6.6 MidPoint EngineとISDA Engineの比較</h3>
 <p>同じHazard Curve、Recovery Rate、割引カーブおよび標準Couponを使用し、MidPoint EngineとISDA Engineの評価差を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>midpoint_engine_isda_inputs <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">cds_midpoint_engine_GQL</span>(</span>
@@ -1696,8 +1725,9 @@ V_{\mathrm{accrual\ rebate}}
 </div>
 <p>MidPoint法は、各Premium期間内のデフォルト時点を期間中点へ集約する。ISDA Engineは標準市場規約に合わせて、より詳細な日付処理と積分を行う。そのため、同じカーブを用いてもLeg NPVとFair Spreadに差が生じる。</p>
 </section>
-<section id="まとめ" class="level2" data-number="16.24">
-<h2 data-number="16.24" class="anchored" data-anchor-id="まとめ"><span class="header-section-number">16.24</span> 24. まとめ</h2>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">8.7 まとめ</h2>
 <p>CDSは、Premium LegとProtection Legから構成される。プロテクション買い手はPremiumを支払い、信用事由が発生した場合に損失補償を受け取る。</p>
 <p>Hazard Rateは、企業がその時点まで存続しているという条件の下での瞬間的なデフォルト強度である。フラットHazard Rateでは、生存確率は次式で表される。</p>
 <p><span class="math display">\[
@@ -1749,7 +1779,6 @@ e^{-\lambda t}
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

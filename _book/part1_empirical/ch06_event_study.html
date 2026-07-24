@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,38 +286,48 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#イベントスタディの考え方" id="toc-イベントスタディの考え方" class="nav-link active" data-scroll-target="#イベントスタディの考え方">6.1 イベントスタディの考え方</a></li>
-  <li><a href="#パッケージの準備" id="toc-パッケージの準備" class="nav-link" data-scroll-target="#パッケージの準備">6.2 パッケージの準備</a></li>
-  <li><a href="#プロジェクトとデータディレクトリ" id="toc-プロジェクトとデータディレクトリ" class="nav-link" data-scroll-target="#プロジェクトとデータディレクトリ">6.3 プロジェクトとデータディレクトリ</a></li>
-  <li><a href="#入力ファイルの確認" id="toc-入力ファイルの確認" class="nav-link" data-scroll-target="#入力ファイルの確認">6.4 入力ファイルの確認</a></li>
-  <li><a href="#データの読み込み" id="toc-データの読み込み" class="nav-link" data-scroll-target="#データの読み込み">6.5 データの読み込み</a></li>
-  <li><a href="#必須列の確認" id="toc-必須列の確認" class="nav-link" data-scroll-target="#必須列の確認">6.6 必須列の確認</a></li>
-  <li><a href="#データ型の整理" id="toc-データ型の整理" class="nav-link" data-scroll-target="#データ型の整理">6.7 データ型の整理</a></li>
-  <li><a href="#データの概要" id="toc-データの概要" class="nav-link" data-scroll-target="#データの概要">6.8 データの概要</a></li>
-  <li><a href="#キーの重複確認" id="toc-キーの重複確認" class="nav-link" data-scroll-target="#キーの重複確認">6.9 キーの重複確認</a></li>
-  <li><a href="#欠損値の確認" id="toc-欠損値の確認" class="nav-link" data-scroll-target="#欠損値の確認">6.10 欠損値の確認</a></li>
-  <li><a href="#決算サプライズ" id="toc-決算サプライズ" class="nav-link" data-scroll-target="#決算サプライズ">6.11 決算サプライズ</a></li>
-  <li><a href="#取引日カレンダー" id="toc-取引日カレンダー" class="nav-link" data-scroll-target="#取引日カレンダー">6.12 取引日カレンダー</a></li>
-  <li><a href="#イベント日0の設定" id="toc-イベント日0の設定" class="nav-link" data-scroll-target="#イベント日0の設定">6.13 イベント日0の設定</a></li>
-  <li><a href="#推定期間とイベント期間" id="toc-推定期間とイベント期間" class="nav-link" data-scroll-target="#推定期間とイベント期間">6.14 推定期間とイベント期間</a></li>
-  <li><a href="#イベントパネルの作成" id="toc-イベントパネルの作成" class="nav-link" data-scroll-target="#イベントパネルの作成">6.15 イベント・パネルの作成</a></li>
-  <li><a href="#データ利用可能性の診断" id="toc-データ利用可能性の診断" class="nav-link" data-scroll-target="#データ利用可能性の診断">6.16 データ利用可能性の診断</a></li>
-  <li><a href="#マーケットモデルの推定" id="toc-マーケットモデルの推定" class="nav-link" data-scroll-target="#マーケットモデルの推定">6.17 マーケット・モデルの推定</a></li>
-  <li><a href="#完全なイベント期間を持つイベント" id="toc-完全なイベント期間を持つイベント" class="nav-link" data-scroll-target="#完全なイベント期間を持つイベント">6.18 完全なイベント期間を持つイベント</a></li>
-  <li><a href="#異常リターンとcar" id="toc-異常リターンとcar" class="nav-link" data-scroll-target="#異常リターンとcar">6.19 異常リターンとCAR</a></li>
-  <li><a href="#aarとcaar" id="toc-aarとcaar" class="nav-link" data-scroll-target="#aarとcaar">6.20 AARとCAAR</a>
+  <li><a href="#イベントスタディの基礎と分析環境" id="toc-イベントスタディの基礎と分析環境" class="nav-link active" data-scroll-target="#イベントスタディの基礎と分析環境">6.1 イベントスタディの基礎と分析環境</a>
   <ul class="collapse">
-  <li><a href="#イベント強度別caar" id="toc-イベント強度別caar" class="nav-link" data-scroll-target="#イベント強度別caar">イベント強度別CAAR</a></li>
-  <li><a href="#イベント日前後のaar" id="toc-イベント日前後のaar" class="nav-link" data-scroll-target="#イベント日前後のaar">イベント日前後のAAR</a></li>
+  <li><a href="#イベントスタディの考え方" id="toc-イベントスタディの考え方" class="nav-link" data-scroll-target="#イベントスタディの考え方">6.1.1 イベントスタディの考え方</a></li>
+  <li><a href="#パッケージの準備" id="toc-パッケージの準備" class="nav-link" data-scroll-target="#パッケージの準備">6.1.2 パッケージの準備</a></li>
+  <li><a href="#プロジェクトとデータディレクトリ" id="toc-プロジェクトとデータディレクトリ" class="nav-link" data-scroll-target="#プロジェクトとデータディレクトリ">6.1.3 プロジェクトとデータディレクトリ</a></li>
   </ul></li>
-  <li><a href="#複数のイベントウィンドウ" id="toc-複数のイベントウィンドウ" class="nav-link" data-scroll-target="#複数のイベントウィンドウ">6.21 複数のイベント・ウィンドウ</a>
+  <li><a href="#入力データの整備と検証" id="toc-入力データの整備と検証" class="nav-link" data-scroll-target="#入力データの整備と検証">6.2 入力データの整備と検証</a>
   <ul class="collapse">
-  <li><a href="#短期carの分布" id="toc-短期carの分布" class="nav-link" data-scroll-target="#短期carの分布">短期CARの分布</a></li>
-  <li><a href="#ウィンドウ別平均car" id="toc-ウィンドウ別平均car" class="nav-link" data-scroll-target="#ウィンドウ別平均car">ウィンドウ別平均CAR</a></li>
+  <li><a href="#入力ファイルの確認" id="toc-入力ファイルの確認" class="nav-link" data-scroll-target="#入力ファイルの確認">6.2.1 入力ファイルの確認</a></li>
+  <li><a href="#データの読み込み" id="toc-データの読み込み" class="nav-link" data-scroll-target="#データの読み込み">6.2.2 データの読み込み</a></li>
+  <li><a href="#必須列の確認" id="toc-必須列の確認" class="nav-link" data-scroll-target="#必須列の確認">6.2.3 必須列の確認</a></li>
+  <li><a href="#データ型の整理" id="toc-データ型の整理" class="nav-link" data-scroll-target="#データ型の整理">6.2.4 データ型の整理</a></li>
+  <li><a href="#データの概要" id="toc-データの概要" class="nav-link" data-scroll-target="#データの概要">6.2.5 データの概要</a></li>
+  <li><a href="#キーの重複確認" id="toc-キーの重複確認" class="nav-link" data-scroll-target="#キーの重複確認">6.2.6 キーの重複確認</a></li>
+  <li><a href="#欠損値の確認" id="toc-欠損値の確認" class="nav-link" data-scroll-target="#欠損値の確認">6.2.7 欠損値の確認</a></li>
   </ul></li>
-  <li><a href="#決算サプライズと短期car" id="toc-決算サプライズと短期car" class="nav-link" data-scroll-target="#決算サプライズと短期car">6.22 決算サプライズと短期CAR</a></li>
-  <li><a href="#結果の保存" id="toc-結果の保存" class="nav-link" data-scroll-target="#結果の保存">6.23 結果の保存</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">6.24 まとめ</a></li>
+  <li><a href="#決算サプライズとイベント日の設定" id="toc-決算サプライズとイベント日の設定" class="nav-link" data-scroll-target="#決算サプライズとイベント日の設定">6.3 決算サプライズとイベント日の設定</a>
+  <ul class="collapse">
+  <li><a href="#決算サプライズ" id="toc-決算サプライズ" class="nav-link" data-scroll-target="#決算サプライズ">6.3.1 決算サプライズ</a></li>
+  <li><a href="#取引日カレンダー" id="toc-取引日カレンダー" class="nav-link" data-scroll-target="#取引日カレンダー">6.3.2 取引日カレンダー</a></li>
+  <li><a href="#イベント日0の設定" id="toc-イベント日0の設定" class="nav-link" data-scroll-target="#イベント日0の設定">6.3.3 イベント日0の設定</a></li>
+  </ul></li>
+  <li><a href="#推定期間とマーケットモデル" id="toc-推定期間とマーケットモデル" class="nav-link" data-scroll-target="#推定期間とマーケットモデル">6.4 推定期間とマーケット・モデル</a>
+  <ul class="collapse">
+  <li><a href="#推定期間とイベント期間" id="toc-推定期間とイベント期間" class="nav-link" data-scroll-target="#推定期間とイベント期間">6.4.1 推定期間とイベント期間</a></li>
+  <li><a href="#イベントパネルの作成" id="toc-イベントパネルの作成" class="nav-link" data-scroll-target="#イベントパネルの作成">6.4.2 イベント・パネルの作成</a></li>
+  <li><a href="#データ利用可能性の診断" id="toc-データ利用可能性の診断" class="nav-link" data-scroll-target="#データ利用可能性の診断">6.4.3 データ利用可能性の診断</a></li>
+  <li><a href="#マーケットモデルの推定" id="toc-マーケットモデルの推定" class="nav-link" data-scroll-target="#マーケットモデルの推定">6.4.4 マーケット・モデルの推定</a></li>
+  <li><a href="#完全なイベント期間を持つイベント" id="toc-完全なイベント期間を持つイベント" class="nav-link" data-scroll-target="#完全なイベント期間を持つイベント">6.4.5 完全なイベント期間を持つイベント</a></li>
+  </ul></li>
+  <li><a href="#異常リターンと日次集計" id="toc-異常リターンと日次集計" class="nav-link" data-scroll-target="#異常リターンと日次集計">6.5 異常リターンと日次集計</a>
+  <ul class="collapse">
+  <li><a href="#異常リターンとcar" id="toc-異常リターンとcar" class="nav-link" data-scroll-target="#異常リターンとcar">6.5.1 異常リターンとCAR</a></li>
+  <li><a href="#aarとcaar" id="toc-aarとcaar" class="nav-link" data-scroll-target="#aarとcaar">6.5.2 AARとCAAR</a></li>
+  </ul></li>
+  <li><a href="#イベントウィンドウ分析と結果保存" id="toc-イベントウィンドウ分析と結果保存" class="nav-link" data-scroll-target="#イベントウィンドウ分析と結果保存">6.6 イベント・ウィンドウ分析と結果保存</a>
+  <ul class="collapse">
+  <li><a href="#複数のイベントウィンドウ" id="toc-複数のイベントウィンドウ" class="nav-link" data-scroll-target="#複数のイベントウィンドウ">6.6.1 複数のイベント・ウィンドウ</a></li>
+  <li><a href="#決算サプライズと短期car" id="toc-決算サプライズと短期car" class="nav-link" data-scroll-target="#決算サプライズと短期car">6.6.2 決算サプライズと短期CAR</a></li>
+  <li><a href="#結果の保存" id="toc-結果の保存" class="nav-link" data-scroll-target="#結果の保存">6.6.3 結果の保存</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">6.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -355,8 +365,10 @@ window.Quarto = {
 <li>イベント単位と日次集計の結果を保存する</li>
 </ol>
 <p>反復処理には明示的なループを使わず、<code>purrr::map()</code>、<code>pmap_dfr()</code>、<code>walk2()</code> を使用する。パイプ演算子は native pipe の <code>|&gt;</code> に統一する。</p>
-<section id="イベントスタディの考え方" class="level2">
-<h2 class="anchored" data-anchor-id="イベントスタディの考え方">6.1 イベントスタディの考え方</h2>
+<section id="イベントスタディの基礎と分析環境" class="level2">
+<h2 class="anchored" data-anchor-id="イベントスタディの基礎と分析環境">6.1 イベントスタディの基礎と分析環境</h2>
+<section id="イベントスタディの考え方" class="level3">
+<h3 class="anchored" data-anchor-id="イベントスタディの考え方">6.1.1 イベントスタディの考え方</h3>
 <p>企業 <span class="math inline">\(i\)</span> の日 <span class="math inline">\(t\)</span> における実現リターンを <span class="math inline">\(R_{i,t}\)</span>、市場リターンを <span class="math inline">\(R_{M,t}\)</span> とする。推定期間では、次のマーケット・モデルを推定する。</p>
 <p><span class="math display">\[
 R_{i,t}
@@ -390,8 +402,8 @@ CAR_{i,t}
 \sum_{\tau=T_1}^{t} AR_{i,\tau}
 \]</span></p>
 </section>
-<section id="パッケージの準備" class="level2">
-<h2 class="anchored" data-anchor-id="パッケージの準備">6.2 パッケージの準備</h2>
+<section id="パッケージの準備" class="level3">
+<h3 class="anchored" data-anchor-id="パッケージの準備">6.1.2 パッケージの準備</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>({</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(tidyverse)</span>
@@ -407,8 +419,8 @@ CAR_{i,t}
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"broom"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="プロジェクトとデータディレクトリ" class="level2">
-<h2 class="anchored" data-anchor-id="プロジェクトとデータディレクトリ">6.3 プロジェクトとデータディレクトリ</h2>
+<section id="プロジェクトとデータディレクトリ" class="level3">
+<h3 class="anchored" data-anchor-id="プロジェクトとデータディレクトリ">6.1.3 プロジェクトとデータディレクトリ</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>project_candidates <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">c</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.getenv</span>(<span class="st">"QUARTO_PROJECT_DIR"</span>),</span>
@@ -444,8 +456,11 @@ CAR_{i,t}
 <span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>derived_data_dir</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="入力ファイルの確認" class="level2">
-<h2 class="anchored" data-anchor-id="入力ファイルの確認">6.4 入力ファイルの確認</h2>
+</section>
+<section id="入力データの整備と検証" class="level2">
+<h2 class="anchored" data-anchor-id="入力データの整備と検証">6.2 入力データの整備と検証</h2>
+<section id="入力ファイルの確認" class="level3">
+<h3 class="anchored" data-anchor-id="入力ファイルの確認">6.2.1 入力ファイルの確認</h3>
 <p>本章では次の3ファイルを使用する。</p>
 <pre class="text"><code>ch08_return_data.csv
 ch08_market_return_data.csv
@@ -523,8 +538,8 @@ ch08_event_data.csv</code></pre>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>input_paths</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="データの読み込み" class="level2">
-<h2 class="anchored" data-anchor-id="データの読み込み">6.5 データの読み込み</h2>
+<section id="データの読み込み" class="level3">
+<h3 class="anchored" data-anchor-id="データの読み込み">6.2.2 データの読み込み</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>return_data_raw <span class="ot">&lt;-</span> readr<span class="sc">::</span><span class="fu">read_csv</span>(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  input_paths[[<span class="st">"return_data"</span>]],</span>
@@ -546,8 +561,8 @@ ch08_event_data.csv</code></pre>
 <span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>event_data_raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="必須列の確認" class="level2">
-<h2 class="anchored" data-anchor-id="必須列の確認">6.6 必須列の確認</h2>
+<section id="必須列の確認" class="level3">
+<h3 class="anchored" data-anchor-id="必須列の確認">6.2.3 必須列の確認</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>required_return_columns <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"date"</span>,</span>
@@ -605,8 +620,8 @@ ch08_event_data.csv</code></pre>
 <span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="データ型の整理" class="level2">
-<h2 class="anchored" data-anchor-id="データ型の整理">6.7 データ型の整理</h2>
+<section id="データ型の整理" class="level3">
+<h3 class="anchored" data-anchor-id="データ型の整理">6.2.4 データ型の整理</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>return_data <span class="ot">&lt;-</span> return_data_raw <span class="sc">|&gt;</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
@@ -669,8 +684,8 @@ ch08_event_data.csv</code></pre>
 <span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="データの概要" class="level2">
-<h2 class="anchored" data-anchor-id="データの概要">6.8 データの概要</h2>
+<section id="データの概要" class="level3">
+<h3 class="anchored" data-anchor-id="データの概要">6.2.5 データの概要</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>input_data_overview <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>data, <span class="sc">~</span>observations, <span class="sc">~</span>firms, <span class="sc">~</span>first_date, <span class="sc">~</span>last_date,</span>
@@ -694,8 +709,8 @@ ch08_event_data.csv</code></pre>
 <span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>input_data_overview</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="キーの重複確認" class="level2">
-<h2 class="anchored" data-anchor-id="キーの重複確認">6.9 キーの重複確認</h2>
+<section id="キーの重複確認" class="level3">
+<h3 class="anchored" data-anchor-id="キーの重複確認">6.2.6 キーの重複確認</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>return_key_duplicates <span class="ot">&lt;-</span> return_data <span class="sc">|&gt;</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(</span>
@@ -737,8 +752,8 @@ ch08_event_data.csv</code></pre>
 <span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="欠損値の確認" class="level2">
-<h2 class="anchored" data-anchor-id="欠損値の確認">6.10 欠損値の確認</h2>
+<section id="欠損値の確認" class="level3">
+<h3 class="anchored" data-anchor-id="欠損値の確認">6.2.7 欠損値の確認</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>missing_summary <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">individual_returns =</span> return_data,</span>
@@ -783,8 +798,11 @@ ch08_event_data.csv</code></pre>
 <span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>missing_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="決算サプライズ" class="level2">
-<h2 class="anchored" data-anchor-id="決算サプライズ">6.11 決算サプライズ</h2>
+</section>
+<section id="決算サプライズとイベント日の設定" class="level2">
+<h2 class="anchored" data-anchor-id="決算サプライズとイベント日の設定">6.3 決算サプライズとイベント日の設定</h2>
+<section id="決算サプライズ" class="level3">
+<h3 class="anchored" data-anchor-id="決算サプライズ">6.3.1 決算サプライズ</h3>
 <p>旧章では予想利益から実現利益を引いていたが、本章では解釈を明確にするため、実現利益から予想利益を引く。</p>
 <p><span class="math display">\[
 Surprise_i
@@ -879,8 +897,8 @@ Surprise_i
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>invalid_surprise_events</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="取引日カレンダー" class="level2">
-<h2 class="anchored" data-anchor-id="取引日カレンダー">6.12 取引日カレンダー</h2>
+<section id="取引日カレンダー" class="level3">
+<h3 class="anchored" data-anchor-id="取引日カレンダー">6.3.2 取引日カレンダー</h3>
 <p>市場リターンの日付を取引日カレンダーとして使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>trading_calendar <span class="ot">&lt;-</span> market_return_data <span class="sc">|&gt;</span></span>
@@ -949,8 +967,8 @@ Surprise_i
 <span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>market_dates_without_returns</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="イベント日0の設定" class="level2">
-<h2 class="anchored" data-anchor-id="イベント日0の設定">6.13 イベント日0の設定</h2>
+<section id="イベント日0の設定" class="level3">
+<h3 class="anchored" data-anchor-id="イベント日0の設定">6.3.3 イベント日0の設定</h3>
 <p>決算発表は取引終了後に行われると仮定する。そのため、発表日が取引日であっても、次の取引日をイベント日0とする。発表日が休日の場合は、最初の翌取引日がイベント日0となる。</p>
 <p><code>findInterval()</code> を用い、明示的なループを使わずに翌取引日を求める。</p>
 <div class="cell">
@@ -1017,8 +1035,11 @@ Surprise_i
 <span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="推定期間とイベント期間" class="level2">
-<h2 class="anchored" data-anchor-id="推定期間とイベント期間">6.14 推定期間とイベント期間</h2>
+</section>
+<section id="推定期間とマーケットモデル" class="level2">
+<h2 class="anchored" data-anchor-id="推定期間とマーケットモデル">6.4 推定期間とマーケット・モデル</h2>
+<section id="推定期間とイベント期間" class="level3">
+<h3 class="anchored" data-anchor-id="推定期間とイベント期間">6.4.1 推定期間とイベント期間</h3>
 <p>本章では、イベント日0を基準として次の期間を使用する。</p>
 <table class="caption-top table">
 <thead>
@@ -1089,8 +1110,8 @@ Surprise_i
 <span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="イベントパネルの作成" class="level2">
-<h2 class="anchored" data-anchor-id="イベントパネルの作成">6.15 イベント・パネルの作成</h2>
+<section id="イベントパネルの作成" class="level3">
+<h3 class="anchored" data-anchor-id="イベントパネルの作成">6.4.2 イベント・パネルの作成</h3>
 <p>各イベントについて、推定期間の開始からイベント期間の終了までの相対取引日を作成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>relative_day_sequence <span class="ot">&lt;-</span> <span class="fu">seq</span>(</span>
@@ -1169,8 +1190,8 @@ Surprise_i
 <span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="データ利用可能性の診断" class="level2">
-<h2 class="anchored" data-anchor-id="データ利用可能性の診断">6.16 データ利用可能性の診断</h2>
+<section id="データ利用可能性の診断" class="level3">
+<h3 class="anchored" data-anchor-id="データ利用可能性の診断">6.4.3 データ利用可能性の診断</h3>
 <p>イベントごとに、推定期間とイベント期間で利用できる観測数を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>event_data_coverage <span class="ot">&lt;-</span> full_sample_data <span class="sc">|&gt;</span></span>
@@ -1253,8 +1274,8 @@ Surprise_i
 <span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>event_coverage_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="マーケットモデルの推定" class="level2">
-<h2 class="anchored" data-anchor-id="マーケットモデルの推定">6.17 マーケット・モデルの推定</h2>
+<section id="マーケットモデルの推定" class="level3">
+<h3 class="anchored" data-anchor-id="マーケットモデルの推定">6.4.4 マーケット・モデルの推定</h3>
 <p>推定期間のデータだけを抽出する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>estimation_window_data <span class="ot">&lt;-</span> full_sample_data <span class="sc">|&gt;</span></span>
@@ -1424,8 +1445,8 @@ Surprise_i
 <span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="完全なイベント期間を持つイベント" class="level2">
-<h2 class="anchored" data-anchor-id="完全なイベント期間を持つイベント">6.18 完全なイベント期間を持つイベント</h2>
+<section id="完全なイベント期間を持つイベント" class="level3">
+<h3 class="anchored" data-anchor-id="完全なイベント期間を持つイベント">6.4.5 完全なイベント期間を持つイベント</h3>
 <p>マーケット・モデルを推定でき、かつ61取引日のイベント期間で個別株と市場リターンがすべて観測できるイベントだけを採用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>eligible_events <span class="ot">&lt;-</span> event_data_coverage <span class="sc">|&gt;</span></span>
@@ -1477,8 +1498,11 @@ Surprise_i
 <span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="異常リターンとcar" class="level2">
-<h2 class="anchored" data-anchor-id="異常リターンとcar">6.19 異常リターンとCAR</h2>
+</section>
+<section id="異常リターンと日次集計" class="level2">
+<h2 class="anchored" data-anchor-id="異常リターンと日次集計">6.5 異常リターンと日次集計</h2>
+<section id="異常リターンとcar" class="level3">
+<h3 class="anchored" data-anchor-id="異常リターンとcar">6.5.1 異常リターンとCAR</h3>
 <p>イベント期間のデータにマーケット・モデルの推定値を結合する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>event_window_data <span class="ot">&lt;-</span> full_sample_data <span class="sc">|&gt;</span></span>
@@ -1560,8 +1584,8 @@ Surprise_i
 <span id="cb44-14"><a href="#cb44-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="aarとcaar" class="level2">
-<h2 class="anchored" data-anchor-id="aarとcaar">6.20 AARとCAAR</h2>
+<section id="aarとcaar" class="level3">
+<h3 class="anchored" data-anchor-id="aarとcaar">6.5.2 AARとCAAR</h3>
 <p>イベント強度別に、平均異常リターン（AAR）と平均累積異常リターン（CAAR）を計算する。</p>
 <p><span class="math display">\[
 AAR_{g,t}
@@ -1705,8 +1729,8 @@ CAR_{i,t}
 <span id="cb47-52"><a href="#cb47-52" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb47-53"><a href="#cb47-53" aria-hidden="true" tabindex="-1"></a>overall_daily_statistics</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="イベント強度別caar" class="level3">
-<h3 class="anchored" data-anchor-id="イベント強度別caar">イベント強度別CAAR</h3>
+<section id="イベント強度別caar" class="level4">
+<h4 class="anchored" data-anchor-id="イベント強度別caar">イベント強度別CAAR</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>daily_event_statistics <span class="sc">|&gt;</span></span>
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -1741,8 +1765,8 @@ CAR_{i,t}
 <span id="cb48-31"><a href="#cb48-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="イベント日前後のaar" class="level3">
-<h3 class="anchored" data-anchor-id="イベント日前後のaar">イベント日前後のAAR</h3>
+<section id="イベント日前後のaar" class="level4">
+<h4 class="anchored" data-anchor-id="イベント日前後のaar">イベント日前後のAAR</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>daily_event_statistics <span class="sc">|&gt;</span></span>
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
@@ -1811,8 +1835,11 @@ CAR_{i,t}
 </div>
 </section>
 </section>
-<section id="複数のイベントウィンドウ" class="level2">
-<h2 class="anchored" data-anchor-id="複数のイベントウィンドウ">6.21 複数のイベント・ウィンドウ</h2>
+</section>
+<section id="イベントウィンドウ分析と結果保存" class="level2">
+<h2 class="anchored" data-anchor-id="イベントウィンドウ分析と結果保存">6.6 イベント・ウィンドウ分析と結果保存</h2>
+<section id="複数のイベントウィンドウ" class="level3">
+<h3 class="anchored" data-anchor-id="複数のイベントウィンドウ">6.6.1 複数のイベント・ウィンドウ</h3>
 <p>日次のCARだけでなく、実務でよく利用される複数のイベント・ウィンドウについて、イベント単位の累積異常リターンを計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>summary_windows <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
@@ -1982,8 +2009,8 @@ CAR_{i,t}
 <span id="cb55-41"><a href="#cb55-41" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb55-42"><a href="#cb55-42" aria-hidden="true" tabindex="-1"></a>overall_window_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="短期carの分布" class="level3">
-<h3 class="anchored" data-anchor-id="短期carの分布">短期CARの分布</h3>
+<section id="短期carの分布" class="level4">
+<h4 class="anchored" data-anchor-id="短期carの分布">短期CARの分布</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>event_level_window_returns <span class="sc">|&gt;</span></span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(window_ID <span class="sc">==</span> <span class="st">"m1_p1"</span>) <span class="sc">|&gt;</span></span>
@@ -2011,8 +2038,8 @@ CAR_{i,t}
 <span id="cb56-24"><a href="#cb56-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ウィンドウ別平均car" class="level3">
-<h3 class="anchored" data-anchor-id="ウィンドウ別平均car">ウィンドウ別平均CAR</h3>
+<section id="ウィンドウ別平均car" class="level4">
+<h4 class="anchored" data-anchor-id="ウィンドウ別平均car">ウィンドウ別平均CAR</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>event_window_summary <span class="sc">|&gt;</span></span>
 <span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -2042,8 +2069,8 @@ CAR_{i,t}
 </div>
 </section>
 </section>
-<section id="決算サプライズと短期car" class="level2">
-<h2 class="anchored" data-anchor-id="決算サプライズと短期car">6.22 決算サプライズと短期CAR</h2>
+<section id="決算サプライズと短期car" class="level3">
+<h3 class="anchored" data-anchor-id="決算サプライズと短期car">6.6.2 決算サプライズと短期CAR</h3>
 <p>イベント強度は決算サプライズの順位情報だけを使用する。ここでは連続変数としての決算サプライズと、短期CAR <code>[-1,+1]</code> の関係を回帰分析で確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>surprise_regression_data <span class="ot">&lt;-</span></span>
@@ -2093,8 +2120,8 @@ CAR_{i,t}
 <span id="cb60-25"><a href="#cb60-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="結果の保存" class="level2">
-<h2 class="anchored" data-anchor-id="結果の保存">6.23 結果の保存</h2>
+<section id="結果の保存" class="level3">
+<h3 class="anchored" data-anchor-id="結果の保存">6.6.3 結果の保存</h3>
 <p>イベント単位の結果を作成する。各イベント・ウィンドウのCARを横持ちに変換し、マーケット・モデルの推定値と結合する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>event_window_wide <span class="ot">&lt;-</span> event_level_window_returns <span class="sc">|&gt;</span></span>
@@ -2241,8 +2268,9 @@ CAR_{i,t}
 <span id="cb65-35"><a href="#cb65-35" aria-hidden="true" tabindex="-1"></a>output_verification</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
+</section>
 <section id="まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="まとめ">6.24 まとめ</h2>
+<h2 class="anchored" data-anchor-id="まとめ">6.7 まとめ</h2>
 <p>本章では、決算発表の翌取引日をイベント日0として、マーケット・モデルによるイベントスタディを実施した。推定期間にはイベント日の130取引日前から31取引日前までの100日を使用し、イベント期間には30取引日前から30取引日後までの61日を使用した。</p>
 <p>イベントごとの回帰推定には <code>nest()</code> と <code>purrr::map()</code>、複数のイベント・ウィンドウには <code>pmap_dfr()</code>、複数ファイルの保存には <code>walk2()</code> を使用した。明示的なループは使用していない。</p>
 <p>結果は次の3ファイルに保存される。</p>

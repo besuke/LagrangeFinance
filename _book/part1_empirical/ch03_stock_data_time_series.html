@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,35 +286,53 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#パッケージの準備" id="toc-パッケージの準備" class="nav-link active" data-scroll-target="#パッケージの準備">3.1 パッケージの準備</a></li>
-  <li><a href="#プロジェクトとデータディレクトリ" id="toc-プロジェクトとデータディレクトリ" class="nav-link" data-scroll-target="#プロジェクトとデータディレクトリ">3.2 プロジェクトとデータディレクトリ</a></li>
-  <li><a href="#株式データの読み込み" id="toc-株式データの読み込み" class="nav-link" data-scroll-target="#株式データの読み込み">3.3 株式データの読み込み</a></li>
-  <li><a href="#必須列の確認" id="toc-必須列の確認" class="nav-link" data-scroll-target="#必須列の確認">3.4 必須列の確認</a></li>
-  <li><a href="#欠損値の確認" id="toc-欠損値の確認" class="nav-link" data-scroll-target="#欠損値の確認">3.5 欠損値の確認</a></li>
-  <li><a href="#データ型と並び順の整理" id="toc-データ型と並び順の整理" class="nav-link" data-scroll-target="#データ型と並び順の整理">3.6 データ型と並び順の整理</a></li>
-  <li><a href="#パネルキーの確認" id="toc-パネルキーの確認" class="nav-link" data-scroll-target="#パネルキーの確認">3.7 パネルキーの確認</a></li>
-  <li><a href="#月次観測数の確認" id="toc-月次観測数の確認" class="nav-link" data-scroll-target="#月次観測数の確認">3.8 月次観測数の確認</a></li>
-  <li><a href="#配当と調整係数" id="toc-配当と調整係数" class="nav-link" data-scroll-target="#配当と調整係数">3.9 配当と調整係数</a></li>
-  <li><a href="#時価総額の計算" id="toc-時価総額の計算" class="nav-link" data-scroll-target="#時価総額の計算">3.10 時価総額の計算</a></li>
-  <li><a href="#前月株価の追加" id="toc-前月株価の追加" class="nav-link" data-scroll-target="#前月株価の追加">3.11 前月株価の追加</a></li>
-  <li><a href="#月次株式リターン" id="toc-月次株式リターン" class="nav-link" data-scroll-target="#月次株式リターン">3.12 月次株式リターン</a></li>
-  <li><a href="#無リスク金利の整合性" id="toc-無リスク金利の整合性" class="nav-link" data-scroll-target="#無リスク金利の整合性">3.13 無リスク金利の整合性</a></li>
-  <li><a href="#月次超過リターン" id="toc-月次超過リターン" class="nav-link" data-scroll-target="#月次超過リターン">3.14 月次超過リターン</a></li>
-  <li><a href="#月次リターンの要約統計量" id="toc-月次リターンの要約統計量" class="nav-link" data-scroll-target="#月次リターンの要約統計量">3.15 月次リターンの要約統計量</a></li>
-  <li><a href="#月次リターンの分布" id="toc-月次リターンの分布" class="nav-link" data-scroll-target="#月次リターンの分布">3.16 月次リターンの分布</a></li>
-  <li><a href="#累積リターン" id="toc-累積リターン" class="nav-link" data-scroll-target="#累積リターン">3.17 累積リターン</a></li>
-  <li><a href="#月次リターンから年次リターンへの集約" id="toc-月次リターンから年次リターンへの集約" class="nav-link" data-scroll-target="#月次リターンから年次リターンへの集約">3.18 月次リターンから年次リターンへの集約</a></li>
-  <li><a href="#年度末時価総額" id="toc-年度末時価総額" class="nav-link" data-scroll-target="#年度末時価総額">3.19 年度末時価総額</a></li>
-  <li><a href="#前章の財務データ" id="toc-前章の財務データ" class="nav-link" data-scroll-target="#前章の財務データ">3.20 前章の財務データ</a></li>
-  <li><a href="#結合前のキー診断" id="toc-結合前のキー診断" class="nav-link" data-scroll-target="#結合前のキー診断">3.21 結合前のキー診断</a></li>
-  <li><a href="#年次データの結合" id="toc-年次データの結合" class="nav-link" data-scroll-target="#年次データの結合">3.22 年次データの結合</a></li>
-  <li><a href="#月次データの結合" id="toc-月次データの結合" class="nav-link" data-scroll-target="#月次データの結合">3.23 月次データの結合</a></li>
-  <li><a href="#売上高利益時価総額の可視化" id="toc-売上高利益時価総額の可視化" class="nav-link" data-scroll-target="#売上高利益時価総額の可視化">3.24 売上高・利益・時価総額の可視化</a></li>
-  <li><a href="#一標本t検定" id="toc-一標本t検定" class="nav-link" data-scroll-target="#一標本t検定">3.25 一標本t検定</a></li>
-  <li><a href="#簿価時価比率と株式リターン" id="toc-簿価時価比率と株式リターン" class="nav-link" data-scroll-target="#簿価時価比率と株式リターン">3.26 簿価時価比率と株式リターン</a></li>
-  <li><a href="#年度別回帰とpurrr" id="toc-年度別回帰とpurrr" class="nav-link" data-scroll-target="#年度別回帰とpurrr">3.27 年度別回帰とpurrr</a></li>
-  <li><a href="#分析用データの保存" id="toc-分析用データの保存" class="nav-link" data-scroll-target="#分析用データの保存">3.28 分析用データの保存</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">3.29 まとめ</a></li>
+  <li><a href="#分析環境と株式データの整備" id="toc-分析環境と株式データの整備" class="nav-link active" data-scroll-target="#分析環境と株式データの整備">3.1 分析環境と株式データの整備</a>
+  <ul class="collapse">
+  <li><a href="#パッケージの準備" id="toc-パッケージの準備" class="nav-link" data-scroll-target="#パッケージの準備">3.1.1 パッケージの準備</a></li>
+  <li><a href="#プロジェクトとデータディレクトリ" id="toc-プロジェクトとデータディレクトリ" class="nav-link" data-scroll-target="#プロジェクトとデータディレクトリ">3.1.2 プロジェクトとデータディレクトリ</a></li>
+  <li><a href="#株式データの読み込み" id="toc-株式データの読み込み" class="nav-link" data-scroll-target="#株式データの読み込み">3.1.3 株式データの読み込み</a></li>
+  <li><a href="#必須列の確認" id="toc-必須列の確認" class="nav-link" data-scroll-target="#必須列の確認">3.1.4 必須列の確認</a></li>
+  <li><a href="#欠損値の確認" id="toc-欠損値の確認" class="nav-link" data-scroll-target="#欠損値の確認">3.1.5 欠損値の確認</a></li>
+  <li><a href="#データ型と並び順の整理" id="toc-データ型と並び順の整理" class="nav-link" data-scroll-target="#データ型と並び順の整理">3.1.6 データ型と並び順の整理</a></li>
+  <li><a href="#パネルキーの確認" id="toc-パネルキーの確認" class="nav-link" data-scroll-target="#パネルキーの確認">3.1.7 パネルキーの確認</a></li>
+  <li><a href="#月次観測数の確認" id="toc-月次観測数の確認" class="nav-link" data-scroll-target="#月次観測数の確認">3.1.8 月次観測数の確認</a></li>
+  </ul></li>
+  <li><a href="#月次リターンと時価総額" id="toc-月次リターンと時価総額" class="nav-link" data-scroll-target="#月次リターンと時価総額">3.2 月次リターンと時価総額</a>
+  <ul class="collapse">
+  <li><a href="#配当と調整係数" id="toc-配当と調整係数" class="nav-link" data-scroll-target="#配当と調整係数">3.2.1 配当と調整係数</a></li>
+  <li><a href="#時価総額" id="toc-時価総額" class="nav-link" data-scroll-target="#時価総額">3.2.2 時価総額</a></li>
+  <li><a href="#前月株価の追加" id="toc-前月株価の追加" class="nav-link" data-scroll-target="#前月株価の追加">3.2.3 前月株価の追加</a></li>
+  <li><a href="#月次株式リターン" id="toc-月次株式リターン" class="nav-link" data-scroll-target="#月次株式リターン">3.2.4 月次株式リターン</a></li>
+  <li><a href="#無リスク金利の整合性" id="toc-無リスク金利の整合性" class="nav-link" data-scroll-target="#無リスク金利の整合性">3.2.5 無リスク金利の整合性</a></li>
+  <li><a href="#月次超過リターン" id="toc-月次超過リターン" class="nav-link" data-scroll-target="#月次超過リターン">3.2.6 月次超過リターン</a></li>
+  </ul></li>
+  <li><a href="#月次リターンの分析" id="toc-月次リターンの分析" class="nav-link" data-scroll-target="#月次リターンの分析">3.3 月次リターンの分析</a>
+  <ul class="collapse">
+  <li><a href="#月次リターンの要約統計量" id="toc-月次リターンの要約統計量" class="nav-link" data-scroll-target="#月次リターンの要約統計量">3.3.1 月次リターンの要約統計量</a></li>
+  <li><a href="#月次リターンの分布" id="toc-月次リターンの分布" class="nav-link" data-scroll-target="#月次リターンの分布">3.3.2 月次リターンの分布</a></li>
+  <li><a href="#累積リターン" id="toc-累積リターン" class="nav-link" data-scroll-target="#累積リターン">3.3.3 累積リターン</a></li>
+  </ul></li>
+  <li><a href="#年次リターンと年度末時価総額" id="toc-年次リターンと年度末時価総額" class="nav-link" data-scroll-target="#年次リターンと年度末時価総額">3.4 年次リターンと年度末時価総額</a>
+  <ul class="collapse">
+  <li><a href="#月次リターンから年次リターンへの集約" id="toc-月次リターンから年次リターンへの集約" class="nav-link" data-scroll-target="#月次リターンから年次リターンへの集約">3.4.1 月次リターンから年次リターンへの集約</a></li>
+  <li><a href="#年度末時価総額" id="toc-年度末時価総額" class="nav-link" data-scroll-target="#年度末時価総額">3.4.2 年度末時価総額</a></li>
+  </ul></li>
+  <li><a href="#財務データとの結合" id="toc-財務データとの結合" class="nav-link" data-scroll-target="#財務データとの結合">3.5 財務データとの結合</a>
+  <ul class="collapse">
+  <li><a href="#前章の財務データ" id="toc-前章の財務データ" class="nav-link" data-scroll-target="#前章の財務データ">3.5.1 前章の財務データ</a></li>
+  <li><a href="#結合前のキー診断" id="toc-結合前のキー診断" class="nav-link" data-scroll-target="#結合前のキー診断">3.5.2 結合前のキー診断</a></li>
+  <li><a href="#年次データの結合" id="toc-年次データの結合" class="nav-link" data-scroll-target="#年次データの結合">3.5.3 年次データの結合</a></li>
+  <li><a href="#月次データの結合" id="toc-月次データの結合" class="nav-link" data-scroll-target="#月次データの結合">3.5.4 月次データの結合</a></li>
+  <li><a href="#売上高利益時価総額の可視化" id="toc-売上高利益時価総額の可視化" class="nav-link" data-scroll-target="#売上高利益時価総額の可視化">3.5.5 売上高・利益・時価総額の可視化</a></li>
+  </ul></li>
+  <li><a href="#統計分析と分析用データ" id="toc-統計分析と分析用データ" class="nav-link" data-scroll-target="#統計分析と分析用データ">3.6 統計分析と分析用データ</a>
+  <ul class="collapse">
+  <li><a href="#一標本t検定" id="toc-一標本t検定" class="nav-link" data-scroll-target="#一標本t検定">3.6.1 一標本t検定</a></li>
+  <li><a href="#簿価時価比率と株式リターン" id="toc-簿価時価比率と株式リターン" class="nav-link" data-scroll-target="#簿価時価比率と株式リターン">3.6.2 簿価時価比率と株式リターン</a></li>
+  <li><a href="#年度別回帰とpurrr" id="toc-年度別回帰とpurrr" class="nav-link" data-scroll-target="#年度別回帰とpurrr">3.6.3 年度別回帰とpurrr</a></li>
+  <li><a href="#分析用データの保存" id="toc-分析用データの保存" class="nav-link" data-scroll-target="#分析用データの保存">3.6.4 分析用データの保存</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">3.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -352,8 +370,10 @@ window.Quarto = {
 <li>第4章以降で使用するデータを保存する</li>
 </ol>
 <p>反復処理には <code>for</code> 文を使わず、<code>purrr::map()</code> 系を利用する。パイプ演算子は native pipe の <code>|&gt;</code> に統一する。</p>
-<section id="パッケージの準備" class="level2">
-<h2 class="anchored" data-anchor-id="パッケージの準備">3.1 パッケージの準備</h2>
+<section id="分析環境と株式データの整備" class="level2">
+<h2 class="anchored" data-anchor-id="分析環境と株式データの整備">3.1 分析環境と株式データの整備</h2>
+<section id="パッケージの準備" class="level3">
+<h3 class="anchored" data-anchor-id="パッケージの準備">3.1.1 パッケージの準備</h3>
 <p>本章では <code>tidyverse</code> と <code>broom</code> を利用する。<code>broom</code> は、回帰分析の結果を tidy なデータフレームへ変換するためのパッケージである。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>({</span>
@@ -370,8 +390,8 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"tidyverse"</span>, <span class="st">"broom"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="プロジェクトとデータディレクトリ" class="level2">
-<h2 class="anchored" data-anchor-id="プロジェクトとデータディレクトリ">3.2 プロジェクトとデータディレクトリ</h2>
+<section id="プロジェクトとデータディレクトリ" class="level3">
+<h3 class="anchored" data-anchor-id="プロジェクトとデータディレクトリ">3.1.2 プロジェクトとデータディレクトリ</h3>
 <p>RStudioでチャンクを個別に実行する場合と、Quartoで章全体をレンダリングする場合では、作業ディレクトリが異なることがある。そのため、プロジェクトルートを実行時に確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>project_candidates <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">c</span>(</span>
@@ -440,8 +460,8 @@ window.Quarto = {
 <span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>csv_catalog</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="株式データの読み込み" class="level2">
-<h2 class="anchored" data-anchor-id="株式データの読み込み">3.3 株式データの読み込み</h2>
+<section id="株式データの読み込み" class="level3">
+<h3 class="anchored" data-anchor-id="株式データの読み込み">3.1.3 株式データの読み込み</h3>
 <p>株式データは <code>ch05_stock_data.csv</code> に保存されている。ファイル名は旧教材の章番号に由来するが、本書では第3章の入力データとして使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>stock_data_candidates <span class="ot">&lt;-</span> csv_paths[</span>
@@ -495,8 +515,8 @@ window.Quarto = {
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="必須列の確認" class="level2">
-<h2 class="anchored" data-anchor-id="必須列の確認">3.4 必須列の確認</h2>
+<section id="必須列の確認" class="level3">
+<h3 class="anchored" data-anchor-id="必須列の確認">3.1.4 必須列の確認</h3>
 <p>本章の計算には次の列が必要である。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>required_stock_columns <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
@@ -524,8 +544,8 @@ window.Quarto = {
 <span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="欠損値の確認" class="level2">
-<h2 class="anchored" data-anchor-id="欠損値の確認">3.5 欠損値の確認</h2>
+<section id="欠損値の確認" class="level3">
+<h3 class="anchored" data-anchor-id="欠損値の確認">3.1.5 欠損値の確認</h3>
 <p>各変数について欠損数と欠損率を計算する。<code>across()</code> に複数の関数を渡し、結果を <code>pivot_longer()</code> で縦長に整理する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>stock_missing_summary <span class="ot">&lt;-</span> stock_data_raw <span class="sc">|&gt;</span></span>
@@ -549,8 +569,8 @@ window.Quarto = {
 <span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>stock_missing_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="データ型と並び順の整理" class="level2">
-<h2 class="anchored" data-anchor-id="データ型と並び順の整理">3.6 データ型と並び順の整理</h2>
+<section id="データ型と並び順の整理" class="level3">
+<h3 class="anchored" data-anchor-id="データ型と並び順の整理">3.1.6 データ型と並び順の整理</h3>
 <p>企業ID、年、月、月IDを整数型に統一する。企業ごとの時系列計算を正しく行うため、<code>firm_ID</code> と <code>month_ID</code> の順に並べる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>stock_data <span class="ot">&lt;-</span> stock_data_raw <span class="sc">|&gt;</span></span>
@@ -566,8 +586,8 @@ window.Quarto = {
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(stock_data)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="パネルキーの確認" class="level2">
-<h2 class="anchored" data-anchor-id="パネルキーの確認">3.7 パネルキーの確認</h2>
+<section id="パネルキーの確認" class="level3">
+<h3 class="anchored" data-anchor-id="パネルキーの確認">3.1.7 パネルキーの確認</h3>
 <p>月次株式データでは、<code>firm_ID</code> と <code>month_ID</code> の組合せが各行を一意に識別する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>stock_key_duplicates <span class="ot">&lt;-</span> stock_data <span class="sc">|&gt;</span></span>
@@ -596,8 +616,8 @@ window.Quarto = {
 <span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="月次観測数の確認" class="level2">
-<h2 class="anchored" data-anchor-id="月次観測数の確認">3.8 月次観測数の確認</h2>
+<section id="月次観測数の確認" class="level3">
+<h3 class="anchored" data-anchor-id="月次観測数の確認">3.1.8 月次観測数の確認</h3>
 <p>年度別の企業数と観測数を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>stock_observations_by_year <span class="ot">&lt;-</span> stock_data <span class="sc">|&gt;</span></span>
@@ -622,8 +642,11 @@ window.Quarto = {
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>observations_by_firm</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="配当と調整係数" class="level2">
-<h2 class="anchored" data-anchor-id="配当と調整係数">3.9 配当と調整係数</h2>
+</section>
+<section id="月次リターンと時価総額" class="level2">
+<h2 class="anchored" data-anchor-id="月次リターンと時価総額">3.2 月次リターンと時価総額</h2>
+<section id="配当と調整係数" class="level3">
+<h3 class="anchored" data-anchor-id="配当と調整係数">3.2.1 配当と調整係数</h3>
 <p>株式リターンを計算する際には、株価変化だけでなく配当と株式分割等の調整係数も考慮する。</p>
 <p>配当が支払われた観測を確認する。</p>
 <div class="cell">
@@ -681,8 +704,8 @@ window.Quarto = {
 <span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>corporate_action_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="時価総額の計算" class="level2">
-<h2 class="anchored" data-anchor-id="時価総額の計算">3.10 時価総額の計算</h2>
+<section id="時価総額" class="level3">
+<h3 class="anchored" data-anchor-id="時価総額">3.2.2 時価総額</h3>
 <p>企業 <span class="math inline">\(i\)</span> の月 <span class="math inline">\(t\)</span> における時価総額 <span class="math inline">\(ME_{i,t}\)</span> は、株価 <span class="math inline">\(P_{i,t}\)</span> と発行済株式数 <span class="math inline">\(N_{i,t}\)</span> の積である。</p>
 <p><span class="math display">\[
 ME_{i,t}=P_{i,t}N_{i,t}
@@ -740,8 +763,8 @@ ME_{i,t}=P_{i,t}N_{i,t}
 <span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="前月株価の追加" class="level2">
-<h2 class="anchored" data-anchor-id="前月株価の追加">3.11 前月株価の追加</h2>
+<section id="前月株価の追加" class="level3">
+<h3 class="anchored" data-anchor-id="前月株価の追加">3.2.3 前月株価の追加</h3>
 <p>企業ごとに <code>lag()</code> を適用し、前月株価を作成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>stock_data <span class="ot">&lt;-</span> stock_data <span class="sc">|&gt;</span></span>
@@ -776,8 +799,8 @@ ME_{i,t}=P_{i,t}N_{i,t}
 <span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">12</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="月次株式リターン" class="level2">
-<h2 class="anchored" data-anchor-id="月次株式リターン">3.12 月次株式リターン</h2>
+<section id="月次株式リターン" class="level3">
+<h3 class="anchored" data-anchor-id="月次株式リターン">3.2.4 月次株式リターン</h3>
 <p>企業 <span class="math inline">\(i\)</span> の月 <span class="math inline">\(t\)</span> における月次株式リターン <span class="math inline">\(R_{i,t}\)</span> を、次式で計算する。</p>
 <p><span class="math display">\[
 R_{i,t}
@@ -822,8 +845,8 @@ R_{i,t}
 <span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_head</span>(<span class="at">n =</span> <span class="dv">15</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="無リスク金利の整合性" class="level2">
-<h2 class="anchored" data-anchor-id="無リスク金利の整合性">3.13 無リスク金利の整合性</h2>
+<section id="無リスク金利の整合性" class="level3">
+<h3 class="anchored" data-anchor-id="無リスク金利の整合性">3.2.5 無リスク金利の整合性</h3>
 <p>同じ月の無リスク金利はすべての企業に共通であることを確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: validate-risk-free-rate</span></span>
@@ -915,8 +938,8 @@ R_{i,t}
 <span id="cb26-87"><a href="#cb26-87" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="月次超過リターン" class="level2">
-<h2 class="anchored" data-anchor-id="月次超過リターン">3.14 月次超過リターン</h2>
+<section id="月次超過リターン" class="level3">
+<h3 class="anchored" data-anchor-id="月次超過リターン">3.2.6 月次超過リターン</h3>
 <p>月次超過リターン <span class="math inline">\(R^e_{i,t}\)</span> は、株式リターンから無リスク金利を引いて計算する。</p>
 <p><span class="math display">\[
 R^e_{i,t}=R_{i,t}-R_{F,t}
@@ -929,8 +952,11 @@ R^e_{i,t}=R_{i,t}-R_{F,t}
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="月次リターンの要約統計量" class="level2">
-<h2 class="anchored" data-anchor-id="月次リターンの要約統計量">3.15 月次リターンの要約統計量</h2>
+</section>
+<section id="月次リターンの分析" class="level2">
+<h2 class="anchored" data-anchor-id="月次リターンの分析">3.3 月次リターンの分析</h2>
+<section id="月次リターンの要約統計量" class="level3">
+<h3 class="anchored" data-anchor-id="月次リターンの要約統計量">3.3.1 月次リターンの要約統計量</h3>
 <p>歪度と尖度を計算する関数を定義する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>calculate_skewness <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
@@ -1016,8 +1042,8 @@ R^e_{i,t}=R_{i,t}-R_{F,t}
 <span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>firm_return_summary</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="月次リターンの分布" class="level2">
-<h2 class="anchored" data-anchor-id="月次リターンの分布">3.16 月次リターンの分布</h2>
+<section id="月次リターンの分布" class="level3">
+<h3 class="anchored" data-anchor-id="月次リターンの分布">3.3.2 月次リターンの分布</h3>
 <p>極端な値によって分布の中心が見えにくくならないよう、1%点から99%点の範囲を表示する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>return_plot_limits <span class="ot">&lt;-</span> <span class="fu">quantile</span>(</span>
@@ -1042,8 +1068,8 @@ R^e_{i,t}=R_{i,t}-R_{F,t}
 <span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="累積リターン" class="level2">
-<h2 class="anchored" data-anchor-id="累積リターン">3.17 累積リターン</h2>
+<section id="累積リターン" class="level3">
+<h3 class="anchored" data-anchor-id="累積リターン">3.3.3 累積リターン</h3>
 <p>月次グロスリターン <span class="math inline">\(1+R_{i,t}\)</span> を時系列方向に掛け合わせることで、累積グロスリターンを求める。</p>
 <p><span class="math display">\[
 G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
@@ -1087,8 +1113,11 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="月次リターンから年次リターンへの集約" class="level2">
-<h2 class="anchored" data-anchor-id="月次リターンから年次リターンへの集約">3.18 月次リターンから年次リターンへの集約</h2>
+</section>
+<section id="年次リターンと年度末時価総額" class="level2">
+<h2 class="anchored" data-anchor-id="年次リターンと年度末時価総額">3.4 年次リターンと年度末時価総額</h2>
+<section id="月次リターンから年次リターンへの集約" class="level3">
+<h3 class="anchored" data-anchor-id="月次リターンから年次リターンへの集約">3.4.1 月次リターンから年次リターンへの集約</h3>
 <p>欠損値を除き、グロスリターンを掛け合わせる関数を定義する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>compound_return <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
@@ -1175,8 +1204,8 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="年度末時価総額" class="level2">
-<h2 class="anchored" data-anchor-id="年度末時価総額">3.19 年度末時価総額</h2>
+<section id="年度末時価総額" class="level3">
+<h3 class="anchored" data-anchor-id="年度末時価総額">3.4.2 年度末時価総額</h3>
 <p>各企業・各年度について、最後に観測された月の時価総額を年度末時価総額として取得する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>year_end_market_equity <span class="ot">&lt;-</span> stock_data <span class="sc">|&gt;</span></span>
@@ -1198,8 +1227,11 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>year_end_market_equity</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="前章の財務データ" class="level2">
-<h2 class="anchored" data-anchor-id="前章の財務データ">3.20 前章の財務データ</h2>
+</section>
+<section id="財務データとの結合" class="level2">
+<h2 class="anchored" data-anchor-id="財務データとの結合">3.5 財務データとの結合</h2>
+<section id="前章の財務データ" class="level3">
+<h3 class="anchored" data-anchor-id="前章の財務データ">3.5.1 前章の財務データ</h3>
 <p>第2章で作成した <code>simulation_data/derived/ch04_output.csv</code> を読み込む。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>financial_output_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(</span>
@@ -1266,8 +1298,8 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="結合前のキー診断" class="level2">
-<h2 class="anchored" data-anchor-id="結合前のキー診断">3.21 結合前のキー診断</h2>
+<section id="結合前のキー診断" class="level3">
+<h3 class="anchored" data-anchor-id="結合前のキー診断">3.5.2 結合前のキー診断</h3>
 <p>株式データに存在するが財務データに存在しない企業・年度を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>stock_keys_without_financial_data <span class="ot">&lt;-</span> annual_stock_data <span class="sc">|&gt;</span></span>
@@ -1305,8 +1337,8 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>join_key_diagnostics</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="年次データの結合" class="level2">
-<h2 class="anchored" data-anchor-id="年次データの結合">3.22 年次データの結合</h2>
+<section id="年次データの結合" class="level3">
+<h3 class="anchored" data-anchor-id="年次データの結合">3.5.3 年次データの結合</h3>
 <p>年次株式データを基準に、財務データと年度末時価総額を結合する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>annual_data <span class="ot">&lt;-</span> annual_stock_data <span class="sc">|&gt;</span></span>
@@ -1335,8 +1367,8 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="月次データの結合" class="level2">
-<h2 class="anchored" data-anchor-id="月次データの結合">3.23 月次データの結合</h2>
+<section id="月次データの結合" class="level3">
+<h3 class="anchored" data-anchor-id="月次データの結合">3.5.4 月次データの結合</h3>
 <p>月次株式データに年次財務データを結合する。同じ年度の財務情報が、各月の行へ付与される。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>monthly_data <span class="ot">&lt;-</span> stock_data <span class="sc">|&gt;</span></span>
@@ -1361,8 +1393,8 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="売上高利益時価総額の可視化" class="level2">
-<h2 class="anchored" data-anchor-id="売上高利益時価総額の可視化">3.24 売上高・利益・時価総額の可視化</h2>
+<section id="売上高利益時価総額の可視化" class="level3">
+<h3 class="anchored" data-anchor-id="売上高利益時価総額の可視化">3.5.5 売上高・利益・時価総額の可視化</h3>
 <p>最新年度の企業について、売上高、当期純利益、時価総額の関係をバブルチャートで確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>latest_analysis_year <span class="ot">&lt;-</span> annual_data <span class="sc">|&gt;</span></span>
@@ -1417,8 +1449,11 @@ G_{i,T}=\prod_{t=1}^{T}(1+R_{i,t})
 <span id="cb51-22"><a href="#cb51-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_classic</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="一標本t検定" class="level2">
-<h2 class="anchored" data-anchor-id="一標本t検定">3.25 一標本t検定</h2>
+</section>
+<section id="統計分析と分析用データ" class="level2">
+<h2 class="anchored" data-anchor-id="統計分析と分析用データ">3.6 統計分析と分析用データ</h2>
+<section id="一標本t検定" class="level3">
+<h3 class="anchored" data-anchor-id="一標本t検定">3.6.1 一標本t検定</h3>
 <p>観測数が最も多い企業を選び、月次超過リターンの平均が0と異なるかを検定する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>test_firm_id <span class="ot">&lt;-</span> stock_data <span class="sc">|&gt;</span></span>
@@ -1468,8 +1503,8 @@ t
 <span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>broom<span class="sc">::</span><span class="fu">tidy</span>(t_test_result)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="簿価時価比率と株式リターン" class="level2">
-<h2 class="anchored" data-anchor-id="簿価時価比率と株式リターン">3.26 簿価時価比率と株式リターン</h2>
+<section id="簿価時価比率と株式リターン" class="level3">
+<h3 class="anchored" data-anchor-id="簿価時価比率と株式リターン">3.6.2 簿価時価比率と株式リターン</h3>
 <p>前年度末の時価総額を作成し、期首株主資本を前年度末時価総額で割って簿価時価比率を計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>annual_data <span class="ot">&lt;-</span> annual_data <span class="sc">|&gt;</span></span>
@@ -1568,8 +1603,8 @@ t
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>broom<span class="sc">::</span><span class="fu">glance</span>(lm_result)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="年度別回帰とpurrr" class="level2">
-<h2 class="anchored" data-anchor-id="年度別回帰とpurrr">3.27 年度別回帰とpurrr</h2>
+<section id="年度別回帰とpurrr" class="level3">
+<h3 class="anchored" data-anchor-id="年度別回帰とpurrr">3.6.3 年度別回帰とpurrr</h3>
 <p>年度ごとの回帰を <code>nest()</code> と <code>purrr::map()</code> で実行する。明示的なループは使用しない。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>yearly_regression_models <span class="ot">&lt;-</span> annual_data <span class="sc">|&gt;</span></span>
@@ -1629,8 +1664,8 @@ t
 <span id="cb63-15"><a href="#cb63-15" aria-hidden="true" tabindex="-1"></a>yearly_regression_fit</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="分析用データの保存" class="level2">
-<h2 class="anchored" data-anchor-id="分析用データの保存">3.28 分析用データの保存</h2>
+<section id="分析用データの保存" class="level3">
+<h3 class="anchored" data-anchor-id="分析用データの保存">3.6.4 分析用データの保存</h3>
 <p>第4章以降で使用するため、月次データと年次データを <code>simulation_data/derived</code> に保存する。元の入力CSVは上書きしない。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">dir.exists</span>(derived_data_dir)) {</span>
@@ -1712,8 +1747,9 @@ t
 <span id="cb66-33"><a href="#cb66-33" aria-hidden="true" tabindex="-1"></a>output_verification</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
+</section>
 <section id="まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="まとめ">3.29 まとめ</h2>
+<h2 class="anchored" data-anchor-id="まとめ">3.7 まとめ</h2>
 <p>本章では、株価、配当、調整係数から月次リターンを作成し、無リスク金利を差し引いて超過リターンを計算した。さらに、月次リターンを年次リターンへ集約し、第2章で作成した財務データと結合した。</p>
 <p>分析用データは次の2ファイルに保存される。</p>
 <pre class="text"><code>simulation_data/derived/ch05_output1.csv

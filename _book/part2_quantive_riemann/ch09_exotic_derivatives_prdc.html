@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>16&nbsp; 第II-9章 エキゾチック・デリバティブとPRDC – ラグランジェ・ファイナンス</title>
+<title>第II-9章 エキゾチック・デリバティブとPRDC – ラグランジェ・ファイナンス</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -235,7 +235,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -285,33 +285,46 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#第ii-9章-エキゾチックデリバティブとprdc" id="toc-第ii-9章-エキゾチックデリバティブとprdc" class="nav-link active" data-scroll-target="#第ii-9章-エキゾチックデリバティブとprdc"><span class="header-section-number">17</span> 第II-9章 エキゾチック・デリバティブとPRDC</a>
+  <li><a href="#prdcの商品構造と市場条件" id="toc-prdcの商品構造と市場条件" class="nav-link active" data-scroll-target="#prdcの商品構造と市場条件">9.1 PRDCの商品構造と市場条件</a>
   <ul class="collapse">
-  <li><a href="#商品条件" id="toc-商品条件" class="nav-link" data-scroll-target="#商品条件"><span class="header-section-number">17.1</span> 1. 商品条件</a></li>
-  <li><a href="#coupon-schedule" id="toc-coupon-schedule" class="nav-link" data-scroll-target="#coupon-schedule"><span class="header-section-number">17.2</span> 2. Coupon Schedule</a></li>
-  <li><a href="#domesticforeignおよびdiscount-curve" id="toc-domesticforeignおよびdiscount-curve" class="nav-link" data-scroll-target="#domesticforeignおよびdiscount-curve"><span class="header-section-number">17.3</span> 3. Domestic、ForeignおよびDiscount Curve</a></li>
-  <li><a href="#fx-process" id="toc-fx-process" class="nav-link" data-scroll-target="#fx-process"><span class="header-section-number">17.4</span> 4. FX Process</a></li>
-  <li><a href="#coupon-payoff" id="toc-coupon-payoff" class="nav-link" data-scroll-target="#coupon-payoff"><span class="header-section-number">17.5</span> 5. Coupon Payoff</a></li>
-  <li><a href="#coupon日ベースのfx時間グリッド" id="toc-coupon日ベースのfx時間グリッド" class="nav-link" data-scroll-target="#coupon日ベースのfx時間グリッド"><span class="header-section-number">17.6</span> 6. Coupon日ベースのFX時間グリッド</a></li>
-  <li><a href="#サンプルfxパス" id="toc-サンプルfxパス" class="nav-link" data-scroll-target="#サンプルfxパス"><span class="header-section-number">17.7</span> 7. サンプルFXパス</a></li>
-  <li><a href="#monte-carloによるprdc評価" id="toc-monte-carloによるprdc評価" class="nav-link" data-scroll-target="#monte-carloによるprdc評価"><span class="header-section-number">17.8</span> 8. Monte CarloによるPRDC評価</a></li>
-  <li><a href="#期待couponとキャッシュフロー" id="toc-期待couponとキャッシュフロー" class="nav-link" data-scroll-target="#期待couponとキャッシュフロー"><span class="header-section-number">17.9</span> 9. 期待Couponとキャッシュフロー</a></li>
-  <li><a href="#期待couponの期間構造" id="toc-期待couponの期間構造" class="nav-link" data-scroll-target="#期待couponの期間構造"><span class="header-section-number">17.10</span> 10. 期待Couponの期間構造</a></li>
-  <li><a href="#coupon-capfloor到達確率" id="toc-coupon-capfloor到達確率" class="nav-link" data-scroll-target="#coupon-capfloor到達確率"><span class="header-section-number">17.11</span> 11. Coupon Cap／Floor到達確率</a></li>
-  <li><a href="#coupon分布" id="toc-coupon分布" class="nav-link" data-scroll-target="#coupon分布"><span class="header-section-number">17.12</span> 12. Coupon分布</a></li>
-  <li><a href="#fx-spot感応度" id="toc-fx-spot感応度" class="nav-link" data-scroll-target="#fx-spot感応度"><span class="header-section-number">17.13</span> 13. FX Spot感応度</a></li>
-  <li><a href="#fx-volatility感応度" id="toc-fx-volatility感応度" class="nav-link" data-scroll-target="#fx-volatility感応度"><span class="header-section-number">17.14</span> 14. FX Volatility感応度</a></li>
-  <li><a href="#monte-carlo標準誤差" id="toc-monte-carlo標準誤差" class="nav-link" data-scroll-target="#monte-carlo標準誤差"><span class="header-section-number">17.15</span> 15. Monte Carlo標準誤差</a></li>
-  <li><a href="#prdc評価の限界" id="toc-prdc評価の限界" class="nav-link" data-scroll-target="#prdc評価の限界"><span class="header-section-number">17.16</span> 16. PRDC評価の限界</a>
+  <li><a href="#商品条件" id="toc-商品条件" class="nav-link" data-scroll-target="#商品条件">9.1.1 商品条件</a></li>
+  <li><a href="#coupon-schedule" id="toc-coupon-schedule" class="nav-link" data-scroll-target="#coupon-schedule">9.1.2 Coupon Schedule</a></li>
+  <li><a href="#domesticforeignおよびdiscount-curve" id="toc-domesticforeignおよびdiscount-curve" class="nav-link" data-scroll-target="#domesticforeignおよびdiscount-curve">9.1.3 Domestic、ForeignおよびDiscount Curve</a></li>
+  </ul></li>
+  <li><a href="#fxプロセスとcoupon-payoff" id="toc-fxプロセスとcoupon-payoff" class="nav-link" data-scroll-target="#fxプロセスとcoupon-payoff">9.2 FXプロセスとCoupon Payoff</a>
   <ul class="collapse">
-  <li><a href="#金利を決定論的とした" id="toc-金利を決定論的とした" class="nav-link" data-scroll-target="#金利を決定論的とした"><span class="header-section-number">17.16.1</span> 16.1 金利を決定論的とした</a></li>
-  <li><a href="#fx-volatilityを一定とした" id="toc-fx-volatilityを一定とした" class="nav-link" data-scroll-target="#fx-volatilityを一定とした"><span class="header-section-number">17.16.2</span> 16.2 FX volatilityを一定とした</a></li>
-  <li><a href="#相関を明示的に扱っていない" id="toc-相関を明示的に扱っていない" class="nav-link" data-scroll-target="#相関を明示的に扱っていない"><span class="header-section-number">17.16.3</span> 16.3 相関を明示的に扱っていない</a></li>
-  <li><a href="#発行体コール権を含めていない" id="toc-発行体コール権を含めていない" class="nav-link" data-scroll-target="#発行体コール権を含めていない"><span class="header-section-number">17.16.4</span> 16.4 発行体コール権を含めていない</a></li>
+  <li><a href="#fx-process" id="toc-fx-process" class="nav-link" data-scroll-target="#fx-process">9.2.1 FX Process</a></li>
+  <li><a href="#coupon-payoff" id="toc-coupon-payoff" class="nav-link" data-scroll-target="#coupon-payoff">9.2.2 Coupon Payoff</a></li>
   </ul></li>
-  <li><a href="#part-iiのまとめ" id="toc-part-iiのまとめ" class="nav-link" data-scroll-target="#part-iiのまとめ"><span class="header-section-number">17.17</span> 17. Part IIのまとめ</a></li>
-  <li><a href="#本章のまとめ" id="toc-本章のまとめ" class="nav-link" data-scroll-target="#本章のまとめ"><span class="header-section-number">17.18</span> 18. 本章のまとめ</a></li>
+  <li><a href="#monte-carloによるprdc評価" id="toc-monte-carloによるprdc評価" class="nav-link" data-scroll-target="#monte-carloによるprdc評価">9.3 Monte CarloによるPRDC評価</a>
+  <ul class="collapse">
+  <li><a href="#coupon日ベースのfx時間グリッド" id="toc-coupon日ベースのfx時間グリッド" class="nav-link" data-scroll-target="#coupon日ベースのfx時間グリッド">9.3.1 Coupon日ベースのFX時間グリッド</a></li>
+  <li><a href="#サンプルfxパス" id="toc-サンプルfxパス" class="nav-link" data-scroll-target="#サンプルfxパス">9.3.2 サンプルFXパス</a></li>
+  <li><a href="#prdcの現在価値" id="toc-prdcの現在価値" class="nav-link" data-scroll-target="#prdcの現在価値">9.3.3 PRDCの現在価値</a></li>
+  <li><a href="#期待couponとキャッシュフロー" id="toc-期待couponとキャッシュフロー" class="nav-link" data-scroll-target="#期待couponとキャッシュフロー">9.3.4 期待Couponとキャッシュフロー</a></li>
   </ul></li>
+  <li><a href="#couponの期間構造と分布" id="toc-couponの期間構造と分布" class="nav-link" data-scroll-target="#couponの期間構造と分布">9.4 Couponの期間構造と分布</a>
+  <ul class="collapse">
+  <li><a href="#期待couponの期間構造" id="toc-期待couponの期間構造" class="nav-link" data-scroll-target="#期待couponの期間構造">9.4.1 期待Couponの期間構造</a></li>
+  <li><a href="#coupon-capfloor到達確率" id="toc-coupon-capfloor到達確率" class="nav-link" data-scroll-target="#coupon-capfloor到達確率">9.4.2 Coupon Cap／Floor到達確率</a></li>
+  <li><a href="#coupon分布" id="toc-coupon分布" class="nav-link" data-scroll-target="#coupon分布">9.4.3 Coupon分布</a></li>
+  </ul></li>
+  <li><a href="#fx感応度とmonte-carlo誤差" id="toc-fx感応度とmonte-carlo誤差" class="nav-link" data-scroll-target="#fx感応度とmonte-carlo誤差">9.5 FX感応度とMonte Carlo誤差</a>
+  <ul class="collapse">
+  <li><a href="#fx-spot感応度" id="toc-fx-spot感応度" class="nav-link" data-scroll-target="#fx-spot感応度">9.5.1 FX Spot感応度</a></li>
+  <li><a href="#fx-volatility感応度" id="toc-fx-volatility感応度" class="nav-link" data-scroll-target="#fx-volatility感応度">9.5.2 FX Volatility感応度</a></li>
+  <li><a href="#monte-carlo標準誤差" id="toc-monte-carlo標準誤差" class="nav-link" data-scroll-target="#monte-carlo標準誤差">9.5.3 Monte Carlo標準誤差</a></li>
+  </ul></li>
+  <li><a href="#モデルの限界とpart-ii総括" id="toc-モデルの限界とpart-ii総括" class="nav-link" data-scroll-target="#モデルの限界とpart-ii総括">9.6 モデルの限界とPart II総括</a>
+  <ul class="collapse">
+  <li><a href="#prdc評価の限界" id="toc-prdc評価の限界" class="nav-link" data-scroll-target="#prdc評価の限界">9.6.1 PRDC評価の限界</a></li>
+  <li><a href="#金利を決定論的とした" id="toc-金利を決定論的とした" class="nav-link" data-scroll-target="#金利を決定論的とした">9.6.2 金利を決定論的とした</a></li>
+  <li><a href="#fx-volatilityを一定とした" id="toc-fx-volatilityを一定とした" class="nav-link" data-scroll-target="#fx-volatilityを一定とした">9.6.3 FX volatilityを一定とした</a></li>
+  <li><a href="#相関を明示的に扱っていない" id="toc-相関を明示的に扱っていない" class="nav-link" data-scroll-target="#相関を明示的に扱っていない">9.6.4 相関を明示的に扱っていない</a></li>
+  <li><a href="#発行体コール権を含めていない" id="toc-発行体コール権を含めていない" class="nav-link" data-scroll-target="#発行体コール権を含めていない">9.6.5 発行体コール権を含めていない</a></li>
+  <li><a href="#part-iiのまとめ" id="toc-part-iiのまとめ" class="nav-link" data-scroll-target="#part-iiのまとめ">9.6.6 Part IIのまとめ</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">9.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -321,7 +334,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学と金融数学</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch09_exotic_derivatives_prdc.html"><span class="chapter-title">第II-9章 エキゾチック・デリバティブとPRDC</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">第II-9章 エキゾチック・デリバティブとPRDC</span></h1>
-<p class="subtitle lead">FX連動CouponとMonte Carlo評価</p>
 </div>
 
 
@@ -338,8 +350,6 @@ window.Quarto = {
 </header>
 
 
-<section id="第ii-9章-エキゾチックデリバティブとprdc" class="level1" data-number="17">
-<h1 data-number="17"><span class="header-section-number">17</span> 第II-9章 エキゾチック・デリバティブとPRDC</h1>
 <p>これまでの章では、債券、金利先物、Swap、Option、Callable BondおよびCDSを、それぞれの主要なリスク要因に基づいて評価した。本章では、第II部の締めくくりとして、金利と為替を組み合わせたエキゾチック・デリバティブであるPRDCを検討する。</p>
 <p>PRDC（Power Reverse Dual Currency Note）は、為替レートに連動するCouponを支払う長期の仕組債である。典型的なCoupon rateは、次の形で表される。</p>
 <p><span class="math display">\[
@@ -386,8 +396,10 @@ C_{\min}
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(broom)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="商品条件" class="level2" data-number="17.1">
-<h2 data-number="17.1" class="anchored" data-anchor-id="商品条件"><span class="header-section-number">17.1</span> 1. 商品条件</h2>
+<section id="prdcの商品構造と市場条件" class="level2">
+<h2 class="anchored" data-anchor-id="prdcの商品構造と市場条件">9.1 PRDCの商品構造と市場条件</h2>
+<section id="商品条件" class="level3">
+<h3 class="anchored" data-anchor-id="商品条件">9.1.1 商品条件</h3>
 <p>2015年9月3日から2041年9月3日まで、半年ごとにCouponを支払うPRDCを考える。最初の1年間は固定Couponとし、その後はFX連動Couponへ移行する。</p>
 <p>評価日は2023年4月11日であるため、固定Intro Coupon期間はすでに終了している。ただし、GaussQuantのPRDC評価関数がIntro Couponを扱えることを確認するため、契約条件として残す。</p>
 <p>本章では、計算時間を抑えながらMonte Carlo評価を確認するため、基準評価のパス数を3,000本、感応度評価を1,000本とする。</p>
@@ -476,8 +488,8 @@ C_{\min}
 <span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20 random_seed             123</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="coupon-schedule" class="level2" data-number="17.2">
-<h2 data-number="17.2" class="anchored" data-anchor-id="coupon-schedule"><span class="header-section-number">17.2</span> 2. Coupon Schedule</h2>
+<section id="coupon-schedule" class="level3">
+<h3 class="anchored" data-anchor-id="coupon-schedule">9.1.2 Coupon Schedule</h3>
 <p>契約開始日から満期までの全Coupon Scheduleと、固定Intro Coupon期間のScheduleを作成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>valuation_date_ql_prdc <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">date_GQL</span>(</span>
@@ -581,8 +593,8 @@ C_{\min}
 <span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 has_remaining_intro_coupon   0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="domesticforeignおよびdiscount-curve" class="level2" data-number="17.3">
-<h2 data-number="17.3" class="anchored" data-anchor-id="domesticforeignおよびdiscount-curve"><span class="header-section-number">17.3</span> 3. Domestic、ForeignおよびDiscount Curve</h2>
+<section id="domesticforeignおよびdiscount-curve" class="level3">
+<h3 class="anchored" data-anchor-id="domesticforeignおよびdiscount-curve">9.1.3 Domestic、ForeignおよびDiscount Curve</h3>
 <p>FX Quoteを、外国通貨1単位当たりの円貨額として表す。</p>
 <p><span class="math display">\[
 S_t
@@ -664,8 +676,11 @@ S_t
 <span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 FX risk-neutral drift    -0.02</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="fx-process" class="level2" data-number="17.4">
-<h2 data-number="17.4" class="anchored" data-anchor-id="fx-process"><span class="header-section-number">17.4</span> 4. FX Process</h2>
+</section>
+<section id="fxプロセスとcoupon-payoff" class="level2">
+<h2 class="anchored" data-anchor-id="fxプロセスとcoupon-payoff">9.2 FXプロセスとCoupon Payoff</h2>
+<section id="fx-process" class="level3">
+<h3 class="anchored" data-anchor-id="fx-process">9.2.1 FX Process</h3>
 <p>FX volatilityを10%とし、Garman–Kohlhagen Processを作成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fx_volatility_curve_prdc <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">BlackConstantVol</span>(</span>
@@ -713,8 +728,8 @@ S_t
 <span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 risk_neutral_drift  -0.02</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="coupon-payoff" class="level2" data-number="17.5">
-<h2 data-number="17.5" class="anchored" data-anchor-id="coupon-payoff"><span class="header-section-number">17.5</span> 5. Coupon Payoff</h2>
+<section id="coupon-payoff" class="level3">
+<h3 class="anchored" data-anchor-id="coupon-payoff">9.2.2 Coupon Payoff</h3>
 <p>本例のFX連動Couponは次式である。</p>
 <p><span class="math display">\[
 C(S)
@@ -872,8 +887,11 @@ a
 </div>
 <p>現在のFX SpotはCap到達水準を上回っているため、評価時点のCoupon式だけを見ればCapに張り付いている。しかし、満期までのFX分布にはFloor、Linear領域およびCap領域のすべてが含まれ得る。</p>
 </section>
-<section id="coupon日ベースのfx時間グリッド" class="level2" data-number="17.6">
-<h2 data-number="17.6" class="anchored" data-anchor-id="coupon日ベースのfx時間グリッド"><span class="header-section-number">17.6</span> 6. Coupon日ベースのFX時間グリッド</h2>
+</section>
+<section id="monte-carloによるprdc評価" class="level2">
+<h2 class="anchored" data-anchor-id="monte-carloによるprdc評価">9.3 Monte CarloによるPRDC評価</h2>
+<section id="coupon日ベースのfx時間グリッド" class="level3">
+<h3 class="anchored" data-anchor-id="coupon日ベースのfx時間グリッド">9.3.1 Coupon日ベースのFX時間グリッド</h3>
 <p>PRDC評価に必要なのは、評価日より後に到来するCoupon日である。GaussQuantの<code>fx_path_generator_GQL()</code>は、実際のCoupon日を用いて不均一な時間間隔を保持する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fx_path_generator_prdc <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">fx_path_generator_GQL</span>(</span>
@@ -941,8 +959,8 @@ a
 </div>
 <p>QuantLibの<code>StochasticProcess1D$evolve()</code>へは標準正規変量を渡す。Brownian incrementを外側で二重に時間調整してはならない。GaussQuantのPath Generatorでは、標準正規乱数と各Coupon間の実際の時間差を分けて処理している。</p>
 </section>
-<section id="サンプルfxパス" class="level2" data-number="17.7">
-<h2 data-number="17.7" class="anchored" data-anchor-id="サンプルfxパス"><span class="header-section-number">17.7</span> 7. サンプルFXパス</h2>
+<section id="サンプルfxパス" class="level3">
+<h3 class="anchored" data-anchor-id="サンプルfxパス">9.3.2 サンプルFXパス</h3>
 <p>Monte Carlo評価へ進む前に、20本のFXパスを生成し、将来のFX分布とCouponの動きを確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sample_path_count_prdc <span class="ot">&lt;-</span> <span class="dv">20</span>L</span>
@@ -1032,8 +1050,8 @@ a
 </div>
 </div>
 </section>
-<section id="monte-carloによるprdc評価" class="level2" data-number="17.8">
-<h2 data-number="17.8" class="anchored" data-anchor-id="monte-carloによるprdc評価"><span class="header-section-number">17.8</span> 8. Monte CarloによるPRDC評価</h2>
+<section id="prdcの現在価値" class="level3">
+<h3 class="anchored" data-anchor-id="prdcの現在価値">9.3.3 PRDCの現在価値</h3>
 <p>各Coupon日の期待Coupon rateは、Monte Carloによって次のように近似する。</p>
 <p><span class="math display">\[
 E[C(S_{t_i})]
@@ -1132,8 +1150,8 @@ D(0,T)N_0
 </div>
 <p>本章の元本償還額は固定されているため、Redemption Legは割引率に依存するがFXには依存しない。FX SpotとFX volatilityの影響は、主にCoupon Legを通じて現れる。</p>
 </section>
-<section id="期待couponとキャッシュフロー" class="level2" data-number="17.9">
-<h2 data-number="17.9" class="anchored" data-anchor-id="期待couponとキャッシュフロー"><span class="header-section-number">17.9</span> 9. 期待Couponとキャッシュフロー</h2>
+<section id="期待couponとキャッシュフロー" class="level3">
+<h3 class="anchored" data-anchor-id="期待couponとキャッシュフロー">9.3.4 期待Couponとキャッシュフロー</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>expected_coupon_display_tbl <span class="ot">&lt;-</span> expected_coupon_tbl <span class="sc">|&gt;</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
@@ -1205,8 +1223,11 @@ D(0,T)N_0
 </div>
 <p>長期のFX期待値はDomestic金利とForeign金利の差の影響を受ける。本例ではForeign金利がDomestic金利より高いため、リスク中立測度の下ではFX Rateに下向きのドリフトが働く。その結果、満期が長くなるほどCap領域からLinear領域またはFloor領域へ移る確率が高くなる。</p>
 </section>
-<section id="期待couponの期間構造" class="level2" data-number="17.10">
-<h2 data-number="17.10" class="anchored" data-anchor-id="期待couponの期間構造"><span class="header-section-number">17.10</span> 10. 期待Couponの期間構造</h2>
+</section>
+<section id="couponの期間構造と分布" class="level2">
+<h2 class="anchored" data-anchor-id="couponの期間構造と分布">9.4 Couponの期間構造と分布</h2>
+<section id="期待couponの期間構造" class="level3">
+<h3 class="anchored" data-anchor-id="期待couponの期間構造">9.4.1 期待Couponの期間構造</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>expected_coupon_plot <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  expected_coupon_tbl,</span>
@@ -1251,8 +1272,8 @@ C(E[S_t])
 \]</span></p>
 <p>CapとFloorを含む非線形Payoffでは、FX分布全体を考慮する必要がある。</p>
 </section>
-<section id="coupon-capfloor到達確率" class="level2" data-number="17.11">
-<h2 data-number="17.11" class="anchored" data-anchor-id="coupon-capfloor到達確率"><span class="header-section-number">17.11</span> 11. Coupon Cap／Floor到達確率</h2>
+<section id="coupon-capfloor到達確率" class="level3">
+<h3 class="anchored" data-anchor-id="coupon-capfloor到達確率">9.4.2 Coupon Cap／Floor到達確率</h3>
 <p>各Coupon日について、シミュレーションされたCouponがFloorまたはCapに到達する確率を計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>coupon_cap_floor_probability_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">prdc_cap_floor_probability_GQL</span>(</span>
@@ -1289,8 +1310,8 @@ C(E[S_t])
 </div>
 <p>Cap確率、Linear領域の確率およびFloor確率は、長期的なCouponの性質を直接示す。現在のSpotがCap水準を上回っていても、長期Couponが常にCapへ固定されるとは限らない。</p>
 </section>
-<section id="coupon分布" class="level2" data-number="17.12">
-<h2 data-number="17.12" class="anchored" data-anchor-id="coupon分布"><span class="header-section-number">17.12</span> 12. Coupon分布</h2>
+<section id="coupon分布" class="level3">
+<h3 class="anchored" data-anchor-id="coupon分布">9.4.3 Coupon分布</h3>
 <p>短期、中期、長期の代表的なCoupon日について、Coupon rateの分布を比較する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>coupon_path_matrix_prdc <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">prdc_coupon_GQL</span>(</span>
@@ -1377,8 +1398,11 @@ C(E[S_t])
 </div>
 <p>Coupon分布は連続的な正規分布または対数正規分布ではない。FloorとCapに確率質量が集まり、その間にLinear領域の連続分布が存在する。</p>
 </section>
-<section id="fx-spot感応度" class="level2" data-number="17.13">
-<h2 data-number="17.13" class="anchored" data-anchor-id="fx-spot感応度"><span class="header-section-number">17.13</span> 13. FX Spot感応度</h2>
+</section>
+<section id="fx感応度とmonte-carlo誤差" class="level2">
+<h2 class="anchored" data-anchor-id="fx感応度とmonte-carlo誤差">9.5 FX感応度とMonte Carlo誤差</h2>
+<section id="fx-spot感応度" class="level3">
+<h3 class="anchored" data-anchor-id="fx-spot感応度">9.5.1 FX Spot感応度</h3>
 <p>PRDC CouponはFX Spotへ直接依存する。Spotを上下させたシナリオを比較する。</p>
 <p>各シナリオで同じ乱数Seedを使用することにより、Monte Carloノイズを抑えたCommon Random Numbers型の比較となる。</p>
 <div class="cell">
@@ -1459,8 +1483,8 @@ C(E[S_t])
 </div>
 <p>Spot上昇はCouponを上昇させる方向に働くが、Capへ到達した後の限界効果は小さくなる。Spot低下時も、Floorへ到達するとCouponの低下は止まる。このため、PRDC価値のSpot感応度は全域で一定ではない。</p>
 </section>
-<section id="fx-volatility感応度" class="level2" data-number="17.14">
-<h2 data-number="17.14" class="anchored" data-anchor-id="fx-volatility感応度"><span class="header-section-number">17.14</span> 14. FX Volatility感応度</h2>
+<section id="fx-volatility感応度" class="level3">
+<h3 class="anchored" data-anchor-id="fx-volatility感応度">9.5.2 FX Volatility感応度</h3>
 <p>PRDC Couponは、FloorとCapを持つ非線形Payoffである。そのため、FX volatilityの変化は将来のFX分布だけでなく、Floor、Linear領域およびCapへ入る確率を変化させる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>volatility_scenario_input_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
@@ -1546,8 +1570,8 @@ C(E[S_t])
 </div>
 <p>通常のOptionのように「Volatility上昇は必ず価値上昇」と単純には言えない。PRDC CouponはCap付きの上昇Payoffであると同時にFloorを持ち、現在のSpot、金利差、満期および各境界への到達確率によってVolatility感応度が変わる。</p>
 </section>
-<section id="monte-carlo標準誤差" class="level2" data-number="17.15">
-<h2 data-number="17.15" class="anchored" data-anchor-id="monte-carlo標準誤差"><span class="header-section-number">17.15</span> 15. Monte Carlo標準誤差</h2>
+<section id="monte-carlo標準誤差" class="level3">
+<h3 class="anchored" data-anchor-id="monte-carlo標準誤差">9.5.3 Monte Carlo標準誤差</h3>
 <p>Monte Carlo推定値には統計誤差が存在する。各パスについて全CouponとRedemptionの現在価値を計算し、標本平均、標準偏差、標準誤差および信頼区間を求める。</p>
 <p>標準誤差は、パス現在価値の標準偏差を <span class="math inline">\(\widehat{\sigma}_{PV}\)</span>、パス数を <span class="math inline">\(M\)</span> とすると、</p>
 <p><span class="math display">\[
@@ -1596,23 +1620,27 @@ SE
 </div>
 <p>パス数を4倍にすると、他の条件が同じであれば標準誤差は概ね半分になる。ただし、計算量も増加する。実務では、パス数を増やすだけでなく、Antithetic Variates、Control Variates、Quasi-Monte Carloなどの分散削減法を併用する。</p>
 </section>
-<section id="prdc評価の限界" class="level2" data-number="17.16">
-<h2 data-number="17.16" class="anchored" data-anchor-id="prdc評価の限界"><span class="header-section-number">17.16</span> 16. PRDC評価の限界</h2>
+</section>
+<section id="モデルの限界とpart-ii総括" class="level2">
+<h2 class="anchored" data-anchor-id="モデルの限界とpart-ii総括">9.6 モデルの限界とPart II総括</h2>
+<section id="prdc評価の限界" class="level3">
+<h3 class="anchored" data-anchor-id="prdc評価の限界">9.6.1 PRDC評価の限界</h3>
 <p>本章のモデルは、PRDCの基本的な非線形CouponとMonte Carlo評価を理解するための簡略モデルである。主な制約は次のとおりである。</p>
-<section id="金利を決定論的とした" class="level3" data-number="17.16.1">
-<h3 data-number="17.16.1" class="anchored" data-anchor-id="金利を決定論的とした"><span class="header-section-number">17.16.1</span> 16.1 金利を決定論的とした</h3>
+</section>
+<section id="金利を決定論的とした" class="level3">
+<h3 class="anchored" data-anchor-id="金利を決定論的とした">9.6.2 金利を決定論的とした</h3>
 <p>Domestic、ForeignおよびDiscount Curveをフラットかつ決定論的とした。実際の長期PRDCでは、Domestic金利とForeign金利の変動が、FX Forward、割引係数およびCoupon価値へ影響する。</p>
 </section>
-<section id="fx-volatilityを一定とした" class="level3" data-number="17.16.2">
-<h3 data-number="17.16.2" class="anchored" data-anchor-id="fx-volatilityを一定とした"><span class="header-section-number">17.16.2</span> 16.2 FX volatilityを一定とした</h3>
+<section id="fx-volatilityを一定とした" class="level3">
+<h3 class="anchored" data-anchor-id="fx-volatilityを一定とした">9.6.3 FX volatilityを一定とした</h3>
 <p>一定のBlack volatilityを使用した。実際のFX Option市場には、満期方向とStrike方向のVolatility Surfaceが存在する。長期PRDCでは、Smile、SkewおよびVolatility term structureの影響が重要となる。</p>
 </section>
-<section id="相関を明示的に扱っていない" class="level3" data-number="17.16.3">
-<h3 data-number="17.16.3" class="anchored" data-anchor-id="相関を明示的に扱っていない"><span class="header-section-number">17.16.3</span> 16.3 相関を明示的に扱っていない</h3>
+<section id="相関を明示的に扱っていない" class="level3">
+<h3 class="anchored" data-anchor-id="相関を明示的に扱っていない">9.6.4 相関を明示的に扱っていない</h3>
 <p>本格的なPRDCモデルでは、Domestic金利、Foreign金利およびFXの間の相関を扱う必要がある。金利とFXを別々に評価して単純に合成するだけでは、長期のCross-currencyリスクを十分に表現できない。</p>
 </section>
-<section id="発行体コール権を含めていない" class="level3" data-number="17.16.4">
-<h3 data-number="17.16.4" class="anchored" data-anchor-id="発行体コール権を含めていない"><span class="header-section-number">17.16.4</span> 16.4 発行体コール権を含めていない</h3>
+<section id="発行体コール権を含めていない" class="level3">
+<h3 class="anchored" data-anchor-id="発行体コール権を含めていない">9.6.5 発行体コール権を含めていない</h3>
 <p>実際のPRDCには、発行体がCoupon日に商品を期限前償還できるCallable条項が含まれることが多い。</p>
 <p>発行体は各行使日で、</p>
 <p><span class="math display">\[
@@ -1630,9 +1658,8 @@ V_{\mathrm{noncallable\ PRDC}}
 V_{\mathrm{issuer\ call}}
 \]</span></p>
 </section>
-</section>
-<section id="part-iiのまとめ" class="level2" data-number="17.17">
-<h2 data-number="17.17" class="anchored" data-anchor-id="part-iiのまとめ"><span class="header-section-number">17.17</span> 17. Part IIのまとめ</h2>
+<section id="part-iiのまとめ" class="level3">
+<h3 class="anchored" data-anchor-id="part-iiのまとめ">9.6.6 Part IIのまとめ</h3>
 <p>第II部では、金融商品のキャッシュフロー、マーケットコンベンション、確率モデルおよび数値計算を段階的に扱った。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>part2_chapter_summary_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
@@ -1679,8 +1706,9 @@ V_{\mathrm{issuer\ call}}
 </ul>
 <p>GaussQuantは、QuantLib SWIGの低水準オブジェクトを金融商品の計算層へまとめる。LagrangeFinanceの章側は、商品構造、数式、入力条件、表、グラフおよび金融的解釈に集中する。</p>
 </section>
-<section id="本章のまとめ" class="level2" data-number="17.18">
-<h2 data-number="17.18" class="anchored" data-anchor-id="本章のまとめ"><span class="header-section-number">17.18</span> 18. 本章のまとめ</h2>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">9.7 まとめ</h2>
 <p>PRDCは、将来のFX Rateに連動するCouponを持つ長期の仕組債である。</p>
 <p>Coupon rateは、</p>
 <p><span class="math display">\[
@@ -1744,7 +1772,6 @@ C_{\min}
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

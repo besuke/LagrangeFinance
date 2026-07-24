@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>11&nbsp; 第II-4章 Blackモデル – ラグランジェ・ファイナンス</title>
+<title>第II-4章 Blackモデル – ラグランジェ・ファイナンス</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,26 +286,35 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#第ii-4章-blackモデル" id="toc-第ii-4章-blackモデル" class="nav-link active" data-scroll-target="#第ii-4章-blackモデル"><span class="header-section-number">12</span> 第II-4章 Blackモデル</a>
+  <li><a href="#blackscholesmertonとblack-76" id="toc-blackscholesmertonとblack-76" class="nav-link active" data-scroll-target="#blackscholesmertonとblack-76">4.1 Black–Scholes–MertonとBlack-76</a>
   <ul class="collapse">
-  <li><a href="#blackscholesmertonとblack-76" id="toc-blackscholesmertonとblack-76" class="nav-link" data-scroll-target="#blackscholesmertonとblack-76"><span class="header-section-number">12.1</span> 1. Black–Scholes–MertonとBlack-76</a>
+  <li><a href="#blackscholesmertonモデル" id="toc-blackscholesmertonモデル" class="nav-link" data-scroll-target="#blackscholesmertonモデル">4.1.1 Black–Scholes–Mertonモデル</a></li>
+  <li><a href="#black-76モデル" id="toc-black-76モデル" class="nav-link" data-scroll-target="#black-76モデル">4.1.2 Black-76モデル</a></li>
+  <li><a href="#black-76の入力条件" id="toc-black-76の入力条件" class="nav-link" data-scroll-target="#black-76の入力条件">4.1.3 Black-76の入力条件</a></li>
+  </ul></li>
+  <li><a href="#black-76による解析評価" id="toc-black-76による解析評価" class="nav-link" data-scroll-target="#black-76による解析評価">4.2 Black-76による解析評価</a>
   <ul class="collapse">
-  <li><a href="#blackscholesmertonモデル" id="toc-blackscholesmertonモデル" class="nav-link" data-scroll-target="#blackscholesmertonモデル"><span class="header-section-number">12.1.1</span> 1.1 Black–Scholes–Mertonモデル</a></li>
-  <li><a href="#black-76モデル" id="toc-black-76モデル" class="nav-link" data-scroll-target="#black-76モデル"><span class="header-section-number">12.1.2</span> 1.2 Black-76モデル</a></li>
+  <li><a href="#black公式による価格とgreeks" id="toc-black公式による価格とgreeks" class="nav-link" data-scroll-target="#black公式による価格とgreeks">4.2.1 Black公式による価格とGreeks</a></li>
+  <li><a href="#black過程によるeuropean-option評価" id="toc-black過程によるeuropean-option評価" class="nav-link" data-scroll-target="#black過程によるeuropean-option評価">4.2.2 Black過程によるEuropean option評価</a></li>
   </ul></li>
-  <li><a href="#black-76の入力条件" id="toc-black-76の入力条件" class="nav-link" data-scroll-target="#black-76の入力条件"><span class="header-section-number">12.2</span> 2. Black-76の入力条件</a></li>
-  <li><a href="#black公式による価格とgreeks" id="toc-black公式による価格とgreeks" class="nav-link" data-scroll-target="#black公式による価格とgreeks"><span class="header-section-number">12.3</span> 3. Black公式による価格とGreeks</a></li>
-  <li><a href="#black過程によるeuropean-option評価" id="toc-black過程によるeuropean-option評価" class="nav-link" data-scroll-target="#black過程によるeuropean-option評価"><span class="header-section-number">12.4</span> 4. Black過程によるEuropean option評価</a></li>
-  <li><a href="#擬似乱数monte-carlo評価" id="toc-擬似乱数monte-carlo評価" class="nav-link" data-scroll-target="#擬似乱数monte-carlo評価"><span class="header-section-number">12.5</span> 5. 擬似乱数Monte Carlo評価</a></li>
-  <li><a href="#monte-carloパスの可視化" id="toc-monte-carloパスの可視化" class="nav-link" data-scroll-target="#monte-carloパスの可視化"><span class="header-section-number">12.6</span> 6. Monte Carloパスの可視化</a></li>
-  <li><a href="#black過程の1パス" id="toc-black過程の1パス" class="nav-link" data-scroll-target="#black過程の1パス"><span class="header-section-number">12.7</span> 7. Black過程の1パス</a></li>
-  <li><a href="#blackscholesmertonモデル-1" id="toc-blackscholesmertonモデル-1" class="nav-link" data-scroll-target="#blackscholesmertonモデル-1"><span class="header-section-number">12.8</span> 8. Black–Scholes–Mertonモデル</a></li>
-  <li><a href="#european-putの解析解と二項tree" id="toc-european-putの解析解と二項tree" class="nav-link" data-scroll-target="#european-putの解析解と二項tree"><span class="header-section-number">12.9</span> 9. European putの解析解と二項Tree</a></li>
-  <li><a href="#american-putの早期行使価値" id="toc-american-putの早期行使価値" class="nav-link" data-scroll-target="#american-putの早期行使価値"><span class="header-section-number">12.10</span> 10. American putの早期行使価値</a></li>
-  <li><a href="#sobol系列によるパス生成" id="toc-sobol系列によるパス生成" class="nav-link" data-scroll-target="#sobol系列によるパス生成"><span class="header-section-number">12.11</span> 11. Sobol系列によるパス生成</a></li>
-  <li><a href="#longstaffschwartz法" id="toc-longstaffschwartz法" class="nav-link" data-scroll-target="#longstaffschwartz法"><span class="header-section-number">12.12</span> 12. Longstaff–Schwartz法</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ"><span class="header-section-number">12.13</span> 13. まとめ</a></li>
+  <li><a href="#blackscholesmertonとeuropean-option" id="toc-blackscholesmertonとeuropean-option" class="nav-link" data-scroll-target="#blackscholesmertonとeuropean-option">4.3 Black–Scholes–MertonとEuropean option</a>
+  <ul class="collapse">
+  <li><a href="#blackscholesmertonモデルの入力条件" id="toc-blackscholesmertonモデルの入力条件" class="nav-link" data-scroll-target="#blackscholesmertonモデルの入力条件">4.3.1 Black–Scholes–Mertonモデルの入力条件</a></li>
+  <li><a href="#european-putの解析解と二項tree" id="toc-european-putの解析解と二項tree" class="nav-link" data-scroll-target="#european-putの解析解と二項tree">4.3.2 European putの解析解と二項Tree</a></li>
   </ul></li>
+  <li><a href="#monte-carlo評価" id="toc-monte-carlo評価" class="nav-link" data-scroll-target="#monte-carlo評価">4.4 Monte Carlo評価</a>
+  <ul class="collapse">
+  <li><a href="#擬似乱数monte-carlo評価" id="toc-擬似乱数monte-carlo評価" class="nav-link" data-scroll-target="#擬似乱数monte-carlo評価">4.4.1 擬似乱数Monte Carlo評価</a></li>
+  <li><a href="#monte-carloパスの可視化" id="toc-monte-carloパスの可視化" class="nav-link" data-scroll-target="#monte-carloパスの可視化">4.4.2 Monte Carloパスの可視化</a></li>
+  <li><a href="#black過程の1パス" id="toc-black過程の1パス" class="nav-link" data-scroll-target="#black過程の1パス">4.4.3 Black過程の1パス</a></li>
+  </ul></li>
+  <li><a href="#american-putの早期行使価値" id="toc-american-putの早期行使価値" class="nav-link" data-scroll-target="#american-putの早期行使価値">4.5 American putの早期行使価値</a></li>
+  <li><a href="#準monte-carloとlongstaffschwartz法" id="toc-準monte-carloとlongstaffschwartz法" class="nav-link" data-scroll-target="#準monte-carloとlongstaffschwartz法">4.6 準Monte CarloとLongstaff–Schwartz法</a>
+  <ul class="collapse">
+  <li><a href="#sobol系列によるパス生成" id="toc-sobol系列によるパス生成" class="nav-link" data-scroll-target="#sobol系列によるパス生成">4.6.1 Sobol系列によるパス生成</a></li>
+  <li><a href="#longstaffschwartz法" id="toc-longstaffschwartz法" class="nav-link" data-scroll-target="#longstaffschwartz法">4.6.2 Longstaff–Schwartz法</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">4.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -315,7 +324,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学と金融数学</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch04_black_model.html"><span class="chapter-title">第II-4章 Blackモデル</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">第II-4章 Blackモデル</span></h1>
-<p class="subtitle lead">Black-76、Black–Scholes–Mertonおよび数値評価法</p>
 </div>
 
 
@@ -332,8 +340,6 @@ window.Quarto = {
 </header>
 
 
-<section id="第ii-4章-blackモデル" class="level1" data-number="12">
-<h1 data-number="12"><span class="header-section-number">12</span> 第II-4章 Blackモデル</h1>
 <p>1973年に公表されたBlack–Scholes–Mertonモデルは、株式オプションの理論価格を求めるための基本モデルとして、金融工学の発展に大きな影響を与えた。このモデルでは、株価が幾何ブラウン運動に従い、将来の株価が対数正規分布に従うと仮定する。</p>
 <p>一方、金利先物、債券先物、商品先物およびフォワード金利を原資産とするオプションでは、現物価格よりも満期に対応する先物価格またはフォワード価格を直接扱う方が自然である。Blackは1976年、Black–Scholes–Mertonモデルの考え方を先物オプションへ適用した。現在、この評価方法はBlack-76モデルまたは単にBlackモデルと呼ばれている。</p>
 <p>Black–Scholes–Mertonモデルでは、現物価格、無リスク金利および配当利回りから将来のフォワード価格を求める。これに対しBlack-76モデルでは、観測されたフォワード価格または先物価格を直接入力し、満期時のPayoffを割り引いて現在価値を求める。</p>
@@ -355,10 +361,10 @@ window.Quarto = {
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(GaussQuant)</span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="blackscholesmertonとblack-76" class="level2" data-number="12.1">
-<h2 data-number="12.1" class="anchored" data-anchor-id="blackscholesmertonとblack-76"><span class="header-section-number">12.1</span> 1. Black–Scholes–MertonとBlack-76</h2>
-<section id="blackscholesmertonモデル" class="level3" data-number="12.1.1">
-<h3 data-number="12.1.1" class="anchored" data-anchor-id="blackscholesmertonモデル"><span class="header-section-number">12.1.1</span> 1.1 Black–Scholes–Mertonモデル</h3>
+<section id="blackscholesmertonとblack-76" class="level2">
+<h2 class="anchored" data-anchor-id="blackscholesmertonとblack-76">4.1 Black–Scholes–MertonとBlack-76</h2>
+<section id="blackscholesmertonモデル" class="level3">
+<h3 class="anchored" data-anchor-id="blackscholesmertonモデル">4.1.1 Black–Scholes–Mertonモデル</h3>
 <p>リスク中立測度の下で、株価 <span class="math inline">\(S_t\)</span> は次の確率微分方程式に従うと仮定する。</p>
 <p><span class="math display">\[
 dS_t
@@ -376,8 +382,8 @@ S_0 e^{(r-q)T}
 \]</span></p>
 <p>したがって、Black–Scholes–Mertonモデルは現物価格を出発点として、金利と配当を通じてフォワード価格を内生的に求めるモデルとみることができる。</p>
 </section>
-<section id="black-76モデル" class="level3" data-number="12.1.2">
-<h3 data-number="12.1.2" class="anchored" data-anchor-id="black-76モデル"><span class="header-section-number">12.1.2</span> 1.2 Black-76モデル</h3>
+<section id="black-76モデル" class="level3">
+<h3 class="anchored" data-anchor-id="black-76モデル">4.1.2 Black-76モデル</h3>
 <p>Black-76では、フォワード価格 <span class="math inline">\(F_0\)</span> を直接入力する。European callの価格は次式で与えられる。</p>
 <p><span class="math display">\[
 C
@@ -414,9 +420,8 @@ d_1-\sigma\sqrt{T}
 <p>であり、<span class="math inline">\(K\)</span> は行使価格、<span class="math inline">\(D(0,T)\)</span> は満期までの割引係数、<span class="math inline">\(N(\cdot)\)</span> は標準正規分布の累積分布関数である。</p>
 <p>金利が決定論的である場合、同一満期の先物価格とフォワード価格は一致するため、Black-76は先物オプションとフォワードオプションの双方に用いられる。</p>
 </section>
-</section>
-<section id="black-76の入力条件" class="level2" data-number="12.2">
-<h2 data-number="12.2" class="anchored" data-anchor-id="black-76の入力条件"><span class="header-section-number">12.2</span> 2. Black-76の入力条件</h2>
+<section id="black-76の入力条件" class="level3">
+<h3 class="anchored" data-anchor-id="black-76の入力条件">4.1.3 Black-76の入力条件</h3>
 <p>本節では、債券先物オプションを意識した価格表示を使用する。フォワード価格は107と32分の6.75、行使価格は107.5、ボラティリティは5.2%、無リスク金利は5%とする。</p>
 <p>Black-76では、現物価格ではなく、オプション満期に対応するフォワード価格または先物価格を原資産として使用する。</p>
 <div class="cell">
@@ -466,8 +471,11 @@ d_1-\sigma\sqrt{T}
 <span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 risk_free_rate 0.05</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="black公式による価格とgreeks" class="level2" data-number="12.3">
-<h2 data-number="12.3" class="anchored" data-anchor-id="black公式による価格とgreeks"><span class="header-section-number">12.3</span> 3. Black公式による価格とGreeks</h2>
+</section>
+<section id="black-76による解析評価" class="level2">
+<h2 class="anchored" data-anchor-id="black-76による解析評価">4.2 Black-76による解析評価</h2>
+<section id="black公式による価格とgreeks" class="level3">
+<h3 class="anchored" data-anchor-id="black公式による価格とgreeks">4.2.1 Black公式による価格とGreeks</h3>
 <p><code>BlackCalculator</code>は、フォワード価格、行使価格、総標準偏差および割引係数から、オプション価格とGreeksを直接計算する。</p>
 <p>QuantLibへ渡される総標準偏差は、単なる年率ボラティリティではなく、</p>
 <p><span class="math display">\[
@@ -519,8 +527,8 @@ d_1-\sigma\sqrt{T}
 <span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 theta_per_day -0.00946</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="black過程によるeuropean-option評価" class="level2" data-number="12.4">
-<h2 data-number="12.4" class="anchored" data-anchor-id="black過程によるeuropean-option評価"><span class="header-section-number">12.4</span> 4. Black過程によるEuropean option評価</h2>
+<section id="black過程によるeuropean-option評価" class="level3">
+<h3 class="anchored" data-anchor-id="black過程によるeuropean-option評価">4.2.2 Black過程によるEuropean option評価</h3>
 <p>前節ではBlack公式を直接使用した。本節では、同じ入力条件からBlack processを構築し、European optionへ解析的Pricing Engineを設定する。</p>
 <p>数式を直接評価する方法と、確率過程およびPricing Engineを通じて評価する方法が、同一の理論価格を与えることを確認する。</p>
 <div class="cell">
@@ -564,8 +572,148 @@ d_1-\sigma\sqrt{T}
 <span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 implied_volatility  0.0520</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="擬似乱数monte-carlo評価" class="level2" data-number="12.5">
-<h2 data-number="12.5" class="anchored" data-anchor-id="擬似乱数monte-carlo評価"><span class="header-section-number">12.5</span> 5. 擬似乱数Monte Carlo評価</h2>
+</section>
+<section id="blackscholesmertonとeuropean-option" class="level2">
+<h2 class="anchored" data-anchor-id="blackscholesmertonとeuropean-option">4.3 Black–Scholes–MertonとEuropean option</h2>
+<section id="blackscholesmertonモデルの入力条件" class="level3">
+<h3 class="anchored" data-anchor-id="blackscholesmertonモデルの入力条件">4.3.1 Black–Scholes–Mertonモデルの入力条件</h3>
+<p>ここからは現物株価を原資産とするBlack–Scholes–Mertonモデルを扱う。現物価格100、行使価格100、満期1年、ボラティリティ20%、無リスク金利5%、配当利回り0%とする。</p>
+<p>Black–Scholes–Merton processでは、現物価格に加えて、無リスク金利カーブ、配当利回りカーブおよびボラティリティカーブを設定する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>bsm_input_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>input,           <span class="sc">~</span>value,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"trade_date"</span>,     <span class="st">"2024-03-01"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"maturity"</span>,       <span class="st">"1Y"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"spot_price"</span>,     <span class="fu">as.character</span>(<span class="dv">100</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"strike_price"</span>,   <span class="fu">as.character</span>(<span class="dv">100</span>),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"volatility"</span>,     <span class="fu">as.character</span>(<span class="fl">0.20</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"risk_free_rate"</span>, <span class="fu">as.character</span>(<span class="fl">0.05</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dividend_rate"</span>,  <span class="fu">as.character</span>(<span class="dv">0</span>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>trade_date_bsm <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">date_GQL</span>(<span class="st">"2024-03-01"</span>)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>calendar_bsm <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">TARGET</span>()</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>maturity_date_bsm <span class="ot">&lt;-</span> calendar_bsm<span class="sc">$</span><span class="fu">advance</span>(</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  trade_date_bsm,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>L,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Years"</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>spot_price_bsm <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>strike_price_bsm <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>volatility_bsm <span class="ot">&lt;-</span> <span class="fl">0.20</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>risk_free_rate_bsm <span class="ot">&lt;-</span> <span class="fl">0.05</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>dividend_rate_bsm <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">set_eval_date_GQL</span>(</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>  trade_date_bsm</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>bsm_bundle <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">bsm_process_bundle_GQL</span>(</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">valuation_date =</span> trade_date_bsm,</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">spot =</span> spot_price_bsm,</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">risk_free_rate =</span> risk_free_rate_bsm,</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">dividend_rate =</span> dividend_rate_bsm,</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatility =</span> volatility_bsm,</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">day_counter =</span> day_counter,</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">calendar =</span> calendar_bsm</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>  bsm_input_tbl,</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Black-Scholes-Merton assumptions"</span>,</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 7 × 2</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   input          value     </span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;     </span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 trade_date     2024-03-01</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 maturity       1Y        </span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 spot_price     100       </span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 strike_price   100       </span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 volatility     0.2       </span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 risk_free_rate 0.05      </span></span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 dividend_rate  0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="european-putの解析解と二項tree" class="level3">
+<h3 class="anchored" data-anchor-id="european-putの解析解と二項tree">4.3.2 European putの解析解と二項Tree</h3>
+<p>Europeanオプションは満期時にのみ行使できるため、Black–Scholes–Mertonモデルの解析解を利用できる。</p>
+<p>二項Treeでは、連続時間の価格過程を有限個の時間ステップへ分割する。ステップ数を増やすほど、理論上は連続時間モデルの解析値へ近づく。</p>
+<p>ここでは、25、100および500ステップのCox–Ross–Rubinstein Treeを解析解と比較する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>european_put <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">make_european_option_GQL</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">spot =</span> spot_price_bsm,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">strike =</span> strike_price_bsm,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity_date =</span> maturity_date_bsm,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">option_type =</span> <span class="st">"put"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">valuation_date =</span> trade_date_bsm,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">risk_free_rate =</span> risk_free_rate_bsm,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">dividend_yield =</span> dividend_rate_bsm,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatility =</span> volatility_bsm,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">day_counter =</span> day_counter,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">calendar =</span> calendar_bsm</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>european_engines <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">crr_25 =</span> QuantLib<span class="sc">::</span><span class="fu">BinomialCRRVanillaEngine</span>(</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="dv">25</span>L</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">analytic =</span> QuantLib<span class="sc">::</span><span class="fu">AnalyticEuropeanEngine</span>(</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">crr_100 =</span> QuantLib<span class="sc">::</span><span class="fu">BinomialCRRVanillaEngine</span>(</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process,</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span>L</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">crr_500 =</span> QuantLib<span class="sc">::</span><span class="fu">BinomialCRRVanillaEngine</span>(</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process,</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>L</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>european_comparison_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">imap_dfr</span>(</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  european_engines,</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(engine, method) {</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    european_put<span class="sc">$</span><span class="fu">setPricingEngine</span>(engine)</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> method,</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>      <span class="at">npv =</span> european_put<span class="sc">$</span><span class="fu">NPV</span>()</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>analytic_put_npv <span class="ot">&lt;-</span> european_comparison_tbl <span class="sc">|&gt;</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(.data<span class="sc">$</span>method <span class="sc">==</span> <span class="st">"analytic"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(.data<span class="sc">$</span>npv)</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>european_comparison_tbl <span class="ot">&lt;-</span> european_comparison_tbl <span class="sc">|&gt;</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">difference_from_analytic =</span> .data<span class="sc">$</span>npv <span class="sc">-</span> analytic_put_npv</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>  european_comparison_tbl,</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>  <span class="st">"European put engine comparison"</span>,</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 3</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method     npv difference_from_analytic</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt;                    &lt;dbl&gt;</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 crr_25    5.65                  0.0720 </span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 analytic  5.58                  0      </span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 crr_100   5.56                 -0.0197 </span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 crr_500   5.58                 -0.00394</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="monte-carlo評価" class="level2">
+<h2 class="anchored" data-anchor-id="monte-carlo評価">4.4 Monte Carlo評価</h2>
+<section id="擬似乱数monte-carlo評価" class="level3">
+<h3 class="anchored" data-anchor-id="擬似乱数monte-carlo評価">4.4.1 擬似乱数Monte Carlo評価</h3>
 <p>リスク中立評価では、オプション価格は満期Payoffの割引期待値として表される。</p>
 <p><span class="math display">\[
 V_0
@@ -579,120 +727,120 @@ E^Q
 <p>Monte Carlo法では、多数の将来パスを生成し、各パスの満期Payoffを求め、その平均値を割り引く。</p>
 <p>European callには解析解があるため、ここでMonte Carlo法を使う目的は、解析解に代わる高度な方法を示すことではない。確率過程から生成したパスの期待値がBlack公式の価格へ近づくことを確認し、後に解析解を持たない商品へ応用する準備をすることにある。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>mc_setting_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>setting, <span class="sc">~</span>value,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"steps"</span>,  <span class="dv">12</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"paths"</span>,  <span class="dv">20000</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"seed"</span>,   <span class="dv">1</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>mc_path_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">generate_path_table_GQL</span>(</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">process =</span> black_bundle<span class="sc">$</span>process,</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity =</span> maturity,</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_steps =</span> <span class="dv">12</span>L,</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_paths =</span> <span class="dv">20000</span>L,</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span>L,</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">sequence =</span> <span class="st">"pseudo"</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>mc_result <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">terminal_option_mc_GQL</span>(</span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_tbl =</span> mc_path_tbl,</span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">strike =</span> strike_price,</span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">discount_factor =</span> discount_factor,</span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">option_type =</span> <span class="st">"call"</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>mc_comparison_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>method,                     <span class="sc">~</span>npv,                       <span class="sc">~</span>standard_error,</span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Black analytic"</span>,            analytic_npv,               <span class="cn">NA_real_</span>,</span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Pseudo-random Monte Carlo"</span>, mc_result<span class="sc">$</span>summary<span class="sc">$</span>npv[[<span class="dv">1</span>]], mc_result<span class="sc">$</span>summary<span class="sc">$</span>standard_error[[<span class="dv">1</span>]]</span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">difference_from_analytic =</span> .data<span class="sc">$</span>npv <span class="sc">-</span> analytic_npv</span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>  mc_setting_tbl,</span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Monte Carlo settings"</span>,</span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   setting value</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt;</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 steps      12</span></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 paths   20000</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 seed        1</span></span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>  mc_comparison_tbl,</span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Analytic and Monte Carlo comparison"</span>,</span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                      npv standard_error difference_from_analytic</span></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                     &lt;dbl&gt;          &lt;dbl&gt;                    &lt;dbl&gt;</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Black analytic            0.562       NA                        0      </span></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Pseudo-random Monte Carlo 0.560        0.00654                 -0.00163</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mc_setting_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>setting, <span class="sc">~</span>value,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"steps"</span>,  <span class="dv">12</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"paths"</span>,  <span class="dv">20000</span>,</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"seed"</span>,   <span class="dv">1</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>mc_path_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">generate_path_table_GQL</span>(</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">process =</span> black_bundle<span class="sc">$</span>process,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity =</span> maturity,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_steps =</span> <span class="dv">12</span>L,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_paths =</span> <span class="dv">20000</span>L,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span>L,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">sequence =</span> <span class="st">"pseudo"</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>mc_result <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">terminal_option_mc_GQL</span>(</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">path_tbl =</span> mc_path_tbl,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">strike =</span> strike_price,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">discount_factor =</span> discount_factor,</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">option_type =</span> <span class="st">"call"</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>mc_comparison_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>method,                     <span class="sc">~</span>npv,                       <span class="sc">~</span>standard_error,</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Black analytic"</span>,            analytic_npv,               <span class="cn">NA_real_</span>,</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Pseudo-random Monte Carlo"</span>, mc_result<span class="sc">$</span>summary<span class="sc">$</span>npv[[<span class="dv">1</span>]], mc_result<span class="sc">$</span>summary<span class="sc">$</span>standard_error[[<span class="dv">1</span>]]</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">difference_from_analytic =</span> .data<span class="sc">$</span>npv <span class="sc">-</span> analytic_npv</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  mc_setting_tbl,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Monte Carlo settings"</span>,</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   setting value</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;   &lt;dbl&gt;</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 steps      12</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 paths   20000</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 seed        1</span></span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>  mc_comparison_tbl,</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Analytic and Monte Carlo comparison"</span>,</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 4</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                      npv standard_error difference_from_analytic</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                     &lt;dbl&gt;          &lt;dbl&gt;                    &lt;dbl&gt;</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Black analytic            0.562       NA                        0      </span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Pseudo-random Monte Carlo 0.560        0.00654                 -0.00163</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>標準誤差は、有限本数のパスを用いたことによるMonte Carlo推定値の不確実性を表す。解析値との差が標準誤差と同程度であれば、シミュレーション結果は統計的に整合的と判断できる。</p>
 </section>
-<section id="monte-carloパスの可視化" class="level2" data-number="12.6">
-<h2 data-number="12.6" class="anchored" data-anchor-id="monte-carloパスの可視化"><span class="header-section-number">12.6</span> 6. Monte Carloパスの可視化</h2>
+<section id="monte-carloパスの可視化" class="level3">
+<h3 class="anchored" data-anchor-id="monte-carloパスの可視化">4.4.2 Monte Carloパスの可視化</h3>
 <p>Black processでは、フォワード価格は対数正規分布に従う。したがって、各パスの価格は常に正であり、満期価格の分布は左右対称にはならない。</p>
 <p>次のグラフでは、前節と同じオプション満期までの120本のパスと、その満期価格分布を表示する。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>path_plot_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">generate_path_table_GQL</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">process =</span> black_bundle<span class="sc">$</span>process,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity =</span> maturity,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_steps =</span> <span class="dv">12</span>L,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_paths =</span> <span class="dv">120</span>L,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span>L,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sequence =</span> <span class="st">"pseudo"</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>path_plot <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  path_plot_tbl,</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> .data<span class="sc">$</span>time,</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> .data<span class="sc">$</span>price,</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">group =</span> .data<span class="sc">$</span>path_id</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>(</span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.45</span>,</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.4</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Black model Monte Carlo paths"</span>,</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year"</span>,</span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Forward price"</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>terminal_plot_tbl <span class="ot">&lt;-</span> path_plot_tbl <span class="sc">|&gt;</span></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(.data<span class="sc">$</span>path_id) <span class="sc">|&gt;</span></span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">slice_max</span>(</span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">order_by =</span> .data<span class="sc">$</span>step,</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="dv">1</span>L,</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">with_ties =</span> <span class="cn">FALSE</span></span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">ungroup</span>()</span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>terminal_plot <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  terminal_plot_tbl,</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> .data<span class="sc">$</span>price)</span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_histogram</span>(</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">24</span></span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Terminal forward-price distribution"</span>,</span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Terminal price"</span>,</span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Count"</span></span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(path_plot)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>path_plot_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">generate_path_table_GQL</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">process =</span> black_bundle<span class="sc">$</span>process,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity =</span> maturity,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_steps =</span> <span class="dv">12</span>L,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_paths =</span> <span class="dv">120</span>L,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> <span class="dv">1</span>L,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">sequence =</span> <span class="st">"pseudo"</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>path_plot <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  path_plot_tbl,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">aes</span>(</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> .data<span class="sc">$</span>time,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> .data<span class="sc">$</span>price,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">group =</span> .data<span class="sc">$</span>path_id</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>(</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">alpha =</span> <span class="fl">0.45</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">linewidth =</span> <span class="fl">0.4</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Black model Monte Carlo paths"</span>,</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Year"</span>,</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Forward price"</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>terminal_plot_tbl <span class="ot">&lt;-</span> path_plot_tbl <span class="sc">|&gt;</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(.data<span class="sc">$</span>path_id) <span class="sc">|&gt;</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">slice_max</span>(</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">order_by =</span> .data<span class="sc">$</span>step,</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> <span class="dv">1</span>L,</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">with_ties =</span> <span class="cn">FALSE</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">ungroup</span>()</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>terminal_plot <span class="ot">&lt;-</span> ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>  terminal_plot_tbl,</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> .data<span class="sc">$</span>price)</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_histogram</span>(</span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">bins =</span> <span class="dv">24</span></span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Terminal forward-price distribution"</span>,</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Terminal price"</span>,</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Count"</span></span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">theme_minimal</span>()</span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(path_plot)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -700,7 +848,7 @@ E^Q
 </figure>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(terminal_plot)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(terminal_plot)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -710,8 +858,8 @@ E^Q
 </div>
 </div>
 </section>
-<section id="black過程の1パス" class="level2" data-number="12.7">
-<h2 data-number="12.7" class="anchored" data-anchor-id="black過程の1パス"><span class="header-section-number">12.7</span> 7. Black過程の1パス</h2>
+<section id="black過程の1パス" class="level3">
+<h3 class="anchored" data-anchor-id="black過程の1パス">4.4.3 Black過程の1パス</h3>
 <p>Black processのフォワード価格は、時間幅 <span class="math inline">\(\Delta t\)</span> ごとに次式で更新できる。</p>
 <p><span class="math display">\[
 F_{t+\Delta t}
@@ -727,205 +875,72 @@ F_t
 <p>ここで、<span class="math inline">\(Z\)</span> は標準正規乱数である。フォワード測度の下ではフォワード価格のドリフトがゼロであるため、指数部にはIto補正項である <span class="math inline">\(-\frac{1}{2}\sigma^2\Delta t\)</span> が現れる。</p>
 <p>QuantLibのPathGeneratorが使用するGaussian incrementを取り出し、同じ乱数から手計算したパスと比較する。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>n_steps_check <span class="ot">&lt;-</span> <span class="dv">3</span>L</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>seed_check <span class="ot">&lt;-</span> <span class="dv">1</span>L</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>generated_path_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">generate_path_table_GQL</span>(</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">process =</span> black_bundle<span class="sc">$</span>process,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity =</span> maturity,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_steps =</span> n_steps_check,</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_paths =</span> <span class="dv">1</span>L,</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> seed_check,</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">sequence =</span> <span class="st">"pseudo"</span></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>gaussian_rng_check <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">GaussianRandomSequenceGenerator</span>(</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  QuantLib<span class="sc">::</span><span class="fu">UniformRandomSequenceGenerator</span>(</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    n_steps_check,</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    QuantLib<span class="sc">::</span><span class="fu">UniformRandomGenerator</span>(seed_check)</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>gaussian_increment <span class="ot">&lt;-</span> gaussian_rng_check<span class="sc">$</span><span class="fu">nextSequence</span>()<span class="sc">$</span><span class="fu">value</span>() <span class="sc">|&gt;</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>()</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>time_grid_check <span class="ot">&lt;-</span> generated_path_tbl <span class="sc">|&gt;</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(.data<span class="sc">$</span>step) <span class="sc">|&gt;</span></span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(.data<span class="sc">$</span>time)</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>dt_check <span class="ot">&lt;-</span> <span class="fu">diff</span>(time_grid_check)</span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>growth_factor <span class="ot">&lt;-</span> <span class="fu">exp</span>(</span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="fl">0.5</span> <span class="sc">*</span> volatility<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> dt_check <span class="sc">+</span></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    volatility <span class="sc">*</span> <span class="fu">sqrt</span>(dt_check) <span class="sc">*</span> gaussian_increment</span>
-<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>hand_price <span class="ot">&lt;-</span> forward_price <span class="sc">*</span> <span class="fu">c</span>(</span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>,</span>
-<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cumprod</span>(growth_factor)</span>
-<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>one_path_check_tbl <span class="ot">&lt;-</span> generated_path_tbl <span class="sc">|&gt;</span></span>
-<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(.data<span class="sc">$</span>step) <span class="sc">|&gt;</span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">transmute</span>(</span>
-<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">step =</span> .data<span class="sc">$</span>step,</span>
-<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">time =</span> .data<span class="sc">$</span>time,</span>
-<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">generated_price =</span> .data<span class="sc">$</span>price,</span>
-<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">hand_price =</span> hand_price,</span>
-<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">difference =</span> .data<span class="sc">$</span>price <span class="sc">-</span> hand_price</span>
-<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>  one_path_check_tbl,</span>
-<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>  <span class="st">"One-path hand calculation"</span>,</span>
-<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
-<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
-<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    step   time generated_price hand_price difference</span></span>
-<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;int&gt;  &lt;dbl&gt;           &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;</span></span>
-<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     0 0                 107.       107.   0       </span></span>
-<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     1 0.0329            107.       107.   0       </span></span>
-<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     2 0.0658            110.       110.   0       </span></span>
-<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     3 0.0986            110.       110.  -1.42e-14</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>n_steps_check <span class="ot">&lt;-</span> <span class="dv">3</span>L</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>seed_check <span class="ot">&lt;-</span> <span class="dv">1</span>L</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>generated_path_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">generate_path_table_GQL</span>(</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">process =</span> black_bundle<span class="sc">$</span>process,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity =</span> maturity,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_steps =</span> n_steps_check,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_paths =</span> <span class="dv">1</span>L,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">seed =</span> seed_check,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">sequence =</span> <span class="st">"pseudo"</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>gaussian_rng_check <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">GaussianRandomSequenceGenerator</span>(</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  QuantLib<span class="sc">::</span><span class="fu">UniformRandomSequenceGenerator</span>(</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    n_steps_check,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    QuantLib<span class="sc">::</span><span class="fu">UniformRandomGenerator</span>(seed_check)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>gaussian_increment <span class="ot">&lt;-</span> gaussian_rng_check<span class="sc">$</span><span class="fu">nextSequence</span>()<span class="sc">$</span><span class="fu">value</span>() <span class="sc">|&gt;</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>()</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>time_grid_check <span class="ot">&lt;-</span> generated_path_tbl <span class="sc">|&gt;</span></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(.data<span class="sc">$</span>step) <span class="sc">|&gt;</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(.data<span class="sc">$</span>time)</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>dt_check <span class="ot">&lt;-</span> <span class="fu">diff</span>(time_grid_check)</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>growth_factor <span class="ot">&lt;-</span> <span class="fu">exp</span>(</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="fl">0.5</span> <span class="sc">*</span> volatility<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> dt_check <span class="sc">+</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    volatility <span class="sc">*</span> <span class="fu">sqrt</span>(dt_check) <span class="sc">*</span> gaussian_increment</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>hand_price <span class="ot">&lt;-</span> forward_price <span class="sc">*</span> <span class="fu">c</span>(</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>,</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cumprod</span>(growth_factor)</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>one_path_check_tbl <span class="ot">&lt;-</span> generated_path_tbl <span class="sc">|&gt;</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">arrange</span>(.data<span class="sc">$</span>step) <span class="sc">|&gt;</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">transmute</span>(</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>    <span class="at">step =</span> .data<span class="sc">$</span>step,</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">time =</span> .data<span class="sc">$</span>time,</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">generated_price =</span> .data<span class="sc">$</span>price,</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">hand_price =</span> hand_price,</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">difference =</span> .data<span class="sc">$</span>price <span class="sc">-</span> hand_price</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>  one_path_check_tbl,</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  <span class="st">"One-path hand calculation"</span>,</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    step   time generated_price hand_price difference</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;int&gt;  &lt;dbl&gt;           &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     0 0                 107.       107.   0       </span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     1 0.0329            107.       107.   0       </span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     2 0.0658            110.       110.   0       </span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     3 0.0986            110.       110.  -1.42e-14</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>差が数値誤差の範囲に収まれば、PathGeneratorがBlack過程の離散化式に従っていることを確認できる。</p>
 </section>
-<section id="blackscholesmertonモデル-1" class="level2" data-number="12.8">
-<h2 data-number="12.8" class="anchored" data-anchor-id="blackscholesmertonモデル-1"><span class="header-section-number">12.8</span> 8. Black–Scholes–Mertonモデル</h2>
-<p>ここからは現物株価を原資産とするBlack–Scholes–Mertonモデルを扱う。現物価格100、行使価格100、満期1年、ボラティリティ20%、無リスク金利5%、配当利回り0%とする。</p>
-<p>Black–Scholes–Merton processでは、現物価格に加えて、無リスク金利カーブ、配当利回りカーブおよびボラティリティカーブを設定する。</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>bsm_input_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>input,           <span class="sc">~</span>value,</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"trade_date"</span>,     <span class="st">"2024-03-01"</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"maturity"</span>,       <span class="st">"1Y"</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"spot_price"</span>,     <span class="fu">as.character</span>(<span class="dv">100</span>),</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"strike_price"</span>,   <span class="fu">as.character</span>(<span class="dv">100</span>),</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"volatility"</span>,     <span class="fu">as.character</span>(<span class="fl">0.20</span>),</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"risk_free_rate"</span>, <span class="fu">as.character</span>(<span class="fl">0.05</span>),</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dividend_rate"</span>,  <span class="fu">as.character</span>(<span class="dv">0</span>)</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>trade_date_bsm <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">date_GQL</span>(<span class="st">"2024-03-01"</span>)</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>calendar_bsm <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">TARGET</span>()</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>maturity_date_bsm <span class="ot">&lt;-</span> calendar_bsm<span class="sc">$</span><span class="fu">advance</span>(</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  trade_date_bsm,</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>L,</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Years"</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>spot_price_bsm <span class="ot">&lt;-</span> <span class="dv">100</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>strike_price_bsm <span class="ot">&lt;-</span> <span class="dv">100</span></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>volatility_bsm <span class="ot">&lt;-</span> <span class="fl">0.20</span></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>risk_free_rate_bsm <span class="ot">&lt;-</span> <span class="fl">0.05</span></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>dividend_rate_bsm <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">set_eval_date_GQL</span>(</span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  trade_date_bsm</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>bsm_bundle <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">bsm_process_bundle_GQL</span>(</span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">valuation_date =</span> trade_date_bsm,</span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">spot =</span> spot_price_bsm,</span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">risk_free_rate =</span> risk_free_rate_bsm,</span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">dividend_rate =</span> dividend_rate_bsm,</span>
-<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatility =</span> volatility_bsm,</span>
-<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">day_counter =</span> day_counter,</span>
-<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">calendar =</span> calendar_bsm</span>
-<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>  bsm_input_tbl,</span>
-<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Black-Scholes-Merton assumptions"</span>,</span>
-<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
-<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 7 × 2</span></span>
-<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   input          value     </span></span>
-<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;chr&gt;     </span></span>
-<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 trade_date     2024-03-01</span></span>
-<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 maturity       1Y        </span></span>
-<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 spot_price     100       </span></span>
-<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 strike_price   100       </span></span>
-<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 volatility     0.2       </span></span>
-<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 risk_free_rate 0.05      </span></span>
-<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 dividend_rate  0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
 </section>
-<section id="european-putの解析解と二項tree" class="level2" data-number="12.9">
-<h2 data-number="12.9" class="anchored" data-anchor-id="european-putの解析解と二項tree"><span class="header-section-number">12.9</span> 9. European putの解析解と二項Tree</h2>
-<p>Europeanオプションは満期時にのみ行使できるため、Black–Scholes–Mertonモデルの解析解を利用できる。</p>
-<p>二項Treeでは、連続時間の価格過程を有限個の時間ステップへ分割する。ステップ数を増やすほど、理論上は連続時間モデルの解析値へ近づく。</p>
-<p>ここでは、25、100および500ステップのCox–Ross–Rubinstein Treeを解析解と比較する。</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>european_put <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">make_european_option_GQL</span>(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">spot =</span> spot_price_bsm,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">strike =</span> strike_price_bsm,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">maturity_date =</span> maturity_date_bsm,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">option_type =</span> <span class="st">"put"</span>,</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">valuation_date =</span> trade_date_bsm,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">risk_free_rate =</span> risk_free_rate_bsm,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">dividend_yield =</span> dividend_rate_bsm,</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">volatility =</span> volatility_bsm,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">day_counter =</span> day_counter,</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">calendar =</span> calendar_bsm</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>european_engines <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">crr_25 =</span> QuantLib<span class="sc">::</span><span class="fu">BinomialCRRVanillaEngine</span>(</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process,</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="dv">25</span>L</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">analytic =</span> QuantLib<span class="sc">::</span><span class="fu">AnalyticEuropeanEngine</span>(</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">crr_100 =</span> QuantLib<span class="sc">::</span><span class="fu">BinomialCRRVanillaEngine</span>(</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process,</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span>L</span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">crr_500 =</span> QuantLib<span class="sc">::</span><span class="fu">BinomialCRRVanillaEngine</span>(</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    bsm_bundle<span class="sc">$</span>process,</span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>    <span class="dv">500</span>L</span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>european_comparison_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">imap_dfr</span>(</span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  european_engines,</span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(engine, method) {</span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    european_put<span class="sc">$</span><span class="fu">setPricingEngine</span>(engine)</span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>      <span class="at">method =</span> method,</span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>      <span class="at">npv =</span> european_put<span class="sc">$</span><span class="fu">NPV</span>()</span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>analytic_put_npv <span class="ot">&lt;-</span> european_comparison_tbl <span class="sc">|&gt;</span></span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(.data<span class="sc">$</span>method <span class="sc">==</span> <span class="st">"analytic"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">pull</span>(.data<span class="sc">$</span>npv)</span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>european_comparison_tbl <span class="ot">&lt;-</span> european_comparison_tbl <span class="sc">|&gt;</span></span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">difference_from_analytic =</span> .data<span class="sc">$</span>npv <span class="sc">-</span> analytic_put_npv</span>
-<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  european_comparison_tbl,</span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>  <span class="st">"European put engine comparison"</span>,</span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 3</span></span>
-<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method     npv difference_from_analytic</span></span>
-<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt;                    &lt;dbl&gt;</span></span>
-<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 crr_25    5.65                  0.0720 </span></span>
-<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 analytic  5.58                  0      </span></span>
-<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 crr_100   5.56                 -0.0197 </span></span>
-<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 crr_500   5.58                 -0.00394</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</section>
-<section id="american-putの早期行使価値" class="level2" data-number="12.10">
-<h2 data-number="12.10" class="anchored" data-anchor-id="american-putの早期行使価値"><span class="header-section-number">12.10</span> 10. American putの早期行使価値</h2>
+<section id="american-putの早期行使価値" class="level2">
+<h2 class="anchored" data-anchor-id="american-putの早期行使価値">4.5 American putの早期行使価値</h2>
 <p>Americanオプションは満期までの任意の時点で行使できる。したがって、その価値は同じ条件のEuropeanオプション以上となる。</p>
 <p><span class="math display">\[
 V_{\mathrm{American}}
@@ -1008,8 +1023,10 @@ V_{\mathrm{European}}
 <span id="cb11-64"><a href="#cb11-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 crr_500              6.10                 0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="sobol系列によるパス生成" class="level2" data-number="12.11">
-<h2 data-number="12.11" class="anchored" data-anchor-id="sobol系列によるパス生成"><span class="header-section-number">12.11</span> 11. Sobol系列によるパス生成</h2>
+<section id="準monte-carloとlongstaffschwartz法" class="level2">
+<h2 class="anchored" data-anchor-id="準monte-carloとlongstaffschwartz法">4.6 準Monte CarloとLongstaff–Schwartz法</h2>
+<section id="sobol系列によるパス生成" class="level3">
+<h3 class="anchored" data-anchor-id="sobol系列によるパス生成">4.6.1 Sobol系列によるパス生成</h3>
 <p>擬似乱数は乱数生成器によって確率的な点列を作る。これに対しSobol系列は、積分領域をできるだけ均等に覆うように構成された低乖離列である。</p>
 <p>Sobol系列を用いる準Monte Carlo法では、通常の擬似乱数より少ないパスで安定した数値積分が得られる場合がある。ただし、パス同士は独立な確率標本ではないため、通常の標準誤差の解釈をそのまま適用できない点に注意する。</p>
 <p>次のコードでは、Black–Scholes–Merton processから64本のSobolパスを生成する。</p>
@@ -1086,8 +1103,8 @@ V_{\mathrm{European}}
 </div>
 </div>
 </section>
-<section id="longstaffschwartz法" class="level2" data-number="12.12">
-<h2 data-number="12.12" class="anchored" data-anchor-id="longstaffschwartz法"><span class="header-section-number">12.12</span> 12. Longstaff–Schwartz法</h2>
+<section id="longstaffschwartz法" class="level3">
+<h3 class="anchored" data-anchor-id="longstaffschwartz法">4.6.2 Longstaff–Schwartz法</h3>
 <p>Americanオプションでは、各行使可能時点において、即時行使価値と保有を継続する価値を比較する必要がある。</p>
 <p>putの即時行使価値は次式である。</p>
 <p><span class="math display">\[
@@ -1211,8 +1228,9 @@ I(S_t)
 </div>
 <p>Longstaff–Schwartz法の価格は、パス数、時間ステップ、基底関数および回帰誤差に依存する。したがって、二項Treeとの差が完全にゼロになることを目的とするのではなく、早期行使判断をMonte Carloパス上でどのように近似するかを確認する。</p>
 </section>
-<section id="まとめ" class="level2" data-number="12.13">
-<h2 data-number="12.13" class="anchored" data-anchor-id="まとめ"><span class="header-section-number">12.13</span> 13. まとめ</h2>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">4.7 まとめ</h2>
 <p>Black-76とBlack–Scholes–Mertonは、原資産が対数正規分布に従うという共通の仮定を持つ。Black–Scholes–Mertonは現物価格から出発し、Black-76はフォワード価格または先物価格を直接入力する。</p>
 <p>Black-76では、Black公式による直接計算と、Black processを用いた解析的Pricing Engineが同じ価格を与えることを確認した。さらに、Monte Carlo法によって満期Payoffの割引期待値を求め、解析値と比較した。</p>
 <p>Black–Scholes–Mertonモデルでは、European putの解析解とCRR Treeを比較した。American putでは、早期行使権を評価するため、近似Engine、CRR TreeおよびLongstaff–Schwartz法を比較した。</p>
@@ -1246,7 +1264,6 @@ I(S_t)
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

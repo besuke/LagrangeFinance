@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,25 +286,39 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#使用するパッケージ" id="toc-使用するパッケージ" class="nav-link active" data-scroll-target="#使用するパッケージ">2.1 使用するパッケージ</a></li>
-  <li><a href="#プロジェクトとデータディレクトリ" id="toc-プロジェクトとデータディレクトリ" class="nav-link" data-scroll-target="#プロジェクトとデータディレクトリ">2.2 プロジェクトとデータディレクトリ</a></li>
-  <li><a href="#財務データの読み込み" id="toc-財務データの読み込み" class="nav-link" data-scroll-target="#財務データの読み込み">2.3 財務データの読み込み</a></li>
-  <li><a href="#データ構造の確認" id="toc-データ構造の確認" class="nav-link" data-scroll-target="#データ構造の確認">2.4 データ構造の確認</a></li>
-  <li><a href="#データ型と並び順の整理" id="toc-データ型と並び順の整理" class="nav-link" data-scroll-target="#データ型と並び順の整理">2.5 データ型と並び順の整理</a></li>
-  <li><a href="#年度別産業別のデータ構成" id="toc-年度別産業別のデータ構成" class="nav-link" data-scroll-target="#年度別産業別のデータ構成">2.6 年度別・産業別のデータ構成</a>
+  <li><a href="#分析環境とデータディレクトリ" id="toc-分析環境とデータディレクトリ" class="nav-link active" data-scroll-target="#分析環境とデータディレクトリ">2.1 分析環境とデータディレクトリ</a>
   <ul class="collapse">
-  <li><a href="#年度別の企業数" id="toc-年度別の企業数" class="nav-link" data-scroll-target="#年度別の企業数">年度別の企業数</a></li>
-  <li><a href="#産業別の企業数" id="toc-産業別の企業数" class="nav-link" data-scroll-target="#産業別の企業数">産業別の企業数</a></li>
+  <li><a href="#使用するパッケージ" id="toc-使用するパッケージ" class="nav-link" data-scroll-target="#使用するパッケージ">2.1.1 使用するパッケージ</a></li>
+  <li><a href="#プロジェクトとデータディレクトリ" id="toc-プロジェクトとデータディレクトリ" class="nav-link" data-scroll-target="#プロジェクトとデータディレクトリ">2.1.2 プロジェクトとデータディレクトリ</a></li>
   </ul></li>
-  <li><a href="#売上高の分布" id="toc-売上高の分布" class="nav-link" data-scroll-target="#売上高の分布">2.7 売上高の分布</a></li>
-  <li><a href="#株主資本とroe" id="toc-株主資本とroe" class="nav-link" data-scroll-target="#株主資本とroe">2.8 株主資本とROE</a></li>
-  <li><a href="#産業別のroe" id="toc-産業別のroe" class="nav-link" data-scroll-target="#産業別のroe">2.9 産業別のROE</a></li>
-  <li><a href="#企業の順位付け" id="toc-企業の順位付け" class="nav-link" data-scroll-target="#企業の順位付け">2.10 企業の順位付け</a></li>
-  <li><a href="#上級デュポンモデル" id="toc-上級デュポンモデル" class="nav-link" data-scroll-target="#上級デュポンモデル">2.11 上級デュポン・モデル</a></li>
-  <li><a href="#pmとatoの関係" id="toc-pmとatoの関係" class="nav-link" data-scroll-target="#pmとatoの関係">2.12 PMとATOの関係</a></li>
-  <li><a href="#複数の財務指標を同じ形式で要約する" id="toc-複数の財務指標を同じ形式で要約する" class="nav-link" data-scroll-target="#複数の財務指標を同じ形式で要約する">2.13 複数の財務指標を同じ形式で要約する</a></li>
-  <li><a href="#中間データの保存" id="toc-中間データの保存" class="nav-link" data-scroll-target="#中間データの保存">2.14 中間データの保存</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">2.15 まとめ</a></li>
+  <li><a href="#財務データの読込みと整備" id="toc-財務データの読込みと整備" class="nav-link" data-scroll-target="#財務データの読込みと整備">2.2 財務データの読込みと整備</a>
+  <ul class="collapse">
+  <li><a href="#財務データの読み込み" id="toc-財務データの読み込み" class="nav-link" data-scroll-target="#財務データの読み込み">2.2.1 財務データの読み込み</a></li>
+  <li><a href="#データ構造の確認" id="toc-データ構造の確認" class="nav-link" data-scroll-target="#データ構造の確認">2.2.2 データ構造の確認</a></li>
+  <li><a href="#データ型と並び順の整理" id="toc-データ型と並び順の整理" class="nav-link" data-scroll-target="#データ型と並び順の整理">2.2.3 データ型と並び順の整理</a></li>
+  </ul></li>
+  <li><a href="#標本構成と売上高分布" id="toc-標本構成と売上高分布" class="nav-link" data-scroll-target="#標本構成と売上高分布">2.3 標本構成と売上高分布</a>
+  <ul class="collapse">
+  <li><a href="#年度別産業別のデータ構成" id="toc-年度別産業別のデータ構成" class="nav-link" data-scroll-target="#年度別産業別のデータ構成">2.3.1 年度別・産業別のデータ構成</a></li>
+  <li><a href="#売上高の分布" id="toc-売上高の分布" class="nav-link" data-scroll-target="#売上高の分布">2.3.2 売上高の分布</a></li>
+  </ul></li>
+  <li><a href="#株主資本とroe分析" id="toc-株主資本とroe分析" class="nav-link" data-scroll-target="#株主資本とroe分析">2.4 株主資本とROE分析</a>
+  <ul class="collapse">
+  <li><a href="#株主資本とroe" id="toc-株主資本とroe" class="nav-link" data-scroll-target="#株主資本とroe">2.4.1 株主資本とROE</a></li>
+  <li><a href="#産業別のroe" id="toc-産業別のroe" class="nav-link" data-scroll-target="#産業別のroe">2.4.2 産業別のROE</a></li>
+  <li><a href="#企業の順位付け" id="toc-企業の順位付け" class="nav-link" data-scroll-target="#企業の順位付け">2.4.3 企業の順位付け</a></li>
+  </ul></li>
+  <li><a href="#上級デュポンモデル" id="toc-上級デュポンモデル" class="nav-link" data-scroll-target="#上級デュポンモデル">2.5 上級デュポン・モデル</a>
+  <ul class="collapse">
+  <li><a href="#roeのデュポン分解" id="toc-roeのデュポン分解" class="nav-link" data-scroll-target="#roeのデュポン分解">2.5.1 ROEのデュポン分解</a></li>
+  <li><a href="#pmとatoの関係" id="toc-pmとatoの関係" class="nav-link" data-scroll-target="#pmとatoの関係">2.5.2 PMとATOの関係</a></li>
+  </ul></li>
+  <li><a href="#財務指標の要約と中間データ" id="toc-財務指標の要約と中間データ" class="nav-link" data-scroll-target="#財務指標の要約と中間データ">2.6 財務指標の要約と中間データ</a>
+  <ul class="collapse">
+  <li><a href="#複数の財務指標を同じ形式で要約する" id="toc-複数の財務指標を同じ形式で要約する" class="nav-link" data-scroll-target="#複数の財務指標を同じ形式で要約する">2.6.1 複数の財務指標を同じ形式で要約する</a></li>
+  <li><a href="#中間データの保存" id="toc-中間データの保存" class="nav-link" data-scroll-target="#中間データの保存">2.6.2 中間データの保存</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">2.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -340,8 +354,10 @@ window.Quarto = {
 <li>入力データはプロジェクトルートの<code>simulation_data</code>以下から検索する。</li>
 <li>中間データは<code>simulation_data/derived</code>へ保存し、元データを上書きしない。</li>
 </ul>
-<section id="使用するパッケージ" class="level2">
-<h2 class="anchored" data-anchor-id="使用するパッケージ">2.1 使用するパッケージ</h2>
+<section id="分析環境とデータディレクトリ" class="level2">
+<h2 class="anchored" data-anchor-id="分析環境とデータディレクトリ">2.1 分析環境とデータディレクトリ</h2>
+<section id="使用するパッケージ" class="level3">
+<h3 class="anchored" data-anchor-id="使用するパッケージ">2.1.1 使用するパッケージ</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>({</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(tidyverse)</span>
@@ -355,8 +371,8 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"tidyverse"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="プロジェクトとデータディレクトリ" class="level2">
-<h2 class="anchored" data-anchor-id="プロジェクトとデータディレクトリ">2.2 プロジェクトとデータディレクトリ</h2>
+<section id="プロジェクトとデータディレクトリ" class="level3">
+<h3 class="anchored" data-anchor-id="プロジェクトとデータディレクトリ">2.1.2 プロジェクトとデータディレクトリ</h3>
 <p>第1章と同様に、現在の作業ディレクトリと<code>_quarto.yml</code>を利用して、LagrangeFinanceのプロジェクトルートを確認する。これにより、リポジトリを別の場所へ移しても、絶対パスを書き換えずに実行できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>project_candidates <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">c</span>(</span>
@@ -432,8 +448,11 @@ window.Quarto = {
 </div>
 </div>
 </section>
-<section id="財務データの読み込み" class="level2">
-<h2 class="anchored" data-anchor-id="財務データの読み込み">2.3 財務データの読み込み</h2>
+</section>
+<section id="財務データの読込みと整備" class="level2">
+<h2 class="anchored" data-anchor-id="財務データの読込みと整備">2.2 財務データの読込みと整備</h2>
+<section id="財務データの読み込み" class="level3">
+<h3 class="anchored" data-anchor-id="財務データの読み込み">2.2.1 財務データの読み込み</h3>
 <p>本章では<code>ch04_financial_data.csv</code>を使用する。ファイルが<code>simulation_data</code>内のサブディレクトリに置かれていても、ファイル名から検索できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>financial_data_candidates <span class="ot">&lt;-</span> csv_paths[</span>
@@ -506,8 +525,8 @@ window.Quarto = {
 <span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="データ構造の確認" class="level2">
-<h2 class="anchored" data-anchor-id="データ構造の確認">2.4 データ構造の確認</h2>
+<section id="データ構造の確認" class="level3">
+<h3 class="anchored" data-anchor-id="データ構造の確認">2.2.2 データ構造の確認</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(financial_data_raw)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -580,8 +599,8 @@ $ FO          &lt;dbl&gt; 2480.72, 3959.70, 6159.02, 10123.91, 11362.22, 13772.1
 </div>
 </div>
 </section>
-<section id="データ型と並び順の整理" class="level2">
-<h2 class="anchored" data-anchor-id="データ型と並び順の整理">2.5 データ型と並び順の整理</h2>
+<section id="データ型と並び順の整理" class="level3">
+<h3 class="anchored" data-anchor-id="データ型と並び順の整理">2.2.3 データ型と並び順の整理</h3>
 <p>企業IDと産業IDは分類を表すためファクター型にし、年度は整数型へ変換する。また、前年度の値を正しく取得できるよう、企業IDと年度で並べ替える。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>financial_data <span class="ot">&lt;-</span> financial_data_raw <span class="sc">|&gt;</span></span>
@@ -628,10 +647,13 @@ $ FO          &lt;dbl&gt; 2480.72, 3959.70, 6159.02, 10123.91, 11362.22, 13772.1
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="年度別産業別のデータ構成" class="level2">
-<h2 class="anchored" data-anchor-id="年度別産業別のデータ構成">2.6 年度別・産業別のデータ構成</h2>
-<section id="年度別の企業数" class="level3">
-<h3 class="anchored" data-anchor-id="年度別の企業数">年度別の企業数</h3>
+</section>
+<section id="標本構成と売上高分布" class="level2">
+<h2 class="anchored" data-anchor-id="標本構成と売上高分布">2.3 標本構成と売上高分布</h2>
+<section id="年度別産業別のデータ構成" class="level3">
+<h3 class="anchored" data-anchor-id="年度別産業別のデータ構成">2.3.1 年度別・産業別のデータ構成</h3>
+<section id="年度別の企業数" class="level4">
+<h4 class="anchored" data-anchor-id="年度別の企業数">年度別の企業数</h4>
 <p>旧コードでは年度ごとにループして企業数を数えていた。本章では<code>group_by()</code>と<code>summarise()</code>で一度に集計する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>firms_by_year <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
@@ -681,8 +703,8 @@ $ FO          &lt;dbl&gt; 2480.72, 3959.70, 6159.02, 10123.91, 11362.22, 13772.1
 </div>
 </div>
 </section>
-<section id="産業別の企業数" class="level3">
-<h3 class="anchored" data-anchor-id="産業別の企業数">産業別の企業数</h3>
+<section id="産業別の企業数" class="level4">
+<h4 class="anchored" data-anchor-id="産業別の企業数">産業別の企業数</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>latest_year <span class="ot">&lt;-</span> <span class="fu">max</span>(financial_data<span class="sc">$</span>year, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -733,8 +755,8 @@ $ FO          &lt;dbl&gt; 2480.72, 3959.70, 6159.02, 10123.91, 11362.22, 13772.1
 </div>
 </section>
 </section>
-<section id="売上高の分布" class="level2">
-<h2 class="anchored" data-anchor-id="売上高の分布">2.7 売上高の分布</h2>
+<section id="売上高の分布" class="level3">
+<h3 class="anchored" data-anchor-id="売上高の分布">2.3.2 売上高の分布</h3>
 <p>売上高は企業規模によって大きく異なるため、元の値と自然対数の両方を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>sales_summary <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
@@ -798,8 +820,11 @@ $ FO          &lt;dbl&gt; 2480.72, 3959.70, 6159.02, 10123.91, 11362.22, 13772.1
 </div>
 </div>
 </section>
-<section id="株主資本とroe" class="level2">
-<h2 class="anchored" data-anchor-id="株主資本とroe">2.8 株主資本とROE</h2>
+</section>
+<section id="株主資本とroe分析" class="level2">
+<h2 class="anchored" data-anchor-id="株主資本とroe分析">2.4 株主資本とROE分析</h2>
+<section id="株主資本とroe" class="level3">
+<h3 class="anchored" data-anchor-id="株主資本とroe">2.4.1 株主資本とROE</h3>
 <p>本章では、営業資産から営業負債を控除した純営業資産と、金融負債から金融資産を控除した純金融負債の差として株主資本を計算する。</p>
 <p><span class="math display">\[
 BE_t = (OA_t - OL_t) - (FO_t - FA_t)
@@ -900,8 +925,8 @@ ROE_t = \frac{X_t}{BE_{t-1}}
 </div>
 </div>
 </section>
-<section id="産業別のroe" class="level2">
-<h2 class="anchored" data-anchor-id="産業別のroe">2.9 産業別のROE</h2>
+<section id="産業別のroe" class="level3">
+<h3 class="anchored" data-anchor-id="産業別のroe">2.4.2 産業別のROE</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>industry_roe_summary <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(industry_ID) <span class="sc">|&gt;</span></span>
@@ -957,8 +982,8 @@ ROE_t = \frac{X_t}{BE_{t-1}}
 </div>
 </div>
 </section>
-<section id="企業の順位付け" class="level2">
-<h2 class="anchored" data-anchor-id="企業の順位付け">2.10 企業の順位付け</h2>
+<section id="企業の順位付け" class="level3">
+<h3 class="anchored" data-anchor-id="企業の順位付け">2.4.3 企業の順位付け</h3>
 <p>最新年度について、産業内でROEが高い企業から順に順位を付ける。<code>dense_rank()</code>を使うと、同順位がある場合でも次の順位を飛ばさない。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>latest_roe_ranking <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
@@ -1023,8 +1048,11 @@ ROE_t = \frac{X_t}{BE_{t-1}}
 </div>
 </div>
 </section>
+</section>
 <section id="上級デュポンモデル" class="level2">
-<h2 class="anchored" data-anchor-id="上級デュポンモデル">2.11 上級デュポン・モデル</h2>
+<h2 class="anchored" data-anchor-id="上級デュポンモデル">2.5 上級デュポン・モデル</h2>
+<section id="roeのデュポン分解" class="level3">
+<h3 class="anchored" data-anchor-id="roeのデュポン分解">2.5.1 ROEのデュポン分解</h3>
 <p>上級デュポン・モデルでは、ROEを純営業資産利益率と財務レバレッジの効果へ分解する。</p>
 <p><span class="math display">\[
 ROE_t = RNOA_t + FLEV_{t-1}(RNOA_t - NBC_t)
@@ -1109,8 +1137,8 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 </div>
 </div>
 </section>
-<section id="pmとatoの関係" class="level2">
-<h2 class="anchored" data-anchor-id="pmとatoの関係">2.12 PMとATOの関係</h2>
+<section id="pmとatoの関係" class="level3">
+<h3 class="anchored" data-anchor-id="pmとatoの関係">2.5.2 PMとATOの関係</h3>
 <p>営業利益率PMと純営業資産回転率ATOは、企業の事業モデルを異なる側面から表す。産業別中央値を使って両者の関係を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>industry_pm_ato <span class="ot">&lt;-</span> financial_data_dupont <span class="sc">|&gt;</span></span>
@@ -1197,8 +1225,11 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 </div>
 </div>
 </section>
-<section id="複数の財務指標を同じ形式で要約する" class="level2">
-<h2 class="anchored" data-anchor-id="複数の財務指標を同じ形式で要約する">2.13 複数の財務指標を同じ形式で要約する</h2>
+</section>
+<section id="財務指標の要約と中間データ" class="level2">
+<h2 class="anchored" data-anchor-id="財務指標の要約と中間データ">2.6 財務指標の要約と中間データ</h2>
+<section id="複数の財務指標を同じ形式で要約する" class="level3">
+<h3 class="anchored" data-anchor-id="複数の財務指標を同じ形式で要約する">2.6.1 複数の財務指標を同じ形式で要約する</h3>
 <p>複数列に同じ集計を適用する場合は、列名のベクトルと<code>purrr::map_dfr()</code>を組み合わせられる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>financial_metrics <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"sales"</span>, <span class="st">"BE"</span>, <span class="st">"ROE"</span>, <span class="st">"RNOA"</span>, <span class="st">"PM"</span>, <span class="st">"ATO"</span>)</span>
@@ -1235,8 +1266,8 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 </div>
 </div>
 </section>
-<section id="中間データの保存" class="level2">
-<h2 class="anchored" data-anchor-id="中間データの保存">2.14 中間データの保存</h2>
+<section id="中間データの保存" class="level3">
+<h3 class="anchored" data-anchor-id="中間データの保存">2.6.2 中間データの保存</h3>
 <p>第3章では、本章で計算した株主資本、前年度株主資本、ROEなどを株式データと結合する。そのため、整理済みデータを<code>simulation_data/derived/ch04_output.csv</code>へ保存する。元の<code>ch04_financial_data.csv</code>は変更しない。</p>
 <p>保存対象には、上級デュポン・モデルの計算結果も含める。</p>
 <div class="cell">
@@ -1263,7 +1294,7 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 <pre><code>                                                                                   size
 C:/AnalyticFin/Projects/LagrangeFinance/simulation_data/derived/ch04_output.csv 2425789
                                                                                               mtime
-C:/AnalyticFin/Projects/LagrangeFinance/simulation_data/derived/ch04_output.csv 2026-07-24 19:46:27</code></pre>
+C:/AnalyticFin/Projects/LagrangeFinance/simulation_data/derived/ch04_output.csv 2026-07-25 01:42:13</code></pre>
 </div>
 </div>
 <p>保存したCSVを読み直し、行数と列名が一致することを確認する。</p>
@@ -1289,8 +1320,9 @@ C:/AnalyticFin/Projects/LagrangeFinance/simulation_data/derived/ch04_output.csv 
 </div>
 </div>
 </section>
+</section>
 <section id="まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="まとめ">2.15 まとめ</h2>
+<h2 class="anchored" data-anchor-id="まとめ">2.7 まとめ</h2>
 <p>本章では、財務データを再現可能な相対パスで読み込み、データ型、欠損値、パネルデータのキーを確認した。次に、年度別・産業別の企業構成、売上高の分布、株主資本、ROE、産業内順位を計算した。最後に、ROEをRNOA、財務レバレッジ、純借入コストへ分解し、第3章で利用する整理済みCSVを<code>simulation_data/derived</code>へ保存した。</p>
 <p>第3章では、月次株式データからリターンを計算し、本章の財務データと結合する。</p>
 

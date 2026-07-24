@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>13&nbsp; 第II-6章 SABRモデル – ラグランジェ・ファイナンス</title>
+<title>第II-6章 SABRモデル – ラグランジェ・ファイナンス</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,28 +286,35 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#第ii-6章-sabrモデル" id="toc-第ii-6章-sabrモデル" class="nav-link active" data-scroll-target="#第ii-6章-sabrモデル"><span class="header-section-number">14</span> 第II-6章 SABRモデル</a>
+  <li><a href="#sabrモデルとパラメータ" id="toc-sabrモデルとパラメータ" class="nav-link active" data-scroll-target="#sabrモデルとパラメータ">6.1 SABRモデルとパラメータ</a>
   <ul class="collapse">
-  <li><a href="#sabrパラメータの役割" id="toc-sabrパラメータの役割" class="nav-link" data-scroll-target="#sabrパラメータの役割"><span class="header-section-number">14.1</span> 1. SABRパラメータの役割</a>
+  <li><a href="#sabrパラメータの役割" id="toc-sabrパラメータの役割" class="nav-link" data-scroll-target="#sabrパラメータの役割">6.1.1 SABRパラメータの役割</a></li>
+  <li><a href="#alpha" id="toc-alpha" class="nav-link" data-scroll-target="#alpha">6.1.2 Alpha</a></li>
+  <li><a href="#beta" id="toc-beta" class="nav-link" data-scroll-target="#beta">6.1.3 Beta</a></li>
+  <li><a href="#volatility-of-volatility" id="toc-volatility-of-volatility" class="nav-link" data-scroll-target="#volatility-of-volatility">6.1.4 Volatility of volatility</a></li>
+  <li><a href="#rho" id="toc-rho" class="nav-link" data-scroll-target="#rho">6.1.5 Rho</a></li>
+  <li><a href="#hagan近似とカリブレーション" id="toc-hagan近似とカリブレーション" class="nav-link" data-scroll-target="#hagan近似とカリブレーション">6.1.6 Hagan近似とカリブレーション</a></li>
+  </ul></li>
+  <li><a href="#black-sabrのカリブレーション" id="toc-black-sabrのカリブレーション" class="nav-link" data-scroll-target="#black-sabrのカリブレーション">6.2 Black SABRのカリブレーション</a>
   <ul class="collapse">
-  <li><a href="#alpha" id="toc-alpha" class="nav-link" data-scroll-target="#alpha"><span class="header-section-number">14.1.1</span> 1.1 Alpha</a></li>
-  <li><a href="#beta" id="toc-beta" class="nav-link" data-scroll-target="#beta"><span class="header-section-number">14.1.2</span> 1.2 Beta</a></li>
-  <li><a href="#volatility-of-volatility" id="toc-volatility-of-volatility" class="nav-link" data-scroll-target="#volatility-of-volatility"><span class="header-section-number">14.1.3</span> 1.3 Volatility of volatility</a></li>
-  <li><a href="#rho" id="toc-rho" class="nav-link" data-scroll-target="#rho"><span class="header-section-number">14.1.4</span> 1.4 Rho</a></li>
+  <li><a href="#市場データ" id="toc-市場データ" class="nav-link" data-scroll-target="#市場データ">6.2.1 市場データ</a></li>
+  <li><a href="#パラメータカリブレーション" id="toc-パラメータカリブレーション" class="nav-link" data-scroll-target="#パラメータカリブレーション">6.2.2 パラメータ・カリブレーション</a></li>
+  <li><a href="#ボラティリティスマイル" id="toc-ボラティリティスマイル" class="nav-link" data-scroll-target="#ボラティリティスマイル">6.2.3 ボラティリティ・スマイル</a></li>
   </ul></li>
-  <li><a href="#hagan近似とカリブレーション" id="toc-hagan近似とカリブレーション" class="nav-link" data-scroll-target="#hagan近似とカリブレーション"><span class="header-section-number">14.2</span> 2. Hagan近似とカリブレーション</a></li>
-  <li><a href="#black-sabrの市場データ" id="toc-black-sabrの市場データ" class="nav-link" data-scroll-target="#black-sabrの市場データ"><span class="header-section-number">14.3</span> 3. Black SABRの市場データ</a></li>
-  <li><a href="#black-sabrのカリブレーション" id="toc-black-sabrのカリブレーション" class="nav-link" data-scroll-target="#black-sabrのカリブレーション"><span class="header-section-number">14.4</span> 4. Black SABRのカリブレーション</a></li>
-  <li><a href="#black-sabrスマイル" id="toc-black-sabrスマイル" class="nav-link" data-scroll-target="#black-sabrスマイル"><span class="header-section-number">14.5</span> 5. Black SABRスマイル</a></li>
-  <li><a href="#sabrパラメータの感応度" id="toc-sabrパラメータの感応度" class="nav-link" data-scroll-target="#sabrパラメータの感応度"><span class="header-section-number">14.6</span> 6. SABRパラメータの感応度</a></li>
-  <li><a href="#shifted-sabrと負の金利" id="toc-shifted-sabrと負の金利" class="nav-link" data-scroll-target="#shifted-sabrと負の金利"><span class="header-section-number">14.7</span> 7. Shifted SABRと負の金利</a></li>
-  <li><a href="#shifted-sabr-normalの市場データ" id="toc-shifted-sabr-normalの市場データ" class="nav-link" data-scroll-target="#shifted-sabr-normalの市場データ"><span class="header-section-number">14.8</span> 8. Shifted SABR Normalの市場データ</a></li>
-  <li><a href="#shifted-sabr-normalのカリブレーション" id="toc-shifted-sabr-normalのカリブレーション" class="nav-link" data-scroll-target="#shifted-sabr-normalのカリブレーション"><span class="header-section-number">14.9</span> 9. Shifted SABR Normalのカリブレーション</a></li>
-  <li><a href="#shifted-sabr-normalスマイル" id="toc-shifted-sabr-normalスマイル" class="nav-link" data-scroll-target="#shifted-sabr-normalスマイル"><span class="header-section-number">14.10</span> 10. Shifted SABR Normalスマイル</a></li>
-  <li><a href="#カリブレーション範囲外のstrike" id="toc-カリブレーション範囲外のstrike" class="nav-link" data-scroll-target="#カリブレーション範囲外のstrike"><span class="header-section-number">14.11</span> 11. カリブレーション範囲外のStrike</a></li>
-  <li><a href="#black-sabrとshifted-sabr-normal" id="toc-black-sabrとshifted-sabr-normal" class="nav-link" data-scroll-target="#black-sabrとshifted-sabr-normal"><span class="header-section-number">14.12</span> 12. Black SABRとShifted SABR Normal</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ"><span class="header-section-number">14.13</span> 13. まとめ</a></li>
+  <li><a href="#sabrパラメータの感応度" id="toc-sabrパラメータの感応度" class="nav-link" data-scroll-target="#sabrパラメータの感応度">6.3 SABRパラメータの感応度</a></li>
+  <li><a href="#shifted-sabrと負の金利" id="toc-shifted-sabrと負の金利" class="nav-link" data-scroll-target="#shifted-sabrと負の金利">6.4 Shifted SABRと負の金利</a></li>
+  <li><a href="#shifted-sabr-normalのカリブレーション" id="toc-shifted-sabr-normalのカリブレーション" class="nav-link" data-scroll-target="#shifted-sabr-normalのカリブレーション">6.5 Shifted SABR Normalのカリブレーション</a>
+  <ul class="collapse">
+  <li><a href="#市場データ-1" id="toc-市場データ-1" class="nav-link" data-scroll-target="#市場データ-1">6.5.1 市場データ</a></li>
+  <li><a href="#パラメータカリブレーション-1" id="toc-パラメータカリブレーション-1" class="nav-link" data-scroll-target="#パラメータカリブレーション-1">6.5.2 パラメータ・カリブレーション</a></li>
+  <li><a href="#normalボラティリティスマイル" id="toc-normalボラティリティスマイル" class="nav-link" data-scroll-target="#normalボラティリティスマイル">6.5.3 Normalボラティリティ・スマイル</a></li>
   </ul></li>
+  <li><a href="#外挿とモデル比較" id="toc-外挿とモデル比較" class="nav-link" data-scroll-target="#外挿とモデル比較">6.6 外挿とモデル比較</a>
+  <ul class="collapse">
+  <li><a href="#カリブレーション範囲外のstrike" id="toc-カリブレーション範囲外のstrike" class="nav-link" data-scroll-target="#カリブレーション範囲外のstrike">6.6.1 カリブレーション範囲外のStrike</a></li>
+  <li><a href="#black-sabrとshifted-sabr-normal" id="toc-black-sabrとshifted-sabr-normal" class="nav-link" data-scroll-target="#black-sabrとshifted-sabr-normal">6.6.2 Black SABRとShifted SABR Normal</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">6.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -317,7 +324,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学と金融数学</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch06_sabr_model.html"><span class="chapter-title">第II-6章 SABRモデル</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">第II-6章 SABRモデル</span></h1>
-<p class="subtitle lead">ボラティリティ・スマイルとパラメータ・カリブレーション</p>
 </div>
 
 
@@ -334,8 +340,6 @@ window.Quarto = {
 </header>
 
 
-<section id="第ii-6章-sabrモデル" class="level1" data-number="14">
-<h1 data-number="14"><span class="header-section-number">14</span> 第II-6章 SABRモデル</h1>
 <p>前章までのBlackモデルとNormalモデルでは、満期とStrikeが同じオプションに対して、一つのボラティリティを与えた。しかし、実際のオプション市場では、同じ満期であってもStrikeごとに異なるインプライド・ボラティリティが観測される。このStrike方向の形状をボラティリティ・スマイルまたはスキューと呼ぶ。</p>
 <p>SABRモデルは、フォワード価格またはフォワード金利と、そのボラティリティを同時に確率変数として扱う。モデル名は、Stochastic Alpha Beta Rhoの頭文字に由来する。</p>
 <p>フォワード <span class="math inline">\(F_t\)</span> とボラティリティ係数 <span class="math inline">\(\alpha_t\)</span> の動学を、概念的に次のように表す。</p>
@@ -381,15 +385,18 @@ dW_t^{(1)}dW_t^{(2)}
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(broom)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="sabrパラメータの役割" class="level2" data-number="14.1">
-<h2 data-number="14.1" class="anchored" data-anchor-id="sabrパラメータの役割"><span class="header-section-number">14.1</span> 1. SABRパラメータの役割</h2>
+<section id="sabrモデルとパラメータ" class="level2">
+<h2 class="anchored" data-anchor-id="sabrモデルとパラメータ">6.1 SABRモデルとパラメータ</h2>
+<section id="sabrパラメータの役割" class="level3">
+<h3 class="anchored" data-anchor-id="sabrパラメータの役割">6.1.1 SABRパラメータの役割</h3>
 <p>SABRの各パラメータは完全に独立してスマイルを動かすわけではないが、主な役割は次のように整理できる。</p>
-<section id="alpha" class="level3" data-number="14.1.1">
-<h3 data-number="14.1.1" class="anchored" data-anchor-id="alpha"><span class="header-section-number">14.1.1</span> 1.1 Alpha</h3>
+</section>
+<section id="alpha" class="level3">
+<h3 class="anchored" data-anchor-id="alpha">6.1.2 Alpha</h3>
 <p><span class="math inline">\(\alpha\)</span> は初期ボラティリティ水準である。他の条件を固定して<span class="math inline">\(\alpha\)</span>を上げると、スマイル全体が概ね上方へ移動する。</p>
 </section>
-<section id="beta" class="level3" data-number="14.1.2">
-<h3 data-number="14.1.2" class="anchored" data-anchor-id="beta"><span class="header-section-number">14.1.2</span> 1.2 Beta</h3>
+<section id="beta" class="level3">
+<h3 class="anchored" data-anchor-id="beta">6.1.3 Beta</h3>
 <p><span class="math inline">\(\beta\)</span> はフォワード水準に対する弾性を表す。</p>
 <p><span class="math display">\[
 \text{instantaneous volatility}
@@ -398,18 +405,17 @@ dW_t^{(1)}dW_t^{(2)}
 \]</span></p>
 <p><span class="math inline">\(\beta=1\)</span> では変動幅がフォワード水準に比例し、Blackモデルに近い。<span class="math inline">\(\beta=0\)</span> では変動幅がフォワード水準に依存せず、Normalモデルに近い。</p>
 </section>
-<section id="volatility-of-volatility" class="level3" data-number="14.1.3">
-<h3 data-number="14.1.3" class="anchored" data-anchor-id="volatility-of-volatility"><span class="header-section-number">14.1.3</span> 1.3 Volatility of volatility</h3>
+<section id="volatility-of-volatility" class="level3">
+<h3 class="anchored" data-anchor-id="volatility-of-volatility">6.1.4 Volatility of volatility</h3>
 <p><span class="math inline">\(\nu\)</span> はvolatility of volatility、すなわちvol-of-volである。<span class="math inline">\(\nu\)</span>が大きいほど、ボラティリティが将来大きく変化する可能性が高まり、一般にスマイルの曲率が強くなる。</p>
 <p>本章のコードでは、変数名として <code>volvol</code> を使用する。</p>
 </section>
-<section id="rho" class="level3" data-number="14.1.4">
-<h3 data-number="14.1.4" class="anchored" data-anchor-id="rho"><span class="header-section-number">14.1.4</span> 1.4 Rho</h3>
+<section id="rho" class="level3">
+<h3 class="anchored" data-anchor-id="rho">6.1.5 Rho</h3>
 <p><span class="math inline">\(\rho\)</span> はフォワード変化とボラティリティ変化の相関である。負の<span class="math inline">\(\rho\)</span>は、フォワード低下時にボラティリティが上昇しやすい構造を表し、低Strike側のボラティリティを相対的に高くする。</p>
 </section>
-</section>
-<section id="hagan近似とカリブレーション" class="level2" data-number="14.2">
-<h2 data-number="14.2" class="anchored" data-anchor-id="hagan近似とカリブレーション"><span class="header-section-number">14.2</span> 2. Hagan近似とカリブレーション</h2>
+<section id="hagan近似とカリブレーション" class="level3">
+<h3 class="anchored" data-anchor-id="hagan近似とカリブレーション">6.1.6 Hagan近似とカリブレーション</h3>
 <p>SABRモデルの市場利用では、Haganらによる近似式を用いて、SABRパラメータからBlack volatilityまたはNormal volatilityを計算することが多い。</p>
 <p>市場Strikeを <span class="math inline">\(K_i\)</span>、市場ボラティリティを <span class="math inline">\(\sigma_i^{\mathrm{mkt}}\)</span>、 SABR近似値を <span class="math inline">\(\sigma_i^{\mathrm{SABR}}\)</span> とする。本章では、適合度を次のRMSEで測定する。</p>
 <p><span class="math display">\[
@@ -427,8 +433,11 @@ dW_t^{(1)}dW_t^{(2)}
 \]</span></p>
 <p><span class="math inline">\(\beta\)</span>を固定し、RMSEが最小となる <span class="math inline">\(\alpha\)</span>、<span class="math inline">\(\nu\)</span>、<span class="math inline">\(\rho\)</span> を数値的に求める。</p>
 </section>
-<section id="black-sabrの市場データ" class="level2" data-number="14.3">
-<h2 data-number="14.3" class="anchored" data-anchor-id="black-sabrの市場データ"><span class="header-section-number">14.3</span> 3. Black SABRの市場データ</h2>
+</section>
+<section id="black-sabrのカリブレーション" class="level2">
+<h2 class="anchored" data-anchor-id="black-sabrのカリブレーション">6.2 Black SABRのカリブレーション</h2>
+<section id="市場データ" class="level3">
+<h3 class="anchored" data-anchor-id="市場データ">6.2.1 市場データ</h3>
 <p>フォワードを0.56%、満期を2年、<span class="math inline">\(\beta=0.5\)</span>とする。市場Black volatilityはStrikeごとに異なり、明確なスマイルを形成している。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>black_market_data <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
@@ -497,8 +506,8 @@ dW_t^{(1)}dW_t^{(2)}
 </div>
 <p>ATMに近いStrikeは0.56%であり、フォワード0.56%と一致する。ATM付近の水準は主に<span class="math inline">\(\alpha\)</span>に影響し、両翼の形状が<span class="math inline">\(\nu\)</span>と<span class="math inline">\(\rho\)</span>の推定に影響する。</p>
 </section>
-<section id="black-sabrのカリブレーション" class="level2" data-number="14.4">
-<h2 data-number="14.4" class="anchored" data-anchor-id="black-sabrのカリブレーション"><span class="header-section-number">14.4</span> 4. Black SABRのカリブレーション</h2>
+<section id="パラメータカリブレーション" class="level3">
+<h3 class="anchored" data-anchor-id="パラメータカリブレーション">6.2.2 パラメータ・カリブレーション</h3>
 <p>目的関数では、各StrikeにおけるQuantLibのSABR Black volatilityと市場Black volatilityのRMSEを計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>objective_sabr_black <span class="ot">&lt;-</span> <span class="cf">function</span>(parameters) {</span>
@@ -603,8 +612,8 @@ dW_t^{(1)}dW_t^{(2)}
 </div>
 <p><code>convergence_code</code>が0であれば、<code>optim()</code>は通常の収束条件を満たして終了している。RMSEは市場ボラティリティとモデル値の平均的な誤差を表す。</p>
 </section>
-<section id="black-sabrスマイル" class="level2" data-number="14.5">
-<h2 data-number="14.5" class="anchored" data-anchor-id="black-sabrスマイル"><span class="header-section-number">14.5</span> 5. Black SABRスマイル</h2>
+<section id="ボラティリティスマイル" class="level3">
+<h3 class="anchored" data-anchor-id="ボラティリティスマイル">6.2.3 ボラティリティ・スマイル</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>black_smile_tbl <span class="ot">&lt;-</span> black_market_data <span class="sc">|&gt;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">transmute</span>(</span>
@@ -698,8 +707,9 @@ dW_t^{(1)}dW_t^{(2)}
 </div>
 <p>SABRはすべての市場点を完全に通過する補間法ではなく、少数のパラメータでスマイル全体の形状を表現するモデルである。残差が完全にゼロでなくても、Strike方向に滑らかなボラティリティを与えられる点に意味がある。</p>
 </section>
-<section id="sabrパラメータの感応度" class="level2" data-number="14.6">
-<h2 data-number="14.6" class="anchored" data-anchor-id="sabrパラメータの感応度"><span class="header-section-number">14.6</span> 6. SABRパラメータの感応度</h2>
+</section>
+<section id="sabrパラメータの感応度" class="level2">
+<h2 class="anchored" data-anchor-id="sabrパラメータの感応度">6.3 SABRパラメータの感応度</h2>
 <p>推定結果を基準として、一つのパラメータだけを上下させた場合のスマイルを確認する。パラメータ間には相互作用があるため、これは厳密なリスク分解ではなく、形状を理解するための比較である。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>base_parameter_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
@@ -861,8 +871,8 @@ dW_t^{(1)}dW_t^{(2)}
 </div>
 <p>一般に、<span class="math inline">\(\alpha\)</span>はスマイルの水準、<span class="math inline">\(\nu\)</span>は曲率、<span class="math inline">\(\rho\)</span>は傾きと左右非対称性に強く影響する。<span class="math inline">\(\beta\)</span>も水準と傾きの双方へ影響するため、他のパラメータとの識別が難しい。このため、<span class="math inline">\(\beta\)</span>を市場慣行や過去推定値に基づいて固定することが多い。</p>
 </section>
-<section id="shifted-sabrと負の金利" class="level2" data-number="14.7">
-<h2 data-number="14.7" class="anchored" data-anchor-id="shifted-sabrと負の金利"><span class="header-section-number">14.7</span> 7. Shifted SABRと負の金利</h2>
+<section id="shifted-sabrと負の金利" class="level2">
+<h2 class="anchored" data-anchor-id="shifted-sabrと負の金利">6.4 Shifted SABRと負の金利</h2>
 <p>通常のBlack SABR近似では、フォワードとStrikeが正である必要がある。負の金利を含む市場では、フォワードとStrikeへ同じShift <span class="math inline">\(s\)</span> を加える。</p>
 <p><span class="math display">\[
 \widetilde{F}
@@ -878,8 +888,10 @@ K+s
 <p>本章では、Normal volatilityの市場データに対して、Shiftを加えたHagan近似を使用する。出力はNormal volatilityであるが、内部ではShift後のフォワードとStrikeを使ってスマイルを表現する。</p>
 <p>Shiftは負の金利を消してしまう調整ではない。モデル計算上の座標を移動するだけであり、実際のStrikeとフォワードは元の水準のまま解釈する。</p>
 </section>
-<section id="shifted-sabr-normalの市場データ" class="level2" data-number="14.8">
-<h2 data-number="14.8" class="anchored" data-anchor-id="shifted-sabr-normalの市場データ"><span class="header-section-number">14.8</span> 8. Shifted SABR Normalの市場データ</h2>
+<section id="shifted-sabr-normalのカリブレーション" class="level2">
+<h2 class="anchored" data-anchor-id="shifted-sabr-normalのカリブレーション">6.5 Shifted SABR Normalのカリブレーション</h2>
+<section id="市場データ-1" class="level3">
+<h3 class="anchored" data-anchor-id="市場データ-1">6.5.1 市場データ</h3>
 <p>フォワードを0.05%、満期を2年、<span class="math inline">\(\beta=0.5\)</span>、Shiftを2.5%とする。市場データにはマイナス0.95%のStrikeが含まれる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>normal_market_data <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
@@ -955,8 +967,8 @@ K+s&gt;0
 \]</span></p>
 <p>が必要である。本例の最小Strikeはマイナス0.95%、Shiftは2.5%であるため、Shift後のStrikeは正となる。</p>
 </section>
-<section id="shifted-sabr-normalのカリブレーション" class="level2" data-number="14.9">
-<h2 data-number="14.9" class="anchored" data-anchor-id="shifted-sabr-normalのカリブレーション"><span class="header-section-number">14.9</span> 9. Shifted SABR Normalのカリブレーション</h2>
+<section id="パラメータカリブレーション-1" class="level3">
+<h3 class="anchored" data-anchor-id="パラメータカリブレーション-1">6.5.2 パラメータ・カリブレーション</h3>
 <p>Black SABRと同様に<span class="math inline">\(\beta\)</span>を固定し、<span class="math inline">\(\alpha\)</span>、<span class="math inline">\(\nu\)</span>、<span class="math inline">\(\rho\)</span>を推定する。目的関数はNormal volatility単位のRMSEである。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>objective_sabr_normal <span class="ot">&lt;-</span> <span class="cf">function</span>(parameters) {</span>
@@ -1064,8 +1076,8 @@ K+s&gt;0
 <span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 convergence_code 0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="shifted-sabr-normalスマイル" class="level2" data-number="14.10">
-<h2 data-number="14.10" class="anchored" data-anchor-id="shifted-sabr-normalスマイル"><span class="header-section-number">14.10</span> 10. Shifted SABR Normalスマイル</h2>
+<section id="normalボラティリティスマイル" class="level3">
+<h3 class="anchored" data-anchor-id="normalボラティリティスマイル">6.5.3 Normalボラティリティ・スマイル</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>normal_smile_tbl <span class="ot">&lt;-</span> normal_market_data <span class="sc">|&gt;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">transmute</span>(</span>
@@ -1166,8 +1178,11 @@ K+s&gt;0
 </div>
 <p>Black volatilityとNormal volatilityは単位が異なるため、Black SABRのRMSEとShifted SABR NormalのRMSEを数値の大きさだけで直接比較してはならない。Black側は相対ボラティリティ、Normal側は金利の絶対変化幅である。</p>
 </section>
-<section id="カリブレーション範囲外のstrike" class="level2" data-number="14.11">
-<h2 data-number="14.11" class="anchored" data-anchor-id="カリブレーション範囲外のstrike"><span class="header-section-number">14.11</span> 11. カリブレーション範囲外のStrike</h2>
+</section>
+<section id="外挿とモデル比較" class="level2">
+<h2 class="anchored" data-anchor-id="外挿とモデル比較">6.6 外挿とモデル比較</h2>
+<section id="カリブレーション範囲外のstrike" class="level3">
+<h3 class="anchored" data-anchor-id="カリブレーション範囲外のstrike">6.6.1 カリブレーション範囲外のStrike</h3>
 <p>SABRモデルは、市場点の間を滑らかにつなぐだけでなく、市場点の外側にもボラティリティを与える。ただし、外挿結果は観測データによる制約が弱く、パラメータの影響を強く受ける。</p>
 <p>次のコードでは、市場データの外側にある二つのStrikeについてNormal volatilityを確認する。</p>
 <div class="cell">
@@ -1213,8 +1228,8 @@ K+s&gt;0
 </div>
 <p>Shift後のStrikeがゼロ以下となる領域では、この近似式を使用できない。また、数式上計算できる場合でも、カリブレーション範囲から遠い外挿値には注意が必要である。</p>
 </section>
-<section id="black-sabrとshifted-sabr-normal" class="level2" data-number="14.12">
-<h2 data-number="14.12" class="anchored" data-anchor-id="black-sabrとshifted-sabr-normal"><span class="header-section-number">14.12</span> 12. Black SABRとShifted SABR Normal</h2>
+<section id="black-sabrとshifted-sabr-normal" class="level3">
+<h3 class="anchored" data-anchor-id="black-sabrとshifted-sabr-normal">6.6.2 Black SABRとShifted SABR Normal</h3>
 <p>二つのカリブレーション結果を一覧にする。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>calibration_comparison_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
@@ -1237,8 +1252,9 @@ K+s&gt;0
 <p>Black SABRでは、正のフォワードとStrikeからBlack volatilityを計算した。Shifted SABR Normalでは、フォワードとStrikeへShiftを加え、負のStrikeを含む市場データへNormal volatilityを適合させた。</p>
 <p>どちらも同じ4つのSABRパラメータを用いるが、出力するインプライド・ボラティリティの定義と単位が異なる。したがって、パラメータ値やRMSEを異なるボラティリティ表現の間で単純比較するのではなく、それぞれの市場表示におけるスマイル適合度を確認する。</p>
 </section>
-<section id="まとめ" class="level2" data-number="14.13">
-<h2 data-number="14.13" class="anchored" data-anchor-id="まとめ"><span class="header-section-number">14.13</span> 13. まとめ</h2>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">6.7 まとめ</h2>
 <p>SABRモデルは、フォワードとそのボラティリティを同時に確率変数として扱い、Strikeごとに異なるインプライド・ボラティリティを少数のパラメータで表現する。</p>
 <p><span class="math inline">\(\alpha\)</span>は主にボラティリティ水準、<span class="math inline">\(\nu\)</span>はスマイルの曲率、<span class="math inline">\(\rho\)</span>は傾きと左右非対称性へ影響する。<span class="math inline">\(\beta\)</span>はフォワード水準に対する変動幅の弾性を表し、他のパラメータとの識別が難しいため、本章では固定してカリブレーションした。</p>
 <p>Black SABRでは、正のフォワードとStrikeを前提としてBlack volatilityのスマイルを評価した。負の金利を含むNormal volatility市場では、フォワードとStrikeへ共通のShiftを加えるShifted SABRを使用した。</p>
@@ -1273,7 +1289,6 @@ K+s&gt;0
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

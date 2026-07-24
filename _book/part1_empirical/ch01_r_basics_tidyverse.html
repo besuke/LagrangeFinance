@@ -207,7 +207,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -257,98 +257,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#使用するパッケージ" id="toc-使用するパッケージ" class="nav-link active" data-scroll-target="#使用するパッケージ">1.1 使用するパッケージ</a></li>
-  <li><a href="#rの基本操作" id="toc-rの基本操作" class="nav-link" data-scroll-target="#rの基本操作">1.2 Rの基本操作</a>
+  <li><a href="#r環境と基本操作" id="toc-r環境と基本操作" class="nav-link active" data-scroll-target="#r環境と基本操作">1.1 R環境と基本操作</a>
   <ul class="collapse">
-  <li><a href="#オブジェクトと代入" id="toc-オブジェクトと代入" class="nav-link" data-scroll-target="#オブジェクトと代入">オブジェクトと代入</a></li>
-  <li><a href="#四則演算と代表的な数学関数" id="toc-四則演算と代表的な数学関数" class="nav-link" data-scroll-target="#四則演算と代表的な数学関数">四則演算と代表的な数学関数</a></li>
-  <li><a href="#オブジェクトの型と構造" id="toc-オブジェクトの型と構造" class="nav-link" data-scroll-target="#オブジェクトの型と構造">オブジェクトの型と構造</a></li>
-  <li><a href="#欠損値" id="toc-欠損値" class="nav-link" data-scroll-target="#欠損値">欠損値</a></li>
+  <li><a href="#使用するパッケージ" id="toc-使用するパッケージ" class="nav-link" data-scroll-target="#使用するパッケージ">1.1.1 使用するパッケージ</a></li>
+  <li><a href="#rの基本操作" id="toc-rの基本操作" class="nav-link" data-scroll-target="#rの基本操作">1.1.2 Rの基本操作</a></li>
   </ul></li>
-  <li><a href="#ベクトル" id="toc-ベクトル" class="nav-link" data-scroll-target="#ベクトル">1.3 ベクトル</a>
+  <li><a href="#ベクトルとデータ構造" id="toc-ベクトルとデータ構造" class="nav-link" data-scroll-target="#ベクトルとデータ構造">1.2 ベクトルとデータ構造</a>
   <ul class="collapse">
-  <li><a href="#ベクトルの作成" id="toc-ベクトルの作成" class="nav-link" data-scroll-target="#ベクトルの作成">ベクトルの作成</a></li>
-  <li><a href="#ベクトルの要素" id="toc-ベクトルの要素" class="nav-link" data-scroll-target="#ベクトルの要素">ベクトルの要素</a></li>
-  <li><a href="#名前付きベクトル" id="toc-名前付きベクトル" class="nav-link" data-scroll-target="#名前付きベクトル">名前付きベクトル</a></li>
-  <li><a href="#ベクトル化" id="toc-ベクトル化" class="nav-link" data-scroll-target="#ベクトル化">ベクトル化</a></li>
+  <li><a href="#ベクトル" id="toc-ベクトル" class="nav-link" data-scroll-target="#ベクトル">1.2.1 ベクトル</a></li>
+  <li><a href="#行列リストデータフレーム" id="toc-行列リストデータフレーム" class="nav-link" data-scroll-target="#行列リストデータフレーム">1.2.2 行列、リスト、データフレーム</a></li>
   </ul></li>
-  <li><a href="#行列リストデータフレーム" id="toc-行列リストデータフレーム" class="nav-link" data-scroll-target="#行列リストデータフレーム">1.4 行列、リスト、データフレーム</a>
+  <li><a href="#関数統計確率分布" id="toc-関数統計確率分布" class="nav-link" data-scroll-target="#関数統計確率分布">1.3 関数・統計・確率分布</a>
   <ul class="collapse">
-  <li><a href="#行列" id="toc-行列" class="nav-link" data-scroll-target="#行列">行列</a></li>
-  <li><a href="#リスト" id="toc-リスト" class="nav-link" data-scroll-target="#リスト">リスト</a></li>
-  <li><a href="#データフレーム" id="toc-データフレーム" class="nav-link" data-scroll-target="#データフレーム">データフレーム</a></li>
+  <li><a href="#条件判定と独自関数" id="toc-条件判定と独自関数" class="nav-link" data-scroll-target="#条件判定と独自関数">1.3.1 条件判定と独自関数</a></li>
+  <li><a href="#記述統計" id="toc-記述統計" class="nav-link" data-scroll-target="#記述統計">1.3.2 記述統計</a></li>
+  <li><a href="#確率分布" id="toc-確率分布" class="nav-link" data-scroll-target="#確率分布">1.3.3 確率分布</a></li>
   </ul></li>
-  <li><a href="#条件判定と独自関数" id="toc-条件判定と独自関数" class="nav-link" data-scroll-target="#条件判定と独自関数">1.5 条件判定と独自関数</a>
+  <li><a href="#データ読込みとdplyr" id="toc-データ読込みとdplyr" class="nav-link" data-scroll-target="#データ読込みとdplyr">1.4 データ読込みとdplyr</a>
   <ul class="collapse">
-  <li><a href="#条件判定" id="toc-条件判定" class="nav-link" data-scroll-target="#条件判定">条件判定</a></li>
-  <li><a href="#独自関数" id="toc-独自関数" class="nav-link" data-scroll-target="#独自関数">独自関数</a></li>
+  <li><a href="#プロジェクト内のデータを読み込む" id="toc-プロジェクト内のデータを読み込む" class="nav-link" data-scroll-target="#プロジェクト内のデータを読み込む">1.4.1 プロジェクト内のデータを読み込む</a></li>
+  <li><a href="#dplyrによるデータ操作" id="toc-dplyrによるデータ操作" class="nav-link" data-scroll-target="#dplyrによるデータ操作">1.4.2 dplyrによるデータ操作</a></li>
   </ul></li>
-  <li><a href="#記述統計" id="toc-記述統計" class="nav-link" data-scroll-target="#記述統計">1.6 記述統計</a>
+  <li><a href="#stringrtidyrpurrr" id="toc-stringrtidyrpurrr" class="nav-link" data-scroll-target="#stringrtidyrpurrr">1.5 stringr・tidyr・purrr</a>
   <ul class="collapse">
-  <li><a href="#代表値と散らばり" id="toc-代表値と散らばり" class="nav-link" data-scroll-target="#代表値と散らばり">代表値と散らばり</a></li>
-  <li><a href="#共分散と相関" id="toc-共分散と相関" class="nav-link" data-scroll-target="#共分散と相関">共分散と相関</a></li>
-  <li><a href="#順位" id="toc-順位" class="nav-link" data-scroll-target="#順位">順位</a></li>
+  <li><a href="#stringrによる文字列処理" id="toc-stringrによる文字列処理" class="nav-link" data-scroll-target="#stringrによる文字列処理">1.5.1 stringrによる文字列処理</a></li>
+  <li><a href="#tidyrによるデータ整形" id="toc-tidyrによるデータ整形" class="nav-link" data-scroll-target="#tidyrによるデータ整形">1.5.2 tidyrによるデータ整形</a></li>
+  <li><a href="#purrrによる反復処理" id="toc-purrrによる反復処理" class="nav-link" data-scroll-target="#purrrによる反復処理">1.5.3 purrrによる反復処理</a></li>
   </ul></li>
-  <li><a href="#確率分布" id="toc-確率分布" class="nav-link" data-scroll-target="#確率分布">1.7 確率分布</a>
+  <li><a href="#可視化と総合演習" id="toc-可視化と総合演習" class="nav-link" data-scroll-target="#可視化と総合演習">1.6 可視化と総合演習</a>
   <ul class="collapse">
-  <li><a href="#一様分布" id="toc-一様分布" class="nav-link" data-scroll-target="#一様分布">一様分布</a></li>
-  <li><a href="#正規分布" id="toc-正規分布" class="nav-link" data-scroll-target="#正規分布">正規分布</a></li>
-  <li><a href="#二項分布" id="toc-二項分布" class="nav-link" data-scroll-target="#二項分布">二項分布</a></li>
-  <li><a href="#ポアソン分布" id="toc-ポアソン分布" class="nav-link" data-scroll-target="#ポアソン分布">ポアソン分布</a></li>
-  <li><a href="#分布関数の比較" id="toc-分布関数の比較" class="nav-link" data-scroll-target="#分布関数の比較">分布関数の比較</a></li>
+  <li><a href="#ggplot2による可視化" id="toc-ggplot2による可視化" class="nav-link" data-scroll-target="#ggplot2による可視化">1.6.1 ggplot2による可視化</a></li>
+  <li><a href="#総合演習" id="toc-総合演習" class="nav-link" data-scroll-target="#総合演習">1.6.2 総合演習</a></li>
   </ul></li>
-  <li><a href="#プロジェクト内のデータを読み込む" id="toc-プロジェクト内のデータを読み込む" class="nav-link" data-scroll-target="#プロジェクト内のデータを読み込む">1.8 プロジェクト内のデータを読み込む</a>
-  <ul class="collapse">
-  <li><a href="#データの構造を確認する" id="toc-データの構造を確認する" class="nav-link" data-scroll-target="#データの構造を確認する">データの構造を確認する</a></li>
-  </ul></li>
-  <li><a href="#dplyrによるデータ操作" id="toc-dplyrによるデータ操作" class="nav-link" data-scroll-target="#dplyrによるデータ操作">1.9 dplyrによるデータ操作</a>
-  <ul class="collapse">
-  <li><a href="#列を選ぶ" id="toc-列を選ぶ" class="nav-link" data-scroll-target="#列を選ぶ">列を選ぶ</a></li>
-  <li><a href="#行を抽出する" id="toc-行を抽出する" class="nav-link" data-scroll-target="#行を抽出する">行を抽出する</a></li>
-  <li><a href="#列を追加する" id="toc-列を追加する" class="nav-link" data-scroll-target="#列を追加する">列を追加する</a></li>
-  <li><a href="#並べ替える" id="toc-並べ替える" class="nav-link" data-scroll-target="#並べ替える">並べ替える</a></li>
-  <li><a href="#要約する" id="toc-要約する" class="nav-link" data-scroll-target="#要約する">要約する</a></li>
-  <li><a href="#グループごとに集計する" id="toc-グループごとに集計する" class="nav-link" data-scroll-target="#グループごとに集計する">グループごとに集計する</a></li>
-  <li><a href="#件数を数える" id="toc-件数を数える" class="nav-link" data-scroll-target="#件数を数える">件数を数える</a></li>
-  <li><a href="#データを結合する" id="toc-データを結合する" class="nav-link" data-scroll-target="#データを結合する">データを結合する</a></li>
-  </ul></li>
-  <li><a href="#stringrによる文字列処理" id="toc-stringrによる文字列処理" class="nav-link" data-scroll-target="#stringrによる文字列処理">1.10 stringrによる文字列処理</a>
-  <ul class="collapse">
-  <li><a href="#置換と結合" id="toc-置換と結合" class="nav-link" data-scroll-target="#置換と結合">置換と結合</a></li>
-  </ul></li>
-  <li><a href="#tidyrによるデータ整形" id="toc-tidyrによるデータ整形" class="nav-link" data-scroll-target="#tidyrによるデータ整形">1.11 tidyrによるデータ整形</a>
-  <ul class="collapse">
-  <li><a href="#wide形式からlong形式へ変換する" id="toc-wide形式からlong形式へ変換する" class="nav-link" data-scroll-target="#wide形式からlong形式へ変換する">wide形式からlong形式へ変換する</a></li>
-  <li><a href="#long形式からwide形式へ戻す" id="toc-long形式からwide形式へ戻す" class="nav-link" data-scroll-target="#long形式からwide形式へ戻す">long形式からwide形式へ戻す</a></li>
-  <li><a href="#文字列を複数列へ分ける" id="toc-文字列を複数列へ分ける" class="nav-link" data-scroll-target="#文字列を複数列へ分ける">文字列を複数列へ分ける</a></li>
-  <li><a href="#欠損値を処理する" id="toc-欠損値を処理する" class="nav-link" data-scroll-target="#欠損値を処理する">欠損値を処理する</a></li>
-  </ul></li>
-  <li><a href="#purrrによる反復処理" id="toc-purrrによる反復処理" class="nav-link" data-scroll-target="#purrrによる反復処理">1.12 purrrによる反復処理</a>
-  <ul class="collapse">
-  <li><a href="#mapと型を指定するmap系関数" id="toc-mapと型を指定するmap系関数" class="nav-link" data-scroll-target="#mapと型を指定するmap系関数">map()と型を指定するmap系関数</a></li>
-  <li><a href="#map2で二つのベクトルを同時に処理する" id="toc-map2で二つのベクトルを同時に処理する" class="nav-link" data-scroll-target="#map2で二つのベクトルを同時に処理する">map2()で二つのベクトルを同時に処理する</a></li>
-  <li><a href="#pmapで複数の列を処理する" id="toc-pmapで複数の列を処理する" class="nav-link" data-scroll-target="#pmapで複数の列を処理する">pmap()で複数の列を処理する</a></li>
-  <li><a href="#複数列へ同じ集計を適用する" id="toc-複数列へ同じ集計を適用する" class="nav-link" data-scroll-target="#複数列へ同じ集計を適用する">複数列へ同じ集計を適用する</a></li>
-  <li><a href="#複数の確率分布を同じ形式で生成する" id="toc-複数の確率分布を同じ形式で生成する" class="nav-link" data-scroll-target="#複数の確率分布を同じ形式で生成する">複数の確率分布を同じ形式で生成する</a></li>
-  <li><a href="#walkで副作用だけを実行する" id="toc-walkで副作用だけを実行する" class="nav-link" data-scroll-target="#walkで副作用だけを実行する">walk()で副作用だけを実行する</a></li>
-  </ul></li>
-  <li><a href="#ggplot2による可視化" id="toc-ggplot2による可視化" class="nav-link" data-scroll-target="#ggplot2による可視化">1.13 ggplot2による可視化</a>
-  <ul class="collapse">
-  <li><a href="#折れ線グラフ" id="toc-折れ線グラフ" class="nav-link" data-scroll-target="#折れ線グラフ">折れ線グラフ</a></li>
-  <li><a href="#ヒストグラム" id="toc-ヒストグラム" class="nav-link" data-scroll-target="#ヒストグラム">ヒストグラム</a></li>
-  <li><a href="#密度関数" id="toc-密度関数" class="nav-link" data-scroll-target="#密度関数">密度関数</a></li>
-  <li><a href="#正規分布の密度と累積分布" id="toc-正規分布の密度と累積分布" class="nav-link" data-scroll-target="#正規分布の密度と累積分布">正規分布の密度と累積分布</a></li>
-  <li><a href="#シミュレーション結果を比較する" id="toc-シミュレーション結果を比較する" class="nav-link" data-scroll-target="#シミュレーション結果を比較する">シミュレーション結果を比較する</a></li>
-  </ul></li>
-  <li><a href="#総合演習" id="toc-総合演習" class="nav-link" data-scroll-target="#総合演習">1.14 総合演習</a>
-  <ul class="collapse">
-  <li><a href="#分析用データを作る" id="toc-分析用データを作る" class="nav-link" data-scroll-target="#分析用データを作る">分析用データを作る</a></li>
-  <li><a href="#企業別の要約統計量を計算する" id="toc-企業別の要約統計量を計算する" class="nav-link" data-scroll-target="#企業別の要約統計量を計算する">企業別の要約統計量を計算する</a></li>
-  <li><a href="#累積リターンを計算する" id="toc-累積リターンを計算する" class="nav-link" data-scroll-target="#累積リターンを計算する">累積リターンを計算する</a></li>
-  <li><a href="#purrrで企業別の統計量を再計算する" id="toc-purrrで企業別の統計量を再計算する" class="nav-link" data-scroll-target="#purrrで企業別の統計量を再計算する">purrrで企業別の統計量を再計算する</a></li>
-  <li><a href="#累積リターンを可視化する" id="toc-累積リターンを可視化する" class="nav-link" data-scroll-target="#累積リターンを可視化する">累積リターンを可視化する</a></li>
-  </ul></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">1.15 まとめ</a></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">1.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -376,8 +317,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p>本章では、Rによるデータ分析に必要な基本操作を、Base Rからtidyverseへ段階的に学ぶ。前半では、オブジェクト、ベクトル、行列、リスト、データフレーム、関数、条件判定、記述統計および確率分布を扱う。後半では、<code>dplyr</code>、<code>stringr</code>、<code>tidyr</code>、<code>purrr</code>、<code>ggplot2</code>を用いて、データの読込み、整形、集計、反復処理、可視化を一つの流れとして組み立てる。</p>
 <p>Base Rの項目構成は、Positが公開している<a href="https://github.com/rstudio/cheatsheets/blob/main/base-r.pdf">Base R Cheatsheet</a>を参考にしている。本章のコードでは、反復処理に明示的なループを使わず、ベクトル化または<code>purrr::map()</code>系関数を用いる。また、パイプ演算子はすべて<code>|&gt;</code>に統一する。</p>
-<section id="使用するパッケージ" class="level2">
-<h2 class="anchored" data-anchor-id="使用するパッケージ">1.1 使用するパッケージ</h2>
+<section id="r環境と基本操作" class="level2">
+<h2 class="anchored" data-anchor-id="r環境と基本操作">1.1 R環境と基本操作</h2>
+<section id="使用するパッケージ" class="level3">
+<h3 class="anchored" data-anchor-id="使用するパッケージ">1.1.1 使用するパッケージ</h3>
 <p>本章ではtidyverseを使用する。tidyverseには、データ操作の<code>dplyr</code>、文字列処理の<code>stringr</code>、データ整形の<code>tidyr</code>、反復処理の<code>purrr</code>、可視化の<code>ggplot2</code>などが含まれる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>({</span>
@@ -392,10 +335,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"tidyverse"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="rの基本操作" class="level2">
-<h2 class="anchored" data-anchor-id="rの基本操作">1.2 Rの基本操作</h2>
-<section id="オブジェクトと代入" class="level3">
-<h3 class="anchored" data-anchor-id="オブジェクトと代入">オブジェクトと代入</h3>
+<section id="rの基本操作" class="level3">
+<h3 class="anchored" data-anchor-id="rの基本操作">1.1.2 Rの基本操作</h3>
+<section id="オブジェクトと代入" class="level4">
+<h4 class="anchored" data-anchor-id="オブジェクトと代入">オブジェクトと代入</h4>
 <p>Rでは、計算結果やデータをオブジェクトとして保存する。代入には<code>&lt;-</code>を用いる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>risk_free_rate <span class="ot">&lt;-</span> <span class="fl">0.01</span></span>
@@ -410,8 +353,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>オブジェクト名には、内容が分かる英単語を用いる。本書では複数の単語をアンダースコアで結ぶsnake_caseを基本とする。</p>
 </section>
-<section id="四則演算と代表的な数学関数" class="level3">
-<h3 class="anchored" data-anchor-id="四則演算と代表的な数学関数">四則演算と代表的な数学関数</h3>
+<section id="四則演算と代表的な数学関数" class="level4">
+<h4 class="anchored" data-anchor-id="四則演算と代表的な数学関数">四則演算と代表的な数学関数</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span> <span class="sc">+</span> <span class="dv">3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -455,8 +398,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="オブジェクトの型と構造" class="level3">
-<h3 class="anchored" data-anchor-id="オブジェクトの型と構造">オブジェクトの型と構造</h3>
+<section id="オブジェクトの型と構造" class="level4">
+<h4 class="anchored" data-anchor-id="オブジェクトの型と構造">オブジェクトの型と構造</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>numeric_value <span class="ot">&lt;-</span> <span class="fl">10.5</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>integer_value <span class="ot">&lt;-</span> <span class="dv">10</span>L</span>
@@ -489,8 +432,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="欠損値" class="level3">
-<h3 class="anchored" data-anchor-id="欠損値">欠損値</h3>
+<section id="欠損値" class="level4">
+<h4 class="anchored" data-anchor-id="欠損値">欠損値</h4>
 <p>欠損値は<code>NA</code>で表す。欠損値の有無は<code>is.na()</code>で確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>returns_with_na <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.02</span>, <span class="cn">NA</span>, <span class="sc">-</span><span class="fl">0.01</span>, <span class="fl">0.03</span>)</span>
@@ -510,10 +453,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 </section>
-<section id="ベクトル" class="level2">
-<h2 class="anchored" data-anchor-id="ベクトル">1.3 ベクトル</h2>
-<section id="ベクトルの作成" class="level3">
-<h3 class="anchored" data-anchor-id="ベクトルの作成">ベクトルの作成</h3>
+</section>
+<section id="ベクトルとデータ構造" class="level2">
+<h2 class="anchored" data-anchor-id="ベクトルとデータ構造">1.2 ベクトルとデータ構造</h2>
+<section id="ベクトル" class="level3">
+<h3 class="anchored" data-anchor-id="ベクトル">1.2.1 ベクトル</h3>
+<section id="ベクトルの作成" class="level4">
+<h4 class="anchored" data-anchor-id="ベクトルの作成">ベクトルの作成</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>interest_rates <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.015</span>, <span class="fl">0.02</span>)</span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>year_sequence <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span></span>
@@ -538,8 +484,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="ベクトルの要素" class="level3">
-<h3 class="anchored" data-anchor-id="ベクトルの要素">ベクトルの要素</h3>
+<section id="ベクトルの要素" class="level4">
+<h4 class="anchored" data-anchor-id="ベクトルの要素">ベクトルの要素</h4>
 <p>Rの添字は1から始まる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>interest_rates[<span class="dv">1</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -560,8 +506,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="名前付きベクトル" class="level3">
-<h3 class="anchored" data-anchor-id="名前付きベクトル">名前付きベクトル</h3>
+<section id="名前付きベクトル" class="level4">
+<h4 class="anchored" data-anchor-id="名前付きベクトル">名前付きベクトル</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>portfolio_weights <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">stock =</span> <span class="fl">0.6</span>, <span class="at">bond =</span> <span class="fl">0.3</span>, <span class="at">cash =</span> <span class="fl">0.1</span>)</span>
 <span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -581,8 +527,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
-<section id="ベクトル化" class="level3">
-<h3 class="anchored" data-anchor-id="ベクトル化">ベクトル化</h3>
+<section id="ベクトル化" class="level4">
+<h4 class="anchored" data-anchor-id="ベクトル化">ベクトル化</h4>
 <p>Rでは、多くの計算をベクトル全体に一度に適用できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>discount_rates <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="fl">0.01</span>, <span class="fl">0.05</span>, <span class="at">by =</span> <span class="fl">0.01</span>)</span>
@@ -604,10 +550,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section>
 </section>
-<section id="行列リストデータフレーム" class="level2">
-<h2 class="anchored" data-anchor-id="行列リストデータフレーム">1.4 行列、リスト、データフレーム</h2>
-<section id="行列" class="level3">
-<h3 class="anchored" data-anchor-id="行列">行列</h3>
+<section id="行列リストデータフレーム" class="level3">
+<h3 class="anchored" data-anchor-id="行列リストデータフレーム">1.2.2 行列、リスト、データフレーム</h3>
+<section id="行列" class="level4">
+<h4 class="anchored" data-anchor-id="行列">行列</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a>return_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(</span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="sc">-</span><span class="fl">0.01</span>, <span class="fl">0.03</span>, <span class="fl">0.00</span>, <span class="fl">0.01</span>),</span>
@@ -638,8 +584,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="リスト" class="level3">
-<h3 class="anchored" data-anchor-id="リスト">リスト</h3>
+<section id="リスト" class="level4">
+<h4 class="anchored" data-anchor-id="リスト">リスト</h4>
 <p>リストには、型や長さの異なるオブジェクトをまとめて保存できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>analysis_result <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
@@ -664,8 +610,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="データフレーム" class="level3">
-<h3 class="anchored" data-anchor-id="データフレーム">データフレーム</h3>
+<section id="データフレーム" class="level4">
+<h4 class="anchored" data-anchor-id="データフレーム">データフレーム</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>firm_data_base <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">firm_id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>,</span>
@@ -727,10 +673,13 @@ month_3    0.00    0.01</code></pre>
 </div>
 </section>
 </section>
-<section id="条件判定と独自関数" class="level2">
-<h2 class="anchored" data-anchor-id="条件判定と独自関数">1.5 条件判定と独自関数</h2>
-<section id="条件判定" class="level3">
-<h3 class="anchored" data-anchor-id="条件判定">条件判定</h3>
+</section>
+<section id="関数統計確率分布" class="level2">
+<h2 class="anchored" data-anchor-id="関数統計確率分布">1.3 関数・統計・確率分布</h2>
+<section id="条件判定と独自関数" class="level3">
+<h3 class="anchored" data-anchor-id="条件判定と独自関数">1.3.1 条件判定と独自関数</h3>
+<section id="条件判定" class="level4">
+<h4 class="anchored" data-anchor-id="条件判定">条件判定</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>npv <span class="ot">&lt;-</span> <span class="fl">5.2</span></span>
 <span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -768,8 +717,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="独自関数" class="level3">
-<h3 class="anchored" data-anchor-id="独自関数">独自関数</h3>
+<section id="独自関数" class="level4">
+<h4 class="anchored" data-anchor-id="独自関数">独自関数</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>calculate_present_value <span class="ot">&lt;-</span> <span class="cf">function</span>(cash_flow, discount_rate, <span class="at">years =</span> <span class="dv">1</span>) {</span>
 <span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>  cash_flow <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> discount_rate)<span class="sc">^</span>years</span>
@@ -793,10 +742,10 @@ month_3    0.00    0.01</code></pre>
 </div>
 </section>
 </section>
-<section id="記述統計" class="level2">
-<h2 class="anchored" data-anchor-id="記述統計">1.6 記述統計</h2>
-<section id="代表値と散らばり" class="level3">
-<h3 class="anchored" data-anchor-id="代表値と散らばり">代表値と散らばり</h3>
+<section id="記述統計" class="level3">
+<h3 class="anchored" data-anchor-id="記述統計">1.3.2 記述統計</h3>
+<section id="代表値と散らばり" class="level4">
+<h4 class="anchored" data-anchor-id="代表値と散らばり">代表値と散らばり</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a>sample_returns <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.03</span>, <span class="sc">-</span><span class="fl">0.02</span>, <span class="fl">0.00</span>, <span class="fl">0.04</span>, <span class="fl">0.02</span>)</span>
 <span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -835,8 +784,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="共分散と相関" class="level3">
-<h3 class="anchored" data-anchor-id="共分散と相関">共分散と相関</h3>
+<section id="共分散と相関" class="level4">
+<h4 class="anchored" data-anchor-id="共分散と相関">共分散と相関</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>stock_a <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.03</span>, <span class="sc">-</span><span class="fl">0.02</span>, <span class="fl">0.02</span>, <span class="fl">0.04</span>)</span>
 <span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>stock_b <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.00</span>, <span class="fl">0.02</span>, <span class="sc">-</span><span class="fl">0.01</span>, <span class="fl">0.01</span>, <span class="fl">0.03</span>)</span>
@@ -851,8 +800,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="順位" class="level3">
-<h3 class="anchored" data-anchor-id="順位">順位</h3>
+<section id="順位" class="level4">
+<h4 class="anchored" data-anchor-id="順位">順位</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a>firm_returns <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.08</span>, <span class="fl">0.12</span>, <span class="sc">-</span><span class="fl">0.03</span>, <span class="fl">0.05</span>)</span>
 <span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -871,8 +820,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </section>
 </section>
-<section id="確率分布" class="level2">
-<h2 class="anchored" data-anchor-id="確率分布">1.7 確率分布</h2>
+<section id="確率分布" class="level3">
+<h3 class="anchored" data-anchor-id="確率分布">1.3.3 確率分布</h3>
 <p>Rの確率分布関数には共通した命名規則がある。</p>
 <table class="caption-top table">
 <thead>
@@ -900,8 +849,8 @@ month_3    0.00    0.01</code></pre>
 </tr>
 </tbody>
 </table>
-<section id="一様分布" class="level3">
-<h3 class="anchored" data-anchor-id="一様分布">一様分布</h3>
+<section id="一様分布" class="level4">
+<h4 class="anchored" data-anchor-id="一様分布">一様分布</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
 <span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -926,8 +875,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="正規分布" class="level3">
-<h3 class="anchored" data-anchor-id="正規分布">正規分布</h3>
+<section id="正規分布" class="level4">
+<h4 class="anchored" data-anchor-id="正規分布">正規分布</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb129"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
 <span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -966,8 +915,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="二項分布" class="level3">
-<h3 class="anchored" data-anchor-id="二項分布">二項分布</h3>
+<section id="二項分布" class="level4">
+<h4 class="anchored" data-anchor-id="二項分布">二項分布</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb141"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
 <span id="cb141-2"><a href="#cb141-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -991,8 +940,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="ポアソン分布" class="level3">
-<h3 class="anchored" data-anchor-id="ポアソン分布">ポアソン分布</h3>
+<section id="ポアソン分布" class="level4">
+<h4 class="anchored" data-anchor-id="ポアソン分布">ポアソン分布</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb149"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb149-1"><a href="#cb149-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
 <span id="cb149-2"><a href="#cb149-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1016,8 +965,8 @@ month_3    0.00    0.01</code></pre>
 </div>
 </div>
 </section>
-<section id="分布関数の比較" class="level3">
-<h3 class="anchored" data-anchor-id="分布関数の比較">分布関数の比較</h3>
+<section id="分布関数の比較" class="level4">
+<h4 class="anchored" data-anchor-id="分布関数の比較">分布関数の比較</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb157"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a>distribution_functions <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>distribution, <span class="sc">~</span>random_function, <span class="sc">~</span>density_function, <span class="sc">~</span>cumulative_function, <span class="sc">~</span>quantile_function,</span>
@@ -1041,8 +990,11 @@ month_3    0.00    0.01</code></pre>
 </div>
 </section>
 </section>
-<section id="プロジェクト内のデータを読み込む" class="level2">
-<h2 class="anchored" data-anchor-id="プロジェクト内のデータを読み込む">1.8 プロジェクト内のデータを読み込む</h2>
+</section>
+<section id="データ読込みとdplyr" class="level2">
+<h2 class="anchored" data-anchor-id="データ読込みとdplyr">1.4 データ読込みとdplyr</h2>
+<section id="プロジェクト内のデータを読み込む" class="level3">
+<h3 class="anchored" data-anchor-id="プロジェクト内のデータを読み込む">1.4.1 プロジェクト内のデータを読み込む</h3>
 <p>本書で使用するデータは、プロジェクトルートの<code>simulation_data</code>ディレクトリに置かれている。絶対パスをコードへ直接書くと、プロジェクトを別の場所へ移したときに動かなくなる。そのため、現在の作業ディレクトリと<code>_quarto.yml</code>を利用してプロジェクトルートを確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb159"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a>project_candidates <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">c</span>(</span>
@@ -1164,8 +1116,8 @@ month_3    0.00    0.01</code></pre>
 # ℹ 11 more rows</code></pre>
 </div>
 </div>
-<section id="データの構造を確認する" class="level3">
-<h3 class="anchored" data-anchor-id="データの構造を確認する">データの構造を確認する</h3>
+<section id="データの構造を確認する" class="level4">
+<h4 class="anchored" data-anchor-id="データの構造を確認する">データの構造を確認する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb167"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb167-1"><a href="#cb167-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(daily_stock_return)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -1200,10 +1152,10 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </section>
 </section>
-<section id="dplyrによるデータ操作" class="level2">
-<h2 class="anchored" data-anchor-id="dplyrによるデータ操作">1.9 dplyrによるデータ操作</h2>
-<section id="列を選ぶ" class="level3">
-<h3 class="anchored" data-anchor-id="列を選ぶ">列を選ぶ</h3>
+<section id="dplyrによるデータ操作" class="level3">
+<h3 class="anchored" data-anchor-id="dplyrによるデータ操作">1.4.2 dplyrによるデータ操作</h3>
+<section id="列を選ぶ" class="level4">
+<h4 class="anchored" data-anchor-id="列を選ぶ">列を選ぶ</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb177"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb177-1"><a href="#cb177-1" aria-hidden="true" tabindex="-1"></a>daily_stock_return <span class="sc">|&gt;</span></span>
 <span id="cb177-2"><a href="#cb177-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(date, firm1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1225,8 +1177,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="行を抽出する" class="level3">
-<h3 class="anchored" data-anchor-id="行を抽出する">行を抽出する</h3>
+<section id="行を抽出する" class="level4">
+<h4 class="anchored" data-anchor-id="行を抽出する">行を抽出する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb179"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb179-1"><a href="#cb179-1" aria-hidden="true" tabindex="-1"></a>daily_stock_return <span class="sc">|&gt;</span></span>
 <span id="cb179-2"><a href="#cb179-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(firm1 <span class="sc">&gt;</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1266,8 +1218,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="列を追加する" class="level3">
-<h3 class="anchored" data-anchor-id="列を追加する">列を追加する</h3>
+<section id="列を追加する" class="level4">
+<h4 class="anchored" data-anchor-id="列を追加する">列を追加する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb183"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb183-1"><a href="#cb183-1" aria-hidden="true" tabindex="-1"></a>return_data <span class="ot">&lt;-</span> daily_stock_return <span class="sc">|&gt;</span></span>
 <span id="cb183-2"><a href="#cb183-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -1301,8 +1253,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="並べ替える" class="level3">
-<h3 class="anchored" data-anchor-id="並べ替える">並べ替える</h3>
+<section id="並べ替える" class="level4">
+<h4 class="anchored" data-anchor-id="並べ替える">並べ替える</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb185"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb185-1"><a href="#cb185-1" aria-hidden="true" tabindex="-1"></a>return_data <span class="sc">|&gt;</span></span>
 <span id="cb185-2"><a href="#cb185-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(firm1)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1344,8 +1296,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="要約する" class="level3">
-<h3 class="anchored" data-anchor-id="要約する">要約する</h3>
+<section id="要約する" class="level4">
+<h4 class="anchored" data-anchor-id="要約する">要約する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb189"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb189-1"><a href="#cb189-1" aria-hidden="true" tabindex="-1"></a>return_data <span class="sc">|&gt;</span></span>
 <span id="cb189-2"><a href="#cb189-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
@@ -1364,8 +1316,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="グループごとに集計する" class="level3">
-<h3 class="anchored" data-anchor-id="グループごとに集計する">グループごとに集計する</h3>
+<section id="グループごとに集計する" class="level4">
+<h4 class="anchored" data-anchor-id="グループごとに集計する">グループごとに集計する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb191"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb191-1"><a href="#cb191-1" aria-hidden="true" tabindex="-1"></a>return_data <span class="sc">|&gt;</span></span>
 <span id="cb191-2"><a href="#cb191-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(market_direction) <span class="sc">|&gt;</span></span>
@@ -1386,8 +1338,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="件数を数える" class="level3">
-<h3 class="anchored" data-anchor-id="件数を数える">件数を数える</h3>
+<section id="件数を数える" class="level4">
+<h4 class="anchored" data-anchor-id="件数を数える">件数を数える</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb193"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb193-1"><a href="#cb193-1" aria-hidden="true" tabindex="-1"></a>return_data <span class="sc">|&gt;</span></span>
 <span id="cb193-2"><a href="#cb193-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(market_direction, <span class="at">sort =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1401,8 +1353,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="データを結合する" class="level3">
-<h3 class="anchored" data-anchor-id="データを結合する">データを結合する</h3>
+<section id="データを結合する" class="level4">
+<h4 class="anchored" data-anchor-id="データを結合する">データを結合する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb195"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb195-1"><a href="#cb195-1" aria-hidden="true" tabindex="-1"></a>firm_master <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb195-2"><a href="#cb195-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>firm,  <span class="sc">~</span>firm_name, <span class="sc">~</span>industry,</span>
@@ -1433,8 +1385,11 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </section>
 </section>
-<section id="stringrによる文字列処理" class="level2">
-<h2 class="anchored" data-anchor-id="stringrによる文字列処理">1.10 stringrによる文字列処理</h2>
+</section>
+<section id="stringrtidyrpurrr" class="level2">
+<h2 class="anchored" data-anchor-id="stringrtidyrpurrr">1.5 stringr・tidyr・purrr</h2>
+<section id="stringrによる文字列処理" class="level3">
+<h3 class="anchored" data-anchor-id="stringrによる文字列処理">1.5.1 stringrによる文字列処理</h3>
 <p>文字列処理では、関数名が<code>str_</code>で始まる<code>stringr</code>を使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb197"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb197-1"><a href="#cb197-1" aria-hidden="true" tabindex="-1"></a>company_names <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
@@ -1464,8 +1419,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 3 "Gamma Industries" Gamma Ind… gamma ind…          16 FALSE          Gamma     </code></pre>
 </div>
 </div>
-<section id="置換と結合" class="level3">
-<h3 class="anchored" data-anchor-id="置換と結合">置換と結合</h3>
+<section id="置換と結合" class="level4">
+<h4 class="anchored" data-anchor-id="置換と結合">置換と結合</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb199"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb199-1"><a href="#cb199-1" aria-hidden="true" tabindex="-1"></a>company_names <span class="sc">|&gt;</span></span>
 <span id="cb199-2"><a href="#cb199-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -1484,10 +1439,10 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </section>
 </section>
-<section id="tidyrによるデータ整形" class="level2">
-<h2 class="anchored" data-anchor-id="tidyrによるデータ整形">1.11 tidyrによるデータ整形</h2>
-<section id="wide形式からlong形式へ変換する" class="level3">
-<h3 class="anchored" data-anchor-id="wide形式からlong形式へ変換する">wide形式からlong形式へ変換する</h3>
+<section id="tidyrによるデータ整形" class="level3">
+<h3 class="anchored" data-anchor-id="tidyrによるデータ整形">1.5.2 tidyrによるデータ整形</h3>
+<section id="wide形式からlong形式へ変換する" class="level4">
+<h4 class="anchored" data-anchor-id="wide形式からlong形式へ変換する">wide形式からlong形式へ変換する</h4>
 <p>元のデータでは、<code>firm1</code>と<code>firm2</code>が別々の列に格納されている。<code>pivot_longer()</code>を使うと、企業名とリターンをそれぞれ一つの列へまとめられる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb201"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb201-1"><a href="#cb201-1" aria-hidden="true" tabindex="-1"></a>return_long <span class="ot">&lt;-</span> daily_stock_return <span class="sc">|&gt;</span></span>
@@ -1516,8 +1471,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="long形式からwide形式へ戻す" class="level3">
-<h3 class="anchored" data-anchor-id="long形式からwide形式へ戻す">long形式からwide形式へ戻す</h3>
+<section id="long形式からwide形式へ戻す" class="level4">
+<h4 class="anchored" data-anchor-id="long形式からwide形式へ戻す">long形式からwide形式へ戻す</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb203"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb203-1"><a href="#cb203-1" aria-hidden="true" tabindex="-1"></a>return_long <span class="sc">|&gt;</span></span>
 <span id="cb203-2"><a href="#cb203-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(</span>
@@ -1542,8 +1497,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="文字列を複数列へ分ける" class="level3">
-<h3 class="anchored" data-anchor-id="文字列を複数列へ分ける">文字列を複数列へ分ける</h3>
+<section id="文字列を複数列へ分ける" class="level4">
+<h4 class="anchored" data-anchor-id="文字列を複数列へ分ける">文字列を複数列へ分ける</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb205"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb205-1"><a href="#cb205-1" aria-hidden="true" tabindex="-1"></a>security_codes <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
 <span id="cb205-2"><a href="#cb205-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">security_id =</span> <span class="fu">c</span>(<span class="st">"JP-1001"</span>, <span class="st">"JP-1002"</span>, <span class="st">"US-2001"</span>)</span>
@@ -1565,8 +1520,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="欠損値を処理する" class="level3">
-<h3 class="anchored" data-anchor-id="欠損値を処理する">欠損値を処理する</h3>
+<section id="欠損値を処理する" class="level4">
+<h4 class="anchored" data-anchor-id="欠損値を処理する">欠損値を処理する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb207"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb207-1"><a href="#cb207-1" aria-hidden="true" tabindex="-1"></a>missing_data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
 <span id="cb207-2"><a href="#cb207-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">firm =</span> <span class="fu">c</span>(<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>),</span>
@@ -1595,10 +1550,10 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </section>
 </section>
-<section id="purrrによる反復処理" class="level2">
-<h2 class="anchored" data-anchor-id="purrrによる反復処理">1.12 purrrによる反復処理</h2>
-<section id="mapと型を指定するmap系関数" class="level3">
-<h3 class="anchored" data-anchor-id="mapと型を指定するmap系関数">map()と型を指定するmap系関数</h3>
+<section id="purrrによる反復処理" class="level3">
+<h3 class="anchored" data-anchor-id="purrrによる反復処理">1.5.3 purrrによる反復処理</h3>
+<section id="mapと型を指定するmap系関数" class="level4">
+<h4 class="anchored" data-anchor-id="mapと型を指定するmap系関数">map()と型を指定するmap系関数</h4>
 <p><code>map()</code>は結果をリストとして返す。数値ベクトルが必要な場合は<code>map_dbl()</code>を用いる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb211"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb211-1"><a href="#cb211-1" aria-hidden="true" tabindex="-1"></a>discount_rates <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.03</span>, <span class="fl">0.04</span>)</span>
@@ -1638,8 +1593,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="map2で二つのベクトルを同時に処理する" class="level3">
-<h3 class="anchored" data-anchor-id="map2で二つのベクトルを同時に処理する">map2()で二つのベクトルを同時に処理する</h3>
+<section id="map2で二つのベクトルを同時に処理する" class="level4">
+<h4 class="anchored" data-anchor-id="map2で二つのベクトルを同時に処理する">map2()で二つのベクトルを同時に処理する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb215"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb215-1"><a href="#cb215-1" aria-hidden="true" tabindex="-1"></a>cash_flows <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">100</span>, <span class="dv">120</span>, <span class="dv">150</span>)</span>
 <span id="cb215-2"><a href="#cb215-2" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)</span>
@@ -1654,8 +1609,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="pmapで複数の列を処理する" class="level3">
-<h3 class="anchored" data-anchor-id="pmapで複数の列を処理する">pmap()で複数の列を処理する</h3>
+<section id="pmapで複数の列を処理する" class="level4">
+<h4 class="anchored" data-anchor-id="pmapで複数の列を処理する">pmap()で複数の列を処理する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb217"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb217-1"><a href="#cb217-1" aria-hidden="true" tabindex="-1"></a>cash_flow_scenarios <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb217-2"><a href="#cb217-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>cash_flow, <span class="sc">~</span>discount_rate, <span class="sc">~</span>years,</span>
@@ -1683,8 +1638,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="複数列へ同じ集計を適用する" class="level3">
-<h3 class="anchored" data-anchor-id="複数列へ同じ集計を適用する">複数列へ同じ集計を適用する</h3>
+<section id="複数列へ同じ集計を適用する" class="level4">
+<h4 class="anchored" data-anchor-id="複数列へ同じ集計を適用する">複数列へ同じ集計を適用する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb219"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb219-1"><a href="#cb219-1" aria-hidden="true" tabindex="-1"></a>return_columns <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"firm1"</span>, <span class="st">"firm2"</span>)</span>
 <span id="cb219-2"><a href="#cb219-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1712,8 +1667,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="複数の確率分布を同じ形式で生成する" class="level3">
-<h3 class="anchored" data-anchor-id="複数の確率分布を同じ形式で生成する">複数の確率分布を同じ形式で生成する</h3>
+<section id="複数の確率分布を同じ形式で生成する" class="level4">
+<h4 class="anchored" data-anchor-id="複数の確率分布を同じ形式で生成する">複数の確率分布を同じ形式で生成する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb221"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb221-1"><a href="#cb221-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1234</span>)</span>
 <span id="cb221-2"><a href="#cb221-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1748,8 +1703,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="walkで副作用だけを実行する" class="level3">
-<h3 class="anchored" data-anchor-id="walkで副作用だけを実行する">walk()で副作用だけを実行する</h3>
+<section id="walkで副作用だけを実行する" class="level4">
+<h4 class="anchored" data-anchor-id="walkで副作用だけを実行する">walk()で副作用だけを実行する</h4>
 <p><code>walk()</code>は、返り値を保存するのではなく、表示などの副作用だけを順番に実行するときに使う。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb223"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb223-1"><a href="#cb223-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="st">"firm1"</span>, <span class="st">"firm2"</span>) <span class="sc">|&gt;</span></span>
@@ -1761,11 +1716,14 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </section>
 </section>
-<section id="ggplot2による可視化" class="level2">
-<h2 class="anchored" data-anchor-id="ggplot2による可視化">1.13 ggplot2による可視化</h2>
+</section>
+<section id="可視化と総合演習" class="level2">
+<h2 class="anchored" data-anchor-id="可視化と総合演習">1.6 可視化と総合演習</h2>
+<section id="ggplot2による可視化" class="level3">
+<h3 class="anchored" data-anchor-id="ggplot2による可視化">1.6.1 ggplot2による可視化</h3>
 <p><code>ggplot2</code>では、データを<code>ggplot()</code>へ渡し、<code>aes()</code>で変数と視覚要素の対応を指定し、<code>geom_*()</code>で図形を追加する。</p>
-<section id="折れ線グラフ" class="level3">
-<h3 class="anchored" data-anchor-id="折れ線グラフ">折れ線グラフ</h3>
+<section id="折れ線グラフ" class="level4">
+<h4 class="anchored" data-anchor-id="折れ線グラフ">折れ線グラフ</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb225"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb225-1"><a href="#cb225-1" aria-hidden="true" tabindex="-1"></a>return_long <span class="sc">|&gt;</span></span>
 <span id="cb225-2"><a href="#cb225-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> return, <span class="at">linetype =</span> firm)) <span class="sc">+</span></span>
@@ -1785,8 +1743,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="ヒストグラム" class="level3">
-<h3 class="anchored" data-anchor-id="ヒストグラム">ヒストグラム</h3>
+<section id="ヒストグラム" class="level4">
+<h4 class="anchored" data-anchor-id="ヒストグラム">ヒストグラム</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb226"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb226-1"><a href="#cb226-1" aria-hidden="true" tabindex="-1"></a>return_long <span class="sc">|&gt;</span></span>
 <span id="cb226-2"><a href="#cb226-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> return)) <span class="sc">+</span></span>
@@ -1806,8 +1764,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="密度関数" class="level3">
-<h3 class="anchored" data-anchor-id="密度関数">密度関数</h3>
+<section id="密度関数" class="level4">
+<h4 class="anchored" data-anchor-id="密度関数">密度関数</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb227"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb227-1"><a href="#cb227-1" aria-hidden="true" tabindex="-1"></a>return_long <span class="sc">|&gt;</span></span>
 <span id="cb227-2"><a href="#cb227-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> return, <span class="at">linetype =</span> firm)) <span class="sc">+</span></span>
@@ -1827,8 +1785,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="正規分布の密度と累積分布" class="level3">
-<h3 class="anchored" data-anchor-id="正規分布の密度と累積分布">正規分布の密度と累積分布</h3>
+<section id="正規分布の密度と累積分布" class="level4">
+<h4 class="anchored" data-anchor-id="正規分布の密度と累積分布">正規分布の密度と累積分布</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb228"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb228-1"><a href="#cb228-1" aria-hidden="true" tabindex="-1"></a>normal_curve <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
 <span id="cb228-2"><a href="#cb228-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">x =</span> <span class="fu">seq</span>(<span class="sc">-</span><span class="dv">4</span>, <span class="dv">4</span>, <span class="at">length.out =</span> <span class="dv">401</span>),</span>
@@ -1859,8 +1817,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="シミュレーション結果を比較する" class="level3">
-<h3 class="anchored" data-anchor-id="シミュレーション結果を比較する">シミュレーション結果を比較する</h3>
+<section id="シミュレーション結果を比較する" class="level4">
+<h4 class="anchored" data-anchor-id="シミュレーション結果を比較する">シミュレーション結果を比較する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb229"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb229-1"><a href="#cb229-1" aria-hidden="true" tabindex="-1"></a>simulated_distributions <span class="sc">|&gt;</span></span>
 <span id="cb229-2"><a href="#cb229-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> values)) <span class="sc">+</span></span>
@@ -1881,11 +1839,11 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </section>
 </section>
-<section id="総合演習" class="level2">
-<h2 class="anchored" data-anchor-id="総合演習">1.14 総合演習</h2>
+<section id="総合演習" class="level3">
+<h3 class="anchored" data-anchor-id="総合演習">1.6.2 総合演習</h3>
 <p>最後に、<code>simulation_data</code>から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。</p>
-<section id="分析用データを作る" class="level3">
-<h3 class="anchored" data-anchor-id="分析用データを作る">分析用データを作る</h3>
+<section id="分析用データを作る" class="level4">
+<h4 class="anchored" data-anchor-id="分析用データを作る">分析用データを作る</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb230"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb230-1"><a href="#cb230-1" aria-hidden="true" tabindex="-1"></a>analysis_data <span class="ot">&lt;-</span> daily_stock_return <span class="sc">|&gt;</span></span>
 <span id="cb230-2"><a href="#cb230-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
@@ -1922,8 +1880,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="企業別の要約統計量を計算する" class="level3">
-<h3 class="anchored" data-anchor-id="企業別の要約統計量を計算する">企業別の要約統計量を計算する</h3>
+<section id="企業別の要約統計量を計算する" class="level4">
+<h4 class="anchored" data-anchor-id="企業別の要約統計量を計算する">企業別の要約統計量を計算する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb232"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb232-1"><a href="#cb232-1" aria-hidden="true" tabindex="-1"></a>firm_summary <span class="ot">&lt;-</span> analysis_data <span class="sc">|&gt;</span></span>
 <span id="cb232-2"><a href="#cb232-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(firm) <span class="sc">|&gt;</span></span>
@@ -1948,8 +1906,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="累積リターンを計算する" class="level3">
-<h3 class="anchored" data-anchor-id="累積リターンを計算する">累積リターンを計算する</h3>
+<section id="累積リターンを計算する" class="level4">
+<h4 class="anchored" data-anchor-id="累積リターンを計算する">累積リターンを計算する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb234"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb234-1"><a href="#cb234-1" aria-hidden="true" tabindex="-1"></a>cumulative_return_data <span class="ot">&lt;-</span> analysis_data <span class="sc">|&gt;</span></span>
 <span id="cb234-2"><a href="#cb234-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(firm) <span class="sc">|&gt;</span></span>
@@ -1979,8 +1937,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="purrrで企業別の統計量を再計算する" class="level3">
-<h3 class="anchored" data-anchor-id="purrrで企業別の統計量を再計算する">purrrで企業別の統計量を再計算する</h3>
+<section id="purrrで企業別の統計量を再計算する" class="level4">
+<h4 class="anchored" data-anchor-id="purrrで企業別の統計量を再計算する">purrrで企業別の統計量を再計算する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb236"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb236-1"><a href="#cb236-1" aria-hidden="true" tabindex="-1"></a>firm_names <span class="ot">&lt;-</span> <span class="fu">unique</span>(analysis_data<span class="sc">$</span>firm)</span>
 <span id="cb236-2"><a href="#cb236-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -2009,8 +1967,8 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </div>
 </section>
-<section id="累積リターンを可視化する" class="level3">
-<h3 class="anchored" data-anchor-id="累積リターンを可視化する">累積リターンを可視化する</h3>
+<section id="累積リターンを可視化する" class="level4">
+<h4 class="anchored" data-anchor-id="累積リターンを可視化する">累積リターンを可視化する</h4>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb238"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb238-1"><a href="#cb238-1" aria-hidden="true" tabindex="-1"></a>cumulative_return_data <span class="sc">|&gt;</span></span>
 <span id="cb238-2"><a href="#cb238-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> cumulative_return, <span class="at">linetype =</span> firm)) <span class="sc">+</span></span>
@@ -2032,8 +1990,9 @@ $ firm2 &lt;dbl&gt; 0.0769625974, -0.0072488484, -0.0173040800, 0.0021689573, 0.
 </div>
 </section>
 </section>
+</section>
 <section id="まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="まとめ">1.15 まとめ</h2>
+<h2 class="anchored" data-anchor-id="まとめ">1.7 まとめ</h2>
 <p>本章では、Base Rの基本的なデータ構造と関数から出発し、記述統計、確率分布、tidyverseによるデータ分析までを一通り確認した。重要な点は次のとおりである。</p>
 <ul>
 <li>オブジェクト名には内容を表すsnake_caseを用いる。</li>

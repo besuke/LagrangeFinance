@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>10&nbsp; 第II-3章 OISスワップとマルチカーブ評価 – ラグランジェ・ファイナンス</title>
+<title>第II-3章 OISスワップとマルチカーブ評価 – ラグランジェ・ファイナンス</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,49 +286,52 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#第ii-3章-oisスワップとマルチカーブ評価" id="toc-第ii-3章-oisスワップとマルチカーブ評価" class="nav-link active" data-scroll-target="#第ii-3章-oisスワップとマルチカーブ評価"><span class="header-section-number">11</span> 第II-3章 OISスワップとマルチカーブ評価</a>
+  <li><a href="#ibor改革とoisの基礎" id="toc-ibor改革とoisの基礎" class="nav-link active" data-scroll-target="#ibor改革とoisの基礎">3.1 IBOR改革とOISの基礎</a>
   <ul class="collapse">
-  <li><a href="#ibor改革と歴史的背景" id="toc-ibor改革と歴史的背景" class="nav-link" data-scroll-target="#ibor改革と歴史的背景"><span class="header-section-number">11.1</span> 1. IBOR改革と歴史的背景</a></li>
-  <li><a href="#oisと翌日物金利" id="toc-oisと翌日物金利" class="nav-link" data-scroll-target="#oisと翌日物金利"><span class="header-section-number">11.2</span> 2. OISと翌日物金利</a></li>
-  <li><a href="#tona市場レートとoisカーブ" id="toc-tona市場レートとoisカーブ" class="nav-link" data-scroll-target="#tona市場レートとoisカーブ"><span class="header-section-number">11.3</span> 3. TONA市場レートとOISカーブ</a>
+  <li><a href="#ibor改革と歴史的背景" id="toc-ibor改革と歴史的背景" class="nav-link" data-scroll-target="#ibor改革と歴史的背景">3.1.1 IBOR改革と歴史的背景</a></li>
+  <li><a href="#oisと翌日物金利" id="toc-oisと翌日物金利" class="nav-link" data-scroll-target="#oisと翌日物金利">3.1.2 OISと翌日物金利</a></li>
+  </ul></li>
+  <li><a href="#tonaカーブと短期ois評価" id="toc-tonaカーブと短期ois評価" class="nav-link" data-scroll-target="#tonaカーブと短期ois評価">3.2 TONAカーブと短期OIS評価</a>
   <ul class="collapse">
-  <li><a href="#tona市場レート" id="toc-tona市場レート" class="nav-link" data-scroll-target="#tona市場レート"><span class="header-section-number">11.3.1</span> 3.1 TONA市場レート</a></li>
-  <li><a href="#tona-oisカーブの構築" id="toc-tona-oisカーブの構築" class="nav-link" data-scroll-target="#tona-oisカーブの構築"><span class="header-section-number">11.3.2</span> 3.2 TONA OISカーブの構築</a></li>
+  <li><a href="#tona市場レート" id="toc-tona市場レート" class="nav-link" data-scroll-target="#tona市場レート">3.2.1 TONA市場レート</a></li>
+  <li><a href="#tona-oisカーブの構築" id="toc-tona-oisカーブの構築" class="nav-link" data-scroll-target="#tona-oisカーブの構築">3.2.2 TONA OISカーブの構築</a></li>
+  <li><a href="#jpy短期oisの評価" id="toc-jpy短期oisの評価" class="nav-link" data-scroll-target="#jpy短期oisの評価">3.2.3 JPY短期OISの評価</a></li>
+  <li><a href="#フェアレートの手計算" id="toc-フェアレートの手計算" class="nav-link" data-scroll-target="#フェアレートの手計算">3.2.4 フェアレートの手計算</a></li>
   </ul></li>
-  <li><a href="#jpy短期oisの評価" id="toc-jpy短期oisの評価" class="nav-link" data-scroll-target="#jpy短期oisの評価"><span class="header-section-number">11.4</span> 4. JPY短期OISの評価</a>
+  <li><a href="#日次複利とfixing" id="toc-日次複利とfixing" class="nav-link" data-scroll-target="#日次複利とfixing">3.3 日次複利とFixing</a>
   <ul class="collapse">
-  <li><a href="#フェアレートの手計算" id="toc-フェアレートの手計算" class="nav-link" data-scroll-target="#フェアレートの手計算"><span class="header-section-number">11.4.1</span> 4.1 フェアレートの手計算</a></li>
+  <li><a href="#ois変動レグの日次複利" id="toc-ois変動レグの日次複利" class="nav-link" data-scroll-target="#ois変動レグの日次複利">3.3.1 OIS変動レグの日次複利</a></li>
+  <li><a href="#fixingの確定と再評価" id="toc-fixingの確定と再評価" class="nav-link" data-scroll-target="#fixingの確定と再評価">3.3.2 Fixingの確定と再評価</a></li>
   </ul></li>
-  <li><a href="#ois変動レグの日次複利" id="toc-ois変動レグの日次複利" class="nav-link" data-scroll-target="#ois変動レグの日次複利"><span class="header-section-number">11.5</span> 5. OIS変動レグの日次複利</a></li>
-  <li><a href="#fixingの確定と再評価" id="toc-fixingの確定と再評価" class="nav-link" data-scroll-target="#fixingの確定と再評価"><span class="header-section-number">11.6</span> 6. Fixingの確定と再評価</a></li>
-  <li><a href="#sofr-oisカーブとスワップ評価" id="toc-sofr-oisカーブとスワップ評価" class="nav-link" data-scroll-target="#sofr-oisカーブとスワップ評価"><span class="header-section-number">11.7</span> 7. SOFR OISカーブとスワップ評価</a>
+  <li><a href="#sofrとマルチカーブ評価" id="toc-sofrとマルチカーブ評価" class="nav-link" data-scroll-target="#sofrとマルチカーブ評価">3.4 SOFRとマルチカーブ評価</a>
   <ul class="collapse">
-  <li><a href="#sofr市場レートとoisカーブ" id="toc-sofr市場レートとoisカーブ" class="nav-link" data-scroll-target="#sofr市場レートとoisカーブ"><span class="header-section-number">11.7.1</span> 7.1 SOFR市場レートとOISカーブ</a></li>
-  <li><a href="#sofr-oisの評価" id="toc-sofr-oisの評価" class="nav-link" data-scroll-target="#sofr-oisの評価"><span class="header-section-number">11.7.2</span> 7.2 SOFR OISの評価</a></li>
+  <li><a href="#sofr市場レートとoisカーブ" id="toc-sofr市場レートとoisカーブ" class="nav-link" data-scroll-target="#sofr市場レートとoisカーブ">3.4.1 SOFR市場レートとOISカーブ</a></li>
+  <li><a href="#sofr-oisの評価" id="toc-sofr-oisの評価" class="nav-link" data-scroll-target="#sofr-oisの評価">3.4.2 SOFR OISの評価</a></li>
+  <li><a href="#マルチカーブ評価" id="toc-マルチカーブ評価" class="nav-link" data-scroll-target="#マルチカーブ評価">3.4.3 マルチカーブ評価</a></li>
+  <li><a href="#シングルカーブ評価との比較" id="toc-シングルカーブ評価との比較" class="nav-link" data-scroll-target="#シングルカーブ評価との比較">3.4.4 シングルカーブ評価との比較</a></li>
   </ul></li>
-  <li><a href="#マルチカーブ評価" id="toc-マルチカーブ評価" class="nav-link" data-scroll-target="#マルチカーブ評価"><span class="header-section-number">11.8</span> 8. マルチカーブ評価</a>
+  <li><a href="#ケーススタディ1eoniaカーブとois評価" id="toc-ケーススタディ1eoniaカーブとois評価" class="nav-link" data-scroll-target="#ケーススタディ1eoniaカーブとois評価">3.5 ケーススタディ1：EONIAカーブとOIS評価</a>
   <ul class="collapse">
-  <li><a href="#フォワードカーブとディスカウントカーブ" id="toc-フォワードカーブとディスカウントカーブ" class="nav-link" data-scroll-target="#フォワードカーブとディスカウントカーブ"><span class="header-section-number">11.8.1</span> 8.1 フォワードカーブとディスカウントカーブ</a></li>
-  <li><a href="#シングルカーブ評価との比較" id="toc-シングルカーブ評価との比較" class="nav-link" data-scroll-target="#シングルカーブ評価との比較"><span class="header-section-number">11.8.2</span> 8.2 シングルカーブ評価との比較</a></li>
+  <li><a href="#評価日とeonia市場データ" id="toc-評価日とeonia市場データ" class="nav-link" data-scroll-target="#評価日とeonia市場データ">3.5.1 評価日とEONIA市場データ</a></li>
+  <li><a href="#eoniaカーブの構築" id="toc-eoniaカーブの構築" class="nav-link" data-scroll-target="#eoniaカーブの構築">3.5.2 EONIAカーブの構築</a></li>
+  <li><a href="#ベンチマーク値の確認" id="toc-ベンチマーク値の確認" class="nav-link" data-scroll-target="#ベンチマーク値の確認">3.5.3 ベンチマーク値の確認</a></li>
+  <li><a href="#市場レートの再現性" id="toc-市場レートの再現性" class="nav-link" data-scroll-target="#市場レートの再現性">3.5.4 市場レートの再現性</a></li>
+  <li><a href="#年oisの構築" id="toc-年oisの構築" class="nav-link" data-scroll-target="#年oisの構築">3.5.5 5年OISの構築</a></li>
+  <li><a href="#oisの構築と計算結果の照合" id="toc-oisの構築と計算結果の照合" class="nav-link" data-scroll-target="#oisの構築と計算結果の照合">3.5.6 OISの構築と計算結果の照合</a></li>
+  <li><a href="#市場固定金利とフェアレート" id="toc-市場固定金利とフェアレート" class="nav-link" data-scroll-target="#市場固定金利とフェアレート">3.5.7 市場固定金利とフェアレート</a></li>
+  <li><a href="#固定レグと翌日物レグ" id="toc-固定レグと翌日物レグ" class="nav-link" data-scroll-target="#固定レグと翌日物レグ">3.5.8 固定レグと翌日物レグ</a></li>
   </ul></li>
-  <li><a href="#ケーススタディ1oisスワップの構築と評価" id="toc-ケーススタディ1oisスワップの構築と評価" class="nav-link" data-scroll-target="#ケーススタディ1oisスワップの構築と評価"><span class="header-section-number">11.9</span> 9. ケーススタディ1：OISスワップの構築と評価</a>
+  <li><a href="#ケーススタディ2市場レート変動と評価損益" id="toc-ケーススタディ2市場レート変動と評価損益" class="nav-link" data-scroll-target="#ケーススタディ2市場レート変動と評価損益">3.6 ケーススタディ2：市場レート変動と評価損益</a>
   <ul class="collapse">
-  <li><a href="#評価日とeonia市場データ" id="toc-評価日とeonia市場データ" class="nav-link" data-scroll-target="#評価日とeonia市場データ"><span class="header-section-number">11.9.1</span> 9.1 評価日とEONIA市場データ</a></li>
-  <li><a href="#eoniaカーブの構築" id="toc-eoniaカーブの構築" class="nav-link" data-scroll-target="#eoniaカーブの構築"><span class="header-section-number">11.9.2</span> 9.2 EONIAカーブの構築</a></li>
-  <li><a href="#ベンチマーク値の確認" id="toc-ベンチマーク値の確認" class="nav-link" data-scroll-target="#ベンチマーク値の確認"><span class="header-section-number">11.9.3</span> 9.3 ベンチマーク値の確認</a></li>
-  <li><a href="#市場レートの再現性" id="toc-市場レートの再現性" class="nav-link" data-scroll-target="#市場レートの再現性"><span class="header-section-number">11.9.4</span> 9.4 市場レートの再現性</a></li>
-  <li><a href="#年oisの構築" id="toc-年oisの構築" class="nav-link" data-scroll-target="#年oisの構築"><span class="header-section-number">11.9.5</span> 9.5 5年OISの構築</a></li>
-  <li><a href="#oisの構築と計算結果の照合" id="toc-oisの構築と計算結果の照合" class="nav-link" data-scroll-target="#oisの構築と計算結果の照合"><span class="header-section-number">11.9.6</span> 9.6 OISの構築と計算結果の照合</a></li>
-  <li><a href="#市場固定金利とフェアレート" id="toc-市場固定金利とフェアレート" class="nav-link" data-scroll-target="#市場固定金利とフェアレート"><span class="header-section-number">11.9.7</span> 9.7 市場固定金利とフェアレート</a></li>
-  <li><a href="#固定レグと翌日物レグ" id="toc-固定レグと翌日物レグ" class="nav-link" data-scroll-target="#固定レグと翌日物レグ"><span class="header-section-number">11.9.8</span> 9.8 固定レグと翌日物レグ</a></li>
-  <li><a href="#市場レートシナリオ" id="toc-市場レートシナリオ" class="nav-link" data-scroll-target="#市場レートシナリオ"><span class="header-section-number">11.9.9</span> 10.1 市場レートシナリオ</a></li>
-  <li><a href="#シナリオ別eoniaカーブ" id="toc-シナリオ別eoniaカーブ" class="nav-link" data-scroll-target="#シナリオ別eoniaカーブ"><span class="header-section-number">11.9.10</span> 10.2 シナリオ別EONIAカーブ</a></li>
-  <li><a href="#同一oisの再評価" id="toc-同一oisの再評価" class="nav-link" data-scroll-target="#同一oisの再評価"><span class="header-section-number">11.9.11</span> 10.3 同一OISの再評価</a></li>
-  <li><a href="#基準シナリオの照合" id="toc-基準シナリオの照合" class="nav-link" data-scroll-target="#基準シナリオの照合"><span class="header-section-number">11.9.12</span> 10.4 基準シナリオの照合</a></li>
-  <li><a href="#市場レート変動と評価損益" id="toc-市場レート変動と評価損益" class="nav-link" data-scroll-target="#市場レート変動と評価損益"><span class="header-section-number">11.9.13</span> 10.5 市場レート変動と評価損益</a></li>
-  <li><a href="#ベーシスポイント当たりの評価変化" id="toc-ベーシスポイント当たりの評価変化" class="nav-link" data-scroll-target="#ベーシスポイント当たりの評価変化"><span class="header-section-number">11.9.14</span> 10.6 1ベーシスポイント当たりの評価変化</a></li>
+  <li><a href="#市場レートシナリオ" id="toc-市場レートシナリオ" class="nav-link" data-scroll-target="#市場レートシナリオ">3.6.1 市場レートシナリオ</a></li>
+  <li><a href="#シナリオ別eoniaカーブ" id="toc-シナリオ別eoniaカーブ" class="nav-link" data-scroll-target="#シナリオ別eoniaカーブ">3.6.2 シナリオ別EONIAカーブ</a></li>
+  <li><a href="#同一oisの再評価" id="toc-同一oisの再評価" class="nav-link" data-scroll-target="#同一oisの再評価">3.6.3 同一OISの再評価</a></li>
+  <li><a href="#基準シナリオの照合" id="toc-基準シナリオの照合" class="nav-link" data-scroll-target="#基準シナリオの照合">3.6.4 基準シナリオの照合</a></li>
+  <li><a href="#市場レート変動と評価損益" id="toc-市場レート変動と評価損益" class="nav-link" data-scroll-target="#市場レート変動と評価損益">3.6.5 市場レート変動と評価損益</a></li>
+  <li><a href="#ベーシスポイント当たりの評価変化" id="toc-ベーシスポイント当たりの評価変化" class="nav-link" data-scroll-target="#ベーシスポイント当たりの評価変化">3.6.6 1ベーシスポイント当たりの評価変化</a></li>
   </ul></li>
-  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">3.7 まとめ</a></li>
+  <li><a href="#参考資料" id="toc-参考資料" class="nav-link" data-scroll-target="#参考資料">参考資料</a></li>
   </ul>
 </nav>
     </div>
@@ -338,7 +341,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学と金融数学</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch03_ois_swaps_multicurve.html"><span class="chapter-title">第II-3章 OISスワップとマルチカーブ評価</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">第II-3章 OISスワップとマルチカーブ評価</span></h1>
-<p class="subtitle lead">IBOR改革、TONA・SOFR、日次複利およびカーブ分離</p>
 </div>
 
 
@@ -355,10 +357,10 @@ window.Quarto = {
 </header>
 
 
-<section id="第ii-3章-oisスワップとマルチカーブ評価" class="level1" data-number="11">
-<h1 data-number="11"><span class="header-section-number">11</span> 第II-3章 OISスワップとマルチカーブ評価</h1>
-<section id="ibor改革と歴史的背景" class="level2" data-number="11.1">
-<h2 data-number="11.1" class="anchored" data-anchor-id="ibor改革と歴史的背景"><span class="header-section-number">11.1</span> 1. IBOR改革と歴史的背景</h2>
+<section id="ibor改革とoisの基礎" class="level2">
+<h2 class="anchored" data-anchor-id="ibor改革とoisの基礎">3.1 IBOR改革とOISの基礎</h2>
+<section id="ibor改革と歴史的背景" class="level3">
+<h3 class="anchored" data-anchor-id="ibor改革と歴史的背景">3.1.1 IBOR改革と歴史的背景</h3>
 <p>2007年から2009年にかけての世界金融危機、とりわけ2008年9月のリーマン・ブラザーズ破綻は、金利デリバティブの評価方法を大きく変化させた。それ以前の市場では、LIBORは信用リスクをほとんど含まない基準金利として扱われ、同一のLIBORカーブから将来の変動金利を予測すると同時に、将来キャッシュフローの現在価値を計算するシングルカーブ評価が広く用いられていた。</p>
 <p>しかし、LIBORは銀行間の無担保資金調達金利である。したがって、LIBORには将来の短期金利に対する市場予想だけでなく、借り手銀行の信用リスク、資金流動性リスクおよび借入期間に応じたプレミアムが含まれる。金融危機時にLIBORとOIS金利の差が急拡大したことにより、LIBORを信用リスクのない割引金利として扱うことができないことが明らかになった。</p>
 <p>この認識を背景として、デリバティブ市場では中央清算および担保契約の利用が拡大した。担保付取引では、担保に付される翌日物金利に近いOISカーブを用いて将来キャッシュフローを割り引くことが経済的に整合的である。一方、LIBOR、TIBORまたはEURIBORなどを参照する契約の将来変動金利は、それぞれの参照金利に対応するフォワードカーブから予測する必要がある。その結果、将来金利を予測するカーブと現在価値を求めるディスカウントカーブを分離するマルチカーブ評価が定着した。</p>
@@ -387,8 +389,8 @@ window.Quarto = {
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="oisと翌日物金利" class="level2" data-number="11.2">
-<h2 data-number="11.2" class="anchored" data-anchor-id="oisと翌日物金利"><span class="header-section-number">11.2</span> 2. OISと翌日物金利</h2>
+<section id="oisと翌日物金利" class="level3">
+<h3 class="anchored" data-anchor-id="oisと翌日物金利">3.1.2 OISと翌日物金利</h3>
 <p>OIS（Overnight Index Swap）は、あらかじめ定めた固定金利と、計算期間中の翌日物金利を複利で積み上げた変動金利を交換する金利スワップである。元本そのものは交換せず、通常は固定レグと変動レグの利息差額を決済する。</p>
 <p>日次金利を <span class="math inline">\(r_i\)</span>、その金利が適用される日数を <span class="math inline">\(d_i\)</span>、日数計算の年間基準を <span class="math inline">\(B\)</span> とすると、計算期間全体の複利収益率は概念的に次式で表される。</p>
 <p><span class="math display">\[
@@ -459,12 +461,13 @@ PV_{\mathrm{fixed}}
 <span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="tona市場レートとoisカーブ" class="level2" data-number="11.3">
-<h2 data-number="11.3" class="anchored" data-anchor-id="tona市場レートとoisカーブ"><span class="header-section-number">11.3</span> 3. TONA市場レートとOISカーブ</h2>
+</section>
+<section id="tonaカーブと短期ois評価" class="level2">
+<h2 class="anchored" data-anchor-id="tonaカーブと短期ois評価">3.2 TONAカーブと短期OIS評価</h2>
 <p>TONAは、日本の無担保コール市場における翌日物金利を基礎とする円のリスク・フリー・レートである。本節では、2022年8月19日の例示的なTONAおよびOIS市場レートから、円OISカーブを構築する。</p>
 <p>短期部分には翌日物金利や短期OISを使用し、中長期部分には各満期のOISスワップレートを使用する。ブートストラップでは、各市場商品の理論価格が市場価格と一致するように、満期ごとの割引係数を順次決定する。</p>
-<section id="tona市場レート" class="level3" data-number="11.3.1">
-<h3 data-number="11.3.1" class="anchored" data-anchor-id="tona市場レート"><span class="header-section-number">11.3.1</span> 3.1 TONA市場レート</h3>
+<section id="tona市場レート" class="level3">
+<h3 class="anchored" data-anchor-id="tona市場レート">3.2.1 TONA市場レート</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>trade_date_tona <span class="ot">&lt;-</span> <span class="st">"2022-08-19"</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -512,8 +515,8 @@ PV_{\mathrm{fixed}}
 <span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14 2022-08-19 JPY      TONA       ois   7Y     0.00191</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="tona-oisカーブの構築" class="level3" data-number="11.3.2">
-<h3 data-number="11.3.2" class="anchored" data-anchor-id="tona-oisカーブの構築"><span class="header-section-number">11.3.2</span> 3.2 TONA OISカーブの構築</h3>
+<section id="tona-oisカーブの構築" class="level3">
+<h3 class="anchored" data-anchor-id="tona-oisカーブの構築">3.2.2 TONA OISカーブの構築</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tona_curve_envs <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">ir_build_ois_curve_envs_GQH</span>(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quotes =</span> tona_quotes,</span>
@@ -571,9 +574,8 @@ PV_{\mathrm{fixed}}
 </div>
 <p>割引係数 <span class="math inline">\(P(0,T)\)</span> は、将来時点 <span class="math inline">\(T\)</span> の1円を評価日時点の価値へ換算する係数である。満期が長くなるほど、通常は割引係数が低下する。ゼロ金利は、各満期の割引係数を単一の金利として表したものである。</p>
 </section>
-</section>
-<section id="jpy短期oisの評価" class="level2" data-number="11.4">
-<h2 data-number="11.4" class="anchored" data-anchor-id="jpy短期oisの評価"><span class="header-section-number">11.4</span> 4. JPY短期OISの評価</h2>
+<section id="jpy短期oisの評価" class="level3">
+<h3 class="anchored" data-anchor-id="jpy短期oisの評価">3.2.3 JPY短期OISの評価</h3>
 <p>次に、TONAカーブを用いて短期円OISを評価する。評価対象は、2022年8月23日から8月30日までの7日間、元本1,000万円、固定金利マイナス0.015%の固定金利支払いOISである。</p>
 <p>OISの固定レグと翌日物レグを確認し、NPVとフェアレートを表示する。</p>
 <div class="cell">
@@ -620,8 +622,9 @@ PV_{\mathrm{fixed}}
 <span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;dbl&gt;</span></span>
 <span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 2022-08-30  -24.2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="フェアレートの手計算" class="level3" data-number="11.4.1">
-<h3 data-number="11.4.1" class="anchored" data-anchor-id="フェアレートの手計算"><span class="header-section-number">11.4.1</span> 4.1 フェアレートの手計算</h3>
+</section>
+<section id="フェアレートの手計算" class="level3">
+<h3 class="anchored" data-anchor-id="フェアレートの手計算">3.2.4 フェアレートの手計算</h3>
 <p>単一期間のOISでは、開始日の割引係数を <span class="math inline">\(P(0,T_0)\)</span>、終了日の割引係数を <span class="math inline">\(P(0,T_1)\)</span>、固定レグの支払日の割引係数を <span class="math inline">\(P(0,T_p)\)</span>、固定レグの年率換算期間を <span class="math inline">\(\alpha\)</span> とすると、フェアレートは概念的に次式で求められる。</p>
 <p><span class="math display">\[
 K_{\mathrm{fair}}
@@ -674,8 +677,10 @@ P(0,T_0)-P(0,T_1)
 </div>
 </section>
 </section>
-<section id="ois変動レグの日次複利" class="level2" data-number="11.5">
-<h2 data-number="11.5" class="anchored" data-anchor-id="ois変動レグの日次複利"><span class="header-section-number">11.5</span> 5. OIS変動レグの日次複利</h2>
+<section id="日次複利とfixing" class="level2">
+<h2 class="anchored" data-anchor-id="日次複利とfixing">3.3 日次複利とFixing</h2>
+<section id="ois変動レグの日次複利" class="level3">
+<h3 class="anchored" data-anchor-id="ois変動レグの日次複利">3.3.1 OIS変動レグの日次複利</h3>
 <p>OISの変動レグでは、計算期間中の翌日物金利を日ごとに複利で積み上げる。休日をまたぐ金利は、次の営業日まで複数日分に適用されるため、各行の適用日数を確認する必要がある。</p>
 <p>次のコードでは、変動レグを日次単位に分解し、割引係数から日次フォワード金利を求める。</p>
 <div class="cell">
@@ -767,8 +772,8 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1                NA                NA                     NA</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="fixingの確定と再評価" class="level2" data-number="11.6">
-<h2 data-number="11.6" class="anchored" data-anchor-id="fixingの確定と再評価"><span class="header-section-number">11.6</span> 6. Fixingの確定と再評価</h2>
+<section id="fixingの確定と再評価" class="level3">
+<h3 class="anchored" data-anchor-id="fixingの確定と再評価">3.3.2 Fixingの確定と再評価</h3>
 <p>評価日より前の翌日物金利には、実際に公表されたFixingを使用する。評価日より後の金利は、OISカーブから推定したフォワード金利を使用する。</p>
 <p>したがって、評価途中のOIS変動レグは、次の二つから構成される。</p>
 <ul>
@@ -836,12 +841,13 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     1 2022-08-29     -0.000142 2022-08-30  -24.2  1.00 -24.2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="sofr-oisカーブとスワップ評価" class="level2" data-number="11.7">
-<h2 data-number="11.7" class="anchored" data-anchor-id="sofr-oisカーブとスワップ評価"><span class="header-section-number">11.7</span> 7. SOFR OISカーブとスワップ評価</h2>
+</section>
+<section id="sofrとマルチカーブ評価" class="level2">
+<h2 class="anchored" data-anchor-id="sofrとマルチカーブ評価">3.4 SOFRとマルチカーブ評価</h2>
 <p>SOFRは、米国債を担保とする翌日物レポ取引に基づく米ドルのリスク・フリー・レートである。TONAが無担保翌日物市場に基づくのに対し、SOFRは有担保取引に基づく点が異なる。</p>
 <p>OIS評価の基本構造はTONAと同じであり、通貨、休日カレンダー、日数計算規則、市場クォートおよび翌日物指数が異なる。</p>
-<section id="sofr市場レートとoisカーブ" class="level3" data-number="11.7.1">
-<h3 data-number="11.7.1" class="anchored" data-anchor-id="sofr市場レートとoisカーブ"><span class="header-section-number">11.7.1</span> 7.1 SOFR市場レートとOISカーブ</h3>
+<section id="sofr市場レートとoisカーブ" class="level3">
+<h3 class="anchored" data-anchor-id="sofr市場レートとoisカーブ">3.4.1 SOFR市場レートとOISカーブ</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>trade_date_sofr <span class="ot">&lt;-</span> <span class="st">"2023-09-26"</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -889,8 +895,8 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 2023-11-28 0.168            0.991    0.0533</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="sofr-oisの評価" class="level3" data-number="11.7.2">
-<h3 data-number="11.7.2" class="anchored" data-anchor-id="sofr-oisの評価"><span class="header-section-number">11.7.2</span> 7.2 SOFR OISの評価</h3>
+<section id="sofr-oisの評価" class="level3">
+<h3 class="anchored" data-anchor-id="sofr-oisの評価">3.4.2 SOFR OISの評価</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>sofr_ois_trade <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">trade_ois_swap_py_GQH</span>(</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">curve_env =</span> sofr_curve_env,</span>
@@ -923,9 +929,8 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2025-09-29 459522.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-</section>
-<section id="マルチカーブ評価" class="level2" data-number="11.8">
-<h2 data-number="11.8" class="anchored" data-anchor-id="マルチカーブ評価"><span class="header-section-number">11.8</span> 8. マルチカーブ評価</h2>
+<section id="マルチカーブ評価" class="level3">
+<h3 class="anchored" data-anchor-id="マルチカーブ評価">3.4.3 マルチカーブ評価</h3>
 <p>金融危機以前のシングルカーブ評価では、同一の金利カーブを用いて、将来変動金利の予測とキャッシュフローの割引を行っていた。</p>
 <p>マルチカーブ評価では、二つの役割を分離する。</p>
 <ul>
@@ -942,8 +947,6 @@ N
 \]</span></p>
 <p>ここで、<span class="math inline">\(F_j\)</span> はフォワードカーブから求め、<span class="math inline">\(D_j\)</span> はディスカウントカーブから求める。</p>
 <p>以下では、マルチカーブの効果だけを明確にするため、EURIBOR 6か月物を参照する一般的なバニラスワップを用いる。同じフォワードカーブを使用しながら、割引カーブを同一にした場合と分離した場合のNPVを比較する。</p>
-<section id="フォワードカーブとディスカウントカーブ" class="level3" data-number="11.8.1">
-<h3 data-number="11.8.1" class="anchored" data-anchor-id="フォワードカーブとディスカウントカーブ"><span class="header-section-number">11.8.1</span> 8.1 フォワードカーブとディスカウントカーブ</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">set_eval_date_GQL</span>(<span class="st">"2023-09-26"</span>)</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1033,8 +1036,8 @@ N
 <span id="cb12-86"><a href="#cb12-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 2028-09-26                    0.810               0.827</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="シングルカーブ評価との比較" class="level3" data-number="11.8.2">
-<h3 data-number="11.8.2" class="anchored" data-anchor-id="シングルカーブ評価との比較"><span class="header-section-number">11.8.2</span> 8.2 シングルカーブ評価との比較</h3>
+<section id="シングルカーブ評価との比較" class="level3">
+<h3 class="anchored" data-anchor-id="シングルカーブ評価との比較">3.4.4 シングルカーブ評価との比較</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>single_curve_swap <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">make_vanilla_swap_GQL</span>(</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">effective_date =</span> <span class="st">"2023-09-28"</span>,</span>
@@ -1094,12 +1097,12 @@ N
 <p>両方のスワップは同じフォワードカーブから将来EURIBORを予測するが、シングルカーブ評価ではそのカーブを割引にも使用し、マルチカーブ評価では別のディスカウントカーブを使用する。割引係数が異なるため、同じ将来キャッシュフローであってもNPVおよびフェアレートが変化する。</p>
 </section>
 </section>
-<section id="ケーススタディ1oisスワップの構築と評価" class="level2" data-number="11.9">
-<h2 data-number="11.9" class="anchored" data-anchor-id="ケーススタディ1oisスワップの構築と評価"><span class="header-section-number">11.9</span> 9. ケーススタディ1：OISスワップの構築と評価</h2>
+<section id="ケーススタディ1eoniaカーブとois評価" class="level2">
+<h2 class="anchored" data-anchor-id="ケーススタディ1eoniaカーブとois評価">3.5 ケーススタディ1：EONIAカーブとOIS評価</h2>
 <p>本ケーススタディでは、2012年12月11日のEONIA市場データからOISカーブを構築する。短期部分には翌日物預金と短期OISを用い、その先には日付指定OISと長期OISを用いる。</p>
 <p>カーブ構築後、年末をまたぐ市場金利に含まれる流動性効果を分離し、年末ジャンプを組み込んだ最終的なEONIAカーブを作成する。さらに、カーブ構築に使用した5年OISの市場レートを契約固定金利としてOISを構築し、NPVとフェアレートを確認する。</p>
-<section id="評価日とeonia市場データ" class="level3" data-number="11.9.1">
-<h3 data-number="11.9.1" class="anchored" data-anchor-id="評価日とeonia市場データ"><span class="header-section-number">11.9.1</span> 9.1 評価日とEONIA市場データ</h3>
+<section id="評価日とeonia市場データ" class="level3">
+<h3 class="anchored" data-anchor-id="評価日とeonia市場データ">3.5.1 評価日とEONIA市場データ</h3>
 <p>評価日は2012年12月11日とする。市場データには、翌日物預金、短期OIS、日付指定OISおよび長期OISを使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>case_evaluation_date <span class="ot">&lt;-</span> <span class="st">"2012-12-11"</span></span>
@@ -1134,8 +1137,8 @@ N
 <p><code>rate_pct</code>はパーセント表示の市場レートであり、<code>rate</code>はQuantLibへ渡す小数表示の金利である。</p>
 <p>預金には1日の期間を設定し、評価日からスポット日までを接続するため、Fixing日数を0日、1日および2日とした。短期OISと長期OISにはスポット日から満期までの期間を指定し、日付指定OISには開始日と終了日を直接指定する。</p>
 </section>
-<section id="eoniaカーブの構築" class="level3" data-number="11.9.2">
-<h3 data-number="11.9.2" class="anchored" data-anchor-id="eoniaカーブの構築"><span class="header-section-number">11.9.2</span> 9.2 EONIAカーブの構築</h3>
+<section id="eoniaカーブの構築" class="level3">
+<h3 class="anchored" data-anchor-id="eoniaカーブの構築">3.5.2 EONIAカーブの構築</h3>
 <p>次に、市場レートからEONIAカーブを構築する。</p>
 <p>最初に対数割引係数を3次補間するカーブと、区分的に一定のフォワード金利を用いるカーブを構築する。後者を用いて年末部分のフォワード金利を確認し、年末ジャンプを推定する。</p>
 <div class="cell">
@@ -1163,8 +1166,8 @@ N
 <p>年末ジャンプの推定では、2012年12月24日から2013年1月7日までのフォワード金利を確認する。次に、2013年1月3日の区分フォワード金利を前後のノードの平均へ置き換え、年末要因を含まないフォワードカーブを作成する。</p>
 <p>元のフォワード金利と調整後のフォワード金利の差を、2012年12月31日から2013年1月2日までの期間へ換算し、年末ジャンプを求める。</p>
 </section>
-<section id="ベンチマーク値の確認" class="level3" data-number="11.9.3">
-<h3 data-number="11.9.3" class="anchored" data-anchor-id="ベンチマーク値の確認"><span class="header-section-number">11.9.3</span> 9.3 ベンチマーク値の確認</h3>
+<section id="ベンチマーク値の確認" class="level3">
+<h3 class="anchored" data-anchor-id="ベンチマーク値の確認">3.5.3 ベンチマーク値の確認</h3>
 <p>年末ジャンプを推定する過程で得られたフォワード金利を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>case_benchmark_check_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
@@ -1202,8 +1205,8 @@ N
 </div>
 <p>基準値はパーセント単位で小数第3位まで表示されている。そのため、照合では表示桁の半分に相当する0.0005パーセントポイントを許容範囲とする。</p>
 </section>
-<section id="市場レートの再現性" class="level3" data-number="11.9.4">
-<h3 data-number="11.9.4" class="anchored" data-anchor-id="市場レートの再現性"><span class="header-section-number">11.9.4</span> 9.4 市場レートの再現性</h3>
+<section id="市場レートの再現性" class="level3">
+<h3 class="anchored" data-anchor-id="市場レートの再現性">3.5.4 市場レートの再現性</h3>
 <p>構築した最終カーブを用いて、各Rate Helperのインプライド・レートを求める。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>case_eonia_validation <span class="ot">&lt;-</span> case_eonia_benchmark<span class="sc">$</span>final_validation</span>
@@ -1244,8 +1247,8 @@ N
 </div>
 <p>各商品のインプライド・レートと市場レートが一致することにより、預金、短期OIS、日付指定OISおよび長期OISが同じ期間構造上で再現されていることを確認できる。</p>
 </section>
-<section id="年oisの構築" class="level3" data-number="11.9.5">
-<h3 data-number="11.9.5" class="anchored" data-anchor-id="年oisの構築"><span class="header-section-number">11.9.5</span> 9.5 5年OISの構築</h3>
+<section id="年oisの構築" class="level3">
+<h3 class="anchored" data-anchor-id="年oisの構築">3.5.5 5年OISの構築</h3>
 <p>市場データに含まれる5年OISを取り上げる。契約固定金利には、カーブ構築に用いた5年OISの市場レートを使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>case_ois_tenor <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">Period</span>(</span>
@@ -1284,8 +1287,8 @@ N
 <span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 2012-12-11      EONIA 5Y                  2             0.00456</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="oisの構築と計算結果の照合" class="level3" data-number="11.9.6">
-<h3 data-number="11.9.6" class="anchored" data-anchor-id="oisの構築と計算結果の照合"><span class="header-section-number">11.9.6</span> 9.6 OISの構築と計算結果の照合</h3>
+<section id="oisの構築と計算結果の照合" class="level3">
+<h3 class="anchored" data-anchor-id="oisの構築と計算結果の照合">3.5.6 OISの構築と計算結果の照合</h3>
 <p>最初に、QuantLibの<code>MakeOIS</code>を直接使用してOISを構築する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>case_ois_builder_quantlib <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">MakeOIS</span>(</span>
@@ -1377,8 +1380,8 @@ N
 <span id="cb21-67"><a href="#cb21-67" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="市場固定金利とフェアレート" class="level3" data-number="11.9.7">
-<h3 data-number="11.9.7" class="anchored" data-anchor-id="市場固定金利とフェアレート"><span class="header-section-number">11.9.7</span> 9.7 市場固定金利とフェアレート</h3>
+<section id="市場固定金利とフェアレート" class="level3">
+<h3 class="anchored" data-anchor-id="市場固定金利とフェアレート">3.5.7 市場固定金利とフェアレート</h3>
 <p>カーブ構築に使用した5年OISの市場レートと、構築後のカーブから求めたフェアレートを比較する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>case_ois_rate_check_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
@@ -1411,8 +1414,8 @@ N
 </div>
 <p>5年OISはカーブ構築に使用した商品の一つであるため、市場固定金利とカーブから再計算したフェアレートは一致し、NPVはゼロに近い値となる。</p>
 </section>
-<section id="固定レグと翌日物レグ" class="level3" data-number="11.9.8">
-<h3 data-number="11.9.8" class="anchored" data-anchor-id="固定レグと翌日物レグ"><span class="header-section-number">11.9.8</span> 9.8 固定レグと翌日物レグ</h3>
+<section id="固定レグと翌日物レグ" class="level3">
+<h3 class="anchored" data-anchor-id="固定レグと翌日物レグ">3.5.8 固定レグと翌日物レグ</h3>
 <p>最後に、5年OISの固定レグと翌日物レグのキャッシュフローを確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>case_ois_fixed_leg_tbl <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">leg_to_cashflow_tbl_GQL</span>(</span>
@@ -1451,7 +1454,11 @@ N
 <span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 2016-12-13 0.00730  </span></span>
 <span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 2017-12-13 0.0122</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>固定レグと翌日物レグは反対方向のキャッシュフローを持ち、市場固定金利がフェアレートと一致する場合には、両レグの現在価値が相殺される。 ## 10. ケーススタディ2：EONIA市場レートの変動と評価損益</p>
+<p>固定レグと翌日物レグは反対方向のキャッシュフローを持ち、市場固定金利がフェアレートと一致する場合には、両レグの現在価値が相殺される。</p>
+</section>
+</section>
+<section id="ケーススタディ2市場レート変動と評価損益" class="level2">
+<h2 class="anchored" data-anchor-id="ケーススタディ2市場レート変動と評価損益">3.6 ケーススタディ2：市場レート変動と評価損益</h2>
 <p>第9節では、2012年12月11日のEONIA市場データから期間構造を構築し、5年OISの市場固定金利とフェアレートが一致することを確認した。</p>
 <p>本ケーススタディでは、評価日とOISの約定条件を変更せず、カーブ構築に使用する市場レートだけを上下へ10ベーシスポイント変化させる。各シナリオについてEONIAカーブを再構築し、第9節と同じ5年OISを再評価する。</p>
 <p>比較するシナリオは、次の三つである。</p>
@@ -1461,9 +1468,8 @@ N
 <li>EONIA市場レートを一律に10ベーシスポイント上昇</li>
 </ul>
 <p>契約固定金利には、第9節で設定した5年OISの市場レート0.456%を引き続き使用する。したがって、各シナリオのNPVの差は、市場レートの変化による評価損益を表す。</p>
-</section>
-<section id="市場レートシナリオ" class="level3" data-number="11.9.9">
-<h3 data-number="11.9.9" class="anchored" data-anchor-id="市場レートシナリオ"><span class="header-section-number">11.9.9</span> 10.1 市場レートシナリオ</h3>
+<section id="市場レートシナリオ" class="level3">
+<h3 class="anchored" data-anchor-id="市場レートシナリオ">3.6.1 市場レートシナリオ</h3>
 <p>最初に、基準となるEONIA市場レートへ、マイナス10ベーシスポイント、ゼロおよびプラス10ベーシスポイントのシフトを加える。</p>
 <p>ここでは構築済みのゼロカーブを直接動かすのではなく、預金、短期OIS、日付指定OISおよび長期OISの市場レートを変化させる。その後、それぞれの市場データからEONIAカーブを改めて構築する。</p>
 <div class="cell">
@@ -1535,8 +1541,8 @@ N
 </div>
 <p>各商品のレートは、基準値から一律に10ベーシスポイント低下または上昇している。評価日、Fixing日数、期間、開始日および終了日などの市場慣行は変更しない。</p>
 </section>
-<section id="シナリオ別eoniaカーブ" class="level3" data-number="11.9.10">
-<h3 data-number="11.9.10" class="anchored" data-anchor-id="シナリオ別eoniaカーブ"><span class="header-section-number">11.9.10</span> 10.2 シナリオ別EONIAカーブ</h3>
+<section id="シナリオ別eoniaカーブ" class="level3">
+<h3 class="anchored" data-anchor-id="シナリオ別eoniaカーブ">3.6.2 シナリオ別EONIAカーブ</h3>
 <p>各シナリオの市場データから、年末ジャンプを含むEONIAカーブを再構築する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>case_rate_scenario_tbl <span class="ot">&lt;-</span> case_rate_scenario_tbl <span class="sc">|&gt;</span></span>
@@ -1600,8 +1606,8 @@ N
 </div>
 <p>すべてのシナリオについて、Rate Helperのインプライド・レートが入力した市場レートと一致することを確認する。これにより、評価損益の比較に使用する各カーブが、それぞれの市場データを再現していることが分かる。</p>
 </section>
-<section id="同一oisの再評価" class="level3" data-number="11.9.11">
-<h3 data-number="11.9.11" class="anchored" data-anchor-id="同一oisの再評価"><span class="header-section-number">11.9.11</span> 10.3 同一OISの再評価</h3>
+<section id="同一oisの再評価" class="level3">
+<h3 class="anchored" data-anchor-id="同一oisの再評価">3.6.3 同一OISの再評価</h3>
 <p>第9節と同じ5年OISを、各シナリオのEONIAカーブへ接続する。</p>
 <p>契約期間は5年、契約固定金利は0.456%のままとし、市場カーブだけを変更する。</p>
 <div class="cell">
@@ -1701,8 +1707,8 @@ N
 <p><code>payer_npv</code>は固定金利を支払うポジションのNPVであり、<code>receiver_npv</code>は固定金利を受け取る反対ポジションのNPVである。</p>
 <p><code>payer_valuation_change</code>と<code>receiver_valuation_change</code>は、それぞれのシナリオのNPVから基準シナリオのNPVを差し引いた評価損益である。</p>
 </section>
-<section id="基準シナリオの照合" class="level3" data-number="11.9.12">
-<h3 data-number="11.9.12" class="anchored" data-anchor-id="基準シナリオの照合"><span class="header-section-number">11.9.12</span> 10.4 基準シナリオの照合</h3>
+<section id="基準シナリオの照合" class="level3">
+<h3 class="anchored" data-anchor-id="基準シナリオの照合">3.6.4 基準シナリオの照合</h3>
 <p>基準シナリオは、第9節で使用した市場データと約定条件をそのまま使用している。そのため、基準シナリオのNPVとフェアレートは、第9節の計算結果と一致する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>case_base_scenario_tbl <span class="ot">&lt;-</span> case_ois_scenario_result_tbl <span class="sc">|&gt;</span></span>
@@ -1753,14 +1759,14 @@ N
 </div>
 <p>この照合により、第9節の基準評価と、第10節の基準シナリオが同じ市場データ、評価日および約定条件に基づいていることを確認できる。</p>
 </section>
-<section id="市場レート変動と評価損益" class="level3" data-number="11.9.13">
-<h3 data-number="11.9.13" class="anchored" data-anchor-id="市場レート変動と評価損益"><span class="header-section-number">11.9.13</span> 10.5 市場レート変動と評価損益</h3>
+<section id="市場レート変動と評価損益" class="level3">
+<h3 class="anchored" data-anchor-id="市場レート変動と評価損益">3.6.5 市場レート変動と評価損益</h3>
 <p>市場レートが低下すると、5年OISのフェアレートも低下する。この場合、固定金利支払側は、低下後の市場水準より高い0.456%を支払うため、既存契約の価値は低下する。</p>
 <p>一方、市場レートが上昇すると、固定金利支払側は市場水準より低い0.456%を支払う契約を保有することになるため、既存契約の価値は上昇する。</p>
 <p>固定金利受取側では、この関係が逆になる。固定金利支払側の利益は固定金利受取側の損失となり、両者のNPVと評価損益は符号が反対になる。</p>
 </section>
-<section id="ベーシスポイント当たりの評価変化" class="level3" data-number="11.9.14">
-<h3 data-number="11.9.14" class="anchored" data-anchor-id="ベーシスポイント当たりの評価変化"><span class="header-section-number">11.9.14</span> 10.6 1ベーシスポイント当たりの評価変化</h3>
+<section id="ベーシスポイント当たりの評価変化" class="level3">
+<h3 class="anchored" data-anchor-id="ベーシスポイント当たりの評価変化">3.6.6 1ベーシスポイント当たりの評価変化</h3>
 <p>上下10ベーシスポイントの結果から、固定金利支払側について、1ベーシスポイント当たりの平均的なNPV変化を求める。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>case_npv_down <span class="ot">&lt;-</span> case_ois_scenario_result_tbl <span class="sc">|&gt;</span></span>
@@ -1802,12 +1808,20 @@ N
 <span id="cb30-37"><a href="#cb30-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Fixed-rate payer      -0.00505 -1.65e-13     0.00502                  0.000503</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p><code>average_npv_change_per_bp</code>は、マイナス10ベーシスポイントからプラス10ベーシスポイントまでのNPV変化を20で除した値である。</p>
-<p>本ケーススタディでは名目元本を1としてOISを構築しているため、この値も単位元本当たりの評価変化を表す。実際の取引では、これに取引元本を乗じることによって、ポジション全体の金利感応度を求めることができる。 ## 11. まとめ 本章では、世界金融危機とIBOR改革を背景として、金利デリバティブの評価がシングルカーブ方式からマルチカーブ方式へ移行した経緯を確認した。LIBORなどのIBORには銀行の信用リスクや資金流動性リスクが含まれるため、担保付取引の割引金利としてそのまま使用することは適切ではない。そこで、担保契約に対応するOISカーブを割引に用い、参照金利ごとのフォワードカーブから将来金利を予測する評価方法が定着した。</p>
+<p>本ケーススタディでは名目元本を1としてOISを構築しているため、この値も単位元本当たりの評価変化を表す。実際の取引では、これに取引元本を乗じることによって、ポジション全体の金利感応度を求めることができる。</p>
+</section>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">3.7 まとめ</h2>
+<p>本章では、世界金融危機とIBOR改革を背景として、金利デリバティブの評価がシングルカーブ方式からマルチカーブ方式へ移行した経緯を確認した。LIBORなどのIBORには銀行の信用リスクや資金流動性リスクが含まれるため、担保付取引の割引金利としてそのまま使用することは適切ではない。そこで、担保契約に対応するOISカーブを割引に用い、参照金利ごとのフォワードカーブから将来金利を予測する評価方法が定着した。</p>
 <p>OISでは、固定金利と、計算期間中の日々の翌日物金利を複利で積み上げた変動金利を交換する。評価日以前の翌日物金利には確定したFixingを使用し、評価日以後の金利には期間構造から求めた予測値を使用する。TONAとSOFRはいずれも翌日物金利であるが、その基礎となる市場や担保性は異なるため、対象通貨の市場慣行を正しく設定する必要がある。</p>
 <p>マルチカーブ評価では、将来の変動金利を求めるフォワードカーブと、将来キャッシュフローを現在価値へ変換するディスカウントカーブを分離する。同じ将来キャッシュフローであっても、使用する割引カーブが異なればNPVやフェアレートも変化する。したがって、金利スワップの評価では、参照インデックスがどのカーブへ接続され、価格計算エンジンがどのカーブを割引に使用しているかを明確にする必要がある。</p>
 <p>ケーススタディでは、期間構造ハンドルを翌日物金利インデックスへ接続し、<code>MakeOIS</code>を用いてOISを構築した。さらに、NPV、フェアレート、固定レグおよび翌日物レグのキャッシュフローを確認し、OISの契約条件と市場カーブが評価結果へどのように反映されるかを示した。</p>
 <p>また、契約固定金利を変更せずに市場カーブを上下へ平行シフトし、OISの評価損益を比較した。契約締結後も固定金利は変化しないが、市場カーブの変動によって将来の翌日物金利予測と割引係数が変化するため、OISのNPVは日々変動する。固定金利支払側と固定金利受取側では、同じ市場変動に対する評価損益の符号が反対になる。</p>
-<p>実際のリスク管理では、カーブ全体の平行シフトだけでなく、短期、中期および長期の金利を個別に変化させる必要がある。また、Fixingの確定、休日カレンダー、日数計算規則、支払ラグ、予測カーブおよび割引カーブの設定を総合的に確認することが、OISと金利スワップを正しく評価するための基本となる。 ## 参考資料</p>
+<p>実際のリスク管理では、カーブ全体の平行シフトだけでなく、短期、中期および長期の金利を個別に変化させる必要がある。また、Fixingの確定、休日カレンダー、日数計算規則、支払ラグ、予測カーブおよび割引カーブの設定を総合的に確認することが、OISと金利スワップを正しく評価するための基本となる。</p>
+</section>
+<section id="参考資料" class="level2">
+<h2 class="anchored" data-anchor-id="参考資料">参考資料</h2>
 <ul>
 <li>Financial Conduct Authority, <a href="https://www.fca.org.uk/news/speeches/the-future-of-libor">The future of LIBOR</a>, 27 July 2017.</li>
 <li>Financial Conduct Authority, <a href="https://www.fca.org.uk/news/press-releases/end-libor">The end of LIBOR</a>, 1 October 2024.</li>
@@ -1816,8 +1830,6 @@ N
 </ul>
 
 
-</section>
-</section>
 </section>
 
 </main> <!-- /main -->
@@ -2223,8 +2235,8 @@ N
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="pagination-link" aria-label="第II-2章 金利期間構造とカーブ構築">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></span>
+      <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="pagination-link" aria-label="第II-2章 金利カーブ構築と債券先物CTD、BPV">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

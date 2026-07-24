@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>14&nbsp; 第II-7章 Callable BondとHull–Whiteモデル – ラグランジェ・ファイナンス</title>
+<title>第II-7章 Callable BondとHull–Whiteモデル – ラグランジェ・ファイナンス</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -236,7 +236,7 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利期間構造とカーブ構築</span></a>
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物CTD、BPV</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -286,27 +286,34 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#第ii-7章-callable-bondとhullwhiteモデル" id="toc-第ii-7章-callable-bondとhullwhiteモデル" class="nav-link active" data-scroll-target="#第ii-7章-callable-bondとhullwhiteモデル"><span class="header-section-number">15</span> 第II-7章 Callable BondとHull–Whiteモデル</a>
+  <li><a href="#hullwhiteモデルと債券条件" id="toc-hullwhiteモデルと債券条件" class="nav-link active" data-scroll-target="#hullwhiteモデルと債券条件">7.1 Hull–Whiteモデルと債券条件</a>
   <ul class="collapse">
-  <li><a href="#hullwhite-1-factorモデル" id="toc-hullwhite-1-factorモデル" class="nav-link" data-scroll-target="#hullwhite-1-factorモデル"><span class="header-section-number">15.1</span> 1. Hull–White 1-factorモデル</a></li>
-  <li><a href="#債券条件" id="toc-債券条件" class="nav-link" data-scroll-target="#債券条件"><span class="header-section-number">15.2</span> 2. 債券条件</a></li>
-  <li><a href="#bullet-bond" id="toc-bullet-bond" class="nav-link" data-scroll-target="#bullet-bond"><span class="header-section-number">15.3</span> 3. Bullet Bond</a></li>
-  <li><a href="#初期カーブとhullwhiteモデル" id="toc-初期カーブとhullwhiteモデル" class="nav-link" data-scroll-target="#初期カーブとhullwhiteモデル"><span class="header-section-number">15.4</span> 4. 初期カーブとHull–Whiteモデル</a></li>
-  <li><a href="#コールスケジュール" id="toc-コールスケジュール" class="nav-link" data-scroll-target="#コールスケジュール"><span class="header-section-number">15.5</span> 5. コールスケジュール</a></li>
-  <li><a href="#callable-bondのtree評価" id="toc-callable-bondのtree評価" class="nav-link" data-scroll-target="#callable-bondのtree評価"><span class="header-section-number">15.6</span> 6. Callable BondのTree評価</a></li>
-  <li><a href="#hullwhiteパラメータ感応度" id="toc-hullwhiteパラメータ感応度" class="nav-link" data-scroll-target="#hullwhiteパラメータ感応度"><span class="header-section-number">15.7</span> 7. Hull–Whiteパラメータ感応度</a></li>
-  <li><a href="#bermudan-receiver-swaption" id="toc-bermudan-receiver-swaption" class="nav-link" data-scroll-target="#bermudan-receiver-swaption"><span class="header-section-number">15.8</span> 8. Bermudan Receiver Swaption</a></li>
-  <li><a href="#vasicekモデルとの違い" id="toc-vasicekモデルとの違い" class="nav-link" data-scroll-target="#vasicekモデルとの違い"><span class="header-section-number">15.9</span> 9. Vasicekモデルとの違い</a></li>
-  <li><a href="#vasicekとhullwhiteのゼロ金利曲線" id="toc-vasicekとhullwhiteのゼロ金利曲線" class="nav-link" data-scroll-target="#vasicekとhullwhiteのゼロ金利曲線"><span class="header-section-number">15.10</span> 10. VasicekとHull–Whiteのゼロ金利曲線</a></li>
-  <li><a href="#hullwhiteモデルのカリブレーション" id="toc-hullwhiteモデルのカリブレーション" class="nav-link" data-scroll-target="#hullwhiteモデルのカリブレーション"><span class="header-section-number">15.11</span> 11. Hull–Whiteモデルのカリブレーション</a>
+  <li><a href="#hullwhite-1-factorモデル" id="toc-hullwhite-1-factorモデル" class="nav-link" data-scroll-target="#hullwhite-1-factorモデル">7.1.1 Hull–White 1-factorモデル</a></li>
+  <li><a href="#債券条件" id="toc-債券条件" class="nav-link" data-scroll-target="#債券条件">7.1.2 債券条件</a></li>
+  <li><a href="#bullet-bond" id="toc-bullet-bond" class="nav-link" data-scroll-target="#bullet-bond">7.1.3 Bullet Bond</a></li>
+  <li><a href="#初期カーブとhullwhiteモデル" id="toc-初期カーブとhullwhiteモデル" class="nav-link" data-scroll-target="#初期カーブとhullwhiteモデル">7.1.4 初期カーブとHull–Whiteモデル</a></li>
+  </ul></li>
+  <li><a href="#callable-bondの構築とtree評価" id="toc-callable-bondの構築とtree評価" class="nav-link" data-scroll-target="#callable-bondの構築とtree評価">7.2 Callable Bondの構築とTree評価</a>
   <ul class="collapse">
-  <li><a href="#y5y-atm-swap" id="toc-y5y-atm-swap" class="nav-link" data-scroll-target="#y5y-atm-swap"><span class="header-section-number">15.11.1</span> 11.1 1Y×5Y ATM Swap</a></li>
-  <li><a href="#one-helper-calibration" id="toc-one-helper-calibration" class="nav-link" data-scroll-target="#one-helper-calibration"><span class="header-section-number">15.11.2</span> 11.2 One-helper calibration</a></li>
+  <li><a href="#コールスケジュール" id="toc-コールスケジュール" class="nav-link" data-scroll-target="#コールスケジュール">7.2.1 コールスケジュール</a></li>
+  <li><a href="#callable-bondのtree評価" id="toc-callable-bondのtree評価" class="nav-link" data-scroll-target="#callable-bondのtree評価">7.2.2 Callable BondのTree評価</a></li>
   </ul></li>
-  <li><a href="#european-swaptionのengine比較" id="toc-european-swaptionのengine比較" class="nav-link" data-scroll-target="#european-swaptionのengine比較"><span class="header-section-number">15.12</span> 12. European SwaptionのEngine比較</a></li>
-  <li><a href="#tree-stepの収束" id="toc-tree-stepの収束" class="nav-link" data-scroll-target="#tree-stepの収束"><span class="header-section-number">15.13</span> 13. Tree stepの収束</a></li>
-  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ"><span class="header-section-number">15.14</span> 14. まとめ</a></li>
+  <li><a href="#hullwhiteパラメータ感応度" id="toc-hullwhiteパラメータ感応度" class="nav-link" data-scroll-target="#hullwhiteパラメータ感応度">7.3 Hull–Whiteパラメータ感応度</a></li>
+  <li><a href="#bermudan-receiver-swaptionとの比較" id="toc-bermudan-receiver-swaptionとの比較" class="nav-link" data-scroll-target="#bermudan-receiver-swaptionとの比較">7.4 Bermudan Receiver Swaptionとの比較</a></li>
+  <li><a href="#vasicekモデルとhullwhiteモデル" id="toc-vasicekモデルとhullwhiteモデル" class="nav-link" data-scroll-target="#vasicekモデルとhullwhiteモデル">7.5 VasicekモデルとHull–Whiteモデル</a>
+  <ul class="collapse">
+  <li><a href="#vasicekモデルとの違い" id="toc-vasicekモデルとの違い" class="nav-link" data-scroll-target="#vasicekモデルとの違い">7.5.1 Vasicekモデルとの違い</a></li>
+  <li><a href="#vasicekとhullwhiteのゼロ金利曲線" id="toc-vasicekとhullwhiteのゼロ金利曲線" class="nav-link" data-scroll-target="#vasicekとhullwhiteのゼロ金利曲線">7.5.2 VasicekとHull–Whiteのゼロ金利曲線</a></li>
   </ul></li>
+  <li><a href="#カリブレーションと数値検証" id="toc-カリブレーションと数値検証" class="nav-link" data-scroll-target="#カリブレーションと数値検証">7.6 カリブレーションと数値検証</a>
+  <ul class="collapse">
+  <li><a href="#hullwhiteモデルのカリブレーション" id="toc-hullwhiteモデルのカリブレーション" class="nav-link" data-scroll-target="#hullwhiteモデルのカリブレーション">7.6.1 Hull–Whiteモデルのカリブレーション</a></li>
+  <li><a href="#y5y-atm-swap" id="toc-y5y-atm-swap" class="nav-link" data-scroll-target="#y5y-atm-swap">7.6.2 1Y×5Y ATM Swap</a></li>
+  <li><a href="#one-helper-calibration" id="toc-one-helper-calibration" class="nav-link" data-scroll-target="#one-helper-calibration">7.6.3 One-helper calibration</a></li>
+  <li><a href="#european-swaptionのengine比較" id="toc-european-swaptionのengine比較" class="nav-link" data-scroll-target="#european-swaptionのengine比較">7.6.4 European SwaptionのEngine比較</a></li>
+  <li><a href="#tree-stepの収束" id="toc-tree-stepの収束" class="nav-link" data-scroll-target="#tree-stepの収束">7.6.5 Tree stepの収束</a></li>
+  </ul></li>
+  <li><a href="#まとめ" id="toc-まとめ" class="nav-link" data-scroll-target="#まとめ">7.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -316,7 +323,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学と金融数学</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch07_callable_hull_white.html"><span class="chapter-title">第II-7章 Callable BondとHull–Whiteモデル</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">第II-7章 Callable BondとHull–Whiteモデル</span></h1>
-<p class="subtitle lead">発行体コール権、Gaussian短期金利モデルおよびTree評価</p>
 </div>
 
 
@@ -333,8 +339,6 @@ window.Quarto = {
 </header>
 
 
-<section id="第ii-7章-callable-bondとhullwhiteモデル" class="level1" data-number="15">
-<h1 data-number="15"><span class="header-section-number">15</span> 第II-7章 Callable BondとHull–Whiteモデル</h1>
 <p>Callable Bondは、発行体があらかじめ定められた日と価格で期限前償還できる債券である。市場金利が低下すると、発行体は既存の高いクーポンを支払い続けるよりも、債券を期限前償還して低い金利で資金を再調達する誘因を持つ。</p>
 <p>したがって、コール条項は発行体にとって価値を持つ一方、投資家にとっては不利な権利である。同じクーポン、満期および信用条件を持つ場合、Callable Bondの価格はオプションを含まないBullet Bondの価格以下となる。</p>
 <p>概念的には、次の関係で表される。</p>
@@ -374,8 +378,10 @@ V_{\mathrm{Bermudan\ receiver\ swaption}}
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">library</span>(broom)</span>
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<section id="hullwhite-1-factorモデル" class="level2" data-number="15.1">
-<h2 data-number="15.1" class="anchored" data-anchor-id="hullwhite-1-factorモデル"><span class="header-section-number">15.1</span> 1. Hull–White 1-factorモデル</h2>
+<section id="hullwhiteモデルと債券条件" class="level2">
+<h2 class="anchored" data-anchor-id="hullwhiteモデルと債券条件">7.1 Hull–Whiteモデルと債券条件</h2>
+<section id="hullwhite-1-factorモデル" class="level3">
+<h3 class="anchored" data-anchor-id="hullwhite-1-factorモデル">7.1.1 Hull–White 1-factorモデル</h3>
 <p>Hull–Whiteモデルでは、短期金利 <span class="math inline">\(r_t\)</span> を次のGaussian過程で表す。</p>
 <p><span class="math display">\[
 dr_t
@@ -404,8 +410,8 @@ r_t
 \]</span></p>
 <p>Hull–WhiteモデルはGaussianモデルであるため、短期金利が負になる可能性を持つ。前章までのNormalモデルと同様、ゼロ金利近傍を扱いやすい一方、極端な負の金利も理論上許容する。</p>
 </section>
-<section id="債券条件" class="level2" data-number="15.2">
-<h2 data-number="15.2" class="anchored" data-anchor-id="債券条件"><span class="header-section-number">15.2</span> 2. 債券条件</h2>
+<section id="債券条件" class="level3">
+<h3 class="anchored" data-anchor-id="債券条件">7.1.2 債券条件</h3>
 <p>5年満期、年率3%、半年払いの固定利付債を考える。市場利回りも3%とし、オプションを含まないBullet Bondの価格がおおむね額面付近となる条件を設定する。</p>
 <p>最初の1年間をノンコール期間とし、その後の各クーポン日に額面100で期限前償還できるものとする。満期日は通常の元本償還日であるため、コール可能日から除外する。</p>
 <div class="cell">
@@ -460,8 +466,8 @@ r_t
 <span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9 non_call_periods 2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="bullet-bond" class="level2" data-number="15.3">
-<h2 data-number="15.3" class="anchored" data-anchor-id="bullet-bond"><span class="header-section-number">15.3</span> 3. Bullet Bond</h2>
+<section id="bullet-bond" class="level3">
+<h3 class="anchored" data-anchor-id="bullet-bond">7.1.3 Bullet Bond</h3>
 <p>クーポンスケジュールを作成し、コール条項を含まない固定利付債を評価する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>bond_schedule <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">Schedule</span>(</span>
@@ -543,8 +549,8 @@ r_t
 <span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 face_amount            100</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="初期カーブとhullwhiteモデル" class="level2" data-number="15.4">
-<h2 data-number="15.4" class="anchored" data-anchor-id="初期カーブとhullwhiteモデル"><span class="header-section-number">15.4</span> 4. 初期カーブとHull–Whiteモデル</h2>
+<section id="初期カーブとhullwhiteモデル" class="level3">
+<h3 class="anchored" data-anchor-id="初期カーブとhullwhiteモデル">7.1.4 初期カーブとHull–Whiteモデル</h3>
 <p>Callable BondとSwaptionを同じ初期カーブとHull–Whiteパラメータで評価する。</p>
 <p>本節では、年率3%のフラットカーブを使用する。Callable Bondの主目的はオプション構造とTree評価を確認することであり、複雑な市場カーブ構築は行わない。</p>
 <div class="cell">
@@ -591,8 +597,11 @@ r_t
 <span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 flat_curve_rate    0.03</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="コールスケジュール" class="level2" data-number="15.5">
-<h2 data-number="15.5" class="anchored" data-anchor-id="コールスケジュール"><span class="header-section-number">15.5</span> 5. コールスケジュール</h2>
+</section>
+<section id="callable-bondの構築とtree評価" class="level2">
+<h2 class="anchored" data-anchor-id="callable-bondの構築とtree評価">7.2 Callable Bondの構築とTree評価</h2>
+<section id="コールスケジュール" class="level3">
+<h3 class="anchored" data-anchor-id="コールスケジュール">7.2.1 コールスケジュール</h3>
 <p>スケジュールには発行日と満期日も含まれる。最初の2クーポン期間をノンコールとし、満期日を除く残りのクーポン日をコール可能日とする。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>bond_schedule_dates <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">schedule_date_vector_GQL</span>(</span>
@@ -638,8 +647,8 @@ r_t
 <span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8           8 2028-10-17        100</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="callable-bondのtree評価" class="level2" data-number="15.6">
-<h2 data-number="15.6" class="anchored" data-anchor-id="callable-bondのtree評価"><span class="header-section-number">15.6</span> 6. Callable BondのTree評価</h2>
+<section id="callable-bondのtree評価" class="level3">
+<h3 class="anchored" data-anchor-id="callable-bondのtree評価">7.2.2 Callable BondのTree評価</h3>
 <p>Callable Bondを作成し、Hull–Whiteモデルに基づく金利TreeをPricing Engineとして設定する。</p>
 <p>各Tree nodeでは、発行体がその時点でコールする価値と、債券を存続させる価値が比較される。発行体にとってコールが有利であれば期限前償還が選択される。</p>
 <div class="cell">
@@ -705,8 +714,9 @@ r_t
 </div>
 <p>Callable Bond価格がBullet Bond価格を下回る差額は、投資家が発行体へ与えている期限前償還権の価値と解釈できる。</p>
 </section>
-<section id="hullwhiteパラメータ感応度" class="level2" data-number="15.7">
-<h2 data-number="15.7" class="anchored" data-anchor-id="hullwhiteパラメータ感応度"><span class="header-section-number">15.7</span> 7. Hull–Whiteパラメータ感応度</h2>
+</section>
+<section id="hullwhiteパラメータ感応度" class="level2">
+<h2 class="anchored" data-anchor-id="hullwhiteパラメータ感応度">7.3 Hull–Whiteパラメータ感応度</h2>
 <p>短期金利のボラティリティが高いほど、将来金利が大きく低下する可能性も高くなる。したがって、発行体のコール権は一般に高くなり、Callable Bond価格は低下する。</p>
 <p>平均回帰速度 <span class="math inline">\(a\)</span> は、金利ショックがどの程度の速さで消滅するかを決める。平均回帰が速い場合、長い期間にわたる金利ショックの影響は小さくなる。</p>
 <div class="cell">
@@ -777,8 +787,8 @@ r_t
 </div>
 <p>パラメータ感応度は他の条件を固定した比較である。市場カリブレーション後のパラメータは互いに独立ではないため、実務上のリスク分析ではカーブとボラティリティ市場を同時に考慮する必要がある。</p>
 </section>
-<section id="bermudan-receiver-swaption" class="level2" data-number="15.8">
-<h2 data-number="15.8" class="anchored" data-anchor-id="bermudan-receiver-swaption"><span class="header-section-number">15.8</span> 8. Bermudan Receiver Swaption</h2>
+<section id="bermudan-receiver-swaptionとの比較" class="level2">
+<h2 class="anchored" data-anchor-id="bermudan-receiver-swaptionとの比較">7.4 Bermudan Receiver Swaptionとの比較</h2>
 <p>発行体が債券をコールする誘因は、市場金利がクーポン金利を下回ったときに強くなる。これは固定金利を受け取るReceiver Swapの価値が、金利低下時に上昇する性質と対応する。</p>
 <p>そこで、債券のクーポンスケジュールを固定レグとするReceiver Swapを作成し、Callable Bondと同じ行使日を持つBermudan Receiver Swaptionを評価する。</p>
 <div class="cell">
@@ -869,8 +879,10 @@ r_t
 </ul>
 <p>したがって、<code>pricing_difference</code>が厳密にゼロとなることは要求しない。この比較の目的は、Callable Bondに埋め込まれた金利低下時のオプション価値を、Receiver Swaptionとの関係から理解することである。</p>
 </section>
-<section id="vasicekモデルとの違い" class="level2" data-number="15.9">
-<h2 data-number="15.9" class="anchored" data-anchor-id="vasicekモデルとの違い"><span class="header-section-number">15.9</span> 9. Vasicekモデルとの違い</h2>
+<section id="vasicekモデルとhullwhiteモデル" class="level2">
+<h2 class="anchored" data-anchor-id="vasicekモデルとhullwhiteモデル">7.5 VasicekモデルとHull–Whiteモデル</h2>
+<section id="vasicekモデルとの違い" class="level3">
+<h3 class="anchored" data-anchor-id="vasicekモデルとの違い">7.5.1 Vasicekモデルとの違い</h3>
 <p>Vasicekモデルは、短期金利が一定の長期平均へ回帰するGaussianモデルである。</p>
 <p><span class="math display">\[
 dr_t
@@ -919,8 +931,8 @@ a(b-r_t)dt
 </table>
 <p>Vasicekモデルは金利期間構造の長期的な形状をモデルパラメータから生成する。Hull–Whiteモデルは、観測カーブを出発点として、その周りの確率的変動を表現する。</p>
 </section>
-<section id="vasicekとhullwhiteのゼロ金利曲線" class="level2" data-number="15.10">
-<h2 data-number="15.10" class="anchored" data-anchor-id="vasicekとhullwhiteのゼロ金利曲線"><span class="header-section-number">15.10</span> 10. VasicekとHull–Whiteのゼロ金利曲線</h2>
+<section id="vasicekとhullwhiteのゼロ金利曲線" class="level3">
+<h3 class="anchored" data-anchor-id="vasicekとhullwhiteのゼロ金利曲線">7.5.2 VasicekとHull–Whiteのゼロ金利曲線</h3>
 <p>Vasicekでは初期短期金利を変えると、モデルが生成する期間構造全体が変化する。Hull–Whiteでは状態変数がゼロであれば初期カーブを再現し、状態変数のショックが平均回帰しながら期間構造へ影響する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>maturity_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(</span>
@@ -1060,13 +1072,17 @@ a(b-r_t)dt
 </div>
 <p>Hull–Whiteの<code>base curve</code>が初期フラットカーブ付近に位置することが、初期期間構造へ適合する性質を表している。状態変数のショックは短期側で大きく、満期が長くなるほど平均回帰によって影響が小さくなる。</p>
 </section>
-<section id="hullwhiteモデルのカリブレーション" class="level2" data-number="15.11">
-<h2 data-number="15.11" class="anchored" data-anchor-id="hullwhiteモデルのカリブレーション"><span class="header-section-number">15.11</span> 11. Hull–Whiteモデルのカリブレーション</h2>
+</section>
+<section id="カリブレーションと数値検証" class="level2">
+<h2 class="anchored" data-anchor-id="カリブレーションと数値検証">7.6 カリブレーションと数値検証</h2>
+<section id="hullwhiteモデルのカリブレーション" class="level3">
+<h3 class="anchored" data-anchor-id="hullwhiteモデルのカリブレーション">7.6.1 Hull–Whiteモデルのカリブレーション</h3>
 <p>Hull–Whiteモデルのパラメータ <span class="math inline">\(a\)</span> と <span class="math inline">\(\sigma\)</span> は、Swaption市場の価格またはインプライド・ボラティリティへ適合させる。</p>
 <p>本節では、1年後に開始して5年間継続する1Y×5Y ATM Swaptionを使用する。市場Normal volatilityを36.06bpとし、平均回帰速度 <span class="math inline">\(a=0.03\)</span> を固定して、短期金利ボラティリティ <span class="math inline">\(\sigma\)</span> だけを推定する。</p>
 <p>単一の市場商品から <span class="math inline">\(a\)</span> と <span class="math inline">\(\sigma\)</span> の双方を安定して識別することはできない。複数満期のSwaptionを利用する場合には、複数のCalibration Helperを同時に用いて両パラメータを推定する。</p>
-<section id="y5y-atm-swap" class="level3" data-number="15.11.1">
-<h3 data-number="15.11.1" class="anchored" data-anchor-id="y5y-atm-swap"><span class="header-section-number">15.11.1</span> 11.1 1Y×5Y ATM Swap</h3>
+</section>
+<section id="y5y-atm-swap" class="level3">
+<h3 class="anchored" data-anchor-id="y5y-atm-swap">7.6.2 1Y×5Y ATM Swap</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">set_eval_date_GQL</span>(trade_date)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1164,8 +1180,8 @@ a(b-r_t)dt
 <span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 forward_swap_rate   0.0302262727429665</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="one-helper-calibration" class="level3" data-number="15.11.2">
-<h3 data-number="15.11.2" class="anchored" data-anchor-id="one-helper-calibration"><span class="header-section-number">15.11.2</span> 11.2 One-helper calibration</h3>
+<section id="one-helper-calibration" class="level3">
+<h3 class="anchored" data-anchor-id="one-helper-calibration">7.6.3 One-helper calibration</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>market_normal_volatility <span class="ot">&lt;-</span> <span class="fl">36.06</span> <span class="sc">/</span> <span class="dv">10000</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>fixed_mean_reversion <span class="ot">&lt;-</span> <span class="fl">0.03</span></span>
@@ -1278,9 +1294,8 @@ a(b-r_t)dt
 </div>
 <p><code>c(TRUE, FALSE)</code>は、最初のパラメータ <span class="math inline">\(a\)</span> を固定し、2番目のパラメータ <span class="math inline">\(\sigma\)</span> だけを最適化する指定である。</p>
 </section>
-</section>
-<section id="european-swaptionのengine比較" class="level2" data-number="15.12">
-<h2 data-number="15.12" class="anchored" data-anchor-id="european-swaptionのengine比較"><span class="header-section-number">15.12</span> 12. European SwaptionのEngine比較</h2>
+<section id="european-swaptionのengine比較" class="level3">
+<h3 class="anchored" data-anchor-id="european-swaptionのengine比較">7.6.4 European SwaptionのEngine比較</h3>
 <p>カリブレーションに用いた1Y×5Y ATM Swapを原資産とするEuropean Payer Swaptionを作成し、次の3つの方法で評価する。</p>
 <ul>
 <li>Jamshidian decomposition</li>
@@ -1380,8 +1395,8 @@ a(b-r_t)dt
 </div>
 <p>カリブレーション対象と同じATM Swaptionであるため、Hull–White価格とBachelier市場価格は近い値になることが期待される。Jamshidianと十分に細かいTreeの差は、主にTree離散化誤差を表す。</p>
 </section>
-<section id="tree-stepの収束" class="level2" data-number="15.13">
-<h2 data-number="15.13" class="anchored" data-anchor-id="tree-stepの収束"><span class="header-section-number">15.13</span> 13. Tree stepの収束</h2>
+<section id="tree-stepの収束" class="level3">
+<h3 class="anchored" data-anchor-id="tree-stepの収束">7.6.5 Tree stepの収束</h3>
 <p>Hull–White Treeでは、時間軸と金利状態を有限個のnodeへ離散化する。Tree stepが少ない場合、金利分布とオプションPayoffの非線形性を粗くしか表現できない。</p>
 <p>同じEuropean Swaptionを異なるTree stepで評価し、Jamshidian価格への収束を確認する。</p>
 <div class="cell">
@@ -1474,8 +1489,9 @@ a(b-r_t)dt
 </div>
 <p>Tree stepを増やすほど、Tree価格がJamshidian価格へ近づくことを確認する。Bermudan SwaptionやCallable Bondには一般的なJamshidian解析解を利用できないため、European SwaptionでTree精度を検証してから、早期行使商品へ同じTree設定を適用することが重要である。</p>
 </section>
-<section id="まとめ" class="level2" data-number="15.14">
-<h2 data-number="15.14" class="anchored" data-anchor-id="まとめ"><span class="header-section-number">15.14</span> 14. まとめ</h2>
+</section>
+<section id="まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="まとめ">7.7 まとめ</h2>
 <p>Callable Bondは、Bullet Bondから発行体の期限前償還権を差し引いた商品として理解できる。金利が低下すると発行体のコール権は価値を持ち、投資家が保有するCallable Bondの価格上昇は抑制される。</p>
 <p>発行体のコール権は、金利低下時に価値が上昇するReceiver Swaptionと同じ方向の金利オプション性を持つ。複数のコール日がある場合にはBermudan Receiver Swaptionに近い。ただし、債券とSwapでは元本、決済およびキャッシュフロー条件が完全には一致しないため、価格関係は近似として解釈する必要がある。</p>
 <p>Hull–WhiteモデルはGaussian平均回帰型の短期金利モデルであり、時間依存ドリフトによって初期イールドカーブへ適合できる。Vasicekモデルがパラメータから期間構造を生成するのに対し、Hull–Whiteモデルは観測カーブを出発点として、その周りの確率変動を表現する。</p>
@@ -1513,7 +1529,6 @@ a(b-r_t)dt
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
