@@ -1,22 +1,23 @@
 # 第6章 イベントスタディ
 
-本章では、企業の決算発表を対象としてイベントスタディを行う。イベントスタディは、特定の企業イベントの前後に観察された株式リターンから、通常時に予想されるリターンを差し引き、イベント固有の株価反応を測定する方法である。
+本章では、企業の決算発表を対象としてイベントスタディを行う。イベントスタディは、企業イベントの前後に観察された株式リターンから、通常時に予想されるリターンを差し引き、イベント固有の株価反応を測定する方法である。
 
-本章では次の処理を順番に行う。
+本章では、次の処理を順番に行う。
 
 1. 個別株リターン、市場リターン、イベント情報を読み込む
 2. 決算サプライズを計算し、イベントを5群に分類する
-3. 発表日の翌営業日をイベント日0として取引日を対応付ける
+3. 発表日の翌取引日をイベント日0として設定する
 4. 推定期間を使ってイベントごとのマーケット・モデルを推定する
 5. 異常リターンと累積異常リターンを計算する
 6. AAR、CAAR、複数のイベント・ウィンドウについて統計的検定を行う
-7. イベント単位と日次集計の結果を保存する
+7. 決算サプライズと短期CARの関係を確認する
+8. イベント単位と日次集計の結果を保存する
 
-反復処理には明示的なループを使わず、`purrr::map()`、`pmap_dfr()`、`walk2()` を使用する。パイプ演算子は native pipe の `|>` に統一する。
+反復処理には明示的なループを使わず、`purrr::map()`、`pmap_dfr()`、`walk2()`を使用する。パイプ演算子はnative pipeの`|>`に統一する。
 
-## 6.1 イベントスタディの基礎と分析環境
+## 6.1 イベントスタディの基本設計
 
-### 6.1.1 イベントスタディの考え方
+### 6.1.1 マーケット・モデル
 
 企業 $i$ の日 $t$ における実現リターンを $R_{i,t}$、市場リターンを $R_{M,t}$ とする。推定期間では、次のマーケット・モデルを推定する。
 
@@ -50,7 +51,7 @@ R_{i,t}
 \widehat{R}_{i,t}
 $$
 
-イベント日から日 $t$ までの累積異常リターン $CAR_{i,t}$ は、異常リターンを累積して計算する。
+イベント期間の開始日から日 $t$ までの累積異常リターン $CAR_{i,t}$ は、異常リターンを累積して計算する。
 
 $$
 CAR_{i,t}
@@ -58,75 +59,114 @@ CAR_{i,t}
 \sum_{\tau=T_1}^{t} AR_{i,\tau}
 $$
 
-### 6.1.2 パッケージの準備
+### 6.1.2 分析期間
+
+本章では、イベント日0を基準として次の期間を使用する。
+
+| 期間 | 相対取引日 | 用途 |
+|---|---:|---|
+| 推定期間 | -130日から-31日 | マーケット・モデルの推定 |
+| 事前イベント期間 | -30日から-1日 | 発表前の株価反応 |
+| イベント日 | 0日 | 発表後最初の取引日 |
+| 事後イベント期間 | 1日から30日 | 発表後の株価反応 |
+
+推定期間は100取引日、イベント期間は61取引日である。マーケット・モデルの推定には、最低80観測を必要とする。
+
+### 6.1.3 分析環境
 
 ```{r}
-#| label: load-packages
+#| label: setup
 #| message: false
 #| warning: false
 
+source("R/utility_LFL.R")
+
 suppressPackageStartupMessages({
   library(tidyverse)
-  library(ggthemes)
-  library(QuantLib)
-  library(GaussQuant)
-  library(tidyverse)
   library(broom)
+  library(ggthemes)
 })
 
+estimation_start <- -130L
+estimation_end <- -31L
+event_start <- -30L
+event_end <- 30L
+minimum_estimation_observations <- 80L
+
+tbl_window_parameter <- tribble(
+  ~parameter, ~value,
+  "estimation_start", estimation_start,
+  "estimation_end", estimation_end,
+  "event_start", event_start,
+  "event_end", event_end,
+  "minimum_estimation_observations", minimum_estimation_observations
+)
+
+tbl_window_parameter
 ```
 
-パッケージをまだインストールしていない場合だけ、次のコードをRコンソールで実行する。
+プロジェクトルートとデータディレクトリを確認する。
 
 ```{r}
-#| label: install-packages
-#| eval: false
+#| label: resolve-directories
 
-install.packages(c("tidyverse", "broom"))
-```
-
-### 6.1.3 プロジェクトとデータディレクトリ
-
-```{r}
-#| label: resolve-project-directory
-
-project_candidates <- unique(c(
+vec_project_candidate <- unique(c(
   Sys.getenv("QUARTO_PROJECT_DIR"),
   getwd(),
   dirname(getwd())
 ))
 
-project_candidates <- project_candidates[nzchar(project_candidates)]
-
-project_matches <- project_candidates[
-  file.exists(file.path(project_candidates, "_quarto.yml"))
+vec_project_candidate <- vec_project_candidate[
+  nzchar(vec_project_candidate)
 ]
 
-if (length(project_matches) == 0) {
+vec_project_match <- vec_project_candidate[
+  file.exists(file.path(vec_project_candidate, "_quarto.yml"))
+]
+
+if (length(vec_project_match) == 0L) {
   stop("LagrangeFinanceのプロジェクトルートを確認できません。")
 }
 
 project_dir <- normalizePath(
-  project_matches[1],
+  vec_project_match[[1]],
   winslash = "/",
   mustWork = TRUE
 )
 
-data_dir <- file.path(project_dir, "simulation_data")
-derived_data_dir <- file.path(data_dir, "derived")
+simulation_data_dir <- file.path(
+  project_dir,
+  "simulation_data"
+)
 
-if (!dir.exists(data_dir)) {
-  stop("simulation_dataディレクトリが見つかりません: ", data_dir)
-}
+derived_data_dir <- file.path(
+  simulation_data_dir,
+  "derived"
+)
 
-project_dir
-data_dir
-derived_data_dir
+dir.create(
+  derived_data_dir,
+  recursive = TRUE,
+  showWarnings = FALSE
+)
+
+tibble(
+  directory = c(
+    "project",
+    "simulation_data",
+    "derived"
+  ),
+  path = c(
+    project_dir,
+    simulation_data_dir,
+    derived_data_dir
+  )
+)
 ```
 
-## 6.2 入力データの整備と検証
+## 6.2 入力データの読み込みと検証
 
-### 6.2.1 入力ファイルの確認
+### 6.2.1 入力ファイル
 
 本章では次の3ファイルを使用する。
 
@@ -139,170 +179,76 @@ ch08_event_data.csv
 ファイル名は旧教材の章番号に由来するが、本書では第6章の入力データとして使用する。
 
 ```{r}
-#| label: list-simulation-data
+#| label: find-input-files
 
-csv_paths <- list.files(
-  path = data_dir,
-  pattern = "\\.csv$",
-  full.names = TRUE,
-  recursive = TRUE
+vec_input_file <- c(
+  return = "ch08_return_data.csv",
+  market = "ch08_market_return_data.csv",
+  event = "ch08_event_data.csv"
 )
 
-normalized_data_dir <- normalizePath(
-  data_dir,
-  winslash = "/",
-  mustWork = TRUE
+vec_input_path <- purrr::map_chr(
+  vec_input_file,
+  find_data_file_LFL,
+  search_dir = simulation_data_dir
 )
 
-normalized_csv_paths <- normalizePath(
-  csv_paths,
-  winslash = "/",
-  mustWork = FALSE
+tibble(
+  data_name = names(vec_input_path),
+  file_name = basename(vec_input_path),
+  path = unname(vec_input_path)
 )
-
-csv_catalog <- tibble(
-  file_name = basename(csv_paths),
-  relative_path = substring(
-    normalized_csv_paths,
-    first = nchar(normalized_data_dir) + 2
-  )
-) |>
-  arrange(relative_path)
-
-csv_catalog
-```
-
-ファイル名を受け取り、`simulation_data` 以下で一意に存在するパスを返す関数を定義する。
-
-```{r}
-#| label: define-find-data-file
-
-find_data_file <- function(file_name) {
-  candidates <- csv_paths[
-    basename(csv_paths) == file_name
-  ]
-
-  if (length(candidates) == 0) {
-    stop(
-      file_name,
-      "がsimulation_data以下に見つかりません。"
-    )
-  }
-
-  if (length(candidates) > 1) {
-    stop(
-      file_name,
-      "が複数見つかりました: ",
-      paste(candidates, collapse = ", ")
-    )
-  }
-
-  candidates[1]
-}
-```
-
-```{r}
-#| label: define-input-paths
-
-input_file_names <- c(
-  return_data =
-    "ch08_return_data.csv",
-  market_return_data =
-    "ch08_market_return_data.csv",
-  event_data =
-    "ch08_event_data.csv"
-)
-
-input_paths <- input_file_names |>
-  map_chr(find_data_file)
-
-input_paths
 ```
 
 ### 6.2.2 データの読み込み
 
 ```{r}
-#| label: read-event-study-data
+#| label: read-input-data
 
-return_data_raw <- readr::read_csv(
-  input_paths[["return_data"]],
+tbl_return_raw <- readr::read_csv(
+  vec_input_path[["return"]],
   show_col_types = FALSE
 )
 
-market_return_data_raw <- readr::read_csv(
-  input_paths[["market_return_data"]],
+tbl_market_raw <- readr::read_csv(
+  vec_input_path[["market"]],
   show_col_types = FALSE
 )
 
-event_data_raw <- readr::read_csv(
-  input_paths[["event_data"]],
+tbl_event_raw <- readr::read_csv(
+  vec_input_path[["event"]],
   show_col_types = FALSE
 )
-
-return_data_raw
-market_return_data_raw
-event_data_raw
 ```
 
 ### 6.2.3 必須列の確認
 
 ```{r}
-#| label: validate-input-columns
+#| label: validate-required-columns
 
-required_return_columns <- c(
-  "date",
-  "firm_ID",
-  "R"
+validate_required_columns_LFL(
+  tbl_return_raw,
+  c("date", "firm_ID", "R"),
+  "tbl_return_raw"
 )
 
-required_market_columns <- c(
-  "date",
-  "R_M"
+validate_required_columns_LFL(
+  tbl_market_raw,
+  c("date", "R_M"),
+  "tbl_market_raw"
 )
 
-required_event_columns <- c(
-  "event_date",
-  "firm_ID",
-  "earnings_forecast",
-  "realized_earnings",
-  "lagged_ME"
+validate_required_columns_LFL(
+  tbl_event_raw,
+  c(
+    "event_date",
+    "firm_ID",
+    "earnings_forecast",
+    "realized_earnings",
+    "lagged_ME"
+  ),
+  "tbl_event_raw"
 )
-
-missing_return_columns <- setdiff(
-  required_return_columns,
-  names(return_data_raw)
-)
-
-missing_market_columns <- setdiff(
-  required_market_columns,
-  names(market_return_data_raw)
-)
-
-missing_event_columns <- setdiff(
-  required_event_columns,
-  names(event_data_raw)
-)
-
-if (length(missing_return_columns) > 0) {
-  stop(
-    "個別株リターンに必要な列が不足しています: ",
-    paste(missing_return_columns, collapse = ", ")
-  )
-}
-
-if (length(missing_market_columns) > 0) {
-  stop(
-    "市場リターンに必要な列が不足しています: ",
-    paste(missing_market_columns, collapse = ", ")
-  )
-}
-
-if (length(missing_event_columns) > 0) {
-  stop(
-    "イベントデータに必要な列が不足しています: ",
-    paste(missing_event_columns, collapse = ", ")
-  )
-}
 ```
 
 ### 6.2.4 データ型の整理
@@ -310,7 +256,7 @@ if (length(missing_event_columns) > 0) {
 ```{r}
 #| label: prepare-input-data
 
-return_data <- return_data_raw |>
+tbl_return <- tbl_return_raw |>
   transmute(
     date = as.Date(date),
     firm_ID = as.integer(firm_ID),
@@ -321,256 +267,204 @@ return_data <- return_data_raw |>
     date
   )
 
-market_return_data <- market_return_data_raw |>
+tbl_market <- tbl_market_raw |>
   transmute(
     date = as.Date(date),
     R_M = as.numeric(R_M)
   ) |>
   arrange(date)
 
-event_data <- event_data_raw |>
-  mutate(
+tbl_event <- tbl_event_raw |>
+  transmute(
     event_date = as.Date(event_date),
     firm_ID = as.integer(firm_ID),
-    earnings_forecast =
-      as.numeric(earnings_forecast),
-    realized_earnings =
-      as.numeric(realized_earnings),
+    earnings_forecast = as.numeric(
+      earnings_forecast
+    ),
+    realized_earnings = as.numeric(
+      realized_earnings
+    ),
     lagged_ME = as.numeric(lagged_ME)
   ) |>
   arrange(
     event_date,
     firm_ID
   )
-
-glimpse(return_data)
-glimpse(market_return_data)
-glimpse(event_data)
 ```
 
-日付を変換できなかった行がないことを確認する。
+### 6.2.5 キーと欠損値の検証
 
 ```{r}
-#| label: validate-dates
+#| label: validate-keys
 
-invalid_return_dates <- return_data |>
-  filter(is.na(date))
-
-invalid_market_dates <- market_return_data |>
-  filter(is.na(date))
-
-invalid_event_dates <- event_data |>
-  filter(is.na(event_date))
-
-invalid_return_dates
-invalid_market_dates
-invalid_event_dates
-
-if (
-  nrow(invalid_return_dates) > 0 |
-    nrow(invalid_market_dates) > 0 |
-    nrow(invalid_event_dates) > 0
-) {
-  stop("日付へ変換できない行があります。")
-}
-```
-
-### 6.2.5 データの概要
-
-```{r}
-#| label: input-data-overview
-
-input_data_overview <- tribble(
-  ~data, ~observations, ~firms, ~first_date, ~last_date,
-  "individual returns",
-  nrow(return_data),
-  n_distinct(return_data$firm_ID),
-  min(return_data$date),
-  max(return_data$date),
-  "market returns",
-  nrow(market_return_data),
-  NA_integer_,
-  min(market_return_data$date),
-  max(market_return_data$date),
-  "events",
-  nrow(event_data),
-  n_distinct(event_data$firm_ID),
-  min(event_data$event_date),
-  max(event_data$event_date)
+validate_unique_keys_LFL(
+  tbl_return,
+  c("firm_ID", "date"),
+  "tbl_return"
 )
 
-input_data_overview
+validate_unique_keys_LFL(
+  tbl_market,
+  "date",
+  "tbl_market"
+)
+
+validate_unique_keys_LFL(
+  tbl_event,
+  c("firm_ID", "event_date"),
+  "tbl_event"
+)
 ```
-
-### 6.2.6 キーの重複確認
-
-```{r}
-#| label: validate-input-keys
-
-return_key_duplicates <- return_data |>
-  count(
-    firm_ID,
-    date,
-    name = "observations"
-  ) |>
-  filter(observations > 1)
-
-market_key_duplicates <- market_return_data |>
-  count(
-    date,
-    name = "observations"
-  ) |>
-  filter(observations > 1)
-
-event_key_duplicates <- event_data |>
-  count(
-    firm_ID,
-    event_date,
-    name = "events"
-  ) |>
-  filter(events > 1)
-
-return_key_duplicates
-market_key_duplicates
-event_key_duplicates
-
-if (nrow(return_key_duplicates) > 0) {
-  stop("個別株リターンのfirm_IDとdateの組合せに重複があります。")
-}
-
-if (nrow(market_key_duplicates) > 0) {
-  stop("市場リターンのdateに重複があります。")
-}
-
-if (nrow(event_key_duplicates) > 0) {
-  stop("同じ企業・同じ日に複数のイベントがあります。")
-}
-```
-
-### 6.2.7 欠損値の確認
 
 ```{r}
 #| label: summarize-missing-values
 
-missing_summary <- list(
-  individual_returns = return_data,
-  market_returns = market_return_data,
-  events = event_data
-) |>
-  imap_dfr(
-    \(data, data_name) {
-      data |>
-        summarise(
-          across(
-            everything(),
-            list(
-              missing =
-                \(x) sum(is.na(x)),
-              missing_rate =
-                \(x) mean(is.na(x))
-            ),
-            .names = "{.col}__{.fn}"
-          )
-        ) |>
-        pivot_longer(
-          cols = everything(),
-          names_to = c(
-            "variable",
-            ".value"
-          ),
-          names_sep = "__"
-        ) |>
-        mutate(
-          data = data_name,
-          .before = 1
-        )
-    }
-  ) |>
-  arrange(
-    data,
-    desc(missing_rate),
-    variable
+tbl_missing_summary <- bind_rows(
+  summarize_missing_values_LFL(
+    tbl_return,
+    "return"
+  ),
+  summarize_missing_values_LFL(
+    tbl_market,
+    "market"
+  ),
+  summarize_missing_values_LFL(
+    tbl_event,
+    "event"
   )
+)
 
-missing_summary
+tbl_missing_summary
 ```
 
-## 6.3 決算サプライズとイベント日の設定
+### 6.2.6 入力データの概要
+
+```{r}
+#| label: input-data-overview
+
+tbl_input_overview <- tribble(
+  ~data_name, ~observations, ~firms, ~first_date, ~last_date,
+  "individual returns",
+  nrow(tbl_return),
+  n_distinct(tbl_return$firm_ID),
+  min(tbl_return$date, na.rm = TRUE),
+  max(tbl_return$date, na.rm = TRUE),
+  "market returns",
+  nrow(tbl_market),
+  NA_integer_,
+  min(tbl_market$date, na.rm = TRUE),
+  max(tbl_market$date, na.rm = TRUE),
+  "events",
+  nrow(tbl_event),
+  n_distinct(tbl_event$firm_ID),
+  min(tbl_event$event_date, na.rm = TRUE),
+  max(tbl_event$event_date, na.rm = TRUE)
+)
+
+tbl_input_overview
+```
+
+### 6.2.7 個別株リターンの分布
+
+```{r}
+#| label: plot-return-distribution
+#| fig-width: 8
+#| fig-height: 5
+
+plot_return_distribution <- tbl_return |>
+  filter(is.finite(R)) |>
+  ggplot(aes(x = R)) +
+  geom_histogram(bins = 80) +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_x_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = "Daily return",
+    y = "Observations",
+    title = "Distribution of Individual Stock Returns"
+  ) +
+  theme_classic()
+
+plot_return_distribution
+```
+
+### 6.2.8 市場リターンの時系列
+
+```{r}
+#| label: plot-market-return-series
+#| fig-width: 10
+#| fig-height: 4.5
+
+plot_market_return_series <- tbl_market |>
+  ggplot(aes(x = date, y = R_M)) +
+  geom_line(linewidth = 0.4) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = NULL,
+    y = "Market return",
+    title = "Daily Market Returns"
+  ) +
+  theme_classic()
+
+plot_market_return_series
+```
+
+## 6.3 決算サプライズとイベント分類
 
 ### 6.3.1 決算サプライズ
 
-旧章では予想利益から実現利益を引いていたが、本章では解釈を明確にするため、実現利益から予想利益を引く。
+決算サプライズは、実現利益と予想利益の差を期首時価総額で標準化して計算する。
 
 $$
 Surprise_i
 =
 \frac{
-  RealizedEarnings_i
-  -
-  ForecastEarnings_i
+RealizedEarnings_i
+-
+ForecastEarnings_i
 }{
-  ME_{i,-1}
+ME_{i,-1}
 }
 $$
 
 正の値は実現利益が予想を上回ったことを、負の値は予想を下回ったことを表す。
 
 ```{r}
-#| label: calculate-earnings-surprise
+#| label: compute-earnings-surprise
 
-event_data <- event_data |>
-  mutate(
-    event_ID = row_number(),
-    event_year =
-      lubridate::year(event_date),
-    earnings_surprise = case_when(
-      !is.finite(lagged_ME) ~ NA_real_,
-      lagged_ME <= 0 ~ NA_real_,
-      !is.finite(earnings_forecast) ~ NA_real_,
-      !is.finite(realized_earnings) ~ NA_real_,
-      TRUE ~ (
-        realized_earnings -
-          earnings_forecast
-      ) / lagged_ME
-    ),
-    earnings_surprise = if_else(
-      is.finite(earnings_surprise),
-      earnings_surprise,
-      NA_real_
-    )
-  )
-```
+tbl_event <- compute_earnings_surprise_LFL(
+  tbl_event = tbl_event,
+  number_of_groups = 5L
+)
 
-年度ごとに決算サプライズを5群へ分類する。グループ1が最も弱い決算、グループ5が最も強い決算を表す。
-
-```{r}
-#| label: classify-event-strength
-
-event_data <- event_data |>
-  group_by(event_year) |>
-  mutate(
-    event_strength = if_else(
-      is.finite(earnings_surprise),
-      ntile(earnings_surprise, 5L),
-      NA_integer_
-    )
+tbl_event |>
+  select(
+    event_ID,
+    firm_ID,
+    event_date,
+    event_year,
+    earnings_surprise,
+    event_strength
   ) |>
-  ungroup() |>
-  mutate(
-    event_strength = factor(
-      event_strength,
-      levels = 1:5,
-      ordered = TRUE
-    )
-  )
-
-event_data
+  slice_head(n = 20)
 ```
+
+### 6.3.2 イベント強度別の概要
 
 ```{r}
 #| label: summarize-event-strength
 
-event_strength_summary <- event_data |>
+tbl_event_strength_summary <- tbl_event |>
   group_by(
     event_year,
     event_strength
@@ -592,31 +486,116 @@ event_strength_summary <- event_data |>
     event_strength
   )
 
-event_strength_summary
+tbl_event_strength_summary
 ```
 
-決算サプライズを計算できないイベントがある場合は分析対象から除外する。
+### 6.3.3 決算サプライズの分布
 
 ```{r}
-#| label: identify-invalid-events
+#| label: plot-earnings-surprise-distribution
+#| fig-width: 8
+#| fig-height: 5
 
-invalid_surprise_events <- event_data |>
-  filter(
-    !is.finite(earnings_surprise) |
-      is.na(event_strength)
-  )
+plot_earnings_surprise_distribution <- tbl_event |>
+  filter(is.finite(earnings_surprise)) |>
+  ggplot(
+    aes(
+      x = earnings_surprise,
+      linetype = event_strength
+    )
+  ) +
+  geom_density(linewidth = 0.8) +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dotted"
+  ) +
+  labs(
+    x = "Standardized earnings surprise",
+    y = "Density",
+    linetype = "Event strength",
+    title = "Distribution of Earnings Surprise"
+  ) +
+  theme_classic()
 
-invalid_surprise_events
+plot_earnings_surprise_distribution
 ```
 
-### 6.3.2 取引日カレンダー
+### 6.3.4 イベント強度別の箱ひげ図
+
+```{r}
+#| label: plot-surprise-by-strength
+#| fig-width: 8
+#| fig-height: 5
+
+plot_surprise_by_strength <- tbl_event |>
+  filter(is.finite(earnings_surprise)) |>
+  ggplot(
+    aes(
+      x = event_strength,
+      y = earnings_surprise
+    )
+  ) +
+  geom_boxplot(
+    outlier.alpha = 0.25
+  ) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dotted"
+  ) +
+  labs(
+    x = "Event strength",
+    y = "Standardized earnings surprise",
+    title = "Earnings Surprise by Event-Strength Group"
+  ) +
+  theme_classic()
+
+plot_surprise_by_strength
+```
+
+### 6.3.5 年度別イベント件数
+
+```{r}
+#| label: plot-events-by-year
+#| fig-width: 9
+#| fig-height: 5
+
+plot_events_by_year <- tbl_event |>
+  count(
+    event_year,
+    event_strength,
+    name = "events"
+  ) |>
+  ggplot(
+    aes(
+      x = factor(event_year),
+      y = events,
+      fill = event_strength
+    )
+  ) +
+  geom_col(
+    position = "dodge"
+  ) +
+  labs(
+    x = "Event year",
+    y = "Events",
+    fill = "Event strength",
+    title = "Number of Earnings Events by Year"
+  ) +
+  theme_classic()
+
+plot_events_by_year
+```
+
+## 6.4 イベント日とイベント・パネル
+
+### 6.4.1 取引日カレンダー
 
 市場リターンの日付を取引日カレンダーとして使用する。
 
 ```{r}
 #| label: build-trading-calendar
 
-trading_calendar <- market_return_data |>
+tbl_trading_calendar <- tbl_market |>
   distinct(date) |>
   arrange(date) |>
   mutate(
@@ -627,17 +606,9 @@ trading_calendar <- market_return_data |>
     date
   )
 
-trading_calendar
-```
-
-市場リターンへ日付IDを追加し、個別株リターンと結合する。
-
-```{r}
-#| label: combine-return-data
-
-market_return_with_ID <- market_return_data |>
+tbl_market_with_ID <- tbl_market |>
   inner_join(
-    trading_calendar,
+    tbl_trading_calendar,
     by = "date"
   ) |>
   select(
@@ -646,9 +617,9 @@ market_return_with_ID <- market_return_data |>
     R_M
   )
 
-return_market_data <- return_data |>
+tbl_return_market <- tbl_return |>
   inner_join(
-    market_return_with_ID,
+    tbl_market_with_ID,
     by = "date"
   ) |>
   select(
@@ -661,67 +632,21 @@ return_market_data <- return_data |>
     firm_ID,
     date_ID
   )
-
-return_market_data
 ```
 
-個別株と市場リターンを結合できなかった日付を確認する。
+### 6.4.2 イベント日0
+
+決算発表は取引終了後に行われると仮定する。そのため、発表日が取引日であっても、その次の取引日をイベント日0とする。
 
 ```{r}
-#| label: diagnose-return-date-coverage
+#| label: assign-event-day-zero
 
-return_dates_without_market <- return_data |>
-  distinct(date) |>
-  anti_join(
-    market_return_data |>
-      distinct(date),
-    by = "date"
-  )
+tbl_event <- assign_event_day_zero_LFL(
+  tbl_event = tbl_event,
+  tbl_trading_calendar = tbl_trading_calendar
+)
 
-market_dates_without_returns <- market_return_data |>
-  distinct(date) |>
-  anti_join(
-    return_data |>
-      distinct(date),
-    by = "date"
-  )
-
-return_dates_without_market
-market_dates_without_returns
-```
-
-
-### 6.3.3 イベント日0の設定
-
-決算発表は取引終了後に行われると仮定する。そのため、発表日が取引日であっても、次の取引日をイベント日0とする。発表日が休日の場合は、最初の翌取引日がイベント日0となる。
-
-`findInterval()` を用い、明示的なループを使わずに翌取引日を求める。
-
-```{r}
-#| label: assign-event-trading-day
-
-trading_dates <- trading_calendar$date
-
-event_data <- event_data |>
-  mutate(
-    event_trade_date_ID =
-      findInterval(
-        as.numeric(event_date),
-        as.numeric(trading_dates)
-      ) + 1L,
-    event_trade_date_ID = if_else(
-      event_trade_date_ID <=
-        nrow(trading_calendar),
-      event_trade_date_ID,
-      NA_integer_
-    ),
-    event_trade_date =
-      trading_dates[
-        event_trade_date_ID
-      ]
-  )
-
-event_data |>
+tbl_event |>
   select(
     event_ID,
     firm_ID,
@@ -730,87 +655,75 @@ event_data |>
     event_trade_date_ID,
     event_strength,
     earnings_surprise
-  )
+  ) |>
+  slice_head(n = 20)
 ```
 
-取引日を割り当てられないイベントを確認する。
+### 6.4.3 発表日からイベント日0までの日数
 
 ```{r}
-#| label: validate-event-trading-day
+#| label: plot-event-date-gap
+#| fig-width: 8
+#| fig-height: 5
 
-events_without_trading_day <- event_data |>
-  filter(
-    is.na(event_trade_date_ID) |
-      is.na(event_trade_date)
+tbl_event_gap <- tbl_event |>
+  mutate(
+    calendar_day_gap = as.integer(
+      event_trade_date - event_date
+    )
   )
 
-events_without_trading_day
+plot_event_date_gap <- tbl_event_gap |>
+  count(
+    calendar_day_gap,
+    name = "events"
+  ) |>
+  ggplot(
+    aes(
+      x = factor(calendar_day_gap),
+      y = events
+    )
+  ) +
+  geom_col() +
+  labs(
+    x = "Calendar days from announcement to event day 0",
+    y = "Events",
+    title = "Delay from Announcement Date to Event Day 0"
+  ) +
+  theme_classic()
 
-if (nrow(events_without_trading_day) > 0) {
-  stop("翌取引日を割り当てられないイベントがあります。")
-}
+plot_event_date_gap
 ```
 
-イベント対象企業が個別株リターンに含まれていることを確認する。
+### 6.4.4 イベント・パネル
 
 ```{r}
-#| label: validate-event-firms
+#| label: create-event-study-panel
 
-event_firms_without_returns <- event_data |>
-  distinct(firm_ID) |>
-  anti_join(
-    return_data |>
-      distinct(firm_ID),
-    by = "firm_ID"
-  )
-
-event_firms_without_returns
-
-if (nrow(event_firms_without_returns) > 0) {
-  stop("個別株リターンが存在しないイベント企業があります。")
-}
-```
-
-## 6.4 推定期間とマーケット・モデル
-
-### 6.4.1 推定期間とイベント期間
-
-本章では、イベント日0を基準として次の期間を使用する。
-
-| 期間 | 相対取引日 | 用途 |
-|---|---:|---|
-| 推定期間 | -130日から-31日 | マーケット・モデルの推定 |
-| 事前イベント期間 | -30日から-1日 | 発表前の株価反応 |
-| イベント日 | 0日 | 発表後最初の取引日 |
-| 事後イベント期間 | 1日から30日 | 発表後の株価反応 |
-
-推定期間は100取引日、イベント期間は61取引日である。
-
-```{r}
-#| label: define-event-study-windows
-
-estimation_start <- -130L
-estimation_end <- -31L
-event_start <- -30L
-event_end <- 30L
-
-minimum_estimation_observations <- 80L
-
-window_parameters <- tribble(
-  ~parameter, ~value,
-  "estimation_start", estimation_start,
-  "estimation_end", estimation_end,
-  "event_start", event_start,
-  "event_end", event_end,
-  "minimum_estimation_observations",
-  minimum_estimation_observations
+tbl_event_panel <- create_event_study_panel_LFL(
+  tbl_event = tbl_event,
+  tbl_trading_calendar = tbl_trading_calendar,
+  tbl_return_market = tbl_return_market,
+  estimation_start = estimation_start,
+  event_end = event_end
 )
 
-window_parameters
+tbl_event_panel |>
+  select(
+    event_ID,
+    firm_ID,
+    relative_day,
+    date,
+    R,
+    R_M
+  ) |>
+  slice_head(n = 20)
 ```
 
+### 6.4.5 データ利用可能性
+
 ```{r}
-#| label: validate-window-lengths
+#| label: summarize-event-data-coverage
 
 estimation_window_length <-
   estimation_end -
@@ -820,355 +733,109 @@ event_window_length <-
   event_end -
   event_start + 1L
 
-tibble(
-  estimation_window_length =
-    estimation_window_length,
-  event_window_length =
-    event_window_length
-)
-```
-
-### 6.4.2 イベント・パネルの作成
-
-各イベントについて、推定期間の開始からイベント期間の終了までの相対取引日を作成する。
-
-```{r}
-#| label: build-event-skeleton
-
-relative_day_sequence <- seq(
-  estimation_start,
-  event_end
-)
-
-full_sample_data <- event_data |>
-  filter(
-    is.finite(earnings_surprise),
-    !is.na(event_strength)
-  ) |>
-  select(
-    event_ID,
-    firm_ID,
-    event_date,
-    event_trade_date,
-    event_trade_date_ID,
-    event_year,
-    event_strength,
-    earnings_surprise
-  ) |>
-  tidyr::crossing(
-    relative_day =
-      relative_day_sequence
-  ) |>
-  mutate(
-    date_ID =
-      event_trade_date_ID +
-      relative_day
-  ) |>
-  left_join(
-    trading_calendar,
-    by = "date_ID"
-  ) |>
-  left_join(
-    return_market_data,
-    by = c(
-      "firm_ID",
-      "date_ID"
-    )
-  ) |>
-  arrange(
-    event_ID,
-    relative_day
-  )
-
-full_sample_data
-```
-
-パネルの行数が理論値と一致することを確認する。
-
-```{r}
-#| label: validate-event-skeleton
-
-expected_event_count <- event_data |>
-  filter(
-    is.finite(earnings_surprise),
-    !is.na(event_strength)
-  ) |>
-  nrow()
-
-expected_rows <-
-  expected_event_count *
-  length(relative_day_sequence)
-
-stopifnot(
-  nrow(full_sample_data) ==
-    expected_rows
-)
-
-tibble(
-  events = n_distinct(
-    full_sample_data$event_ID
-  ),
-  relative_days =
-    length(relative_day_sequence),
-  expected_rows = expected_rows,
-  actual_rows = nrow(full_sample_data)
-)
-```
-
-### 6.4.3 データ利用可能性の診断
-
-イベントごとに、推定期間とイベント期間で利用できる観測数を確認する。
-
-```{r}
-#| label: event-data-coverage
-
-event_data_coverage <- full_sample_data |>
+tbl_event_coverage <- tbl_event_panel |>
   group_by(
     event_ID,
     firm_ID,
     event_strength
   ) |>
   summarise(
-    estimation_days =
-      sum(
-        between(
-          relative_day,
-          estimation_start,
-          estimation_end
-        )
-      ),
-    valid_estimation_days =
-      sum(
-        between(
-          relative_day,
-          estimation_start,
-          estimation_end
-        ) &
-          is.finite(R) &
-          is.finite(R_M)
-      ),
-    event_days =
-      sum(
-        between(
-          relative_day,
-          event_start,
-          event_end
-        )
-      ),
-    valid_event_days =
-      sum(
-        between(
-          relative_day,
-          event_start,
-          event_end
-        ) &
-          is.finite(R) &
-          is.finite(R_M)
-      ),
+    valid_estimation_days = sum(
+      between(
+        relative_day,
+        estimation_start,
+        estimation_end
+      ) &
+        is.finite(R) &
+        is.finite(R_M)
+    ),
+    valid_event_days = sum(
+      between(
+        relative_day,
+        event_start,
+        event_end
+      ) &
+        is.finite(R) &
+        is.finite(R_M)
+    ),
     .groups = "drop"
-  ) |>
-  arrange(event_ID)
+  )
 
-event_data_coverage
-```
-
-```{r}
-#| label: summarize-event-coverage
-
-event_coverage_summary <- event_data_coverage |>
+tbl_event_coverage |>
   summarise(
     events = n(),
-    complete_estimation_window =
-      sum(
-        valid_estimation_days ==
-          estimation_window_length
-      ),
-    usable_estimation_window =
-      sum(
-        valid_estimation_days >=
-          minimum_estimation_observations
-      ),
-    complete_event_window =
-      sum(
-        valid_event_days ==
-          event_window_length
-      ),
-    usable_both_windows =
-      sum(
-        valid_estimation_days >=
-          minimum_estimation_observations &
-          valid_event_days ==
-            event_window_length
-      )
-  )
-
-event_coverage_summary
-```
-
-### 6.4.4 マーケット・モデルの推定
-
-推定期間のデータだけを抽出する。
-
-```{r}
-#| label: prepare-estimation-window
-
-estimation_window_data <- full_sample_data |>
-  filter(
-    between(
-      relative_day,
-      estimation_start,
-      estimation_end
+    complete_estimation_window = sum(
+      valid_estimation_days ==
+        estimation_window_length
     ),
-    is.finite(R),
-    is.finite(R_M)
-  ) |>
-  arrange(
-    event_ID,
-    relative_day
+    usable_estimation_window = sum(
+      valid_estimation_days >=
+        minimum_estimation_observations
+    ),
+    complete_event_window = sum(
+      valid_event_days ==
+        event_window_length
+    )
   )
-
-estimation_window_data
 ```
 
-推定可能なイベントを選ぶ。最低観測数を満たし、市場リターンが一定でないことを条件とする。
+### 6.4.6 推定期間の利用可能日数
 
 ```{r}
-#| label: identify-estimable-events
+#| label: plot-estimation-coverage
+#| fig-width: 8
+#| fig-height: 5
 
-estimable_events <- estimation_window_data |>
-  group_by(event_ID) |>
-  summarise(
-    estimation_observations = n(),
-    distinct_market_returns =
-      n_distinct(R_M),
-    .groups = "drop"
-  ) |>
-  filter(
-    estimation_observations >=
+plot_estimation_coverage <- tbl_event_coverage |>
+  ggplot(
+    aes(
+      x = valid_estimation_days
+    )
+  ) +
+  geom_histogram(
+    binwidth = 5,
+    boundary = 0
+  ) +
+  geom_vline(
+    xintercept =
       minimum_estimation_observations,
-    distinct_market_returns > 1
-  )
+    linetype = "dotted"
+  ) +
+  labs(
+    x = "Valid estimation-window observations",
+    y = "Events",
+    title = "Estimation-Window Data Coverage"
+  ) +
+  theme_classic()
 
-estimable_events
+plot_estimation_coverage
 ```
 
-`nest()` と `map()` を用い、イベントごとにマーケット・モデルを推定する。
+## 6.5 マーケット・モデルの推定
+
+### 6.5.1 イベント別回帰
 
 ```{r}
 #| label: estimate-market-models
 
-market_models <- estimation_window_data |>
-  semi_join(
-    estimable_events,
-    by = "event_ID"
-  ) |>
-  group_by(event_ID) |>
-  nest() |>
-  mutate(
-    model = map(
-      data,
-      \(data) lm(
-        R ~ R_M,
-        data = data
-      )
-    ),
-    coefficients = map(
-      model,
-      broom::tidy
-    ),
-    fit = map(
-      model,
-      broom::glance
-    )
-  )
+tbl_market_model <- estimate_market_models_LFL(
+  tbl_event_panel = tbl_event_panel,
+  estimation_start = estimation_start,
+  estimation_end = estimation_end,
+  minimum_observations =
+    minimum_estimation_observations
+)
 
-market_models
+tbl_market_model |>
+  slice_head(n = 20)
 ```
 
-回帰係数を横持ちに変換する。
-
-```{r}
-#| label: extract-market-model-coefficients
-
-market_model_coefficients <- market_models |>
-  select(
-    event_ID,
-    coefficients
-  ) |>
-  unnest(coefficients) |>
-  select(
-    event_ID,
-    term,
-    estimate
-  ) |>
-  pivot_wider(
-    names_from = term,
-    values_from = estimate
-  ) |>
-  rename(
-    alpha = `(Intercept)`,
-    beta = R_M
-  )
-
-market_model_coefficients
-```
-
-残差標準偏差、決定係数、観測数を取り出す。
-
-```{r}
-#| label: extract-market-model-fit
-
-market_model_fit <- market_models |>
-  select(
-    event_ID,
-    fit
-  ) |>
-  unnest(fit) |>
-  transmute(
-    event_ID,
-    sigma_AR = sigma,
-    r_squared = r.squared,
-    adjusted_r_squared =
-      adj.r.squared,
-    estimation_observations =
-      nobs
-  )
-
-market_model_fit
-```
-
-イベント情報、回帰係数、適合度を統合する。
-
-```{r}
-#| label: build-market-model-parameters
-
-market_model_parameters <- event_data |>
-  select(
-    event_ID,
-    firm_ID,
-    event_date,
-    event_trade_date,
-    event_year,
-    event_strength,
-    earnings_surprise
-  ) |>
-  inner_join(
-    market_model_coefficients,
-    by = "event_ID"
-  ) |>
-  inner_join(
-    market_model_fit,
-    by = "event_ID"
-  ) |>
-  arrange(event_ID)
-
-market_model_parameters
-```
+### 6.5.2 推定結果の概要
 
 ```{r}
 #| label: summarize-market-models
 
-market_model_summary <- market_model_parameters |>
+tbl_market_model_summary <- tbl_market_model |>
   summarise(
     estimated_events = n(),
     mean_alpha = mean(alpha),
@@ -1177,6 +844,7 @@ market_model_summary <- market_model_parameters |>
     minimum_beta = min(beta),
     maximum_beta = max(beta),
     mean_r_squared = mean(r_squared),
+    median_r_squared = median(r_squared),
     mean_sigma_AR = mean(sigma_AR),
     minimum_observations =
       min(estimation_observations),
@@ -1184,15 +852,17 @@ market_model_summary <- market_model_parameters |>
       max(estimation_observations)
   )
 
-market_model_summary
+tbl_market_model_summary
 ```
 
+### 6.5.3 ベータの分布
+
 ```{r}
-#| label: plot-market-model-beta
+#| label: plot-market-beta
 #| fig-width: 8
 #| fig-height: 5
 
-market_model_parameters |>
+plot_market_beta <- tbl_market_model |>
   ggplot(aes(x = beta)) +
   geom_histogram(bins = 40) +
   geom_vline(
@@ -1200,156 +870,109 @@ market_model_parameters |>
     linetype = "dotted"
   ) +
   labs(
-    x = "Market Beta",
-    y = "Count",
+    x = "Market beta",
+    y = "Events",
     title = "Distribution of Event-Specific Market Betas"
   ) +
   theme_classic()
+
+plot_market_beta
 ```
 
-### 6.4.5 完全なイベント期間を持つイベント
-
-マーケット・モデルを推定でき、かつ61取引日のイベント期間で個別株と市場リターンがすべて観測できるイベントだけを採用する。
+### 6.5.4 アルファの分布
 
 ```{r}
-#| label: identify-eligible-events
+#| label: plot-market-alpha
+#| fig-width: 8
+#| fig-height: 5
 
-eligible_events <- event_data_coverage |>
-  filter(
-    valid_estimation_days >=
-      minimum_estimation_observations,
-    valid_event_days ==
-      event_window_length
-  ) |>
-  semi_join(
-    market_model_parameters,
-    by = "event_ID"
-  ) |>
-  select(
-    event_ID,
-    firm_ID,
-    event_strength,
-    valid_estimation_days,
-    valid_event_days
-  )
+plot_market_alpha <- tbl_market_model |>
+  ggplot(aes(x = alpha)) +
+  geom_histogram(bins = 40) +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_x_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = "Market-model alpha",
+    y = "Events",
+    title = "Distribution of Event-Specific Alphas"
+  ) +
+  theme_classic()
 
-eligible_events
+plot_market_alpha
 ```
 
+### 6.5.5 決定係数の分布
+
 ```{r}
-#| label: eligible-event-summary
+#| label: plot-market-model-r-squared
+#| fig-width: 8
+#| fig-height: 5
 
-eligible_event_summary <- eligible_events |>
-  count(
-    event_strength,
-    name = "events"
-  ) |>
-  complete(
-    event_strength,
-    fill = list(events = 0)
-  ) |>
-  arrange(event_strength)
+plot_market_model_r_squared <- tbl_market_model |>
+  ggplot(aes(x = r_squared)) +
+  geom_histogram(bins = 40) +
+  labs(
+    x = "R-squared",
+    y = "Events",
+    title = "Goodness of Fit of Event-Specific Market Models"
+  ) +
+  theme_classic()
 
-eligible_event_summary
+plot_market_model_r_squared
 ```
 
-各イベント強度に少なくとも2件のイベントが必要である。
+### 6.5.6 ベータと決定係数
 
 ```{r}
-#| label: validate-eligible-events
+#| label: plot-beta-r-squared
+#| fig-width: 8
+#| fig-height: 5
 
-insufficient_event_groups <- eligible_event_summary |>
-  filter(events < 2)
-
-insufficient_event_groups
-
-if (nrow(insufficient_event_groups) > 0) {
-  stop(
-    "統計的検定に必要なイベント数を満たさないイベント強度があります。"
-  )
-}
-```
-
-## 6.5 異常リターンと日次集計
-
-### 6.5.1 異常リターンとCAR
-
-イベント期間のデータにマーケット・モデルの推定値を結合する。
-
-```{r}
-#| label: prepare-event-window-data
-
-event_window_data <- full_sample_data |>
-  filter(
-    between(
-      relative_day,
-      event_start,
-      event_end
+plot_beta_r_squared <- tbl_market_model |>
+  ggplot(
+    aes(
+      x = beta,
+      y = r_squared,
+      shape = event_strength
     )
-  ) |>
-  semi_join(
-    eligible_events,
-    by = "event_ID"
-  ) |>
-  inner_join(
-    market_model_parameters |>
-      select(
-        event_ID,
-        alpha,
-        beta,
-        sigma_AR,
-        r_squared,
-        estimation_observations
-      ),
-    by = "event_ID"
-  ) |>
-  mutate(
-    normal_return =
-      alpha + beta * R_M,
-    AR = R - normal_return
-  ) |>
-  group_by(event_ID) |>
-  arrange(
-    relative_day,
-    .by_group = TRUE
-  ) |>
-  mutate(
-    CAR = cumsum(AR)
-  ) |>
-  ungroup() |>
-  arrange(
-    event_ID,
-    relative_day
-  )
+  ) +
+  geom_point(alpha = 0.55) +
+  geom_vline(
+    xintercept = 1,
+    linetype = "dotted"
+  ) +
+  labs(
+    x = "Market beta",
+    y = "R-squared",
+    shape = "Event strength",
+    title = "Market Beta and Model Fit"
+  ) +
+  theme_classic()
 
-event_window_data
+plot_beta_r_squared
 ```
 
-計算後に欠損値や非有限値がないことを確認する。
+## 6.6 異常リターンと累積異常リターン
+
+### 6.6.1 ARとCAR
 
 ```{r}
-#| label: validate-event-window-data
+#| label: compute-abnormal-returns
 
-invalid_event_window_rows <- event_window_data |>
-  filter(
-    !is.finite(R) |
-      !is.finite(R_M) |
-      !is.finite(normal_return) |
-      !is.finite(AR) |
-      !is.finite(CAR)
-  )
+tbl_abnormal_return <- compute_abnormal_returns_LFL(
+  tbl_event_panel = tbl_event_panel,
+  tbl_market_model = tbl_market_model,
+  event_start = event_start,
+  event_end = event_end,
+  require_complete_window = TRUE
+)
 
-invalid_event_window_rows
-
-if (nrow(invalid_event_window_rows) > 0) {
-  stop("イベント期間のARまたはCARに欠損値があります。")
-}
-```
-
-```{r}
-#| label: inspect-event-window-data
-
-event_window_data |>
+tbl_abnormal_return |>
   select(
     event_ID,
     firm_ID,
@@ -1365,10 +988,9 @@ event_window_data |>
   slice_head(n = 20)
 ```
 
+### 6.6.2 AARとCAAR
 
-### 6.5.2 AARとCAAR
-
-イベント強度別に、平均異常リターン（AAR）と平均累積異常リターン（CAAR）を計算する。
+イベント強度 $g$ に属するイベント数を $N_g$ とすると、平均異常リターンは次式で表される。
 
 $$
 AAR_{g,t}
@@ -1377,6 +999,8 @@ AAR_{g,t}
 \sum_{i \in g}
 AR_{i,t}
 $$
+
+平均累積異常リターンは次式で表される。
 
 $$
 CAAR_{g,t}
@@ -1387,7 +1011,7 @@ CAR_{i,t}
 $$
 
 ```{r}
-#| label: define-significance-stars
+#| label: significance-function
 
 significance_stars <- function(p_value) {
   case_when(
@@ -1401,9 +1025,9 @@ significance_stars <- function(p_value) {
 ```
 
 ```{r}
-#| label: calculate-daily-event-statistics
+#| label: compute-daily-statistics
 
-daily_event_statistics <- event_window_data |>
+tbl_daily_statistics <- tbl_abnormal_return |>
   group_by(
     relative_day,
     event_strength
@@ -1439,7 +1063,7 @@ daily_event_statistics <- event_window_data |>
       is.finite(t_AAR),
       2 * pt(
         -abs(t_AAR),
-        df = events - 1
+        df = events - 1L
       ),
       NA_real_
     ),
@@ -1447,7 +1071,7 @@ daily_event_statistics <- event_window_data |>
       is.finite(t_CAAR),
       2 * pt(
         -abs(t_CAAR),
-        df = events - 1
+        df = events - 1L
       ),
       NA_real_
     ),
@@ -1461,77 +1085,17 @@ daily_event_statistics <- event_window_data |>
     relative_day
   )
 
-daily_event_statistics
+tbl_daily_statistics
 ```
 
-イベント強度を区別しない全イベントのAARとCAARも計算する。
+### 6.6.3 イベント強度別CAAR
 
 ```{r}
-#| label: calculate-overall-daily-statistics
+#| label: plot-caar-by-strength
+#| fig-width: 10
+#| fig-height: 5.5
 
-overall_daily_statistics <- event_window_data |>
-  group_by(relative_day) |>
-  summarise(
-    events = n_distinct(event_ID),
-    AAR = mean(AR),
-    CAAR = mean(CAR),
-    standard_deviation_AR = sd(AR),
-    standard_deviation_CAR = sd(CAR),
-    .groups = "drop"
-  ) |>
-  mutate(
-    standard_error_AAR =
-      standard_deviation_AR /
-      sqrt(events),
-    standard_error_CAAR =
-      standard_deviation_CAR /
-      sqrt(events),
-    t_AAR = if_else(
-      is.finite(standard_error_AAR) &
-        standard_error_AAR > 0,
-      AAR / standard_error_AAR,
-      NA_real_
-    ),
-    t_CAAR = if_else(
-      is.finite(standard_error_CAAR) &
-        standard_error_CAAR > 0,
-      CAAR / standard_error_CAAR,
-      NA_real_
-    ),
-    p_AAR = if_else(
-      is.finite(t_AAR),
-      2 * pt(
-        -abs(t_AAR),
-        df = events - 1
-      ),
-      NA_real_
-    ),
-    p_CAAR = if_else(
-      is.finite(t_CAAR),
-      2 * pt(
-        -abs(t_CAAR),
-        df = events - 1
-      ),
-      NA_real_
-    ),
-    significance_AAR =
-      significance_stars(p_AAR),
-    significance_CAAR =
-      significance_stars(p_CAAR)
-  ) |>
-  arrange(relative_day)
-
-overall_daily_statistics
-```
-
-#### イベント強度別CAAR
-
-```{r}
-#| label: plot-caar-by-event-strength
-#| fig-width: 9
-#| fig-height: 5
-
-daily_event_statistics |>
+plot_caar_by_strength <- tbl_daily_statistics |>
   ggplot(
     aes(
       x = relative_day,
@@ -1547,36 +1111,42 @@ daily_event_statistics |>
     ymax = Inf,
     alpha = 0.08
   ) +
-  geom_line(linewidth = 0.8) +
+  geom_line(linewidth = 0.9) +
   geom_hline(
     yintercept = 0,
+    linetype = "dotted"
+  ) +
+  geom_vline(
+    xintercept = 0,
     linetype = "dotted"
   ) +
   scale_y_continuous(
     labels = scales::label_percent()
   ) +
   labs(
-    x = "Relative Trading Day",
+    x = "Relative trading day",
     y = "CAAR",
-    linetype = "Event Strength",
+    linetype = "Event strength",
     title = "CAAR by Earnings-Surprise Group"
   ) +
   theme_classic()
+
+plot_caar_by_strength
 ```
 
-#### イベント日前後のAAR
+### 6.6.4 イベント日前後のAAR
 
 ```{r}
 #| label: plot-aar-around-event
-#| fig-width: 9
-#| fig-height: 5
+#| fig-width: 10
+#| fig-height: 5.5
 
-daily_event_statistics |>
+plot_aar_around_event <- tbl_daily_statistics |>
   filter(
     between(
       relative_day,
-      -10,
-      10
+      -10L,
+      10L
     )
   ) |>
   ggplot(
@@ -1603,141 +1173,170 @@ daily_event_statistics |>
     labels = scales::label_percent()
   ) +
   labs(
-    x = "Relative Trading Day",
+    x = "Relative trading day",
     y = "AAR",
-    linetype = "Event Strength",
+    linetype = "Event strength",
     title = "Average Abnormal Returns around the Event"
   ) +
   theme_classic()
+
+plot_aar_around_event
 ```
 
-最も強いイベント群について、イベント日前後5日の検定結果を表示する。
+### 6.6.5 イベント日0のAAR
 
 ```{r}
-#| label: strongest-event-daily-table
+#| label: plot-event-day-aar
+#| fig-width: 8
+#| fig-height: 5
 
-strongest_event_daily_table <- daily_event_statistics |>
-  filter(
-    event_strength == 5,
-    between(
-      relative_day,
-      -5,
-      5
+plot_event_day_aar <- tbl_daily_statistics |>
+  filter(relative_day == 0L) |>
+  ggplot(
+    aes(
+      x = event_strength,
+      y = AAR
     )
-  ) |>
-  select(
-    relative_day,
-    events,
-    AAR,
-    t_AAR,
-    p_AAR,
-    significance_AAR,
-    CAAR,
-    t_CAAR,
-    p_CAAR,
-    significance_CAAR
-  )
+  ) +
+  geom_col() +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = "Event strength",
+    y = "Event-day AAR",
+    title = "Abnormal Return on Event Day 0"
+  ) +
+  theme_classic()
 
-strongest_event_daily_table
+plot_event_day_aar
 ```
 
-## 6.6 イベント・ウィンドウ分析と結果保存
+### 6.6.6 イベント日後のCAAR
 
-### 6.6.1 複数のイベント・ウィンドウ
+```{r}
+#| label: plot-post-event-caar
+#| fig-width: 10
+#| fig-height: 5
 
-日次のCARだけでなく、実務でよく利用される複数のイベント・ウィンドウについて、イベント単位の累積異常リターンを計算する。
+plot_post_event_caar <- tbl_daily_statistics |>
+  filter(
+    between(
+      relative_day,
+      0L,
+      30L
+    )
+  ) |>
+  ggplot(
+    aes(
+      x = relative_day,
+      y = CAAR,
+      linetype = event_strength
+    )
+  ) +
+  geom_line(linewidth = 0.9) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = "Trading days after event",
+    y = "CAAR",
+    linetype = "Event strength",
+    title = "Post-Event Cumulative Abnormal Returns"
+  ) +
+  theme_classic()
+
+plot_post_event_caar
+```
+
+### 6.6.7 イベント強度別AR分布
+
+```{r}
+#| label: plot-ar-distribution-by-strength
+#| fig-width: 9
+#| fig-height: 5
+
+plot_ar_distribution_by_strength <- tbl_abnormal_return |>
+  filter(
+    between(
+      relative_day,
+      -1L,
+      1L
+    )
+  ) |>
+  ggplot(
+    aes(
+      x = AR,
+      linetype = event_strength
+    )
+  ) +
+  geom_density(linewidth = 0.8) +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_x_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = "Abnormal return",
+    y = "Density",
+    linetype = "Event strength",
+    title = "Distribution of Abnormal Returns in [-1, +1]"
+  ) +
+  theme_classic()
+
+plot_ar_distribution_by_strength
+```
+
+## 6.7 イベント・ウィンドウ分析
+
+### 6.7.1 ウィンドウ定義
 
 ```{r}
 #| label: define-summary-windows
 
-summary_windows <- tribble(
+tbl_summary_window <- tribble(
   ~window_ID, ~window_label, ~start_day, ~end_day,
   "m1_p1", "[-1, +1]", -1L, 1L,
   "0_p1", "[0, +1]", 0L, 1L,
   "m5_p5", "[-5, +5]", -5L, 5L,
+  "m10_p10", "[-10, +10]", -10L, 10L,
   "m30_p30", "[-30, +30]", -30L, 30L
 )
 
-summary_windows
+tbl_summary_window
 ```
 
-`pmap_dfr()` を使って、各ウィンドウに同じ集計処理を適用する。
+### 6.7.2 イベント別CAR
 
 ```{r}
-#| label: calculate-event-window-returns
+#| label: compute-event-window-returns
 
-event_level_window_returns <- pmap_dfr(
-  summary_windows,
-  \(window_ID,
-    window_label,
-    start_day,
-    end_day) {
-    event_window_data |>
-      filter(
-        between(
-          relative_day,
-          start_day,
-          end_day
-        )
-      ) |>
-      group_by(
-        event_ID,
-        firm_ID,
-        event_date,
-        event_trade_date,
-        event_year,
-        event_strength,
-        earnings_surprise
-      ) |>
-      summarise(
-        CAR_window = sum(AR),
-        observed_days = n(),
-        .groups = "drop"
-      ) |>
-      mutate(
-        window_ID = .env$window_ID,
-        window_label = .env$window_label,
-        start_day = .env$start_day,
-        end_day = .env$end_day,
-        expected_days =
-          .env$end_day -
-          .env$start_day + 1L,
-        .before = CAR_window
-      )
-  }
-) |>
-  arrange(
-    window_ID,
-    event_ID
+tbl_event_window_return <-
+  compute_event_window_returns_LFL(
+    tbl_abnormal_return = tbl_abnormal_return,
+    tbl_window = tbl_summary_window
   )
 
-event_level_window_returns
+tbl_event_window_return |>
+  slice_head(n = 20)
 ```
 
-各ウィンドウで必要な日数がそろっていることを確認する。
-
-```{r}
-#| label: validate-summary-windows
-
-invalid_window_observations <-
-  event_level_window_returns |>
-  filter(
-    observed_days != expected_days
-  )
-
-invalid_window_observations
-
-if (nrow(invalid_window_observations) > 0) {
-  stop("イベント・ウィンドウの日数が不足するイベントがあります。")
-}
-```
-
-イベント強度別の平均CARとt検定を計算する。
+### 6.7.3 イベント強度別の平均CAR
 
 ```{r}
 #| label: summarize-event-window-returns
 
-event_window_summary <- event_level_window_returns |>
+tbl_event_window_summary <- tbl_event_window_return |>
   group_by(
     window_ID,
     window_label,
@@ -1770,7 +1369,7 @@ event_window_summary <- event_level_window_returns |>
       is.finite(t_value),
       2 * pt(
         -abs(t_value),
-        df = events - 1
+        df = events - 1L
       ),
       NA_real_
     ),
@@ -1782,66 +1381,17 @@ event_window_summary <- event_level_window_returns |>
     event_strength
   )
 
-event_window_summary
+tbl_event_window_summary
 ```
 
-全イベントを対象としたウィンドウ別結果も計算する。
-
-```{r}
-#| label: summarize-overall-window-returns
-
-overall_window_summary <- event_level_window_returns |>
-  group_by(
-    window_ID,
-    window_label,
-    start_day,
-    end_day
-  ) |>
-  summarise(
-    events = n_distinct(event_ID),
-    mean_CAR = mean(CAR_window),
-    median_CAR = median(CAR_window),
-    standard_deviation_CAR =
-      sd(CAR_window),
-    positive_CAR_ratio =
-      mean(CAR_window > 0),
-    .groups = "drop"
-  ) |>
-  mutate(
-    standard_error_CAR =
-      standard_deviation_CAR /
-      sqrt(events),
-    t_value = if_else(
-      is.finite(standard_error_CAR) &
-        standard_error_CAR > 0,
-      mean_CAR /
-        standard_error_CAR,
-      NA_real_
-    ),
-    p_value = if_else(
-      is.finite(t_value),
-      2 * pt(
-        -abs(t_value),
-        df = events - 1
-      ),
-      NA_real_
-    ),
-    significance =
-      significance_stars(p_value)
-  ) |>
-  arrange(window_ID)
-
-overall_window_summary
-```
-
-#### 短期CARの分布
+### 6.7.4 短期CARの分布
 
 ```{r}
 #| label: plot-short-window-car
 #| fig-width: 8
 #| fig-height: 5
 
-event_level_window_returns |>
+plot_short_window_car <- tbl_event_window_return |>
   filter(window_ID == "m1_p1") |>
   ggplot(
     aes(
@@ -1860,21 +1410,23 @@ event_level_window_returns |>
     labels = scales::label_percent()
   ) +
   labs(
-    x = "Event Strength",
+    x = "Event strength",
     y = "CAR [-1, +1]",
     title = "Short-Window CAR by Earnings Surprise"
   ) +
   theme_classic()
+
+plot_short_window_car
 ```
 
-#### ウィンドウ別平均CAR
+### 6.7.5 ウィンドウ別平均CAR
 
 ```{r}
 #| label: plot-window-mean-car
-#| fig-width: 9
-#| fig-height: 5
+#| fig-width: 10
+#| fig-height: 5.5
 
-event_window_summary |>
+plot_window_mean_car <- tbl_event_window_summary |>
   ggplot(
     aes(
       x = event_strength,
@@ -1893,50 +1445,157 @@ event_window_summary |>
     labels = scales::label_percent()
   ) +
   labs(
-    x = "Event Strength",
+    x = "Event strength",
     y = "Mean CAR",
     fill = "Window",
     title = "Mean CAR across Event Windows"
   ) +
   theme_classic()
+
+plot_window_mean_car
 ```
 
-### 6.6.2 決算サプライズと短期CAR
-
-イベント強度は決算サプライズの順位情報だけを使用する。ここでは連続変数としての決算サプライズと、短期CAR `[-1,+1]` の関係を回帰分析で確認する。
+### 6.7.6 正のCARとなったイベントの割合
 
 ```{r}
-#| label: prepare-surprise-regression
+#| label: plot-positive-car-ratio
+#| fig-width: 10
+#| fig-height: 5
 
-surprise_regression_data <-
-  event_level_window_returns |>
+plot_positive_car_ratio <- tbl_event_window_summary |>
+  ggplot(
+    aes(
+      x = event_strength,
+      y = positive_CAR_ratio,
+      fill = window_label
+    )
+  ) +
+  geom_col(
+    position = "dodge"
+  ) +
+  geom_hline(
+    yintercept = 0.5,
+    linetype = "dotted"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent(),
+    limits = c(0, 1)
+  ) +
+  labs(
+    x = "Event strength",
+    y = "Positive CAR ratio",
+    fill = "Window",
+    title = "Share of Events with Positive CAR"
+  ) +
+  theme_classic()
+
+plot_positive_car_ratio
+```
+
+### 6.7.7 平均CARのヒートマップ
+
+```{r}
+#| label: plot-window-car-heatmap
+#| fig-width: 9
+#| fig-height: 5
+
+plot_window_car_heatmap <- tbl_event_window_summary |>
+  ggplot(
+    aes(
+      x = event_strength,
+      y = window_label,
+      fill = mean_CAR
+    )
+  ) +
+  geom_tile() +
+  geom_text(
+    aes(
+      label = scales::percent(
+        mean_CAR,
+        accuracy = 0.1
+      )
+    )
+  ) +
+  labs(
+    x = "Event strength",
+    y = "Event window",
+    fill = "Mean CAR",
+    title = "Mean CAR by Event Strength and Event Window"
+  ) +
+  theme_classic()
+
+plot_window_car_heatmap
+```
+
+## 6.8 決算サプライズと短期CAR
+
+### 6.8.1 回帰分析
+
+```{r}
+#| label: estimate-surprise-regression
+
+tbl_surprise_regression <- tbl_event_window_return |>
   filter(
     window_ID == "m1_p1",
     is.finite(earnings_surprise),
     is.finite(CAR_window)
   )
 
-surprise_regression_data
-```
-
-```{r}
-#| label: estimate-surprise-regression
-
-surprise_regression <- lm(
+model_surprise_car <- lm(
   CAR_window ~ earnings_surprise,
-  data = surprise_regression_data
+  data = tbl_surprise_regression
 )
 
-broom::tidy(surprise_regression)
-broom::glance(surprise_regression)
+broom::tidy(model_surprise_car)
+broom::glance(model_surprise_car)
 ```
 
-```{r}
-#| label: plot-surprise-regression
-#| fig-width: 8
-#| fig-height: 5
+### 6.8.2 決算サプライズと短期CAR
 
-surprise_regression_data |>
+```{r}
+#| label: plot-surprise-car
+#| fig-width: 8
+#| fig-height: 5.5
+
+plot_surprise_car <- tbl_surprise_regression |>
+  ggplot(
+    aes(
+      x = earnings_surprise,
+      y = CAR_window,
+      shape = event_strength
+    )
+  ) +
+  geom_point(alpha = 0.45) +
+  geom_smooth(
+    method = "lm",
+    se = TRUE
+  ) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dotted"
+  ) +
+  scale_y_continuous(
+    labels = scales::label_percent()
+  ) +
+  labs(
+    x = "Standardized earnings surprise",
+    y = "CAR [-1, +1]",
+    shape = "Event strength",
+    title = "Earnings Surprise and Short-Window CAR"
+  ) +
+  theme_classic()
+
+plot_surprise_car
+```
+
+### 6.8.3 年度別の関係
+
+```{r}
+#| label: plot-surprise-car-by-year
+#| fig-width: 10
+#| fig-height: 7
+
+plot_surprise_car_by_year <- tbl_surprise_regression |>
   ggplot(
     aes(
       x = earnings_surprise,
@@ -1948,6 +1607,10 @@ surprise_regression_data |>
     method = "lm",
     se = FALSE
   ) +
+  facet_wrap(
+    vars(event_year),
+    scales = "free_x"
+  ) +
   geom_hline(
     yintercept = 0,
     linetype = "dotted"
@@ -1956,21 +1619,23 @@ surprise_regression_data |>
     labels = scales::label_percent()
   ) +
   labs(
-    x = "Standardized Earnings Surprise",
+    x = "Standardized earnings surprise",
     y = "CAR [-1, +1]",
-    title = "Earnings Surprise and Short-Window CAR"
+    title = "Earnings Surprise and Short-Window CAR by Year"
   ) +
   theme_classic()
+
+plot_surprise_car_by_year
 ```
 
-### 6.6.3 結果の保存
+## 6.9 分析結果の保存
 
-イベント単位の結果を作成する。各イベント・ウィンドウのCARを横持ちに変換し、マーケット・モデルの推定値と結合する。
+### 6.9.1 イベント単位の結果
 
 ```{r}
 #| label: prepare-event-level-output
 
-event_window_wide <- event_level_window_returns |>
+tbl_event_window_wide <- tbl_event_window_return |>
   select(
     event_ID,
     window_ID,
@@ -1982,26 +1647,25 @@ event_window_wide <- event_level_window_returns |>
     names_prefix = "CAR_"
   )
 
-event_level_output <- market_model_parameters |>
+tbl_event_output <- tbl_market_model |>
   semi_join(
-    eligible_events,
+    tbl_abnormal_return |>
+      distinct(event_ID),
     by = "event_ID"
   ) |>
   left_join(
-    event_window_wide,
+    tbl_event_window_wide,
     by = "event_ID"
   ) |>
   arrange(event_ID)
-
-event_level_output
 ```
 
-日次のイベント結果と日次集計結果も保存対象とする。
+### 6.9.2 日次結果
 
 ```{r}
-#| label: prepare-daily-outputs
+#| label: prepare-daily-output
 
-event_daily_output <- event_window_data |>
+tbl_event_daily_output <- tbl_abnormal_return |>
   select(
     event_ID,
     firm_ID,
@@ -2024,35 +1688,25 @@ event_daily_output <- event_window_data |>
     estimation_observations
   )
 
-event_summary_output <- daily_event_statistics |>
+tbl_event_summary_output <- tbl_daily_statistics |>
   arrange(
     event_strength,
     relative_day
   )
 ```
 
-3つのCSVファイルを `simulation_data/derived` に保存する。
+### 6.9.3 CSV保存
 
 ```{r}
-#| label: define-output-paths
+#| label: save-results
 
-if (!dir.exists(derived_data_dir)) {
-  dir.create(
-    derived_data_dir,
-    recursive = TRUE
-  )
-}
-
-output_data <- list(
-  event_results =
-    event_level_output,
-  event_daily =
-    event_daily_output,
-  event_summary =
-    event_summary_output
+list_output <- list(
+  event_results = tbl_event_output,
+  event_daily = tbl_event_daily_output,
+  event_summary = tbl_event_summary_output
 )
 
-output_paths <- c(
+vec_output_path <- c(
   event_results = file.path(
     derived_data_dir,
     "ch08_event_results.csv"
@@ -2067,73 +1721,66 @@ output_paths <- c(
   )
 )
 
-output_paths
-```
-
-```{r}
-#| label: save-event-study-outputs
-
-walk2(
-  output_data,
-  output_paths,
-  \(data, path) {
-    readr::write_csv(
-      data,
-      path
-    )
-  }
+purrr::walk2(
+  list_output,
+  vec_output_path,
+  readr::write_csv
 )
 
-output_paths
+tibble(
+  output_name = names(vec_output_path),
+  path = unname(vec_output_path)
+)
 ```
 
-保存したファイルを読み直し、行数と列名を検証する。
+### 6.9.4 保存結果の検証
 
 ```{r}
-#| label: verify-event-study-outputs
+#| label: verify-results
 
-output_verification <- imap_dfr(
-  output_data,
-  \(expected_data, data_name) {
-    output_path <-
-      output_paths[[data_name]]
+tbl_output_verification <- purrr::imap_dfr(
+  list_output,
+  \(tbl_expected, output_name) {
+    output_path <- vec_output_path[[output_name]]
 
-    output_check <- readr::read_csv(
+    tbl_check <- readr::read_csv(
       output_path,
       show_col_types = FALSE
     )
 
     stopifnot(
-      nrow(output_check) ==
-        nrow(expected_data)
+      nrow(tbl_check) ==
+        nrow(tbl_expected)
     )
 
     stopifnot(
       identical(
-        names(output_check),
-        names(expected_data)
+        names(tbl_check),
+        names(tbl_expected)
       )
     )
 
     tibble(
-      data = data_name,
+      output_name = output_name,
       output_file = output_path,
-      rows = nrow(output_check),
-      columns = ncol(output_check),
+      rows = nrow(tbl_check),
+      columns = ncol(tbl_check),
       size_bytes =
         file.info(output_path)$size
     )
   }
 )
 
-output_verification
+tbl_output_verification
 ```
 
-## 6.7 まとめ
+## 6.10 まとめ
 
 本章では、決算発表の翌取引日をイベント日0として、マーケット・モデルによるイベントスタディを実施した。推定期間にはイベント日の130取引日前から31取引日前までの100日を使用し、イベント期間には30取引日前から30取引日後までの61日を使用した。
 
-イベントごとの回帰推定には `nest()` と `purrr::map()`、複数のイベント・ウィンドウには `pmap_dfr()`、複数ファイルの保存には `walk2()` を使用した。明示的なループは使用していない。
+決算サプライズは、実現利益と予想利益の差を期首時価総額で標準化し、年度ごとに5群へ分類した。イベント別にマーケット・モデルを推定し、通常リターン、異常リターン、累積異常リターンを計算した。さらに、日次のAARとCAAR、複数イベント・ウィンドウのCAR、正のCARとなったイベントの割合、決算サプライズと短期CARの回帰関係を確認した。
+
+反復処理には`purrr`を利用し、明示的なループは使用していない。データ探索、入力検証、イベント日0の設定、イベント・パネルの作成、マーケット・モデルの推定、AR・CARの計算、イベント・ウィンドウ集計は、`utility_LFL.R`の共通関数へ分離した。
 
 結果は次の3ファイルに保存される。
 

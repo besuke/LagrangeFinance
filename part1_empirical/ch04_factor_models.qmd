@@ -1,147 +1,50 @@
 # 第4章 ファクターモデル
 
-本章では、第3章で作成した月次株式データと年次財務データを利用し、市場ポートフォリオ、企業規模ポートフォリオ、簿価時価比率ポートフォリオ、SMB、HMLを構築する。さらに、企業規模ポートフォリオを対象としてCAPMとFama--Frenchの3ファクター・モデルを推定する。
+本章では、第3章で作成した月次株式データと年次財務データを利用し、市場ポートフォリオ、企業規模ポートフォリオ、簿価時価比率ポートフォリオ、SMB、HMLを構築する。さらに、企業規模10分位ポートフォリオを対象として、CAPMとFama--Frenchの3ファクター・モデルを推定する。
 
-本章では次の処理を順番に行う。
+本章の処理は、次の順序で進める。
 
 1. 第3章の月次・年次データを読み込む
-2. 前年度末の情報だけを使ってポートフォリオを形成する
+2. 前年度末の情報からポートフォリオを形成する
 3. 市場ポートフォリオと市場超過リターンを計算する
-4. 企業規模と簿価時価比率によるポートフォリオ・ソートを行う
+4. 企業規模と簿価時価比率による単変量ソートを行う
 5. 2×3ポートフォリオからSMBとHMLを構築する
-6. CAPMとFF3モデルを `purrr::map()` で一括推定する
+6. CAPMとFF3モデルを推定して比較する
 7. 第5章以降で使用するファクター・データを保存する
 
-反復処理には明示的な `for` 文を使わず、`purrr::map()` 系を利用する。パイプ演算子は native pipe の `|>` に統一する。
+反復処理には明示的なループを使わず、`purrr::map()`系を利用する。
 
-## 4.1 分析環境と入力データ
-
-### 4.1.1 パッケージの準備
+## 4.1 分析環境
 
 ```{r}
-#| label: load-packages
+#| label: setup
 #| message: false
 #| warning: false
 
 
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(ggthemes)
-  library(QuantLib)
-  library(GaussQuant)
-  library(tidyverse)
-  library(broom)
-})
-
+source('C:/AnalyticFin/Projects/LagrangeFinance/R/utility_LFL.R')
+load_part1_packages_LFL()
 ```
 
-パッケージをまだインストールしていない場合だけ、次のコードをRコンソールで実行する。
+本章では、第1章から第3章と同じ共通ユーティリティを利用する。ファイル探索、CSV読込み、表の表示、グラフのテーマ設定を各章で重複して定義しない。
 
-```{r}
-#| label: install-packages
-#| eval: false
+## 4.2 入力データ
 
-install.packages(c("tidyverse", "broom"))
-```
+### 4.2.1 第3章の出力の読込み
 
-### 4.1.2 プロジェクトとデータディレクトリ
-
-RStudioでチャンクを個別実行する場合と、Quartoで章全体をレンダリングする場合の両方に対応するため、プロジェクトルートを実行時に確認する。
-
-```{r}
-#| label: resolve-project-directory
-
-project_candidates <- unique(c(
-  Sys.getenv("QUARTO_PROJECT_DIR"),
-  getwd(),
-  dirname(getwd())
-))
-
-project_candidates <- project_candidates[nzchar(project_candidates)]
-
-project_matches <- project_candidates[
-  file.exists(file.path(project_candidates, "_quarto.yml"))
-]
-
-if (length(project_matches) == 0) {
-  stop("LagrangeFinanceのプロジェクトルートを確認できません。")
-}
-
-project_dir <- normalizePath(
-  project_matches[1],
-  winslash = "/",
-  mustWork = TRUE
-)
-
-data_dir <- file.path(project_dir, "simulation_data")
-derived_data_dir <- file.path(data_dir, "derived")
-
-if (!dir.exists(data_dir)) {
-  stop("simulation_dataディレクトリが見つかりません: ", data_dir)
-}
-
-if (!dir.exists(derived_data_dir)) {
-  stop(
-    "derivedディレクトリが見つかりません。第2章と第3章を先に実行してください: ",
-    derived_data_dir
-  )
-}
-
-project_dir
-data_dir
-derived_data_dir
-```
-
-### 4.1.3 第3章の出力を読み込む
-
-第3章では次の2ファイルを作成した。
+第3章で作成した次の2ファイルを読み込む。
 
 ```text
 simulation_data/derived/ch05_output1.csv
 simulation_data/derived/ch05_output2.csv
 ```
 
-`ch05_output1.csv` は月次データ、`ch05_output2.csv` は年次データである。ファイル名は旧教材の章番号に由来する。
-
-```{r}
-#| label: define-input-paths
-
-monthly_input_path <- file.path(
-  derived_data_dir,
-  "ch05_output1.csv"
-)
-
-annual_input_path <- file.path(
-  derived_data_dir,
-  "ch05_output2.csv"
-)
-
-input_paths <- c(
-  monthly = monthly_input_path,
-  annual = annual_input_path
-)
-
-missing_input_paths <- input_paths[
-  !file.exists(input_paths)
-]
-
-if (length(missing_input_paths) > 0) {
-  stop(
-    "第3章の出力が見つかりません。第3章を先に実行してください: ",
-    paste(missing_input_paths, collapse = ", ")
-  )
-}
-
-input_paths
-```
+`ch05_output1.csv`は月次データ、`ch05_output2.csv`は年次データである。ファイル名は旧教材の章番号に由来する。
 
 ```{r}
 #| label: read-input-data
 
-monthly_data <- readr::read_csv(
-  monthly_input_path,
-  show_col_types = FALSE
-) |>
+tbl_monthly <- read_derived_csv_LFL("ch05_output1.csv") |>
   mutate(
     firm_ID = as.integer(firm_ID),
     year = as.integer(year),
@@ -151,143 +54,121 @@ monthly_data <- readr::read_csv(
   ) |>
   arrange(firm_ID, month_ID)
 
-annual_data <- readr::read_csv(
-  annual_input_path,
-  show_col_types = FALSE
-) |>
+tbl_annual <- read_derived_csv_LFL("ch05_output2.csv") |>
   mutate(
     firm_ID = as.integer(firm_ID),
     year = as.integer(year)
   ) |>
   arrange(firm_ID, year)
 
-glimpse(monthly_data)
-glimpse(annual_data)
+show_data_structure_LFL(tbl_monthly)
+show_data_structure_LFL(tbl_annual)
 ```
 
 ```{r}
 #| label: input-data-overview
 
-input_data_overview <- tribble(
+tbl_input_overview <- tribble(
   ~data, ~observations, ~variables, ~firms, ~first_year, ~last_year,
-  "monthly",
-  nrow(monthly_data),
-  ncol(monthly_data),
-  n_distinct(monthly_data$firm_ID),
-  min(monthly_data$year, na.rm = TRUE),
-  max(monthly_data$year, na.rm = TRUE),
-  "annual",
-  nrow(annual_data),
-  ncol(annual_data),
-  n_distinct(annual_data$firm_ID),
-  min(annual_data$year, na.rm = TRUE),
-  max(annual_data$year, na.rm = TRUE)
+  "monthly", nrow(tbl_monthly), ncol(tbl_monthly),
+  n_distinct(tbl_monthly$firm_ID),
+  min(tbl_monthly$year, na.rm = TRUE),
+  max(tbl_monthly$year, na.rm = TRUE),
+  "annual", nrow(tbl_annual), ncol(tbl_annual),
+  n_distinct(tbl_annual$firm_ID),
+  min(tbl_annual$year, na.rm = TRUE),
+  max(tbl_annual$year, na.rm = TRUE)
 )
 
-input_data_overview
+show_table_LFL(tbl_input_overview)
 ```
 
-### 4.1.4 必須列とパネルキー
+### 4.2.2 必須列とパネルキー
+
+分析を開始する前に、必要な列とパネルキーの一意性を確認する。
 
 ```{r}
-#| label: validate-input-columns
+#| label: validate-input-data
 
-required_monthly_columns <- c(
+vec_required_monthly_columns <- c(
   "year", "month", "month_ID", "month_date",
   "firm_ID", "R", "R_F", "Re", "ME"
 )
 
-required_annual_columns <- c(
+vec_required_annual_columns <- c(
   "year", "firm_ID", "ME", "BE", "lagged_BE"
 )
 
-missing_monthly_columns <- setdiff(
-  required_monthly_columns,
-  names(monthly_data)
+vec_missing_monthly_columns <- setdiff(
+  vec_required_monthly_columns,
+  names(tbl_monthly)
 )
 
-missing_annual_columns <- setdiff(
-  required_annual_columns,
-  names(annual_data)
+vec_missing_annual_columns <- setdiff(
+  vec_required_annual_columns,
+  names(tbl_annual)
 )
 
-if (length(missing_monthly_columns) > 0) {
+if (length(vec_missing_monthly_columns) > 0) {
   stop(
     "月次データに必要な列が不足しています: ",
-    paste(missing_monthly_columns, collapse = ", ")
+    paste(vec_missing_monthly_columns, collapse = ", ")
   )
 }
 
-if (length(missing_annual_columns) > 0) {
+if (length(vec_missing_annual_columns) > 0) {
   stop(
     "年次データに必要な列が不足しています: ",
-    paste(missing_annual_columns, collapse = ", ")
+    paste(vec_missing_annual_columns, collapse = ", ")
   )
 }
-```
 
-```{r}
-#| label: validate-input-keys
-
-monthly_key_duplicates <- monthly_data |>
+tbl_monthly_key_duplicates <- tbl_monthly |>
   count(firm_ID, month_ID, name = "observations") |>
   filter(observations > 1)
 
-annual_key_duplicates <- annual_data |>
+tbl_annual_key_duplicates <- tbl_annual |>
   count(firm_ID, year, name = "observations") |>
   filter(observations > 1)
 
-monthly_key_duplicates
-annual_key_duplicates
-
-if (nrow(monthly_key_duplicates) > 0) {
+if (nrow(tbl_monthly_key_duplicates) > 0) {
   stop("月次データのfirm_IDとmonth_IDの組合せに重複があります。")
 }
 
-if (nrow(annual_key_duplicates) > 0) {
+if (nrow(tbl_annual_key_duplicates) > 0) {
   stop("年次データのfirm_IDとyearの組合せに重複があります。")
 }
+
+show_table_LFL(tbl_monthly_key_duplicates)
+show_table_LFL(tbl_annual_key_duplicates)
 ```
 
-### 4.1.5 補助関数
+### 4.2.3 分析用補助関数
+
+次の関数は、欠損値や非有限値を除外して要約統計量と加重平均を計算する。
 
 ```{r}
-#| label: define-summary-helpers
+#| label: define-analysis-helpers
 
-median_safe <- function(x) {
+compute_median_safe <- function(x) {
   values <- x[is.finite(x)]
-
-  if (length(values) == 0) {
-    return(NA_real_)
-  }
-
+  if (length(values) == 0) return(NA_real_)
   median(values)
 }
 
-mean_safe <- function(x) {
+compute_mean_safe <- function(x) {
   values <- x[is.finite(x)]
-
-  if (length(values) == 0) {
-    return(NA_real_)
-  }
-
+  if (length(values) == 0) return(NA_real_)
   mean(values)
 }
 
-weighted_mean_safe <- function(x, weight) {
-  valid <- is.finite(x) &
-    is.finite(weight) &
-    weight > 0
-
-  if (!any(valid)) {
-    return(NA_real_)
-  }
-
-  sum(x[valid] * weight[valid]) /
-    sum(weight[valid])
+compute_weighted_mean_safe <- function(x, weight) {
+  valid <- is.finite(x) & is.finite(weight) & weight > 0
+  if (!any(valid)) return(NA_real_)
+  sum(x[valid] * weight[valid]) / sum(weight[valid])
 }
 
-significance_stars <- function(p_value) {
+compute_significance_stars <- function(p_value) {
   case_when(
     is.na(p_value) ~ "",
     p_value < 0.01 ~ "***",
@@ -298,31 +179,29 @@ significance_stars <- function(p_value) {
 }
 ```
 
-## 4.2 ポートフォリオ形成と市場リターン
+## 4.3 ポートフォリオ形成と市場リターン
 
-### 4.2.1 前年度情報の準備
+### 4.3.1 前年度情報の準備
 
-ポートフォリオ形成には、リターンが実現する年度より前に利用可能な情報だけを使う。本章では、年度 $t$ の月次リターンに対して、年度 $t-1$ 末の時価総額と株主資本を用いる。
+年度 $t$ の月次リターンに対して、年度 $t-1$ 末に観測された時価総額と株主資本を使用する。これにより、将来情報をポートフォリオ形成に利用することを防ぐ。
 
 ```{r}
 #| label: prepare-lagged-variables
 
-if (!"lagged_ME" %in% names(annual_data)) {
-  annual_data <- annual_data |>
+if (!"lagged_ME" %in% names(tbl_annual)) {
+  tbl_annual <- tbl_annual |>
     group_by(firm_ID) |>
     arrange(year, .by_group = TRUE) |>
     mutate(lagged_ME = lag(ME)) |>
     ungroup()
 }
 
-if (!"lagged_BEME" %in% names(annual_data)) {
-  annual_data <- annual_data |>
-    mutate(
-      lagged_BEME = lagged_BE / lagged_ME
-    )
+if (!"lagged_BEME" %in% names(tbl_annual)) {
+  tbl_annual <- tbl_annual |>
+    mutate(lagged_BEME = lagged_BE / lagged_ME)
 }
 
-annual_data <- annual_data |>
+tbl_annual <- tbl_annual |>
   mutate(
     lagged_ME = if_else(
       is.finite(lagged_ME) & lagged_ME > 0,
@@ -336,34 +215,28 @@ annual_data <- annual_data |>
     )
   ) |>
   arrange(firm_ID, year)
-```
 
-```{r}
-#| label: lagged-variable-availability
-
-lagged_variable_availability <- annual_data |>
+tbl_lagged_variable_availability <- tbl_annual |>
   group_by(year) |>
   summarise(
     firms = n_distinct(firm_ID),
     valid_lagged_ME = sum(is.finite(lagged_ME)),
     valid_lagged_BEME = sum(is.finite(lagged_BEME)),
     valid_for_2x3 = sum(
-      is.finite(lagged_ME) &
-        is.finite(lagged_BEME)
+      is.finite(lagged_ME) & is.finite(lagged_BEME)
     ),
     .groups = "drop"
-  ) |>
-  arrange(year)
+  )
 
-lagged_variable_availability
+show_table_LFL(tbl_lagged_variable_availability, n = Inf)
 ```
 
-### 4.2.2 市場ポートフォリオ
+### 4.3.2 市場ポートフォリオ
 
-年度 $t$ の企業 $i$ の市場ポートフォリオ・ウェイト $w^M_{i,t}$ は、前年度末時価総額から計算する。
+年度 $t$ の企業 $i$ の市場ポートフォリオ・ウェイトは、前年度末時価総額から計算する。
 
 $$
-w^M_{i,t}
+w_{i,t}^{M}
 =
 \frac{ME_{i,t-1}}
 {\sum_j ME_{j,t-1}}
@@ -372,31 +245,14 @@ $$
 ```{r}
 #| label: prepare-market-membership
 
-market_membership <- annual_data |>
-  filter(
-    is.finite(lagged_ME),
-    lagged_ME > 0
-  ) |>
+tbl_market_membership <- tbl_annual |>
+  filter(is.finite(lagged_ME), lagged_ME > 0) |>
   group_by(year) |>
-  mutate(
-    market_weight = lagged_ME /
-      sum(lagged_ME)
-  ) |>
+  mutate(market_weight = lagged_ME / sum(lagged_ME)) |>
   ungroup() |>
-  select(
-    year,
-    firm_ID,
-    lagged_ME,
-    market_weight
-  )
+  select(year, firm_ID, lagged_ME, market_weight)
 
-market_membership
-```
-
-```{r}
-#| label: validate-market-weights
-
-market_weight_check <- market_membership |>
+tbl_market_weight_check <- tbl_market_membership |>
   group_by(year) |>
   summarise(
     firms = n_distinct(firm_ID),
@@ -406,88 +262,68 @@ market_weight_check <- market_membership |>
     .groups = "drop"
   )
 
-market_weight_check
-
-if (any(abs(market_weight_check$weight_sum - 1) > 1e-10)) {
+if (any(abs(tbl_market_weight_check$weight_sum - 1) > 1e-10)) {
   stop("市場ポートフォリオの年度別ウェイト合計が1ではありません。")
 }
+
+show_table_LFL(tbl_market_weight_check, n = Inf)
 ```
 
 市場ポートフォリオの月次リターンは、前年度末時価総額による加重平均である。
 
 $$
-R_{M,t}
-=
-\sum_i w^M_{i,t}R_{i,t}
+R_{M,t}=\sum_i w^M_{i,t}R_{i,t}
 $$
 
 ```{r}
 #| label: calculate-market-return
 
-market_return_data <- monthly_data |>
+tbl_market_returns <- tbl_monthly |>
   inner_join(
-    market_membership,
+    tbl_market_membership,
     by = c("year", "firm_ID")
   ) |>
-  group_by(
-    month_ID,
-    year,
-    month,
-    month_date
-  ) |>
+  group_by(month_ID, year, month, month_date) |>
   summarise(
-    R_F = median_safe(R_F),
-    R_M = weighted_mean_safe(R, lagged_ME),
+    R_F = compute_median_safe(R_F),
+    R_M = compute_weighted_mean_safe(R, lagged_ME),
     eligible_firms = n_distinct(firm_ID),
     valid_return_firms = sum(
-      is.finite(R) &
-        is.finite(lagged_ME) &
-        lagged_ME > 0
+      is.finite(R) & is.finite(lagged_ME) & lagged_ME > 0
     ),
     .groups = "drop"
   ) |>
   mutate(
     R_Me = R_M - R_F,
-    return_coverage = valid_return_firms /
-      eligible_firms
+    return_coverage = valid_return_firms / eligible_firms
   ) |>
   arrange(month_ID)
 
-market_return_data
-```
+tbl_invalid_market_months <- tbl_market_returns |>
+  filter(!is.finite(R_F) | !is.finite(R_M) | !is.finite(R_Me))
 
-```{r}
-#| label: validate-market-return
-
-invalid_market_months <- market_return_data |>
-  filter(
-    !is.finite(R_F) |
-      !is.finite(R_M) |
-      !is.finite(R_Me)
-  )
-
-invalid_market_months
-
-if (nrow(invalid_market_months) > 0) {
+if (nrow(tbl_invalid_market_months) > 0) {
   stop("市場リターンを作成できない月があります。")
 }
+
+show_table_LFL(tbl_market_returns)
 ```
 
 ```{r}
 #| label: summarize-market-return
 
-market_return_summary <- market_return_data |>
+tbl_market_return_summary <- tbl_market_returns |>
   summarise(
     observations = n(),
     mean_market_return = mean(R_M),
-    mean_market_excess_return = mean(R_Me),
+    vec_mean_market_excess_return = mean(R_Me),
     market_volatility = sd(R_M),
     minimum_market_return = min(R_M),
     maximum_market_return = max(R_M),
     minimum_coverage = min(return_coverage)
   )
 
-market_return_summary
+show_table_LFL(tbl_market_return_summary)
 ```
 
 ```{r}
@@ -495,7 +331,7 @@ market_return_summary
 #| fig-width: 8
 #| fig-height: 5
 
-market_return_data |>
+plot_market_excess_return <- tbl_market_returns |>
   ggplot(aes(x = R_Me)) +
   geom_histogram(bins = 40) +
   geom_vline(xintercept = 0, linetype = "dotted") +
@@ -503,8 +339,9 @@ market_return_data |>
     x = "Monthly Market Excess Return",
     y = "Count",
     title = "Distribution of Market Excess Returns"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_market_excess_return))
 ```
 
 ```{r}
@@ -512,85 +349,49 @@ market_return_data |>
 #| fig-width: 9
 #| fig-height: 5
 
-market_return_data |>
+plot_cumulative_market_return <- tbl_market_returns |>
   arrange(month_ID) |>
-  mutate(
-    cumulative_gross_market_return =
-      cumprod(1 + R_M)
-  ) |>
-  ggplot(
-    aes(
-      x = month_date,
-      y = cumulative_gross_market_return
-    )
-  ) +
+  mutate(cumulative_gross_market_return = cumprod(1 + R_M)) |>
+  ggplot(aes(x = month_date, y = cumulative_gross_market_return)) +
   geom_line(linewidth = 0.8) +
   geom_hline(yintercept = 1, linetype = "dotted") +
   labs(
     x = NULL,
     y = "Cumulative Gross Return",
     title = "Value-Weighted Market Portfolio"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_cumulative_market_return))
 ```
 
-### 4.2.3 ポートフォリオ形成データ
+### 4.3.3 ポートフォリオ形成ユニバース
 
-企業規模と簿価時価比率の両方が利用可能な企業を共通の形成ユニバースとする。
+企業規模と簿価時価比率の両方を利用できる企業を共通の形成ユニバースとする。
 
 ```{r}
 #| label: prepare-formation-universe
 
-formation_universe <- annual_data |>
+tbl_formation_universe <- tbl_annual |>
   filter(
     is.finite(lagged_ME),
     lagged_ME > 0,
     is.finite(lagged_BEME),
     lagged_BEME > 0
   ) |>
-  select(
-    year,
-    firm_ID,
-    lagged_ME,
-    lagged_BEME
-  )
+  select(year, firm_ID, lagged_ME, lagged_BEME)
 
-formation_universe
-```
-
-```{r}
-#| label: calculate-formation-breakpoints
-
-formation_breakpoints <- formation_universe |>
+tbl_formation_breakpoints <- tbl_formation_universe |>
   group_by(year) |>
   summarise(
     firms = n_distinct(firm_ID),
     size_median = median(lagged_ME),
-    BEME_30 = quantile(
-      lagged_BEME,
-      probs = 0.30,
-      names = FALSE
-    ),
-    BEME_70 = quantile(
-      lagged_BEME,
-      probs = 0.70,
-      names = FALSE
-    ),
+    BEME_30 = quantile(lagged_BEME, probs = 0.30, names = FALSE),
+    BEME_70 = quantile(lagged_BEME, probs = 0.70, names = FALSE),
     .groups = "drop"
-  ) |>
-  arrange(year)
+  )
 
-formation_breakpoints
-```
-
-```{r}
-#| label: assign-portfolios
-
-formation_data <- formation_universe |>
-  left_join(
-    formation_breakpoints,
-    by = "year"
-  ) |>
+tbl_formation <- tbl_formation_universe |>
+  left_join(tbl_formation_breakpoints, by = "year") |>
   group_by(year) |>
   mutate(
     ME_rank10 = ntile(lagged_ME, 10),
@@ -598,108 +399,65 @@ formation_data <- formation_universe |>
   ) |>
   ungroup() |>
   mutate(
-    size_group = if_else(
-      lagged_ME <= size_median,
-      "S",
-      "B"
-    ),
+    size_group = if_else(lagged_ME <= size_median, "S", "B"),
     BEME_group = case_when(
       lagged_BEME <= BEME_30 ~ "L",
       lagged_BEME <= BEME_70 ~ "N",
       TRUE ~ "H"
     ),
-    FF_portfolio_type = paste0(
-      size_group,
-      BEME_group
-    ),
     FF_portfolio_type = factor(
-      FF_portfolio_type,
-      levels = c(
-        "SL", "SN", "SH",
-        "BL", "BN", "BH"
-      )
+      paste0(size_group, BEME_group),
+      levels = c("SL", "SN", "SH", "BL", "BN", "BH")
     )
   ) |>
   select(
-    year,
-    firm_ID,
-    lagged_ME,
-    lagged_BEME,
-    ME_rank10,
-    BEME_rank10,
-    size_group,
-    BEME_group,
-    FF_portfolio_type
+    year, firm_ID, lagged_ME, lagged_BEME,
+    ME_rank10, BEME_rank10,
+    size_group, BEME_group, FF_portfolio_type
   )
 
-formation_data
-```
-
-```{r}
-#| label: validate-portfolio-membership
-
-portfolio_membership_counts <- formation_data |>
-  count(
-    year,
-    FF_portfolio_type,
-    name = "firms"
-  ) |>
+tbl_portfolio_membership_counts <- tbl_formation |>
+  count(year, FF_portfolio_type, name = "firms") |>
   complete(
     year,
     FF_portfolio_type,
     fill = list(firms = 0)
   ) |>
-  arrange(
-    year,
-    FF_portfolio_type
-  )
+  arrange(year, FF_portfolio_type)
 
-empty_portfolios <- portfolio_membership_counts |>
+tbl_empty_portfolios <- tbl_portfolio_membership_counts |>
   filter(firms == 0)
 
-portfolio_membership_counts
-empty_portfolios
-
-if (nrow(empty_portfolios) > 0) {
+if (nrow(tbl_empty_portfolios) > 0) {
   stop("企業が割り当てられていない2×3ポートフォリオがあります。")
 }
+
+show_table_LFL(tbl_formation_breakpoints, n = Inf)
+show_table_LFL(tbl_portfolio_membership_counts, n = Inf)
 ```
 
+## 4.4 単変量ポートフォリオ・ソート
 
-## 4.3 単変量ポートフォリオ・ソートとCAPM
-
-### 4.3.1 企業規模10分位ポートフォリオ
+### 4.4.1 企業規模10分位ポートフォリオ
 
 企業規模10分位ごとに、等加重リターンと前年度末時価総額加重リターンを計算する。
 
 ```{r}
 #| label: calculate-size-decile-returns
 
-size_decile_returns <- monthly_data |>
+tbl_size_decile_returns <- tbl_monthly |>
   inner_join(
-    formation_data |>
-      select(
-        year,
-        firm_ID,
-        lagged_ME,
-        ME_rank10
-      ),
+    tbl_formation |>
+      select(year, firm_ID, lagged_ME, ME_rank10),
     by = c("year", "firm_ID")
   ) |>
   group_by(
-    month_ID,
-    year,
-    month,
-    month_date,
-    ME_rank10
+    month_ID, year, month, month_date, ME_rank10
   ) |>
   summarise(
-    R_F = median_safe(R_F),
-    R_equal = mean_safe(R),
-    R_value = weighted_mean_safe(
-      R,
-      lagged_ME
-    ),
+    R_F = compute_median_safe(R_F),
+    R_equal = compute_mean_safe(R),
+    R_value = compute_weighted_mean_safe(R, lagged_ME),
     firms = n_distinct(firm_ID),
     valid_return_firms = sum(is.finite(R)),
     .groups = "drop"
@@ -708,18 +466,9 @@ size_decile_returns <- monthly_data |>
     Re_equal = R_equal - R_F,
     Re_value = R_value - R_F
   ) |>
-  arrange(
-    month_ID,
-    ME_rank10
-  )
+  arrange(month_ID, ME_rank10)
 
-size_decile_returns
-```
-
-```{r}
-#| label: validate-size-decile-coverage
-
-size_decile_coverage <- size_decile_returns |>
+tbl_size_decile_coverage <- tbl_size_decile_returns |>
   group_by(month_ID) |>
   summarise(
     portfolios = n_distinct(ME_rank10),
@@ -727,37 +476,22 @@ size_decile_coverage <- size_decile_returns |>
   ) |>
   filter(portfolios != 10)
 
-size_decile_coverage
-
-if (nrow(size_decile_coverage) > 0) {
+if (nrow(tbl_size_decile_coverage) > 0) {
   stop("10個の企業規模ポートフォリオがそろわない月があります。")
 }
-```
 
-```{r}
-#| label: summarize-size-decile-returns
-
-size_decile_summary <- size_decile_returns |>
+tbl_size_decile_summary <- tbl_size_decile_returns |>
   group_by(ME_rank10) |>
   summarise(
     months = n(),
-    mean_equal_excess_return = mean(
-      Re_equal,
-      na.rm = TRUE
-    ),
-    mean_value_excess_return = mean(
-      Re_value,
-      na.rm = TRUE
-    ),
-    value_return_volatility = sd(
-      Re_value,
-      na.rm = TRUE
-    ),
+    mean_equal_excess_return = mean(Re_equal, na.rm = TRUE),
+    mean_value_excess_return = mean(Re_value, na.rm = TRUE),
+    value_return_volatility = sd(Re_value, na.rm = TRUE),
     .groups = "drop"
   ) |>
   arrange(ME_rank10)
 
-size_decile_summary
+show_table_LFL(tbl_size_decile_summary, n = Inf)
 ```
 
 ```{r}
@@ -765,26 +499,18 @@ size_decile_summary
 #| fig-width: 8
 #| fig-height: 5
 
-size_decile_summary |>
+plot_size_decile <- tbl_size_decile_summary |>
   select(
     ME_rank10,
     equal_weighted = mean_equal_excess_return,
     value_weighted = mean_value_excess_return
   ) |>
   pivot_longer(
-    cols = c(
-      equal_weighted,
-      value_weighted
-    ),
+    cols = c(equal_weighted, value_weighted),
     names_to = "weighting",
     values_to = "mean_excess_return"
   ) |>
-  mutate(
-    ME_rank10 = factor(
-      ME_rank10,
-      levels = 1:10
-    )
-  ) |>
+  mutate(ME_rank10 = factor(ME_rank10, levels = 1:10)) |>
   ggplot(
     aes(
       x = ME_rank10,
@@ -794,48 +520,35 @@ size_decile_summary |>
   ) +
   geom_col(position = "dodge") +
   geom_hline(yintercept = 0, linetype = "dotted") +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  scale_y_continuous(labels = scales::label_percent()) +
   labs(
     x = "Size Decile",
     y = "Mean Monthly Excess Return",
     fill = "Weighting",
     title = "Size-Sorted Portfolio Returns"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_size_decile))
 ```
 
-### 4.3.2 簿価時価比率10分位ポートフォリオ
+### 4.4.2 簿価時価比率10分位ポートフォリオ
 
 ```{r}
 #| label: calculate-beme-decile-returns
 
-BEME_decile_returns <- monthly_data |>
+tbl_beme_decile_returns <- tbl_monthly |>
   inner_join(
-    formation_data |>
-      select(
-        year,
-        firm_ID,
-        lagged_ME,
-        BEME_rank10
-      ),
+    tbl_formation |>
+      select(year, firm_ID, lagged_ME, BEME_rank10),
     by = c("year", "firm_ID")
   ) |>
   group_by(
-    month_ID,
-    year,
-    month,
-    month_date,
-    BEME_rank10
+    month_ID, year, month, month_date, BEME_rank10
   ) |>
   summarise(
-    R_F = median_safe(R_F),
-    R_equal = mean_safe(R),
-    R_value = weighted_mean_safe(
-      R,
-      lagged_ME
-    ),
+    R_F = compute_median_safe(R_F),
+    R_equal = compute_mean_safe(R),
+    R_value = compute_weighted_mean_safe(R, lagged_ME),
     firms = n_distinct(firm_ID),
     valid_return_firms = sum(is.finite(R)),
     .groups = "drop"
@@ -844,38 +557,20 @@ BEME_decile_returns <- monthly_data |>
     Re_equal = R_equal - R_F,
     Re_value = R_value - R_F
   ) |>
-  arrange(
-    month_ID,
-    BEME_rank10
-  )
+  arrange(month_ID, BEME_rank10)
 
-BEME_decile_returns
-```
-
-```{r}
-#| label: summarize-beme-decile-returns
-
-BEME_decile_summary <- BEME_decile_returns |>
+tbl_beme_decile_summary <- tbl_beme_decile_returns |>
   group_by(BEME_rank10) |>
   summarise(
     months = n(),
-    mean_equal_excess_return = mean(
-      Re_equal,
-      na.rm = TRUE
-    ),
-    mean_value_excess_return = mean(
-      Re_value,
-      na.rm = TRUE
-    ),
-    value_return_volatility = sd(
-      Re_value,
-      na.rm = TRUE
-    ),
+    mean_equal_excess_return = mean(Re_equal, na.rm = TRUE),
+    mean_value_excess_return = mean(Re_value, na.rm = TRUE),
+    value_return_volatility = sd(Re_value, na.rm = TRUE),
     .groups = "drop"
   ) |>
   arrange(BEME_rank10)
 
-BEME_decile_summary
+show_table_LFL(tbl_beme_decile_summary, n = Inf)
 ```
 
 ```{r}
@@ -883,26 +578,18 @@ BEME_decile_summary
 #| fig-width: 8
 #| fig-height: 5
 
-BEME_decile_summary |>
+plot_beme_decile <- tbl_beme_decile_summary |>
   select(
     BEME_rank10,
     equal_weighted = mean_equal_excess_return,
     value_weighted = mean_value_excess_return
   ) |>
   pivot_longer(
-    cols = c(
-      equal_weighted,
-      value_weighted
-    ),
+    cols = c(equal_weighted, value_weighted),
     names_to = "weighting",
     values_to = "mean_excess_return"
   ) |>
-  mutate(
-    BEME_rank10 = factor(
-      BEME_rank10,
-      levels = 1:10
-    )
-  ) |>
+  mutate(BEME_rank10 = factor(BEME_rank10, levels = 1:10)) |>
   ggplot(
     aes(
       x = BEME_rank10,
@@ -912,150 +599,79 @@ BEME_decile_summary |>
   ) +
   geom_col(position = "dodge") +
   geom_hline(yintercept = 0, linetype = "dotted") +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  scale_y_continuous(labels = scales::label_percent()) +
   labs(
     x = "Book-to-Market Decile",
     y = "Mean Monthly Excess Return",
     fill = "Weighting",
     title = "Book-to-Market-Sorted Portfolio Returns"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_beme_decile))
 ```
 
-### 4.3.3 CAPMの推定
+## 4.5 CAPM
+
+### 4.5.1 モデルの推定
 
 CAPMでは、ポートフォリオ $p$ の超過リターンを市場超過リターンで説明する。
 
 $$
 R^e_{p,t}
 =
-\alpha_p
-+
-\beta_p R^e_{M,t}
-+
-\varepsilon_{p,t}
+\alpha_p+\beta_pR^e_{M,t}+\varepsilon_{p,t}
 $$
 
 ```{r}
-#| label: prepare-capm-data
+#| label: estimate-capm
 
-CAPM_data <- size_decile_returns |>
-  select(
-    month_ID,
-    ME_rank10,
-    Re = Re_value
-  ) |>
+tbl_capm_data <- tbl_size_decile_returns |>
+  select(month_ID, ME_rank10, Re = Re_value) |>
   inner_join(
-    market_return_data |>
-      select(
-        month_ID,
-        R_Me
-      ),
+    tbl_market_returns |>
+      select(month_ID, R_Me),
     by = "month_ID"
   ) |>
-  filter(
-    is.finite(Re),
-    is.finite(R_Me)
-  ) |>
-  arrange(
-    ME_rank10,
-    month_ID
-  )
+  filter(is.finite(Re), is.finite(R_Me)) |>
+  arrange(ME_rank10, month_ID)
 
-CAPM_data
-```
-
-`nest()` で各規模ポートフォリオのデータをまとめ、`map()` で同じ回帰式を適用する。
-
-```{r}
-#| label: estimate-capm-with-purrr
-
-CAPM_models <- CAPM_data |>
+tbl_capm_models <- tbl_capm_data |>
   group_by(ME_rank10) |>
   nest() |>
   mutate(
-    model = map(
-      data,
-      \(data) lm(
-        Re ~ R_Me,
-        data = data
-      )
-    ),
-    coefficients = map(
-      model,
-      broom::tidy
-    ),
-    fit = map(
-      model,
-      broom::glance
-    )
+    model = map(data, \(data) lm(Re ~ R_Me, data = data)),
+    coefficients = map(model, broom::tidy),
+    fit = map(model, broom::glance)
   )
 
-CAPM_models
-```
-
-```{r}
-#| label: extract-capm-coefficients
-
-CAPM_results <- CAPM_models |>
-  select(
-    ME_rank10,
-    coefficients
-  ) |>
+tbl_capm_results <- tbl_capm_models |>
+  select(ME_rank10, coefficients) |>
   unnest(coefficients) |>
-  mutate(
-    significance = significance_stars(
-      p.value
-    )
-  ) |>
-  arrange(
-    ME_rank10,
-    term
-  )
+  mutate(significance = compute_significance_stars(p.value)) |>
+  arrange(ME_rank10, term)
 
-CAPM_results
-```
-
-```{r}
-#| label: extract-capm-fit
-
-CAPM_fit <- CAPM_models |>
-  select(
-    ME_rank10,
-    fit
-  ) |>
+tbl_capm_fit <- tbl_capm_models |>
+  select(ME_rank10, fit) |>
   unnest(fit) |>
   select(
-    ME_rank10,
-    r.squared,
-    adj.r.squared,
-    sigma,
-    statistic,
-    p.value,
-    nobs
+    ME_rank10, r.squared, adj.r.squared,
+    sigma, statistic, p.value, nobs
   ) |>
   arrange(ME_rank10)
 
-CAPM_fit
-```
-
-```{r}
-#| label: summarize-capm-alpha
-
-CAPM_alpha <- CAPM_results |>
+tbl_capm_alpha <- tbl_capm_results |>
   filter(term == "(Intercept)") |>
   transmute(
     ME_rank10,
-    CAPM_alpha = estimate,
+    tbl_capm_alpha = estimate,
     standard_error = std.error,
     statistic,
     p_value = p.value,
     significance
   )
 
-CAPM_alpha
+show_table_LFL(tbl_capm_results, n = Inf)
+show_table_LFL(tbl_capm_fit, n = Inf)
 ```
 
 ```{r}
@@ -1063,102 +679,77 @@ CAPM_alpha
 #| fig-width: 8
 #| fig-height: 5
 
-CAPM_alpha |>
-  mutate(
-    ME_rank10 = factor(
-      ME_rank10,
-      levels = 1:10
-    )
-  ) |>
-  ggplot(
-    aes(
-      x = ME_rank10,
-      y = CAPM_alpha
-    )
-  ) +
+plot_capm_alpha <- tbl_capm_alpha |>
+  mutate(ME_rank10 = factor(ME_rank10, levels = 1:10)) |>
+  ggplot(aes(x = ME_rank10, y = tbl_capm_alpha)) +
   geom_col() +
   geom_hline(yintercept = 0, linetype = "dotted") +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  scale_y_continuous(labels = scales::label_percent()) +
   labs(
     x = "Size Decile",
     y = "CAPM Alpha",
     title = "CAPM Alphas of Size Portfolios"
-  ) +
-  theme_classic()
-```
-
-#### 証券市場線
-
-```{r}
-#| label: prepare-security-market-line
-
-CAPM_beta <- CAPM_results |>
-  filter(term == "R_Me") |>
-  transmute(
-    ME_rank10,
-    CAPM_beta = estimate,
-    beta_p_value = p.value
   )
 
-security_market_line_data <- size_decile_summary |>
-  select(
-    ME_rank10,
-    mean_excess_return =
-      mean_value_excess_return
-  ) |>
-  left_join(
-    CAPM_beta,
-    by = "ME_rank10"
-  )
-
-mean_market_excess_return <- mean(
-  market_return_data$R_Me,
-  na.rm = TRUE
-)
-
-security_market_line_data
+show_plot_LFL(add_lagrange_theme_LFL(plot_capm_alpha))
 ```
+
+### 4.5.2 証券市場線
 
 ```{r}
 #| label: plot-security-market-line
 #| fig-width: 8
 #| fig-height: 5
 
-security_market_line_data |>
+tbl_capm_beta <- tbl_capm_results |>
+  filter(term == "R_Me") |>
+  transmute(
+    ME_rank10,
+    tbl_capm_beta = estimate,
+    beta_p_value = p.value
+  )
+
+tbl_security_market_line <- tbl_size_decile_summary |>
+  select(
+    ME_rank10,
+    mean_excess_return = mean_value_excess_return
+  ) |>
+  left_join(tbl_capm_beta, by = "ME_rank10")
+
+vec_mean_market_excess_return <- mean(
+  tbl_market_returns$R_Me,
+  na.rm = TRUE
+)
+
+plot_security_market_line <- tbl_security_market_line |>
   ggplot(
     aes(
-      x = CAPM_beta,
+      x = tbl_capm_beta,
       y = mean_excess_return
     )
   ) +
   geom_point() +
-  geom_text(
-    aes(label = ME_rank10),
-    nudge_y = 0.0005
-  ) +
+  geom_text(aes(label = ME_rank10), nudge_y = 0.0005) +
   geom_abline(
     intercept = 0,
-    slope = mean_market_excess_return,
+    slope = vec_mean_market_excess_return,
     linetype = "dashed"
   ) +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  scale_y_continuous(labels = scales::label_percent()) +
   labs(
     x = "Market Beta",
     y = "Mean Monthly Excess Return",
     title = "Security Market Line"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_security_market_line))
 ```
 
-## 4.4 2×3ポートフォリオとSMB・HML
+## 4.6 2×3ポートフォリオとSMB・HML
 
-### 4.4.1 2×3 Size--BE/MEポートフォリオ
+### 4.6.1 Size--BE/MEポートフォリオ
 
-Fama--French型のSMBとHMLを作成するため、企業規模をSmallとBigの2群、簿価時価比率をLow、Neutral、Highの3群に分ける。
+企業規模をSmallとBigの2群、簿価時価比率をLow、Neutral、Highの3群に分ける。
 
 | ポートフォリオ | 企業規模 | 簿価時価比率 |
 |---|---|---|
@@ -1172,76 +763,43 @@ Fama--French型のSMBとHMLを作成するため、企業規模をSmallとBigの
 ```{r}
 #| label: calculate-ff-portfolio-returns
 
-FF_portfolio_returns <- monthly_data |>
+tbl_ff_portfolio_returns <- tbl_monthly |>
   inner_join(
-    formation_data |>
+    tbl_formation |>
       select(
-        year,
-        firm_ID,
-        lagged_ME,
-        size_group,
-        BEME_group,
-        FF_portfolio_type
+        year, firm_ID, lagged_ME,
+        size_group, BEME_group, FF_portfolio_type
       ),
     by = c("year", "firm_ID")
   ) |>
-  filter(
-    !is.na(FF_portfolio_type)
-  ) |>
+  filter(!is.na(FF_portfolio_type)) |>
   group_by(
-    month_ID,
-    year,
-    month,
-    month_date,
-    FF_portfolio_type,
-    size_group,
-    BEME_group
+    month_ID, year, month, month_date,
+    FF_portfolio_type, size_group, BEME_group
   ) |>
   summarise(
-    R_F = median_safe(R_F),
-    R = weighted_mean_safe(
-      R,
-      lagged_ME
-    ),
+    R_F = compute_median_safe(R_F),
+    R = compute_weighted_mean_safe(R, lagged_ME),
     firms = n_distinct(firm_ID),
     valid_return_firms = sum(is.finite(R)),
     .groups = "drop"
   ) |>
-  mutate(
-    Re = R - R_F
-  ) |>
-  arrange(
-    month_ID,
-    FF_portfolio_type
-  )
+  mutate(Re = R - R_F) |>
+  arrange(month_ID, FF_portfolio_type)
 
-FF_portfolio_returns
-```
-
-```{r}
-#| label: validate-ff-portfolio-coverage
-
-FF_portfolio_coverage <- FF_portfolio_returns |>
+tbl_ff_portfolio_coverage <- tbl_ff_portfolio_returns |>
   group_by(month_ID) |>
   summarise(
-    portfolios = n_distinct(
-      FF_portfolio_type
-    ),
+    portfolios = n_distinct(FF_portfolio_type),
     .groups = "drop"
   ) |>
   filter(portfolios != 6)
 
-FF_portfolio_coverage
-
-if (nrow(FF_portfolio_coverage) > 0) {
+if (nrow(tbl_ff_portfolio_coverage) > 0) {
   stop("6個のSize--BE/MEポートフォリオがそろわない月があります。")
 }
-```
 
-```{r}
-#| label: summarize-ff-portfolio-returns
-
-FF_portfolio_summary <- FF_portfolio_returns |>
+tbl_ff_portfolio_summary <- tbl_ff_portfolio_returns |>
   group_by(
     FF_portfolio_type,
     size_group,
@@ -1256,7 +814,7 @@ FF_portfolio_summary <- FF_portfolio_returns |>
   ) |>
   arrange(FF_portfolio_type)
 
-FF_portfolio_summary
+show_table_LFL(tbl_ff_portfolio_summary, n = Inf)
 ```
 
 ```{r}
@@ -1264,7 +822,7 @@ FF_portfolio_summary
 #| fig-width: 8
 #| fig-height: 5
 
-FF_portfolio_summary |>
+plot_ff_portfolio <- tbl_ff_portfolio_summary |>
   ggplot(
     aes(
       x = BEME_group,
@@ -1274,27 +832,23 @@ FF_portfolio_summary |>
   ) +
   geom_col(position = "dodge") +
   geom_text(
-    aes(
-      label = FF_portfolio_type,
-      group = size_group
-    ),
+    aes(label = FF_portfolio_type, group = size_group),
     position = position_dodge(width = 0.9),
     vjust = -0.5
   ) +
   geom_hline(yintercept = 0, linetype = "dotted") +
   scale_y_continuous(
     labels = scales::label_percent(),
-    expand = expansion(
-      mult = c(0.05, 0.15)
-    )
+    expand = expansion(mult = c(0.05, 0.15))
   ) +
   labs(
     x = "Book-to-Market Group",
     y = "Mean Monthly Excess Return",
     fill = "Size Group",
     title = "Six Size--Book-to-Market Portfolios"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_ff_portfolio))
 ```
 
 ```{r}
@@ -1302,13 +856,10 @@ FF_portfolio_summary |>
 #| fig-width: 9
 #| fig-height: 5
 
-FF_portfolio_returns |>
+plot_ff_cumulative <- tbl_ff_portfolio_returns |>
   group_by(FF_portfolio_type) |>
   arrange(month_ID, .by_group = TRUE) |>
-  mutate(
-    cumulative_gross_return =
-      cumprod(1 + R)
-  ) |>
+  mutate(cumulative_gross_return = cumprod(1 + R)) |>
   ungroup() |>
   ggplot(
     aes(
@@ -1324,11 +875,12 @@ FF_portfolio_returns |>
     y = "Cumulative Gross Return",
     linetype = "Portfolio",
     title = "Cumulative Returns of Six Portfolios"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_ff_cumulative))
 ```
 
-### 4.4.2 SMBとHML
+### 4.6.2 SMBとHML
 
 SMBはSmallポートフォリオの平均リターンからBigポートフォリオの平均リターンを引いて計算する。
 
@@ -1351,16 +903,12 @@ HML_t
 $$
 
 ```{r}
-#| label: pivot-ff-portfolios-wide
+#| label: calculate-smb-hml
 
-FF_portfolio_wide <- FF_portfolio_returns |>
+tbl_ff_portfolio_wide <- tbl_ff_portfolio_returns |>
   select(
-    month_ID,
-    year,
-    month,
-    month_date,
-    FF_portfolio_type,
-    R
+    month_ID, year, month, month_date,
+    FF_portfolio_type, R
   ) |>
   pivot_wider(
     names_from = FF_portfolio_type,
@@ -1368,114 +916,54 @@ FF_portfolio_wide <- FF_portfolio_returns |>
   ) |>
   arrange(month_ID)
 
-FF_portfolio_wide
-```
-
-```{r}
-#| label: calculate-smb-hml
-
-SMB_HML_data <- FF_portfolio_wide |>
+tbl_smb_hml <- tbl_ff_portfolio_wide |>
   mutate(
-    SMB = (
-      SL + SN + SH
-    ) / 3 - (
-      BL + BN + BH
-    ) / 3,
-    HML = (
-      SH + BH
-    ) / 2 - (
-      SL + BL
-    ) / 2
+    SMB = (SL + SN + SH) / 3 - (BL + BN + BH) / 3,
+    HML = (SH + BH) / 2 - (SL + BL) / 2
   ) |>
   select(
-    month_ID,
-    year,
-    month,
-    month_date,
-    SL,
-    SN,
-    SH,
-    BL,
-    BN,
-    BH,
-    SMB,
-    HML
+    month_ID, year, month, month_date,
+    SL, SN, SH, BL, BN, BH, SMB, HML
   )
 
-SMB_HML_data
-```
-
-```{r}
-#| label: build-factor-data
-
-factor_data <- market_return_data |>
+tbl_factor <- tbl_market_returns |>
   select(
-    month_ID,
-    year,
-    month,
-    month_date,
-    R_F,
-    R_M,
-    R_Me,
-    market_return_coverage =
-      return_coverage
+    month_ID, year, month, month_date,
+    R_F, R_M, R_Me,
+    market_return_coverage = return_coverage
   ) |>
   inner_join(
-    SMB_HML_data,
-    by = c(
-      "month_ID",
-      "year",
-      "month",
-      "month_date"
-    )
+    tbl_smb_hml,
+    by = c("month_ID", "year", "month", "month_date")
   ) |>
   arrange(month_ID)
 
-factor_data
-```
-
-```{r}
-#| label: validate-factor-data
-
-invalid_factor_rows <- factor_data |>
+tbl_invalid_factor_rows <- tbl_factor |>
   filter(
     !if_all(
-      c(
-        R_F,
-        R_M,
-        R_Me,
-        SMB,
-        HML
-      ),
+      c(R_F, R_M, R_Me, SMB, HML),
       is.finite
     )
   )
 
-invalid_factor_rows
-
-if (nrow(invalid_factor_rows) > 0) {
+if (nrow(tbl_invalid_factor_rows) > 0) {
   stop("ファクター・データに欠損値または非有限値があります。")
 }
+
+show_table_LFL(tbl_factor)
 ```
 
-
-### 4.4.3 ファクターの要約統計量
-
-複数のファクターを `map_dfr()` で同じ形式に集計する。
+### 4.6.3 ファクターの要約統計量
 
 ```{r}
-#| label: summarize-factors-with-purrr
+#| label: summarize-factors
 
-factor_names <- c(
-  "R_Me",
-  "SMB",
-  "HML"
-)
+vec_factor_names <- c("R_Me", "SMB", "HML")
 
-factor_summary <- factor_names |>
+tbl_factor_summary <- vec_factor_names |>
   map_dfr(
     \(factor_name) {
-      values <- factor_data[[factor_name]]
+      values <- tbl_factor[[factor_name]]
       finite_values <- values[is.finite(values)]
 
       tibble(
@@ -1486,31 +974,18 @@ factor_summary <- factor_names |>
         minimum = min(finite_values),
         median = median(finite_values),
         maximum = max(finite_values),
-        t_value = mean(finite_values) / (
-          sd(finite_values) /
-            sqrt(length(finite_values))
-        )
+        t_value = mean(finite_values) /
+          (sd(finite_values) / sqrt(length(finite_values)))
       )
     }
   )
 
-factor_summary
-```
+tbl_factor_correlation <- tbl_factor |>
+  select(R_Me, SMB, HML) |>
+  cor(use = "complete.obs")
 
-```{r}
-#| label: calculate-factor-correlations
-
-factor_correlation <- factor_data |>
-  select(
-    R_Me,
-    SMB,
-    HML
-  ) |>
-  cor(
-    use = "complete.obs"
-  )
-
-factor_correlation
+show_table_LFL(tbl_factor_summary, n = Inf)
+tbl_factor_correlation
 ```
 
 ```{r}
@@ -1518,28 +993,14 @@ factor_correlation
 #| fig-width: 9
 #| fig-height: 6
 
-factor_data |>
-  select(
-    month_date,
-    R_Me,
-    SMB,
-    HML
-  ) |>
+plot_factor_time_series <- tbl_factor |>
+  select(month_date, R_Me, SMB, HML) |>
   pivot_longer(
-    cols = c(
-      R_Me,
-      SMB,
-      HML
-    ),
+    cols = c(R_Me, SMB, HML),
     names_to = "factor",
     values_to = "return"
   ) |>
-  ggplot(
-    aes(
-      x = month_date,
-      y = return
-    )
-  ) +
+  ggplot(aes(x = month_date, y = return)) +
   geom_line(linewidth = 0.6) +
   geom_hline(yintercept = 0, linetype = "dotted") +
   facet_wrap(
@@ -1547,20 +1008,19 @@ factor_data |>
     ncol = 1,
     scales = "free_y"
   ) +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  scale_y_continuous(labels = scales::label_percent()) +
   labs(
     x = NULL,
     y = "Monthly Return",
     title = "Market, SMB and HML Factors"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_factor_time_series))
 ```
 
-## 4.5 FF3モデルとCAPM比較
+## 4.7 FF3モデルとCAPMの比較
 
-### 4.5.1 FF3モデルの推定
+### 4.7.1 FF3モデルの推定
 
 Fama--Frenchの3ファクター・モデルは、ポートフォリオの超過リターンを市場、SMB、HMLで説明する。
 
@@ -1568,141 +1028,70 @@ $$
 R^e_{p,t}
 =
 \alpha_p
-+
-\beta_{M,p}R^e_{M,t}
-+
-\beta_{SMB,p}SMB_t
-+
-\beta_{HML,p}HML_t
-+
-\varepsilon_{p,t}
++\beta_{M,p}R^e_{M,t}
++\beta_{SMB,p}SMB_t
++\beta_{HML,p}HML_t
++\varepsilon_{p,t}
 $$
 
 ```{r}
-#| label: prepare-ff3-data
+#| label: estimate-ff3
 
-FF3_data <- size_decile_returns |>
-  select(
-    month_ID,
-    ME_rank10,
-    Re = Re_value
-  ) |>
+tbl_ff3_data <- tbl_size_decile_returns |>
+  select(month_ID, ME_rank10, Re = Re_value) |>
   inner_join(
-    factor_data |>
-      select(
-        month_ID,
-        R_Me,
-        SMB,
-        HML
-      ),
+    tbl_factor |>
+      select(month_ID, R_Me, SMB, HML),
     by = "month_ID"
   ) |>
   filter(
     if_all(
-      c(
-        Re,
-        R_Me,
-        SMB,
-        HML
-      ),
+      c(Re, R_Me, SMB, HML),
       is.finite
     )
   ) |>
-  arrange(
-    ME_rank10,
-    month_ID
-  )
+  arrange(ME_rank10, month_ID)
 
-FF3_data
-```
-
-```{r}
-#| label: estimate-ff3-with-purrr
-
-FF3_models <- FF3_data |>
+tbl_ff3_models <- tbl_ff3_data |>
   group_by(ME_rank10) |>
   nest() |>
   mutate(
     model = map(
       data,
-      \(data) lm(
-        Re ~ R_Me + SMB + HML,
-        data = data
-      )
+      \(data) lm(Re ~ R_Me + SMB + HML, data = data)
     ),
-    coefficients = map(
-      model,
-      broom::tidy
-    ),
-    fit = map(
-      model,
-      broom::glance
-    )
+    coefficients = map(model, broom::tidy),
+    fit = map(model, broom::glance)
   )
 
-FF3_models
-```
-
-```{r}
-#| label: extract-ff3-coefficients
-
-FF3_results <- FF3_models |>
-  select(
-    ME_rank10,
-    coefficients
-  ) |>
+tbl_ff3_results <- tbl_ff3_models |>
+  select(ME_rank10, coefficients) |>
   unnest(coefficients) |>
-  mutate(
-    significance = significance_stars(
-      p.value
-    )
-  ) |>
-  arrange(
-    ME_rank10,
-    term
-  )
+  mutate(significance = compute_significance_stars(p.value)) |>
+  arrange(ME_rank10, term)
 
-FF3_results
-```
-
-```{r}
-#| label: extract-ff3-fit
-
-FF3_fit <- FF3_models |>
-  select(
-    ME_rank10,
-    fit
-  ) |>
+tbl_ff3_fit <- tbl_ff3_models |>
+  select(ME_rank10, fit) |>
   unnest(fit) |>
   select(
-    ME_rank10,
-    r.squared,
-    adj.r.squared,
-    sigma,
-    statistic,
-    p.value,
-    nobs
+    ME_rank10, r.squared, adj.r.squared,
+    sigma, statistic, p.value, nobs
   ) |>
   arrange(ME_rank10)
 
-FF3_fit
-```
-
-```{r}
-#| label: summarize-ff3-alpha
-
-FF3_alpha <- FF3_results |>
+tbl_ff3_alpha <- tbl_ff3_results |>
   filter(term == "(Intercept)") |>
   transmute(
     ME_rank10,
-    FF3_alpha = estimate,
+    tbl_ff3_alpha = estimate,
     standard_error = std.error,
     statistic,
     p_value = p.value,
     significance
   )
 
-FF3_alpha
+show_table_LFL(tbl_ff3_results, n = Inf)
+show_table_LFL(tbl_ff3_fit, n = Inf)
 ```
 
 ```{r}
@@ -1710,60 +1099,55 @@ FF3_alpha
 #| fig-width: 8
 #| fig-height: 5
 
-FF3_alpha |>
-  mutate(
-    ME_rank10 = factor(
-      ME_rank10,
-      levels = 1:10
-    )
-  ) |>
-  ggplot(
-    aes(
-      x = ME_rank10,
-      y = FF3_alpha
-    )
-  ) +
+plot_ff3_alpha <- tbl_ff3_alpha |>
+  mutate(ME_rank10 = factor(ME_rank10, levels = 1:10)) |>
+  ggplot(aes(x = ME_rank10, y = tbl_ff3_alpha)) +
   geom_col() +
   geom_hline(yintercept = 0, linetype = "dotted") +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  scale_y_continuous(labels = scales::label_percent()) +
   labs(
     x = "Size Decile",
     y = "FF3 Alpha",
     title = "FF3 Alphas of Size Portfolios"
-  ) +
-  theme_classic()
+  )
+
+show_plot_LFL(add_lagrange_theme_LFL(plot_ff3_alpha))
 ```
 
-### 4.5.2 CAPMとFF3の比較
+### 4.7.2 アルファとモデル適合度の比較
 
 ```{r}
-#| label: compare-model-alpha
+#| label: compare-models
 
-model_alpha_comparison <- CAPM_alpha |>
-  select(
-    ME_rank10,
-    CAPM_alpha
-  ) |>
+tbl_model_alpha_comparison <- tbl_capm_alpha |>
+  select(ME_rank10, tbl_capm_alpha) |>
   left_join(
-    FF3_alpha |>
-      select(
-        ME_rank10,
-        FF3_alpha
-      ),
+    tbl_ff3_alpha |>
+      select(ME_rank10, tbl_ff3_alpha),
     by = "ME_rank10"
   ) |>
   pivot_longer(
-    cols = c(
-      CAPM_alpha,
-      FF3_alpha
-    ),
+    cols = c(tbl_capm_alpha, tbl_ff3_alpha),
     names_to = "model",
     values_to = "alpha"
   )
 
-model_alpha_comparison
+tbl_model_fit_comparison <- tbl_capm_fit |>
+  select(
+    ME_rank10,
+    CAPM_adjusted_R2 = adj.r.squared
+  ) |>
+  left_join(
+    tbl_ff3_fit |>
+      select(
+        ME_rank10,
+        FF3_adjusted_R2 = adj.r.squared
+      ),
+    by = "ME_rank10"
+  )
+
+show_table_LFL(tbl_model_alpha_comparison, n = Inf)
+show_table_LFL(tbl_model_fit_comparison, n = Inf)
 ```
 
 ```{r}
@@ -1771,13 +1155,8 @@ model_alpha_comparison
 #| fig-width: 8
 #| fig-height: 5
 
-model_alpha_comparison |>
-  mutate(
-    ME_rank10 = factor(
-      ME_rank10,
-      levels = 1:10
-    )
-  ) |>
+plot_model_alpha <- tbl_model_alpha_comparison |>
+  mutate(ME_rank10 = factor(ME_rank10, levels = 1:10)) |>
   ggplot(
     aes(
       x = ME_rank10,
@@ -1787,38 +1166,15 @@ model_alpha_comparison |>
   ) +
   geom_col(position = "dodge") +
   geom_hline(yintercept = 0, linetype = "dotted") +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  scale_y_continuous(labels = scales::label_percent()) +
   labs(
     x = "Size Decile",
     y = "Monthly Alpha",
     fill = "Model",
     title = "CAPM and FF3 Alphas"
-  ) +
-  theme_classic()
-```
-
-```{r}
-#| label: compare-model-fit
-
-model_fit_comparison <- CAPM_fit |>
-  select(
-    ME_rank10,
-    CAPM_adjusted_R2 =
-      adj.r.squared
-  ) |>
-  left_join(
-    FF3_fit |>
-      select(
-        ME_rank10,
-        FF3_adjusted_R2 =
-          adj.r.squared
-      ),
-    by = "ME_rank10"
   )
 
-model_fit_comparison
+show_plot_LFL(add_lagrange_theme_LFL(plot_model_alpha))
 ```
 
 ```{r}
@@ -1826,21 +1182,13 @@ model_fit_comparison
 #| fig-width: 8
 #| fig-height: 5
 
-model_fit_comparison |>
+plot_model_fit <- tbl_model_fit_comparison |>
   pivot_longer(
-    cols = c(
-      CAPM_adjusted_R2,
-      FF3_adjusted_R2
-    ),
+    cols = c(CAPM_adjusted_R2, FF3_adjusted_R2),
     names_to = "model",
     values_to = "adjusted_R2"
   ) |>
-  mutate(
-    ME_rank10 = factor(
-      ME_rank10,
-      levels = 1:10
-    )
-  ) |>
+  mutate(ME_rank10 = factor(ME_rank10, levels = 1:10)) |>
   ggplot(
     aes(
       x = ME_rank10,
@@ -1854,101 +1202,71 @@ model_fit_comparison |>
     y = "Adjusted R-squared",
     fill = "Model",
     title = "Model Fit: CAPM and FF3"
-  ) +
-  theme_classic()
-```
-
-## 4.6 ファクター・データの保存
-
-### 4.6.1 保存と検証
-
-第5章以降で使用するファクター・データを、`simulation_data/derived/ch06_output.csv` に保存する。
-
-```{r}
-#| label: prepare-factor-output
-
-factor_output <- factor_data |>
-  select(
-    month_ID,
-    year,
-    month,
-    month_date,
-    R_F,
-    R_M,
-    R_Me,
-    SMB,
-    HML,
-    SL,
-    SN,
-    SH,
-    BL,
-    BN,
-    BH,
-    market_return_coverage
   )
 
-factor_output
+show_plot_LFL(add_lagrange_theme_LFL(plot_model_fit))
 ```
+
+## 4.8 ファクター・データの保存
+
+第5章以降で使用するファクター・データを、`simulation_data/derived/ch06_output.csv`に保存する。
 
 ```{r}
 #| label: save-factor-output
 
-factor_output_path <- file.path(
-  derived_data_dir,
+tbl_factor_output <- tbl_factor |>
+  select(
+    month_ID, year, month, month_date,
+    R_F, R_M, R_Me, SMB, HML,
+    SL, SN, SH, BL, BN, BH,
+    market_return_coverage
+  )
+
+vec_derived_data_dir <- file.path(
+  get_simulation_data_dir_LFL(),
+  "derived"
+)
+
+if (!dir.exists(vec_derived_data_dir)) {
+  dir.create(vec_derived_data_dir, recursive = TRUE)
+}
+
+vec_factor_output_path <- file.path(
+  vec_derived_data_dir,
   "ch06_output.csv"
 )
 
 readr::write_csv(
-  factor_output,
-  factor_output_path
+  tbl_factor_output,
+  vec_factor_output_path
 )
 
-factor_output_path
-file.info(
-  factor_output_path
-)[, c("size", "mtime")]
-```
-
-保存したファイルを読み直し、行数と列名を検証する。
-
-```{r}
-#| label: verify-factor-output
-
-factor_output_check <- readr::read_csv(
-  factor_output_path,
+tbl_factor_output_check <- readr::read_csv(
+  vec_factor_output_path,
   show_col_types = FALSE
 )
 
 stopifnot(
-  nrow(factor_output_check) ==
-    nrow(factor_output)
+  nrow(tbl_factor_output_check) == nrow(tbl_factor_output),
+  identical(names(tbl_factor_output_check), names(tbl_factor_output))
 )
 
-stopifnot(
-  identical(
-    names(factor_output_check),
-    names(factor_output)
-  )
+tbl_factor_output_summary <- tibble(
+  output_file = vec_factor_output_path,
+  rows = nrow(tbl_factor_output_check),
+  columns = ncol(tbl_factor_output_check),
+  first_month = min(tbl_factor_output_check$month_ID),
+  last_month = max(tbl_factor_output_check$month_ID)
 )
 
-tibble(
-  output_file = factor_output_path,
-  rows = nrow(factor_output_check),
-  columns = ncol(factor_output_check),
-  first_month = min(
-    factor_output_check$month_ID
-  ),
-  last_month = max(
-    factor_output_check$month_ID
-  )
-)
+show_table_LFL(tbl_factor_output_summary)
 ```
 
-## 4.7 まとめ
+## 4.9 まとめ
 
-本章では、前年度末時価総額を用いて市場ポートフォリオと企業規模ポートフォリオを構築した。さらに、企業規模と簿価時価比率による独立2×3ソートから6ポートフォリオを作成し、SMBとHMLを計算した。
+本章では、前年度末時価総額を用いて市場ポートフォリオと企業規模ポートフォリオを構築した。また、企業規模と簿価時価比率による独立2×3ソートから6ポートフォリオを作成し、SMBとHMLを計算した。
 
-回帰分析では、企業規模10分位ポートフォリオに対してCAPMとFF3モデルを推定し、アルファと決定係数を比較した。回帰の反復処理には `nest()` と `purrr::map()` を用いており、明示的なループは使用していない。
+企業規模10分位ポートフォリオに対してCAPMとFF3モデルを推定し、アルファと調整済み決定係数を比較した。回帰の反復処理には`nest()`と`purrr::map()`を使用しており、明示的なループは使用していない。
 
 作成したファクター・データは次の場所に保存される。
 

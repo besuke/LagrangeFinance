@@ -1,5 +1,5 @@
 ---
-title: "第II-5章 Normal（Bachelier）モデル"
+title: "第II-5章 金利モデル（期間構造なし）Normaモデル"
 execute:
   eval: true
   echo: true

@@ -1,5 +1,5 @@
 ---
-title: "第II-7章 Callable BondとHull–Whiteモデル"
+title: "第II-7章 金利期間構造モデル Hull–White Callable債評価"
 execute:
   eval: true
   echo: true

@@ -1,11 +1,11 @@
----
-title: "第II-4章 Blackモデル"
-execute:
-  eval: true
-  echo: true
-  warning: false
-  message: false
----
+# ---
+# title: "第II-4章 株価・為替と幾何ブラウン運動モデル"
+# execute:
+#   eval: true
+#   echo: true
+#   warning: false
+#   message: false
+# ---
 
 
 1973年に公表されたBlack–Scholes–Mertonモデルは、株式オプションの理論価格を求めるための基本モデルとして、金融工学の発展に大きな影響を与えた。このモデルでは、株価が幾何ブラウン運動に従い、将来の株価が対数正規分布に従うと仮定する。

@@ -1,389 +1,697 @@
-# 第5章 資産価格モデル
+---
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+---
 
-## 5.1 分析環境とデータ準備
+# 第5章 資産価格モデルとポートフォリオ最適化
 
-### 5.1.1 外部パッケージの読み込みとデータの準備
+本章では、Fama--Frenchの3ファクター・モデルを用いて企業別の期待リターンを推定し、その結果を配当成長率の分析とポートフォリオ最適化へ接続する。
 
-```{r}
-#| label: load-and-prepare-data
-#| eval: false
-#| message: false
-#| warning: false
+前章までに作成した月次株式データ、年次企業データ、ファクターデータを利用し、企業固有リスクと共通ファクターリスクから株式リターンの分散共分散行列を構築する。最後に、平均分散最適化を実行し、目標期待リターンの変化に応じた効率的フロンティアを確認する。
 
-library(tidyverse)
-library(broom)
+## 5.1 分析対象とデータの接続
 
-monthly_data <- read_csv("ch05_output1.csv")
-annual_data  <- read_csv("ch05_output2.csv")
-factor_data <- read_csv("ch06_output.csv")
+### 5.1.1 共通関数と分析データ
 
-monthly_data <- monthly_data %>% 
-  group_by(firm_ID) %>% # firm_IDでグループ化
-  mutate(is_public_2020 = (max(month_ID) == 72), # 2020年の年末時点で上場しているかフラグ付け
-         N_observations = n()) %>% # 各firm_IDのデータ数をカウント
-  ungroup() %>% 
-  filter(is_public_2020 == TRUE, # 2020年の年末時点で上場しているfirm_IDを抽出
-         N_observations >= 36) %>% # 36ヶ月以上のデータがあるfirm_IDを抽出
-  select(-N_observations) # N_observations列を削除
-
-annual_data <- monthly_data %>% # monthly_dataに含まれるyearとfirm_IDのペアを抽出
-  select(year, firm_ID) %>% 
-  unique() %>%
-  left_join(annual_data, by = c("year", "firm_ID")) # annual_dataとmonthly_dataでyearとfirm_IDのペアを整合的に
-```
-
-## 5.2 FF3モデルと株式資本コスト
-
-### 5.2.1 FF3モデルの推定
+本章では、プロジェクト共通のutilityを読み込み、前章までに作成された派生データを利用する。パッケージの導入方法そのものは扱わず、分析に必要な処理から開始する。
 
 ```{r}
-#| label: estimate-ff3-by-firm
-#| eval: false
-#| message: false
-#| warning: false
+#| label: setup-chapter-05
 
-firm_ID_set <- unique(monthly_data$firm_ID) # firm_IDの固有要素を抽出
-N_firms <- length(firm_ID_set) # firm_ID_setの要素数をカウント
-
-monthly_data <- monthly_data %>% 
-  select(-R_F) %>% # R_Fはmonthly_dataとfactor_dataで重複するので削除
-  full_join(factor_data, by = "month_ID")
-
-FF3_results <- list(NA) # 推定結果を保存するために空のリストを準備
-
-for (i in 1:N_firms) {
-  
-  FF3_results[[i]] <- monthly_data %>% 
-    filter(firm_ID == firm_ID_set[i]) %>%
-    lm(Re ~ 0 + R_Me + SMB + HML, data = .) %>% # 冒頭に"0 +"を追加して定数項をゼロに
-    tidy() %>% 
-    mutate(firm_ID = firm_ID_set[i]) %>% # 推定対象のfirm_IDを保存
-    select(firm_ID, everything())
-    
-}
-
-FF3_results <- do.call(rbind, FF3_results) # do.call()関数を用いて複数のデータフレームから構成されるリストを一つのデータフレームに統合
+source("R/utility_LFL.R")
+load_part1_packages_LFL()
 ```
-
-### 5.2.2 ファクター・ローディングの整理
 
 ```{r}
-#| label: reshape-ff3-loadings
-#| eval: false
-#| message: false
-#| warning: false
+#| label: read-chapter-05-data
 
-FF3_loadings <- FF3_results %>% 
-  pivot_wider(id_cols = "firm_ID", names_from = "term", values_from = "estimate") %>% # term列の値に応じて新しく列を定義
-  rename(beta_M = R_Me, beta_SMB = SMB, beta_HML = HML) # 列名を変更
+tbl_monthly_raw <- read_derived_csv_LFL("ch05_output1.csv")
+tbl_annual_raw <- read_derived_csv_LFL("ch05_output2.csv")
+tbl_factor <- read_derived_csv_LFL("ch06_output.csv")
 ```
 
-### 5.2.3 ファクター・リスクプレミアムの計算
+### 5.1.2 推定対象企業の選定
+
+企業別の時系列回帰には一定数の観測値が必要である。本章では、2020年末まで上場が継続し、月次観測値が36か月以上存在する企業を推定対象とする。
 
 ```{r}
-#| label: calculate-factor-risk-premia
-#| eval: false
-#| message: false
-#| warning: false
+#| label: select-estimation-sample
 
-factor_risk_premium <- apply(factor_data[ , 4:6], 2, mean) * 12 # 12を掛けて年次プレミアムに換算
-
-##       R_Me        SMB        HML 
-
-## 0.04800514 0.07858358 0.08328208 
+tbl_monthly <- tbl_monthly_raw |>
+  group_by(firm_ID) |>
+  mutate(
+    is_public_2020 = max(month_ID, na.rm = TRUE) == 72,
+    n_observations = n()
+  ) |>
+  ungroup() |>
+  filter(
+    is_public_2020,
+    n_observations >= 36
+  ) |>
+  select(-n_observations)
 ```
 
-### 5.2.4 FF3モデルによる株式資本コストの推定
+年次データについても、月次データに含まれる企業と年度の組合せに限定する。
 
 ```{r}
-#| label: estimate-ff3-cost-of-capital
-#| eval: false
-#| message: false
-#| warning: false
+#| label: align-annual-data
 
-expected_R_FF3 <- as.matrix(FF3_loadings[ , 2:4]) %*% factor_risk_premium # Fama-Frenchの3ファクター・モデルに基づいて期待リターンを計算
-
-FF3_cost_of_capital <- tibble(firm_ID = FF3_loadings$firm_ID, cost_of_capital = as.vector(expected_R_FF3)) # 行列からデータフレームに変換してfirm_ID列を追加
+tbl_annual <- tbl_monthly |>
+  distinct(year, firm_ID) |>
+  left_join(
+    tbl_annual_raw,
+    by = c("year", "firm_ID")
+  )
 ```
 
-## 5.3 株式資本コストと配当成長
+### 5.1.3 月次株式リターンとファクターの結合
 
-### 5.3.1 株式資本コストの分布
+月次株式データとファクターデータを `month_ID` で結合する。無リスク金利 `R_F` が月次株式データにも含まれる場合は、重複を避けるため、ファクターデータ側の値を利用する。
 
 ```{r}
-#| label: plot-cost-of-capital-distribution
-#| eval: false
-#| message: false
-#| warning: false
+#| label: join-monthly-and-factor-data
 
-ggplot(FF3_cost_of_capital) + 
-  geom_histogram(aes(x = cost_of_capital)) + 
-  labs(x = "FF3 Cost of Capital", y = "Count") +
-  scale_y_discrete(expand = c(0, 0)) + 
-  theme_classic()
+tbl_monthly_factor <- tbl_monthly |>
+  select(-any_of("R_F")) |>
+  left_join(
+    tbl_factor,
+    by = "month_ID"
+  )
 ```
 
-### 5.3.2 時価総額別の株式資本コスト
+## 5.2 FF3モデルによる期待リターンの推定
+
+### 5.2.1 FF3モデル
+
+企業 $i$ の時点 $t$ における超過リターンを、次の3ファクター・モデルで表す。
+
+$$
+R_{i,t} - R_{F,t}
+=
+\beta_{i,M} R_{M,t}^{e}
++
+\beta_{i,SMB} SMB_t
++
+\beta_{i,HML} HML_t
++
+\varepsilon_{i,t}
+$$
+
+ここで、$R_{M,t}^{e}$ は市場超過リターン、$SMB_t$ は企業規模ファクター、$HML_t$ は簿価時価比率ファクターである。本章では、入力データに含まれる超過リターン `Re` を被説明変数とし、定数項を置かずに企業別回帰を推定する。
 
 ```{r}
-#| label: plot-cost-of-capital-by-size
-#| eval: false
-#| message: false
-#| warning: false
+#| label: estimate-ff3-models
 
-annual_data_2020 <- annual_data %>%
-  group_by(firm_ID) %>% # 企業ごとに時価総額を計算
-  mutate(lagged_ME = lag(ME)) %>% 
-  ungroup() %>%
-  filter(year == 2020) %>% # 2020年のデータのみ抽出
-  mutate(ME_rank2 = as.factor(ntile(lagged_ME, 2)), # 時価総額に基づき二分割
-         ME_rank2 = fct_recode(ME_rank2,
-                                     Small = "1",
-                                     Large = "2")) %>% 
-  full_join(FF3_cost_of_capital, by = "firm_ID") %>% # 株式資本コストの推定値を追加
-  drop_na() # 欠損値を削除
-
-ggplot(annual_data_2020) +
-  geom_density(aes(x = cost_of_capital, group = ME_rank2, linetype = ME_rank2)) + # 密度関数を描くにはgeom_density()関数を用いる
-  labs(x = "FF3 Cost of Capital", y = "Estimated Density", linetype = "Firm Type")  + 
-  scale_y_continuous(expand = c(0, 0), breaks = NULL) + # break引数で目盛り線を非表示に指定
-  theme_classic()
+tbl_ff3_models <- tbl_monthly_factor |>
+  select(
+    firm_ID,
+    Re,
+    R_Me,
+    SMB,
+    HML
+  ) |>
+  drop_na() |>
+  group_by(firm_ID) |>
+  nest(tbl_firm = -firm_ID) |>
+  mutate(
+    list_model = map(
+      tbl_firm,
+      \(tbl_data) {
+        lm(
+          Re ~ 0 + R_Me + SMB + HML,
+          data = tbl_data
+        )
+      }
+    ),
+    tbl_coefficient = map(
+      list_model,
+      broom::tidy
+    )
+  ) |>
+  ungroup()
 ```
 
-### 5.3.3 配当利回りの計算
+### 5.2.2 企業別ファクター・ローディング
+
+企業別回帰から得られた係数を横持ち形式に変換し、市場、企業規模、簿価時価比率に対する感応度として整理する。
 
 ```{r}
-#| label: calculate-dividend-yield
-#| eval: false
-#| message: false
-#| warning: false
+#| label: create-ff3-loading-table
 
-dividend_yield_2020 <- monthly_data %>% 
-  filter(year == 2020) %>%
-  group_by(firm_ID) %>% # firm_IDでグループ化
-  summarize(annual_dividend = sum(DPS * shares_outstanding), # 各月の配当支払総額を合計
-            latest_ME = ME[which.max(month_ID)]) %>%  # 最新の時価総額を保存
-  mutate(dividend_yield = annual_dividend / latest_ME) %>% # 配当利回りの実績値を計算
-  filter(dividend_yield > 0) # 無配の企業を落とす
+tbl_ff3_loadings <- tbl_ff3_models |>
+  select(
+    firm_ID,
+    tbl_coefficient
+  ) |>
+  unnest(tbl_coefficient) |>
+  select(
+    firm_ID,
+    term,
+    estimate
+  ) |>
+  pivot_wider(
+    names_from = term,
+    values_from = estimate
+  ) |>
+  rename(
+    beta_market = R_Me,
+    beta_size = SMB,
+    beta_value = HML
+  )
+
+show_table_head_LFL(tbl_ff3_loadings)
 ```
 
-### 5.3.4 潜在配当成長率の推定
+### 5.2.3 ファクター・リスクプレミアム
+
+月次ファクターリターンの標本平均を12倍し、年率換算したファクター・リスクプレミアムを求める。
 
 ```{r}
-#| label: estimate-implied-dividend-growth
-#| eval: false
-#| message: false
-#| warning: false
+#| label: compute-factor-risk-premia
 
-dividend_yield_2020 %>% 
-  left_join(FF3_cost_of_capital, by = "firm_ID") %>% # 株式資本コストの推定値を追加
-  mutate(implied_dividend_growth = (cost_of_capital - dividend_yield) / (1 + dividend_yield)) # 配当割引モデルから潜在配当成長率を逆算
+vec_factor_names <- c("R_Me", "SMB", "HML")
+
+tbl_factor_risk_premium <- tbl_factor |>
+  summarise(
+    across(
+      all_of(vec_factor_names),
+      \(vec_return) {
+        mean(vec_return, na.rm = TRUE) * 12
+      }
+    )
+  ) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "factor",
+    values_to = "annual_risk_premium"
+  )
+
+vec_factor_risk_premium <- tbl_factor_risk_premium |>
+  arrange(match(factor, vec_factor_names)) |>
+  pull(annual_risk_premium)
+
+names(vec_factor_risk_premium) <- vec_factor_names
+
+show_table_LFL(tbl_factor_risk_premium)
 ```
 
-## 5.4 リスクモデルと投資ユニバース
+### 5.2.4 株式資本コスト
 
-### 5.4.1 ファクターの分散共分散行列
+FF3モデルに基づく企業 $i$ の期待超過リターンは、ファクター・ローディングとファクター・リスクプレミアムの積和として求められる。
+
+$$
+E[R_i-R_F]
+=
+\beta_{i,M}E[R_M^e]
++
+\beta_{i,SMB}E[SMB]
++
+\beta_{i,HML}E[HML]
+$$
+
+本章では、この期待超過リターンを企業の株式資本コストとして利用する。
 
 ```{r}
-#| label: estimate-factor-covariance
-#| eval: false
-#| message: false
-#| warning: false
+#| label: compute-cost-of-equity
 
-Sigma_FF3 <- 12 * cov(factor_data[ , 4:6]) # 12を掛けて年次データに換算
+tbl_cost_of_equity <- tbl_ff3_loadings |>
+  mutate(
+    cost_of_equity =
+      beta_market * vec_factor_risk_premium[["R_Me"]] +
+      beta_size * vec_factor_risk_premium[["SMB"]] +
+      beta_value * vec_factor_risk_premium[["HML"]]
+  )
 
-##              R_Me          SMB          HML
-
-## R_Me  0.020685969 -0.003901607  0.001529890
-
-## SMB  -0.003901607  0.006268377 -0.001886351
-
-## HML   0.001529890 -0.001886351  0.003915638
+show_table_head_LFL(tbl_cost_of_equity)
 ```
 
-### 5.4.2 投資対象企業の選定
+## 5.3 期待リターンと配当成長率
+
+### 5.3.1 期待リターンの企業間分布
+
+```{r}
+#| label: plot-cost-of-equity-distribution
+
+plot_cost_of_equity_distribution <- tbl_cost_of_equity |>
+  ggplot(
+    aes(x = cost_of_equity)
+  ) +
+  geom_histogram(bins = 30) +
+  labs(
+    x = "FF3 Cost of Equity",
+    y = "Count"
+  ) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.05))
+  )
+
+plot_cost_of_equity_distribution <- add_lagrange_theme_LFL(
+  plot_cost_of_equity_distribution
+)
+
+show_plot_LFL(plot_cost_of_equity_distribution)
+```
+
+### 5.3.2 企業規模と期待リターン
+
+```{r}
+#| label: create-2020-size-groups
+
+tbl_firm_characteristics_2020 <- tbl_annual |>
+  arrange(
+    firm_ID,
+    year
+  ) |>
+  group_by(firm_ID) |>
+  mutate(
+    lagged_ME = lag(ME)
+  ) |>
+  ungroup() |>
+  filter(year == 2020) |>
+  mutate(
+    size_group = ntile(lagged_ME, 2),
+    size_group = factor(
+      size_group,
+      levels = c(1, 2),
+      labels = c("Small", "Large")
+    )
+  ) |>
+  inner_join(
+    tbl_cost_of_equity,
+    by = "firm_ID"
+  ) |>
+  drop_na(
+    lagged_ME,
+    cost_of_equity,
+    size_group
+  )
+```
+
+```{r}
+#| label: plot-cost-of-equity-by-size
+
+plot_cost_of_equity_by_size <- tbl_firm_characteristics_2020 |>
+  ggplot(
+    aes(
+      x = cost_of_equity,
+      linetype = size_group
+    )
+  ) +
+  geom_density() +
+  labs(
+    x = "FF3 Cost of Equity",
+    y = "Estimated Density",
+    linetype = "Firm Size"
+  ) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.05)),
+    breaks = NULL
+  )
+
+plot_cost_of_equity_by_size <- add_lagrange_theme_LFL(
+  plot_cost_of_equity_by_size
+)
+
+show_plot_LFL(plot_cost_of_equity_by_size)
+```
+
+### 5.3.3 配当利回り
+
+```{r}
+#| label: compute-dividend-yield
+
+tbl_dividend_yield_2020 <- tbl_monthly |>
+  filter(year == 2020) |>
+  group_by(firm_ID) |>
+  summarise(
+    annual_dividend = sum(
+      DPS * shares_outstanding,
+      na.rm = TRUE
+    ),
+    latest_ME = ME[which.max(month_ID)],
+    .groups = "drop"
+  ) |>
+  mutate(
+    dividend_yield = annual_dividend / latest_ME
+  ) |>
+  filter(
+    is.finite(dividend_yield),
+    dividend_yield > 0
+  )
+
+show_table_head_LFL(tbl_dividend_yield_2020)
+```
+
+### 5.3.4 潜在配当成長率
+
+株式資本コストを $r_i$、配当利回りを $y_i$ とすると、本章で用いる潜在配当成長率 $g_i$ は次式から逆算される。
+
+$$
+g_i
+=
+\frac{r_i-y_i}{1+y_i}
+$$
+
+```{r}
+#| label: compute-implied-dividend-growth
+
+tbl_implied_dividend_growth <- tbl_dividend_yield_2020 |>
+  inner_join(
+    tbl_cost_of_equity |>
+      select(
+        firm_ID,
+        cost_of_equity
+      ),
+    by = "firm_ID"
+  ) |>
+  mutate(
+    implied_dividend_growth =
+      (cost_of_equity - dividend_yield) /
+      (1 + dividend_yield)
+  )
+
+show_table_head_LFL(tbl_implied_dividend_growth)
+```
+## 5.4 ファクターモデルによるリスク推定
+### 5.4.1 ファクターの分散共分散
+
+```{r}
+#| label: compute-factor-covariance
+
+tbl_factor_covariance <- compute_covariance_table_LFL(
+  tbl_data = tbl_factor,
+  vec_variables = vec_factor_names,
+  annualization_factor = 12
+)
+
+matrix_factor_covariance <- convert_covariance_table_to_matrix_LFL(
+  tbl_factor_covariance
+)
+
+show_table_LFL(tbl_factor_covariance)
+```
+
+### 5.4.2 投資ユニバース
 
 ```{r}
 #| label: select-investment-universe
-#| eval: false
-#| message: false
-#| warning: false
 
-N_portfolio_firms <- 100 # 投資対象の企業を100社に限定
+n_portfolio_firms <- 100L
 
-investment_universe <-  annual_data %>% 
-  filter(year == 2020) %>% # 2020年度のデータを抽出
-  filter(rank(desc(ME)) <= N_portfolio_firms) %>% # その中で時価総額が上位100社の銘柄を抽出
-  select(firm_ID) %>% 
-  unlist() # データフレームからベクトルに変換
+tbl_investment_universe <- tbl_annual |>
+  filter(year == 2020) |>
+  inner_join(
+    tbl_cost_of_equity |>
+      select(
+        firm_ID,
+        cost_of_equity
+      ),
+    by = "firm_ID"
+  ) |>
+  slice_max(
+    order_by = ME,
+    n = n_portfolio_firms,
+    with_ties = FALSE
+  ) |>
+  arrange(desc(ME)) |>
+  select(
+    firm_ID,
+    ME,
+    cost_of_equity
+  )
 
-names(investment_universe) <- NULL # firm_IDという列名を消去
+vec_investment_firm_ids <- tbl_investment_universe |>
+  pull(firm_ID)
 
+n_portfolio_firms <- length(vec_investment_firm_ids)
 
+show_table_head_LFL(tbl_investment_universe)
 ```
 
-### 5.4.3 誤差項の分散共分散行列
+### 5.4.3 企業固有リスク
 
 ```{r}
-#| label: estimate-idiosyncratic-covariance
-#| eval: false
-#| message: false
-#| warning: false
+#| label: compute-idiosyncratic-variance
 
-Sigma_epsilon <- monthly_data %>%
-  filter(firm_ID %in% investment_universe) %>% # 投資対象に含まれるデータのみを抽出
-  left_join(FF3_loadings, by = "firm_ID") %>%
-  mutate(R_FF3 = R_F + beta_M * R_Me + beta_SMB * SMB + beta_HML * HML, # ファクターの実現値からFama-Frenchの3ファクター・モデルに基づくリターンを計算
-         epsilon = R - R_FF3) %>% # 実際のリターンとの違いから誤差項を推定
-  group_by(firm_ID) %>% 
-  summarize(epsilon_variance = 12 * var(epsilon, na.rm = TRUE)) %>% # firm_IDごとに誤差項の分散を推定
-  select(epsilon_variance) %>% 
-  unlist() %>% # データフレームからベクトルに変換
-  diag() # ベクトルから対角行列を作成
+tbl_idiosyncratic_variance <- tbl_monthly_factor |>
+  filter(
+    firm_ID %in% vec_investment_firm_ids
+  ) |>
+  inner_join(
+    tbl_ff3_loadings,
+    by = "firm_ID"
+  ) |>
+  mutate(
+    fitted_return =
+      R_F +
+      beta_market * R_Me +
+      beta_size * SMB +
+      beta_value * HML,
+    residual_return = R - fitted_return
+  ) |>
+  group_by(firm_ID) |>
+  summarise(
+    idiosyncratic_variance =
+      12 * var(
+        residual_return,
+        na.rm = TRUE
+      ),
+    .groups = "drop"
+  ) |>
+  right_join(
+    tbl_investment_universe |>
+      select(firm_ID),
+    by = "firm_ID"
+  ) |>
+  arrange(
+    match(
+      firm_ID,
+      vec_investment_firm_ids
+    )
+  )
+
+show_table_head_LFL(tbl_idiosyncratic_variance)
 ```
 
-### 5.4.4 リターンの分散共分散行列
+### 5.4.4 株式リターンの分散共分散
+
+企業別ファクター・ローディングを並べた行列を $\boldsymbol{B}$、企業固有リスクの対角行列を $\boldsymbol{\Sigma}_{\varepsilon}$ とすると、株式リターンの分散共分散行列は次式で構築できる。
+
+$$
+\boldsymbol{\Sigma}
+=
+\boldsymbol{B}
+\boldsymbol{\Sigma}_F
+\boldsymbol{B}^{\mathsf{T}}
++
+\boldsymbol{\Sigma}_{\varepsilon}
+$$
 
 ```{r}
 #| label: build-return-covariance
-#| eval: false
-#| message: false
-#| warning: false
 
-beta <- FF3_loadings %>%
-  filter(firm_ID %in% investment_universe) %>% # 投資対象に含まれるデータのみを抽出
-  select(-firm_ID) %>% # ファクター・ローディングのみを抽出
-  as.matrix() # データフレームから行列に変換
+tbl_portfolio_loadings <- tbl_investment_universe |>
+  select(firm_ID) |>
+  left_join(
+    tbl_ff3_loadings,
+    by = "firm_ID"
+  )
 
-Sigma <- beta %*% Sigma_FF3 %*% t(beta) + Sigma_epsilon # 分解式に基づいて分散共分散行列を計算
+matrix_factor_loadings <- tbl_portfolio_loadings |>
+  select(
+    beta_market,
+    beta_size,
+    beta_value
+  ) |>
+  as.matrix()
+
+vec_idiosyncratic_variance <- tbl_idiosyncratic_variance |>
+  pull(idiosyncratic_variance)
+
+matrix_idiosyncratic_covariance <- diag(
+  vec_idiosyncratic_variance
+)
+
+matrix_return_covariance <-
+  matrix_factor_loadings %*%
+  matrix_factor_covariance %*%
+  t(matrix_factor_loadings) +
+  matrix_idiosyncratic_covariance
+
+rownames(matrix_return_covariance) <- vec_investment_firm_ids
+colnames(matrix_return_covariance) <- vec_investment_firm_ids
 ```
 
-### 5.4.5 期待リターンのベクトル
+### 5.4.5 期待リターン
 
 ```{r}
 #| label: build-expected-return-vector
-#| eval: false
-#| message: false
-#| warning: false
 
-mu <- FF3_cost_of_capital %>% # 7.1.2節の推定結果をそのまま利用
-  filter(firm_ID %in% investment_universe) %>% # 投資対象に含まれるデータのみを抽出
-  select(-firm_ID) %>%
-  unlist() # データフレームからベクトルに変換
+vec_expected_returns <- tbl_investment_universe |>
+  pull(cost_of_equity)
 
-names(mu) <- NULL # cost_of_capitalという列名を消去
+names(vec_expected_returns) <- vec_investment_firm_ids
 
-##   [1]  0.203791678 -0.001750860  0.071846430  …（中略）…  0.088872719  0.153100331  0.361662758
+tibble(
+  firm_ID = vec_investment_firm_ids,
+  expected_return = vec_expected_returns
+) |>
+  show_table_head_LFL()
 ```
 
-## 5.5 平均分散ポートフォリオ
+## 5.5 平均分散最適化
 
-### 5.5.1 quadprogパッケージの準備
+### 5.5.1 最適化問題
 
-```{r}
-#| label: install-quadprog
-#| eval: false
-#| message: false
-#| warning: false
+目標期待リターンを $\mu_p^*$ とすると、ポートフォリオ・ウェイト $\boldsymbol{w}$ は次の問題から求められる。
 
-install.packages("quadprog") # quadprogはquadratic programming（二次計画法）の略
-```
+$$
+\min_{\boldsymbol{w}}
+\frac{1}{2}
+\boldsymbol{w}^{\mathsf{T}}
+\boldsymbol{\Sigma}
+\boldsymbol{w}
+$$
 
-### 5.5.2 平均分散最適化問題の設定
+$$
+\boldsymbol{w}^{\mathsf{T}}
+\boldsymbol{\mu}
+=
+\mu_p^*
+$$
+
+$$
+\boldsymbol{w}^{\mathsf{T}}
+\boldsymbol{1}
+=
+1
+$$
+
+本章の基本設定では、空売りを禁止する不等式制約は追加しない。
+
+### 5.5.2 目標期待リターンの設定
 
 ```{r}
 #| label: solve-mean-variance-portfolio
-#| eval: false
-#| message: false
-#| warning: false
 
-library(quadprog) # quadprogの読み込み
+target_return <- 0.10
 
-target_return <- 0.1 # 目標期待リターンを0.1に設定
-
-Dmat <- Sigma # 分散共分散行列
-dvec <- rep(0, N_portfolio_firms) # 対応項無し
-Amat <- cbind(mu, rep(1, N_portfolio_firms)) # 目標期待リターン，及び保有比率の係数
-bvec <- c(target_return, 1) # 目標期待リターン，及び保有比率の合計値
-
-MV_portfolio <- solve.QP(Dmat, dvec, Amat, bvec, meq = 2) # 等号制約の数をmeq引数で表す
+list_mean_variance_portfolio <- compute_mean_variance_portfolio_LFL(
+  matrix_covariance = matrix_return_covariance,
+  vec_expected_returns = vec_expected_returns,
+  target_return = target_return
+)
 ```
 
-### 5.5.3 最適化結果の構造
+### 5.5.3 最適ポートフォリオ
 
 ```{r}
-#| label: inspect-mean-variance-result
-#| eval: false
-#| message: false
-#| warning: false
+#| label: create-optimal-portfolio-table
 
-str(MV_portfolio) # solve.QP()関数の返り値の構造を確認
+tbl_optimal_portfolio <- create_portfolio_weight_table_LFL(
+  list_optimization = list_mean_variance_portfolio,
+  vec_asset_ids = vec_investment_firm_ids,
+  target_return = target_return
+) |>
+  arrange(
+    desc(abs(weight))
+  )
+
+show_table_head_LFL(
+  tbl_optimal_portfolio,
+  n = 10
+)
 ```
 
-### 5.5.4 最適保有比率とポートフォリオ・リスク
+### 5.5.4 最適化結果の検算
 
 ```{r}
-#| label: extract-optimal-portfolio
-#| eval: false
-#| message: false
-#| warning: false
+#| label: validate-optimal-portfolio
 
-optimal_weight <- MV_portfolio$solution # 最適保有比率を保存
-print(optimal_weight[1:10]) # 最初の10社のみ表示
+tbl_portfolio_summary <- compute_portfolio_summary_LFL(
+  list_optimization = list_mean_variance_portfolio,
+  target_return = target_return
+) |>
+  mutate(
+    realized_expected_return = sum(
+      list_mean_variance_portfolio$solution *
+        vec_expected_returns
+    ),
+    return_constraint_error =
+      realized_expected_return -
+      target_return,
+    weight_constraint_error =
+      weight_sum -
+      1
+  )
 
-minimized_risk <- sqrt(2 * MV_portfolio$value) # 平均分散ポートフォリオのリスクを保存して表示
-print(minimized_risk)
-
+show_table_LFL(tbl_portfolio_summary)
 ```
 
 ## 5.6 効率的フロンティア
 
-### 5.6.1 複数の目標期待リターンによる最適化
+### 5.6.1 目標期待リターンの範囲
 
 ```{r}
-#| label: calculate-efficient-frontier
-#| eval: false
-#| message: false
-#| warning: false
+#| label: create-target-return-grid
 
-target_return <- seq(-0.1, 0.4, length = 100) # -0.1から0.4の範囲を離散化して目標期待リターンを100次元のベクトルで準備
-N_points <- length(target_return) # target_returnの次元100をN_pointsと定義
-
-optimal_weight <- matrix(NA, nrow = N_points, ncol = N_portfolio_firms) # 各目標期待リターンに対して最適保有比率を保存する空行列を準備
-minimized_risk <- rep(NA, N_points) # 同様に平均分散ポートフォリオのリスクを保存する空ベクトルを準備
-
-for (i in 1:N_points) { # 平均分散ポートフォリオの計算を100回繰り返す
-  bvec <- c(target_return[i], 1)
-  MV_portfolio <- solve.QP(Dmat, dvec, Amat, bvec, meq = 2)
-  optimal_weight[i, ] <- MV_portfolio$solution # 結果の保存
-  minimized_risk[i] <- sqrt(2 * MV_portfolio$value)
-}
-
-print(optimal_weight[N_points, 1:10]) # target_return = 0.4のときの最適保有比率（最初の10社のみ）
-
-print(minimized_risk[N_points]) # target_return = 0.4のときの平均分散ポートフォリオのリスク
-
+vec_target_returns <- seq(
+  from = -0.10,
+  to = 0.40,
+  length.out = 100
+)
 ```
 
-### 5.6.2 効率的フロンティアの描画
+### 5.6.2 複数ポートフォリオの推定
+
+```{r}
+#| label: compute-efficient-frontier
+
+tbl_efficient_frontier <- compute_efficient_frontier_LFL(
+  matrix_covariance = matrix_return_covariance,
+  vec_expected_returns = vec_expected_returns,
+  vec_target_returns = vec_target_returns
+)
+
+show_table_head_LFL(
+  tbl_efficient_frontier |>
+    select(
+      target_return,
+      portfolio_risk
+    )
+)
+```
+
+### 5.6.3 効率的フロンティアの描画
 
 ```{r}
 #| label: plot-efficient-frontier
-#| eval: false
-#| message: false
-#| warning: false
 
-MV_frontier <- tibble(target_return, minimized_risk)
+plot_efficient_frontier <- tbl_efficient_frontier |>
+  ggplot(
+    aes(
+      x = portfolio_risk,
+      y = target_return
+    )
+  ) +
+  geom_line() +
+  labs(
+    x = "Portfolio Risk",
+    y = "Expected Return"
+  )
 
-ggplot(MV_frontier) + 
-  geom_line(aes(x = target_return, y = minimized_risk)) + # x軸にtarget_return, y軸にminimized_riskを指定
-  coord_flip() + # 縦軸と横軸をひっくり返すのにcoord_flip()関数を用いる
-  labs(x = "Expected Return", y = "Risk") + 
-  theme_classic()
+plot_efficient_frontier <- add_lagrange_theme_LFL(
+  plot_efficient_frontier
+)
+
+show_plot_LFL(plot_efficient_frontier)
 ```
 
 ## 5.7 まとめ
 
-本章では、Fama--Frenchの3ファクター・モデルを用いて、企業別のファクター・ローディングと株式資本コストを推定した。
+本章では、Fama--Frenchの3ファクター・モデルを企業別に推定し、市場、企業規模、簿価時価比率に対するファクター・ローディングを求めた。ファクター・リスクプレミアムとの積和から株式資本コストを計算し、配当利回りと組み合わせることで潜在配当成長率を推定した。
 
-さらに、ファクターと誤差項から株式リターンの分散共分散行列を構築し、二次計画法による平均分散ポートフォリオと効率的フロンティアを確認した。
+さらに、共通ファクターの分散共分散行列と企業固有リスクから株式リターンの分散共分散行列を構築した。これを平均分散最適化へ接続し、単一の目標期待リターンに対応する最適ポートフォリオと、複数の目標期待リターンからなる効率的フロンティアを確認した。

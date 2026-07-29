@@ -9,7 +9,7 @@ book:
   chapters:
     - index.qmd
 
-    - part: "第I部 実証会計・ファイナンス"
+    - part: "第I部 金融工学　均衡モデル"
       chapters:
         - part1_empirical/ch01_r_basics_tidyverse.qmd
         - part1_empirical/ch02_financial_data.qmd
@@ -18,7 +18,7 @@ book:
         - part1_empirical/ch05_asset_pricing.qmd
         - part1_empirical/ch06_event_study.qmd
 
-    - part: "第II部 金融工学と金融数学"
+    - part: "第II部 金融工学　無裁定モデル"
       chapters:
         - part2_quantive_riemann/ch01_deterministic_cashflow_valuation.qmd
         - part2_quantive_riemann/ch02_interest_rate_curves.qmd
@@ -38,7 +38,7 @@ format:
     number-sections: false
 
 execute:
-  eval: false
+  eval: true
   echo: true
   warning: false
   message: false
