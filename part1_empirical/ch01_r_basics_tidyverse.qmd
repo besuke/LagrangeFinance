@@ -446,13 +446,15 @@ distribution_functions
 
 ### プロジェクト内のデータを読み込む
 
-本書で使用するデータは、プロジェクトルートの`simulation_data`ディレクトリに置かれている。プロジェクトルートの探索やファイル検索は`utility.R`へ集約し、各章では分析対象となるファイル名だけを指定する。
+本書で使用するデータは、プロジェクトルートの`data`ディレクトリに置き、外部入力に近いデータを`raw`、分析によって作成したデータを`derived`に分ける。プロジェクトルートの探索やファイル検索は`R/utility_LFL.R`へ集約し、各章では分析対象となる相対パスだけを指定する。
 
 ```{r}
 #| label: read-daily-stock-return
 
-tbl_daily_stock_return <- read_csv_file_LFL("ch03_daily_stock_return.csv") |>
-  mutate(date = as.Date(date))
+tbl_daily_stock_return <-
+  read_parquet_file_LFL(
+    file.path("raw", "market", "daily_stock_returns.parquet")
+  )
 
 vec_required_columns <- c("date", "firm1", "firm2")
 vec_missing_columns <- setdiff(vec_required_columns, names(tbl_daily_stock_return))
@@ -1215,7 +1217,7 @@ ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Data
 データが1台のPCで扱える範囲では、Arrowと`dbplyr`が導入しやすい。データ量や計算量が1台のメモリとCPUを大きく超える場合にはSparkが候補になる。本書では、実行環境を複雑にしないため、Arrowと`dbplyr`を実装対象とし、Sparkは位置づけの説明にとどめる。
 ## 総合演習
 
-最後に、`simulation_data`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
+最後に、`data/raw/market/daily_stock_returns.parquet`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
 
 ### 分析用データを作る
 

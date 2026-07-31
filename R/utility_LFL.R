@@ -247,6 +247,10 @@ find_project_dir_LFL <- function() {
   normalizePath(hit[1], winslash = "/", mustWork = TRUE)
 }
 
+get_data_dir_LFL <- function() {
+  file.path(find_project_dir_LFL(), "data")
+}
+
 get_simulation_data_dir_LFL <- function() {
   file.path(find_project_dir_LFL(), "simulation_data")
 }
@@ -604,6 +608,12 @@ compute_efficient_frontier_LFL <- function(
 #' @param search_dir Directory searched recursively.
 #'
 #' @return A normalized file path.
+#' Find a data file
+#'
+#' @param file_name File name or relative path to find.
+#' @param search_dir Directory or directories searched recursively.
+#'
+#' @return A normalized file path.
 find_data_file_LFL <- function(
     file_name,
     search_dir = NULL
@@ -618,101 +628,95 @@ find_data_file_LFL <- function(
       call. = FALSE
     )
   }
-  
+
   if (is.null(search_dir)) {
-    vec_search_dir_candidate <- unique(c(
-      file.path(
-        getwd(),
-        "simulation_data"
-      ),
-      file.path(
-        dirname(getwd()),
-        "simulation_data"
-      )
+    search_dir <- unique(c(
+      get_data_dir_LFL(),
+      get_simulation_data_dir_LFL()
     ))
-    
-    vec_search_dir_candidate <-
-      vec_search_dir_candidate[
-        dir.exists(vec_search_dir_candidate)
-      ]
-    
-    if (
-      length(vec_search_dir_candidate) ==
-      0L
-    ) {
-      stop(
-        paste0(
-          "simulation_data directory ",
-          "could not be found from: ",
-          getwd()
-        ),
-        call. = FALSE
-      )
-    }
-    
-    search_dir <-
-      vec_search_dir_candidate[[1]]
   }
-  
+
   if (
     !is.character(search_dir) ||
-    length(search_dir) != 1L ||
-    !dir.exists(search_dir)
+    length(search_dir) == 0L
   ) {
     stop(
-      "search_dir must be an existing directory.",
+      "search_dir must be a non-empty character vector.",
       call. = FALSE
     )
   }
-  
-  vec_candidate_path <- list.files(
-    path = search_dir,
-    recursive = TRUE,
-    full.names = TRUE
+
+  search_dir <- search_dir[
+    dir.exists(search_dir)
+  ]
+
+  if (length(search_dir) == 0L) {
+    stop(
+      "No data directory could be found.",
+      call. = FALSE
+    )
+  }
+
+  direct_candidates <- file.path(
+    search_dir,
+    file_name
   )
-  
-  vec_matching_path <-
-    vec_candidate_path[
-      basename(vec_candidate_path) ==
-        file_name
-    ]
-  
-  if (length(vec_matching_path) == 0L) {
+
+  direct_matches <- direct_candidates[
+    file.exists(direct_candidates)
+  ]
+
+  if (length(direct_matches) >= 1L) {
+    return(
+      normalizePath(
+        direct_matches[[1]],
+        winslash = "/",
+        mustWork = TRUE
+      )
+    )
+  }
+
+  candidate_paths <- unlist(
+    lapply(
+      search_dir,
+      list.files,
+      recursive = TRUE,
+      full.names = TRUE
+    ),
+    use.names = FALSE
+  )
+
+  matching_paths <- candidate_paths[
+    basename(candidate_paths) ==
+      basename(file_name)
+  ]
+
+  if (length(matching_paths) == 0L) {
     stop(
       "File not found under ",
-      search_dir,
+      paste(search_dir, collapse = ", "),
       ": ",
       file_name,
       call. = FALSE
     )
   }
-  
-  if (length(vec_matching_path) > 1L) {
+
+  if (length(matching_paths) > 1L) {
     stop(
       "Multiple files were found for ",
       file_name,
       ": ",
-      paste(
-        vec_matching_path,
-        collapse = ", "
-      ),
+      paste(matching_paths, collapse = ", "),
       call. = FALSE
     )
   }
-  
+
   normalizePath(
-    vec_matching_path[[1]],
+    matching_paths[[1]],
     winslash = "/",
     mustWork = TRUE
   )
 }
-#' Validate required columns
-#'
-#' @param tbl_data A data frame.
-#' @param vec_required_columns Required column names.
-#' @param data_name Name used in the error message.
-#'
-#' @return The input data invisibly.
 validate_required_columns_LFL <- function(
     tbl_data,
     vec_required_columns,
