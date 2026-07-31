@@ -29,7 +29,13 @@ load_part1_packages_LFL()
 #| label: read-financial-data
 
 financial_data_raw <-
-  read_csv_file_LFL("ch04_financial_data.csv")
+  read_parquet_file_LFL(
+    file.path(
+      "raw",
+      "fundamentals",
+      "financial_statements.parquet"
+    )
+  )
 
 show_table_LFL(financial_data_raw, n = 10)
 ```
@@ -718,28 +724,36 @@ show_table_LFL(metric_summary, n = nrow(metric_summary))
 
 ### 2.6.2 中間データの保存
 
-第3章では、本章で計算した株主資本、前年度株主資本およびROEなどを株式データと結合する。そのため、上級デュポン・モデルの計算結果を含む整理済みデータを`simulation_data/derived/ch04_output.csv`へ保存する。
+第3章では、本章で計算した株主資本、前年度株主資本およびROEなどを株式データと結合する。そのため、上級デュポン・モデルの計算結果を含む整理済みデータを`data/derived/fundamentals/financial_characteristics.parquet`へ保存する。
 
 ```{r}
 #| label: save-financial-output
 
 financial_output_path <-
-  write_derived_csv_file_LFL(
+  write_derived_parquet_file_LFL(
     financial_data_dupont,
-    "ch04_output.csv"
+    file.path(
+      "fundamentals",
+      "financial_characteristics.parquet"
+    )
   )
 
 financial_output_path
 file.info(financial_output_path)[, c("size", "mtime")]
 ```
 
-保存したCSVを読み直し、行数と列名が一致することを確認する。
+保存したParquetファイルを読み直し、行数と列名が一致することを確認する。
 
 ```{r}
 #| label: verify-financial-output
 
 financial_output_check <-
-  read_derived_csv_file_LFL("ch04_output.csv")
+  read_derived_parquet_file_LFL(
+    file.path(
+      "fundamentals",
+      "financial_characteristics.parquet"
+    )
+  )
 
 stopifnot(
   nrow(financial_output_check) ==
@@ -764,6 +778,6 @@ show_table_LFL(output_summary)
 
 ## 2.7 まとめ
 
-本章では、財務データの構造、欠損値およびパネルデータのキーを確認した。次に、年度別・産業別の企業構成、売上高の分布、株主資本、ROEおよび産業内順位を計算した。最後に、ROEをRNOA、財務レバレッジおよび純借入コストへ分解し、第3章で利用する整理済みデータを`simulation_data/derived/ch04_output.csv`へ保存した。
+本章では、財務データの構造、欠損値およびパネルデータのキーを確認した。次に、年度別・産業別の企業構成、売上高の分布、株主資本、ROEおよび産業内順位を計算した。最後に、ROEをRNOA、財務レバレッジおよび純借入コストへ分解し、第3章で利用する整理済みデータを`data/derived/fundamentals/financial_characteristics.parquet`へ保存した。
 
 第3章では、株式データからリターンを計算し、本章で作成した財務データと結合する。

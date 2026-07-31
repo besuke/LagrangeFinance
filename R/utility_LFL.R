@@ -1602,3 +1602,179 @@ read_derived_csv_LFL <- function(
     ...
   )
 }
+
+
+#' Write a Parquet file to the derived-data directory
+#'
+#' @param tbl_data A data frame to write.
+#' @param file_name Output Parquet file name or relative path.
+#' @param derived_data_dir Derived-data directory. When omitted,
+#'   data/derived under the project root is used.
+#' @param ... Additional arguments passed to arrow::write_parquet().
+#'
+#' @return The normalized output path, invisibly.
+write_derived_parquet_file_LFL <- function(
+    tbl_data,
+    file_name,
+    derived_data_dir = NULL,
+    ...
+) {
+  if (!is.data.frame(tbl_data)) {
+    stop(
+      "tbl_data must be a data frame.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    !is.character(file_name) ||
+    length(file_name) != 1L ||
+    !nzchar(file_name)
+  ) {
+    stop(
+      "file_name must be one non-empty character value.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    !identical(
+      tolower(tools::file_ext(file_name)),
+      "parquet"
+    )
+  ) {
+    stop(
+      "file_name must have a .parquet extension.",
+      call. = FALSE
+    )
+  }
+
+  if (is.null(derived_data_dir)) {
+    derived_data_dir <- file.path(
+      get_data_dir_LFL(),
+      "derived"
+    )
+  }
+
+  if (
+    !is.character(derived_data_dir) ||
+    length(derived_data_dir) != 1L ||
+    !nzchar(derived_data_dir)
+  ) {
+    stop(
+      "derived_data_dir must be one non-empty character value.",
+      call. = FALSE
+    )
+  }
+
+  output_path <- file.path(
+    derived_data_dir,
+    file_name
+  )
+
+  dir.create(
+    dirname(output_path),
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+
+  arrow::write_parquet(
+    tbl_data,
+    sink = output_path,
+    ...
+  )
+
+  if (!file.exists(output_path)) {
+    stop(
+      "Parquet output was not created: ",
+      output_path,
+      call. = FALSE
+    )
+  }
+
+  invisible(
+    normalizePath(
+      output_path,
+      winslash = "/",
+      mustWork = TRUE
+    )
+  )
+}
+
+
+#' Read a Parquet file from the derived-data directory
+#'
+#' @param file_name Parquet file name or relative path.
+#' @param derived_data_dir Derived-data directory. When omitted,
+#'   data/derived under the project root is used.
+#' @param ... Additional arguments passed to arrow::read_parquet().
+#'
+#' @return A data frame.
+read_derived_parquet_file_LFL <- function(
+    file_name,
+    derived_data_dir = NULL,
+    ...
+) {
+  if (
+    !is.character(file_name) ||
+    length(file_name) != 1L ||
+    !nzchar(file_name)
+  ) {
+    stop(
+      "file_name must be one non-empty character value.",
+      call. = FALSE
+    )
+  }
+
+  if (
+    !identical(
+      tolower(tools::file_ext(file_name)),
+      "parquet"
+    )
+  ) {
+    stop(
+      "file_name must have a .parquet extension.",
+      call. = FALSE
+    )
+  }
+
+  if (is.null(derived_data_dir)) {
+    derived_data_dir <- file.path(
+      get_data_dir_LFL(),
+      "derived"
+    )
+  }
+
+  if (
+    !is.character(derived_data_dir) ||
+    length(derived_data_dir) != 1L ||
+    !nzchar(derived_data_dir)
+  ) {
+    stop(
+      "derived_data_dir must be one non-empty character value.",
+      call. = FALSE
+    )
+  }
+
+  file_path <- file.path(
+    derived_data_dir,
+    file_name
+  )
+
+  if (!file.exists(file_path)) {
+    stop(
+      "Derived Parquet file was not found: ",
+      normalizePath(
+        file_path,
+        winslash = "/",
+        mustWork = FALSE
+      ),
+      call. = FALSE
+    )
+  }
+
+  arrow::read_parquet(
+    file_path,
+    ...
+  )
+}
