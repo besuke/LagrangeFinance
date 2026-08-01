@@ -26,7 +26,7 @@ source('C:/AnalyticFin/Projects/LagrangeFinance/R/utility_LFL.R')
 load_part1_packages_LFL()
 ```
 
-本章では、第1章から第3章と同じ共通ユーティリティを利用する。ファイル探索、CSV読込み、表の表示、グラフのテーマ設定を各章で重複して定義しない。
+本章では、第1章から第3章と同じ共通ユーティリティを利用する。ファイル探索、Parquet読込み、表の表示、グラフのテーマ設定を各章で重複して定義しない。
 
 ## 4.2 入力データ
 
@@ -35,16 +35,22 @@ load_part1_packages_LFL()
 第3章で作成した次の2ファイルを読み込む。
 
 ```text
-simulation_data/derived/ch05_output1.csv
-simulation_data/derived/ch05_output2.csv
+data/derived/returns/monthly_stock_returns.parquet
+data/derived/fundamentals/annual_firm_characteristics.parquet
 ```
 
-`ch05_output1.csv`は月次データ、`ch05_output2.csv`は年次データである。ファイル名は旧教材の章番号に由来する。
+`monthly_stock_returns.parquet`は月次データ、`annual_firm_characteristics.parquet`は年次データである。
 
 ```{r}
 #| label: read-input-data
 
-tbl_monthly <- read_derived_csv_LFL("ch05_output1.csv") |>
+tbl_monthly <-
+  read_derived_parquet_file_LFL(
+    file.path(
+      "returns",
+      "monthly_stock_returns.parquet"
+    )
+  ) |>
   mutate(
     firm_ID = as.integer(firm_ID),
     year = as.integer(year),
@@ -54,7 +60,13 @@ tbl_monthly <- read_derived_csv_LFL("ch05_output1.csv") |>
   ) |>
   arrange(firm_ID, month_ID)
 
-tbl_annual <- read_derived_csv_LFL("ch05_output2.csv") |>
+tbl_annual <-
+  read_derived_parquet_file_LFL(
+    file.path(
+      "fundamentals",
+      "annual_firm_characteristics.parquet"
+    )
+  ) |>
   mutate(
     firm_ID = as.integer(firm_ID),
     year = as.integer(year)
@@ -1209,7 +1221,7 @@ show_plot_LFL(add_lagrange_theme_LFL(plot_model_fit))
 
 ## 4.8 ファクター・データの保存
 
-第5章以降で使用するファクター・データを、`simulation_data/derived/ch06_output.csv`に保存する。
+第5章以降で使用するファクター・データを、`data/derived/factors/fama_french_factors.parquet`に保存する。
 
 ```{r}
 #| label: save-factor-output
@@ -1222,29 +1234,22 @@ tbl_factor_output <- tbl_factor |>
     market_return_coverage
   )
 
-vec_derived_data_dir <- file.path(
-  get_simulation_data_dir_LFL(),
-  "derived"
-)
+vec_factor_output_path <-
+  write_derived_parquet_file_LFL(
+    tbl_factor_output,
+    file.path(
+      "factors",
+      "fama_french_factors.parquet"
+    )
+  )
 
-if (!dir.exists(vec_derived_data_dir)) {
-  dir.create(vec_derived_data_dir, recursive = TRUE)
-}
-
-vec_factor_output_path <- file.path(
-  vec_derived_data_dir,
-  "ch06_output.csv"
-)
-
-readr::write_csv(
-  tbl_factor_output,
-  vec_factor_output_path
-)
-
-tbl_factor_output_check <- readr::read_csv(
-  vec_factor_output_path,
-  show_col_types = FALSE
-)
+tbl_factor_output_check <-
+  read_derived_parquet_file_LFL(
+    file.path(
+      "factors",
+      "fama_french_factors.parquet"
+    )
+  )
 
 stopifnot(
   nrow(tbl_factor_output_check) == nrow(tbl_factor_output),
@@ -1271,7 +1276,7 @@ show_table_LFL(tbl_factor_output_summary)
 作成したファクター・データは次の場所に保存される。
 
 ```text
-simulation_data/derived/ch06_output.csv
+data/derived/factors/fama_french_factors.parquet
 ```
 
 第5章では、このファクター・データを利用して、個別企業の資本コスト、共分散構造、平均分散ポートフォリオを分析する。
