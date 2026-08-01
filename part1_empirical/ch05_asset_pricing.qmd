@@ -28,9 +28,27 @@ load_part1_packages_LFL()
 ```{r}
 #| label: read-chapter-05-data
 
-tbl_monthly_raw <- read_derived_csv_LFL("ch05_output1.csv")
-tbl_annual_raw <- read_derived_csv_LFL("ch05_output2.csv")
-tbl_factor <- read_derived_csv_LFL("ch06_output.csv")
+tbl_monthly_raw <-
+  read_derived_parquet_file_LFL(
+    file.path(
+      "returns",
+      "monthly_stock_returns.parquet"
+    )
+  )
+tbl_annual_raw <-
+  read_derived_parquet_file_LFL(
+    file.path(
+      "fundamentals",
+      "annual_firm_characteristics.parquet"
+    )
+  )
+tbl_factor <-
+  read_derived_parquet_file_LFL(
+    file.path(
+      "factors",
+      "fama_french_factors.parquet"
+    )
+  )
 ```
 
 ### 5.1.2 推定対象企業の選定
