@@ -134,18 +134,22 @@ project_dir <- normalizePath(
   mustWork = TRUE
 )
 
-simulation_data_dir <- file.path(
-  project_dir,
-  "simulation_data"
+data_dir <- get_data_dir_LFL()
+
+raw_event_data_dir <- file.path(
+  data_dir,
+  "raw",
+  "events"
 )
 
-derived_data_dir <- file.path(
-  simulation_data_dir,
-  "derived"
+derived_event_data_dir <- file.path(
+  data_dir,
+  "derived",
+  "events"
 )
 
 dir.create(
-  derived_data_dir,
+  derived_event_data_dir,
   recursive = TRUE,
   showWarnings = FALSE
 )
@@ -153,13 +157,13 @@ dir.create(
 tibble(
   directory = c(
     "project",
-    "simulation_data",
-    "derived"
+    "raw_events",
+    "derived_events"
   ),
   path = c(
     project_dir,
-    simulation_data_dir,
-    derived_data_dir
+    raw_event_data_dir,
+    derived_event_data_dir
   )
 )
 ```
@@ -171,26 +175,37 @@ tibble(
 本章では次の3ファイルを使用する。
 
 ```text
-ch08_return_data.csv
-ch08_market_return_data.csv
-ch08_event_data.csv
+data/raw/events/firm_returns.parquet
+data/raw/events/market_returns.parquet
+data/raw/events/earnings_events.parquet
 ```
 
-ファイル名は旧教材の章番号に由来するが、本書では第6章の入力データとして使用する。
+ファイル名はデータの内容を表す名称に統一し、Parquet形式で読み込む。
 
 ```{r}
 #| label: find-input-files
 
 vec_input_file <- c(
-  return = "ch08_return_data.csv",
-  market = "ch08_market_return_data.csv",
-  event = "ch08_event_data.csv"
+  return = file.path(
+    "raw",
+    "events",
+    "firm_returns.parquet"
+  ),
+  market = file.path(
+    "raw",
+    "events",
+    "market_returns.parquet"
+  ),
+  event = file.path(
+    "raw",
+    "events",
+    "earnings_events.parquet"
+  )
 )
 
 vec_input_path <- purrr::map_chr(
   vec_input_file,
-  find_data_file_LFL,
-  search_dir = simulation_data_dir
+  find_data_file_LFL
 )
 
 tibble(
@@ -205,20 +220,20 @@ tibble(
 ```{r}
 #| label: read-input-data
 
-tbl_return_raw <- readr::read_csv(
-  vec_input_path[["return"]],
-  show_col_types = FALSE
-)
+tbl_return_raw <-
+  read_parquet_file_LFL(
+    vec_input_file[["return"]]
+  )
 
-tbl_market_raw <- readr::read_csv(
-  vec_input_path[["market"]],
-  show_col_types = FALSE
-)
+tbl_market_raw <-
+  read_parquet_file_LFL(
+    vec_input_file[["market"]]
+  )
 
-tbl_event_raw <- readr::read_csv(
-  vec_input_path[["event"]],
-  show_col_types = FALSE
-)
+tbl_event_raw <-
+  read_parquet_file_LFL(
+    vec_input_file[["event"]]
+  )
 ```
 
 ### 6.2.3 必須列の確認
@@ -1695,7 +1710,7 @@ tbl_event_summary_output <- tbl_daily_statistics |>
   )
 ```
 
-### 6.9.3 CSV保存
+### 6.9.3 Parquet保存
 
 ```{r}
 #| label: save-results
@@ -1706,25 +1721,28 @@ list_output <- list(
   event_summary = tbl_event_summary_output
 )
 
-vec_output_path <- c(
+vec_output_file <- c(
   event_results = file.path(
-    derived_data_dir,
-    "ch08_event_results.csv"
+    "events",
+    "event_study_results.parquet"
   ),
   event_daily = file.path(
-    derived_data_dir,
-    "ch08_event_daily.csv"
+    "events",
+    "event_study_daily.parquet"
   ),
   event_summary = file.path(
-    derived_data_dir,
-    "ch08_event_summary.csv"
+    "events",
+    "event_study_summary.parquet"
   )
 )
 
-purrr::walk2(
+vec_output_path <- purrr::imap_chr(
   list_output,
-  vec_output_path,
-  readr::write_csv
+  \(tbl_output, output_name)
+    write_derived_parquet_file_LFL(
+      tbl_output,
+      vec_output_file[[output_name]]
+    )
 )
 
 tibble(
@@ -1741,12 +1759,13 @@ tibble(
 tbl_output_verification <- purrr::imap_dfr(
   list_output,
   \(tbl_expected, output_name) {
+    output_file <- vec_output_file[[output_name]]
     output_path <- vec_output_path[[output_name]]
 
-    tbl_check <- readr::read_csv(
-      output_path,
-      show_col_types = FALSE
-    )
+    tbl_check <-
+      read_derived_parquet_file_LFL(
+        output_file
+      )
 
     stopifnot(
       nrow(tbl_check) ==
@@ -1785,7 +1804,7 @@ tbl_output_verification
 結果は次の3ファイルに保存される。
 
 ```text
-simulation_data/derived/ch08_event_results.csv
-simulation_data/derived/ch08_event_daily.csv
-simulation_data/derived/ch08_event_summary.csv
+data/derived/events/event_study_results.parquet
+data/derived/events/event_study_daily.parquet
+data/derived/events/event_study_summary.parquet
 ```
