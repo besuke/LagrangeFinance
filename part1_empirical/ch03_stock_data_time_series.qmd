@@ -29,7 +29,13 @@ load_part1_packages_LFL()
 #| label: read-stock-data
 
 stock_data_raw <-
-  read_csv_file_LFL("ch05_stock_data.csv")
+  read_parquet_file_LFL(
+    file.path(
+      "raw",
+      "market",
+      "stock_prices_and_returns.parquet"
+    )
+  )
 
 show_table_LFL(stock_data_raw, n = 10)
 ```
@@ -734,13 +740,18 @@ show_table_LFL(annual_stock_data, n = 20)
 
 ### 3.5.2 年次財務データの読込み
 
-第2章で作成した`ch04_output.csv`を読み込む。
+第2章で作成した`data/derived/fundamentals/financial_characteristics.parquet`を読み込む。
 
 ```{r}
 #| label: read-financial-data
 
 financial_data <-
-  read_derived_csv_file_LFL("ch04_output.csv") |>
+  read_derived_parquet_file_LFL(
+    file.path(
+      "fundamentals",
+      "financial_characteristics.parquet"
+    )
+  ) |>
   mutate(
     firm_ID = as.integer(firm_ID),
     year = as.integer(year)
@@ -1144,7 +1155,7 @@ show_table_LFL(
 
 ## 3.7 分析用データの保存
 
-第4章以降で使用するため、月次データと年次データを`simulation_data/derived`へ保存する。
+第4章以降で使用するため、月次データを`data/derived/returns/monthly_stock_returns.parquet`、年次データを`data/derived/fundamentals/annual_firm_characteristics.parquet`へ保存する。
 
 ```{r}
 #| label: save-stock-outputs
@@ -1155,14 +1166,20 @@ output_data <- list(
 )
 
 output_files <- c(
-  monthly = "ch05_output1.csv",
-  annual = "ch05_output2.csv"
+  monthly = file.path(
+    "returns",
+    "monthly_stock_returns.parquet"
+  ),
+  annual = file.path(
+    "fundamentals",
+    "annual_firm_characteristics.parquet"
+  )
 )
 
 output_paths <- output_data |>
   imap_chr(
     \(data, data_name)
-      write_derived_csv_file_LFL(
+      write_derived_parquet_file_LFL(
         data,
         output_files[[data_name]]
       )
@@ -1180,7 +1197,7 @@ output_verification <- output_data |>
   imap_dfr(
     \(expected_data, data_name) {
       output_check <-
-        read_derived_csv_file_LFL(
+        read_derived_parquet_file_LFL(
           output_files[[data_name]]
         )
 
@@ -1214,6 +1231,6 @@ show_table_LFL(output_verification)
 
 ## 3.8 まとめ
 
-本章では、株価、配当および調整係数から月次リターンを作成し、無リスク金利を差し引いて超過リターンを計算した。さらに、月次リターンを年次リターンへ集約し、第2章で作成した財務データと結合した。最後に、簿価時価比率と年次超過リターンの関係を回帰分析で確認し、月次データを`ch05_output1.csv`、年次データを`ch05_output2.csv`として保存した。
+本章では、株価、配当および調整係数から月次リターンを作成し、無リスク金利を差し引いて超過リターンを計算した。さらに、月次リターンを年次リターンへ集約し、第2章で作成した財務データと結合した。最後に、簿価時価比率と年次超過リターンの関係を回帰分析で確認し、月次データを`data/derived/returns/monthly_stock_returns.parquet`、年次データを`data/derived/fundamentals/annual_firm_characteristics.parquet`として保存した。
 
 第4章では、本章で作成した分析用データを利用して、ポートフォリオ分析へ進む。
