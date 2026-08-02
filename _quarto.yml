@@ -3,9 +3,9 @@ project:
   execute-dir: project
 book:
   title: "ラグランジェ・ファイナンス"
-  subtitle: "First Step in Quant Technology"
+  subtitle: "金融データ分析・数理モデル・並列計算"
   author: "Eiichi Horigome"
-
+  output-file: "lagrange-finance"
   chapters:
     - index.qmd
 

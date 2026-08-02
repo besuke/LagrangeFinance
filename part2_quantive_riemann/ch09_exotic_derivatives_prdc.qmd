@@ -5,7 +5,15 @@ execute:
   echo: true
   warning: false
   message: false
+  error: false
 ---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 
 これまでの章では、債券、金利先物、Swap、Option、Callable BondおよびCDSを、それぞれの主要なリスク要因に基づいて評価した。本章では、第II部の締めくくりとして、金利と為替を組み合わせたエキゾチック・デリバティブであるPRDCを検討する。
@@ -43,25 +51,6 @@ $$
 本章では、Domestic金利、Foreign金利およびFX volatilityを一定とするGarman–Kohlhagenモデルを用いて、将来のCoupon日ごとにFXパスを生成する。各パスでCouponを計算し、その平均値からCoupon LegとRedemption Legの現在価値を求める。
 
 実際のPRDCには、発行体の期限前償還権を含むことが多い。本章では商品の基本構造を明確にするため、**発行体コール権を含まない非Callable PRDC**を評価する。Callable PRDCには、金利・為替の複数因子モデル、相関構造およびLeast-Squares Monte Carloなどが追加で必要となる。
-
-```{r chapter09-setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
-)
-
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(ggthemes)
-  library(QuantLib)
-  library(GaussQuant)
-  library(tidyverse)
-  library(broom)
-})
-```
 
 ## 9.1 PRDCの商品構造と市場条件
 
@@ -105,27 +94,27 @@ GaussQuant::set_eval_date_GQL(
 )
 
 prdc_input_tbl <- tibble::tribble(
-  ~input,                    ~value,
-  "valuation_date",           as.character(valuation_date_prdc),
-  "effective_date",           as.character(effective_date_prdc),
-  "termination_date",         as.character(termination_date_prdc),
-  "intro_coupon_end_date",    as.character(intro_coupon_end_date_prdc),
-  "notional_jpy",             as.character(notional_prdc),
-  "intro_coupon_rate",        as.character(intro_coupon_rate_prdc),
-  "coupon_frequency_months",  as.character(coupon_frequency_months_prdc),
-  "domestic_rate",            as.character(domestic_rate_prdc),
-  "foreign_rate",             as.character(foreign_rate_prdc),
-  "discount_rate",            as.character(discount_rate_prdc),
-  "fx_spot",                  as.character(fx_spot_prdc),
-  "fx_volatility",            as.character(fx_volatility_prdc),
-  "coupon_fx_base",           as.character(coupon_fx_base_prdc),
-  "coupon_leverage",          as.character(coupon_leverage_prdc),
-  "coupon_subtraction",       as.character(coupon_subtraction_prdc),
-  "coupon_floor",             as.character(coupon_floor_prdc),
-  "coupon_cap",               as.character(coupon_cap_prdc),
-  "valuation_paths",          as.character(number_of_paths_prdc),
-  "sensitivity_paths",        as.character(sensitivity_paths_prdc),
-  "random_seed",              as.character(random_seed_prdc)
+  ~input, ~value,
+  "valuation_date", as.character(valuation_date_prdc),
+  "effective_date", as.character(effective_date_prdc),
+  "termination_date", as.character(termination_date_prdc),
+  "intro_coupon_end_date", as.character(intro_coupon_end_date_prdc),
+  "notional_jpy", as.character(notional_prdc),
+  "intro_coupon_rate", as.character(intro_coupon_rate_prdc),
+  "coupon_frequency_months", as.character(coupon_frequency_months_prdc),
+  "domestic_rate", as.character(domestic_rate_prdc),
+  "foreign_rate", as.character(foreign_rate_prdc),
+  "discount_rate", as.character(discount_rate_prdc),
+  "fx_spot", as.character(fx_spot_prdc),
+  "fx_volatility", as.character(fx_volatility_prdc),
+  "coupon_fx_base", as.character(coupon_fx_base_prdc),
+  "coupon_leverage", as.character(coupon_leverage_prdc),
+  "coupon_subtraction", as.character(coupon_subtraction_prdc),
+  "coupon_floor", as.character(coupon_floor_prdc),
+  "coupon_cap", as.character(coupon_cap_prdc),
+  "valuation_paths", as.character(number_of_paths_prdc),
+  "sensitivity_paths", as.character(sensitivity_paths_prdc),
+  "random_seed", as.character(random_seed_prdc)
 )
 
 GaussQuant::show_tbl_GQH(
@@ -196,15 +185,15 @@ remaining_intro_coupon_dates_prdc <- intro_coupon_dates_prdc[
 ]
 
 intro_coupon_status_tbl <- tibble::tribble(
-  ~metric,                        ~value,
-  "intro_coupon_rate",             intro_coupon_rate_prdc,
-  "total_intro_schedule_dates",    length(intro_coupon_dates_prdc),
-  "remaining_intro_coupon_dates",  length(remaining_intro_coupon_dates_prdc),
-  "has_remaining_intro_coupon",    as.numeric(
-                                      length(
-                                        remaining_intro_coupon_dates_prdc
-                                      ) > 0
-                                    )
+  ~metric, ~value,
+  "intro_coupon_rate", intro_coupon_rate_prdc,
+  "total_intro_schedule_dates", length(intro_coupon_dates_prdc),
+  "remaining_intro_coupon_dates", length(remaining_intro_coupon_dates_prdc),
+  "has_remaining_intro_coupon", as.numeric(
+    length(
+      remaining_intro_coupon_dates_prdc
+    ) > 0
+  )
 )
 
 GaussQuant::show_tbl_GQH(
@@ -288,12 +277,12 @@ discount_curve_handle_prdc <- QuantLib::YieldTermStructureHandle(
 )
 
 curve_summary_tbl <- tibble::tribble(
-  ~curve,                 ~flat_rate,
-  "Domestic FX curve",     domestic_rate_prdc,
-  "Foreign FX curve",      foreign_rate_prdc,
-  "PRDC discount curve",   discount_rate_prdc,
+  ~curve, ~flat_rate,
+  "Domestic FX curve", domestic_rate_prdc,
+  "Foreign FX curve", foreign_rate_prdc,
+  "PRDC discount curve", discount_rate_prdc,
   "FX risk-neutral drift", domestic_rate_prdc -
-                             foreign_rate_prdc
+    foreign_rate_prdc
 )
 
 GaussQuant::show_tbl_GQH(
@@ -331,13 +320,13 @@ fx_process_prdc <- GaussQuant::fx_process_GQL(
 )
 
 fx_market_summary_tbl <- tibble::tribble(
-  ~metric,               ~value,
-  "fx_spot",              fx_spot_prdc,
-  "fx_volatility",        fx_volatility_prdc,
-  "domestic_rate",        domestic_rate_prdc,
-  "foreign_rate",         foreign_rate_prdc,
-  "risk_neutral_drift",   domestic_rate_prdc -
-                            foreign_rate_prdc
+  ~metric, ~value,
+  "fx_spot", fx_spot_prdc,
+  "fx_volatility", fx_volatility_prdc,
+  "domestic_rate", domestic_rate_prdc,
+  "foreign_rate", foreign_rate_prdc,
+  "risk_neutral_drift", domestic_rate_prdc -
+    foreign_rate_prdc
 )
 
 GaussQuant::show_tbl_GQH(
@@ -434,10 +423,10 @@ fx_payoff_grid_tbl <- tibble::tibble(
   )
 
 coupon_threshold_tbl <- tibble::tribble(
-  ~threshold,       ~fx_rate,
+  ~threshold, ~fx_rate,
   "floor_threshold", fx_floor_threshold_prdc,
-  "cap_threshold",   fx_cap_threshold_prdc,
-  "current_spot",    fx_spot_prdc
+  "cap_threshold", fx_cap_threshold_prdc,
+  "current_spot", fx_spot_prdc
 )
 
 prdc_payoff_plot <- ggplot2::ggplot(
@@ -512,17 +501,17 @@ time_grid_tbl <- tibble::tibble(
 )
 
 path_generator_summary_tbl <- tibble::tribble(
-  ~metric,                  ~value,
-  "remaining_coupon_dates",  length(
-                               fx_path_generator_prdc$remaining_coupon_dates
-                             ),
-  "number_of_steps",         fx_path_generator_prdc$number_of_steps,
-  "first_coupon_time",       min(
-                               fx_path_generator_prdc$coupon_times
-                             ),
-  "final_coupon_time",       max(
-                               fx_path_generator_prdc$coupon_times
-                             )
+  ~metric, ~value,
+  "remaining_coupon_dates", length(
+    fx_path_generator_prdc$remaining_coupon_dates
+  ),
+  "number_of_steps", fx_path_generator_prdc$number_of_steps,
+  "first_coupon_time", min(
+    fx_path_generator_prdc$coupon_times
+  ),
+  "final_coupon_time", max(
+    fx_path_generator_prdc$coupon_times
+  )
 )
 
 GaussQuant::show_tbl_GQH(
@@ -690,16 +679,16 @@ redemption_present_value_prdc <- prdc_result$summary |>
 prdc_present_value_jpy <- prdc_result$npv
 
 prdc_valuation_summary_tbl <- tibble::tribble(
-  ~metric,                    ~value,
-  "coupon_leg_pv_jpy",         coupon_leg_present_value_prdc,
-  "redemption_leg_pv_jpy",     redemption_present_value_prdc,
-  "total_pv_jpy",              prdc_present_value_jpy,
+  ~metric, ~value,
+  "coupon_leg_pv_jpy", coupon_leg_present_value_prdc,
+  "redemption_leg_pv_jpy", redemption_present_value_prdc,
+  "total_pv_jpy", prdc_present_value_jpy,
   "pv_as_percent_of_notional", prdc_present_value_jpy /
-                                  notional_prdc,
-  "number_of_paths",           number_of_paths_prdc,
-  "number_of_coupon_steps",    nrow(
-                                  fx_path_matrix_prdc
-                                )
+    notional_prdc,
+  "number_of_paths", number_of_paths_prdc,
+  "number_of_coupon_steps", nrow(
+    fx_path_matrix_prdc
+  )
 )
 
 GaussQuant::show_tbl_GQH(
@@ -917,12 +906,12 @@ PRDC CouponはFX Spotへ直接依存する。Spotを上下させたシナリオ�
 
 ```{r chapter09-spot-sensitivity}
 spot_scenario_input_tbl <- tibble::tribble(
-  ~scenario,       ~fx_spot,
-  "spot_minus_10",  fx_spot_prdc * 0.90,
-  "spot_minus_5",   fx_spot_prdc * 0.95,
-  "base",           fx_spot_prdc,
-  "spot_plus_5",    fx_spot_prdc * 1.05,
-  "spot_plus_10",   fx_spot_prdc * 1.10
+  ~scenario, ~fx_spot,
+  "spot_minus_10", fx_spot_prdc * 0.90,
+  "spot_minus_5", fx_spot_prdc * 0.95,
+  "base", fx_spot_prdc,
+  "spot_plus_5", fx_spot_prdc * 1.05,
+  "spot_plus_10", fx_spot_prdc * 1.10
 )
 
 spot_sensitivity_tbl <- GaussQuant::prdc_spot_sensitivity_GQL(
@@ -985,12 +974,12 @@ PRDC Couponは、FloorとCapを持つ非線形Payoffである。そのため、F
 
 ```{r chapter09-volatility-sensitivity}
 volatility_scenario_input_tbl <- tibble::tribble(
-  ~scenario,     ~fx_volatility,
-  "vol_5pct",     0.05,
-  "vol_7_5pct",   0.075,
-  "base",         fx_volatility_prdc,
-  "vol_12_5pct",  0.125,
-  "vol_15pct",    0.15
+  ~scenario, ~fx_volatility,
+  "vol_5pct", 0.05,
+  "vol_7_5pct", 0.075,
+  "base", fx_volatility_prdc,
+  "vol_12_5pct", 0.125,
+  "vol_15pct", 0.15
 )
 
 volatility_sensitivity_tbl <- GaussQuant::prdc_volatility_sensitivity_GQL(
@@ -1146,16 +1135,16 @@ $$
 
 ```{r chapter09-part2-summary}
 part2_chapter_summary_tbl <- tibble::tribble(
-  ~chapter, ~subject,                              ~main_method,
-  "II-1",   "Bonds and market conventions",        "Yield, price, duration, and convexity",
-  "II-2",   "Treasury futures and CTD",             "Basis, carry, implied repo, and futures BPV",
-  "II-3",   "OIS and multi-curve valuation",        "Discount and forecast curve separation",
-  "II-4",   "Black model",                          "Lognormal forward-option pricing",
-  "II-5",   "Normal model",                         "Bachelier pricing for zero and negative rates",
-  "II-6",   "SABR model",                           "Volatility-smile calibration",
-  "II-7",   "Callable Bond and Hull-White",          "Short-rate tree and early exercise",
-  "II-8",   "Credit risk and CDS",                  "Hazard curve, MidPoint, and ISDA valuation",
-  "II-9",   "Exotic derivatives and PRDC",          "FX-linked coupon Monte Carlo valuation"
+  ~chapter, ~subject, ~main_method,
+  "II-1", "Bonds and market conventions", "Yield, price, duration, and convexity",
+  "II-2", "Treasury futures and CTD", "Basis, carry, implied repo, and futures BPV",
+  "II-3", "OIS and multi-curve valuation", "Discount and forecast curve separation",
+  "II-4", "Black model", "Lognormal forward-option pricing",
+  "II-5", "Normal model", "Bachelier pricing for zero and negative rates",
+  "II-6", "SABR model", "Volatility-smile calibration",
+  "II-7", "Callable Bond and Hull-White", "Short-rate tree and early exercise",
+  "II-8", "Credit risk and CDS", "Hazard curve, MidPoint, and ISDA valuation",
+  "II-9", "Exotic derivatives and PRDC", "FX-linked coupon Monte Carlo valuation"
 )
 
 GaussQuant::show_tbl_GQH(
@@ -1219,14 +1208,14 @@ FX SpotとFX volatilityの感応度は、FloorとCapによって非線形とな�
 
 ```{r chapter09-completion}
 chapter09_summary_tbl <- tibble::tribble(
-  ~section,                 ~main_result,
-  "Coupon payoff",           "Floored and capped FX-linked coupon",
-  "FX process",              "Garman-Kohlhagen risk-neutral dynamics",
-  "Monte Carlo valuation",   "Coupon leg and redemption leg NPV",
-  "Spot sensitivity",        "Nonlinear response caused by cap and floor",
-  "Volatility sensitivity",  "Distributional effect on coupon regions",
-  "Monte Carlo error",       "Standard error and confidence interval",
-  "Model boundary",          "Non-callable deterministic-rate PRDC"
+  ~section, ~main_result,
+  "Coupon payoff", "Floored and capped FX-linked coupon",
+  "FX process", "Garman-Kohlhagen risk-neutral dynamics",
+  "Monte Carlo valuation", "Coupon leg and redemption leg NPV",
+  "Spot sensitivity", "Nonlinear response caused by cap and floor",
+  "Volatility sensitivity", "Distributional effect on coupon regions",
+  "Monte Carlo error", "Standard error and confidence interval",
+  "Model boundary", "Non-callable deterministic-rate PRDC"
 )
 
 GaussQuant::show_tbl_GQH(

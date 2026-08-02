@@ -5,7 +5,16 @@ execute:
   echo: true
   warning: false
   message: false
+  error: false
 ---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
 
 
 ## 3.1 IBOR改革とOISの基礎
@@ -29,25 +38,6 @@ LIBORに代わる主要な指標として、日本円ではTONA、米ドルで�
 以上のIBOR改革によって、金利デリバティブ評価は、単一のLIBORカーブですべてを処理する方法から、翌日物金利を基礎とするOISカーブを割引に用い、参照金利ごとに将来金利を予測する方法へ移行した。
 
 本章では、この歴史的変化を踏まえ、日本円のTONAおよび米ドルのSOFRを参照するOISを取り上げる。まず市場レートからOISカーブを構築し、固定レグと翌日物変動レグを評価する。次に、変動レグを日次金利へ分解し、Fixingの確定前後で評価額がどのように変化するかを確認する。最後に、将来金利を予測するカーブとキャッシュフローを割り引くカーブを分離し、マルチカーブ評価の基本構造を示す。
-
-```{r chapter03-setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
-)
-
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(ggthemes)
-  library(QuantLib)
-  library(GaussQuant)
-  library(tidyverse)
-  library(broom)
-})
-```
 
 ### 3.1.2 OISと翌日物金利
 

@@ -1,4 +1,5 @@
 ---
+title: "第I-2章 財務データの整理と分析"
 execute:
   eval: true
   echo: true
@@ -7,19 +8,17 @@ execute:
   error: false
 ---
 
-# 第2章 財務データの整理と分析
-
-本章では、企業の財務データを読み込み、データ型、欠損値、年度構成および産業構成を確認する。次に、株主資本、自己資本利益率（ROE）および上級デュポン・モデルの構成要素を計算する。第1章で導入した`dplyr`、`tidyr`、`purrr`および`ggplot2`を、企業パネルデータの分析へ応用する。
-
-## 2.1 分析環境
-
 ```{r}
-#| label: load-packages
+#| label: load-utility
+#| include: false
 
 source(file.path("R", "utility_LFL.R"))
-
-load_part1_packages_LFL()
 ```
+
+
+本章では、企業の財務データを読み込み、データ型、欠損値、年度構成および産業構成を確認する。
+
+## 2.1 分析環境
 
 ## 2.2 財務データの読込みと整備
 

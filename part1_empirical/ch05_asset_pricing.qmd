@@ -1,12 +1,19 @@
 ---
+title: "第I-5章 資産価格モデルとポートフォリオ最適化"
 execute:
   eval: true
   echo: true
   warning: false
   message: false
+  error: false
 ---
 
-# 第5章 資産価格モデルとポートフォリオ最適化
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 本章では、Fama--Frenchの3ファクター・モデルを用いて企業別の期待リターンを推定し、その結果を配当成長率の分析とポートフォリオ最適化へ接続する。
 
@@ -18,12 +25,6 @@ execute:
 
 本章では、プロジェクト共通のutilityを読み込み、前章までに作成された派生データを利用する。パッケージの導入方法そのものは扱わず、分析に必要な処理から開始する。
 
-```{r}
-#| label: setup-chapter-05
-
-source("R/utility_LFL.R")
-load_part1_packages_LFL()
-```
 
 ```{r}
 #| label: read-chapter-05-data

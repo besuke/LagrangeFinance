@@ -1,12 +1,19 @@
 ---
-title: "第II-7章 金利期間構造モデル Hull–White Callable債評価"
+title: "第II-7章 金利期間構造モデル Early Termination債評価"
 execute:
   eval: true
   echo: true
   warning: false
-  message: false
+  message: false  
+  error: false
 ---
 
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 Callable Bondは、発行体があらかじめ定められた日と価格で期限前償還できる債券である。市場金利が低下すると、発行体は既存の高いクーポンを支払い続けるよりも、債券を期限前償還して低い金利で資金を再調達する誘因を持つ。
 

@@ -5,7 +5,16 @@ execute:
   echo: true
   warning: false
   message: false
+  error: false
 ---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
 
 
 前章では、株価や為替レートのように、価格の変化率をウィーナー過程によって表現する対象について、Blackモデルを検討した。Blackモデルでは、原資産の変動幅がその時点の価格水準に比例する幾何ブラウン運動を仮定するため、原資産価格は常に正の値を取る。
@@ -45,21 +54,6 @@ $$
 ここで、$Z$ は標準正規分布に従う確率変数である。フォワード金利の変化幅は現在の金利水準に依存しないため、将来金利はゼロまたはマイナスの値も取り得る。
 
 本章では、あえて金利期間構造全体の動学モデルを導入せず、各商品の評価に必要なフォワード金利を、それぞれに対応する測度の下でマルチンゲールとして直接モデル化する。この枠組みに基づき、金利先物オプション、Caplet、CapおよびSwaptionをNormalモデルによって評価する。
-
-```{r chapter05-setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
-)
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(QuantLib)
-  library(GaussQuant)
-})
-```
 
 ## 5.1 Normalモデルの基礎
 

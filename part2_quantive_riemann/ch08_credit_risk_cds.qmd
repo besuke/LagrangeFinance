@@ -5,8 +5,15 @@ execute:
   echo: true
   warning: false
   message: false
+  error: false
 ---
 
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 前章までの評価では、将来の市場価格、金利またはボラティリティの変動を扱った。本章では、契約相手または参照企業が債務を履行できなくなる信用リスクを検討する。
 

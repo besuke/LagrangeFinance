@@ -1,4 +1,19 @@
-# 第4章 ファクターモデル
+---
+title: "第I-4章 ファクターモデル析"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 本章では、第3章で作成した月次株式データと年次財務データを利用し、市場ポートフォリオ、企業規模ポートフォリオ、簿価時価比率ポートフォリオ、SMB、HMLを構築する。さらに、企業規模10分位ポートフォリオを対象として、CAPMとFama--Frenchの3ファクター・モデルを推定する。
 
@@ -12,20 +27,8 @@
 6. CAPMとFF3モデルを推定して比較する
 7. 第5章以降で使用するファクター・データを保存する
 
-反復処理には明示的なループを使わず、`purrr::map()`系を利用する。
 
 ## 4.1 分析環境
-
-```{r}
-#| label: setup
-#| message: false
-#| warning: false
-
-
-source('C:/AnalyticFin/Projects/LagrangeFinance/R/utility_LFL.R')
-load_part1_packages_LFL()
-```
-
 本章では、第1章から第3章と同じ共通ユーティリティを利用する。ファイル探索、Parquet読込み、表の表示、グラフのテーマ設定を各章で重複して定義しない。
 
 ## 4.2 入力データ

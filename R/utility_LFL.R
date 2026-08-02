@@ -205,31 +205,6 @@ set_random_seed_LFL <- function(seed = 20260726) {
   invisible(seed)
 }
 
-load_part1_packages_LFL <- function() {
-  pkgs <- c(
-    "tidyverse", "dbplyr", "arrow", "future", "furrr",
-    "ggthemes", "glue", "scales", "slider", "broom", "lubridate"
-  )
-
-  invisible(lapply(pkgs, require, character.only = TRUE))
-  ggplot2::theme_set(create_lagrange_theme_LFL())
-  options(pillar.sigfig = 5, tibble.width = Inf, scipen = 999)
-  set_random_seed_LFL()
-  invisible(TRUE)
-}
-
-load_part2_packages_LFL <- function() {
-  pkgs <- c(
-    "tidyverse", "GaussQuant", "QuantLib", "dbplyr",
-    "arrow", "future", "furrr", "ggthemes", "glue", "scales"
-  )
-
-  invisible(lapply(pkgs, require, character.only = TRUE))
-  ggplot2::theme_set(create_lagrange_theme_LFL())
-  options(pillar.sigfig = 5, tibble.width = Inf, scipen = 999)
-  set_random_seed_LFL()
-  invisible(TRUE)
-}
 
 find_project_dir_LFL <- function() {
   candidates <- unique(c(
@@ -1778,3 +1753,114 @@ read_derived_parquet_file_LFL <- function(
     ...
   )
 }
+
+
+.set_lagrange_knitr_options_LFL <- function() {
+  knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    warning = FALSE,
+    message = FALSE
+  )
+  
+  invisible(TRUE)
+}
+
+
+.load_lagrange_packages_LFL <- function() {
+  packages <- c(
+    "tidyverse",
+    "broom",
+    "lubridate",
+    "slider",
+    "ggthemes",
+    "glue",
+    "scales",
+    "arrow",
+    "dbplyr",
+    "future",
+    "furrr",
+    "PortfolioAnalytics",
+    "PerformanceAnalytics",
+    "ROI",
+    "ROI.plugin.quadprog",
+    "quadprog",
+    "xts",
+    "zoo",
+    "tidymodels",
+    "glmnet",
+    "QuantLib",
+    "GaussQuant"
+  )
+  missing_packages <- packages |>
+    purrr::keep(
+      \(package_name) {
+        length(
+          find.package(
+            package_name,
+            quiet = TRUE
+          )
+        ) == 0L
+      }
+    )
+  
+  if (length(missing_packages) > 0L) {
+    stop(
+      "必要なパッケージを読み込めません。",
+      call. = FALSE
+    )
+  }
+  
+  suppressWarnings(
+    suppressMessages(
+      purrr::walk(
+        packages,
+        \(package_name) {
+          library(
+            package_name,
+            character.only = TRUE
+          )
+        }
+      )
+    )
+  )
+  
+  suppressWarnings(
+    suppressPackageStartupMessages(
+      purrr::walk(
+        packages,
+        \(package_name) {
+          library(
+            package_name,
+            character.only = TRUE
+          )
+        }
+      )
+    )
+  )
+  
+  invisible(TRUE)
+}
+
+
+.initialize_lagrange_LFL <- function() {
+  .set_lagrange_knitr_options_LFL()
+  .load_lagrange_packages_LFL()
+  
+  ggplot2::theme_set(
+    create_lagrange_theme_LFL()
+  )
+  
+  options(
+    pillar.sigfig = 5,
+    tibble.width = Inf,
+    scipen = 999
+  )
+
+  set_random_seed_LFL()
+  
+  invisible(TRUE)
+}
+
+
+.initialize_lagrange_LFL()

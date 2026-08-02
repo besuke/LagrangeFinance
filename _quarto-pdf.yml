@@ -2,8 +2,8 @@ project:
   output-dir: _pdf_build
 
 book:
-  title: "金融モデル・テクノロジー入門"
-  subtitle: "Quant Technology 1st Step"
+  title: "ラグランジェ・ファイナンス"
+  subtitle: "金融データ分析・数理モデル・並列計算"
   author: "Eiichi Horigome"
   output-file: "lagrange-finance"
 

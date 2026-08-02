@@ -5,7 +5,15 @@ execute:
   echo: true
   warning: false
   message: false
+  error: false
 ---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 
 前章までのBlackモデルとNormalモデルでは、満期とStrikeが同じオプションに対して、一つのボラティリティを与えた。しかし、実際のオプション市場では、同じ満期であってもStrikeごとに異なるインプライド・ボラティリティが観測される。このStrike方向の形状をボラティリティ・スマイルまたはスキューと呼ぶ。
@@ -42,25 +50,6 @@ SABRモデルには、$\alpha$、$\beta$、$\nu$、$\rho$ の4パラメータが
 $\beta=1$ は対数正規型に近く、$\beta=0$ はNormal型に近い。実務では4パラメータを同時推定すると不安定になりやすいため、$\beta$ をあらかじめ固定し、$\alpha$、$\nu$、$\rho$ を市場ボラティリティへカリブレーションすることが多い。
 
 本章では、まずBlack volatilityのスマイルへSABRモデルを適合させる。次に各パラメータがスマイルの形状へ与える影響を確認する。最後に、負のStrikeを含むNormal volatilityの市場データに対してShifted SABRを適用する。
-
-```{r chapter06-setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
-)
-
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(ggthemes)
-  library(QuantLib)
-  library(GaussQuant)
-  library(tidyverse)
-  library(broom)
-})
-```
 
 ## 6.1 SABRモデルとパラメータ
 

@@ -1,33 +1,25 @@
 ---
 title: "第II-2章 金利カーブ構築と債券先物CTD、BPV"
-
 execute:
   eval: true
   echo: true
   warning: false
   message: false
+  error: false
 ---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 債券、金利スワップおよび金利オプションの評価では、将来キャッシュフローを現在価値へ換算するための金利期間構造が必要となる。金利期間構造は、満期ごとの金利を並べた単なる曲線ではない。市場で観測される預金金利、債券価格、FRAおよびスワップレートなどから、各将来日の割引係数を整合的に推定した結果である。
 
 同じ期間構造は、割引係数、ゼロ金利またはフォワード金利として表現できる。これらは相互に変換可能であるが、表示方法によって曲線の特徴の見え方が異なる。割引係数は現在価値計算に直接用いられ、ゼロ金利は満期ごとの平均的な金利水準を示し、フォワード金利は将来の区間ごとの限界的な金利を示す。
 
 本章では、最初にゼロ金利ノードから単純なカーブを構築し、割引係数、ゼロ金利およびフォワード金利の関係を確認する。次に、補間方式による曲線形状の違いを比較する。その後、預金と債券、ならびに預金とスワップを用いたブートストラップを行い、最後にImplied Term Structureと平行シフトを確認する。
-
-```{r chapter02-setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
-)
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(QuantLib)
-  library(GaussQuant)
-})
-```
 
 ## 2.1 金利カーブの基礎
 

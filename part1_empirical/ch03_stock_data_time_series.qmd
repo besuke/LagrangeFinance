@@ -1,4 +1,5 @@
 ---
+title: "第I-3章 株式データと時系列分析"
 execute:
   eval: true
   echo: true
@@ -7,18 +8,16 @@ execute:
   error: false
 ---
 
-# 第3章 株式データと時系列分析
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
 
 本章では、月次株式データから株式リターン、超過リターンおよび時価総額を作成し、第2章で整理した年次財務データと結合する。さらに、月次リターンの分布、累積リターン、年次リターンおよび簿価時価比率との関係を確認し、第4章以降で利用する分析用データを保存する。
 
 ## 3.1 分析環境
-
-```{r}
-#| label: load-packages
-
-source(file.path("R", "utility_LFL.R"))
-load_part1_packages_LFL()
-```
 
 ## 3.2 株式データの読込みと整備
 
@@ -29,7 +28,7 @@ load_part1_packages_LFL()
 #| label: read-stock-data
 
 stock_data_raw <-
-  read_parquet_file_LFL(
+read_parquet_file_LFL(
     file.path(
       "raw",
       "market",

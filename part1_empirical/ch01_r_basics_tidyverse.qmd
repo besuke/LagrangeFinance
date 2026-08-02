@@ -1,4 +1,5 @@
 ---
+title: "第I-1章 Rによるデータ分析の基礎"
 execute:
   eval: true
   echo: true
@@ -7,7 +8,14 @@ execute:
   error: false
 ---
 
-# 第1章 Rによるデータ分析の基礎
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+
 
 本章では、Rによるデータ分析に必要な基本操作を、Base Rからtidyverseへ段階的に学ぶ。前半では、オブジェクト、ベクトル、行列、リスト、データフレーム、関数、条件判定、記述統計および確率分布を扱う。後半では、`dplyr`、`stringr`、`tidyr`、`purrr`、`ggplot2`を用いて、データの読込み、整形、集計、反復処理、可視化を一つの流れとして組み立てる。さらに、`nest()`によるリスト列、`future`と`furrr`による並列計算、`dbplyr`とArrowによるデータベース・大規模データ処理へ進む。
 
@@ -15,15 +23,6 @@ Base Rの項目構成は、Positが公開している[Base R Cheatsheet](https:/
 
 
 ## 1.1 Rの基礎
-
-### 使用するパッケージ
-
-```{r}
-#| label: load-utility
-
-source(file.path("R", "utility_LFL.R"))
-suppressPackageStartupMessages(load_part1_packages_LFL())
-```
 
 ### Rの基本操作
 

@@ -1,4 +1,20 @@
-# 第6章 イベントスタディ
+---
+title: "第I-6章 イベントスタディ"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
 
 本章では、企業の決算発表を対象としてイベントスタディを行う。イベントスタディは、企業イベントの前後に観察された株式リターンから、通常時に予想されるリターンを差し引き、イベント固有の株価反応を測定する方法である。
 
@@ -12,8 +28,6 @@
 6. AAR、CAAR、複数のイベント・ウィンドウについて統計的検定を行う
 7. 決算サプライズと短期CARの関係を確認する
 8. イベント単位と日次集計の結果を保存する
-
-反復処理には明示的なループを使わず、`purrr::map()`、`pmap_dfr()`、`walk2()`を使用する。パイプ演算子はnative pipeの`|>`に統一する。
 
 ## 6.1 イベントスタディの基本設計
 
@@ -78,15 +92,6 @@ $$
 #| label: setup
 #| message: false
 #| warning: false
-
-source("R/utility_LFL.R")
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(broom)
-  library(ggthemes)
-})
-
 estimation_start <- -130L
 estimation_end <- -31L
 event_start <- -30L
