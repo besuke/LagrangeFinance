@@ -4,28 +4,39 @@
 .Rproj.user/
 .renv/
 renv/library/
-_book/
+
 _freeze/
 *.html
 *.pdf
 *.docx
+
+# 完成版のQuarto HTMLをGit管理する
+
+!/_book/
+!/_book/**
+
+# 完成版のPDFをGit管理する
+
+!/_pdf_build/
+!/_pdf_build/lagrange-finance.pdf
+
 .DS_Store
-__pycache__/
+**pycache**/
 .ipynb_checkpoints/
 .quarto/
 **/*.quarto_ipynb
-
-/.quarto/
 
 simulation_data/derived/
 *.bak
 *.bak_*
 *.tmp
 *.patch
+
 part1_empirical/PV.png
 part1_empirical/IRR.pdf
 
 # Local cleanup and rendering intermediates
+
 _render_single/
 commit_and_clean_lagrangefinance*.ps1
 clean_lagrangefinance_local*.ps1
