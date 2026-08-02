@@ -1,0 +1,933 @@
+---
+title: "第III-3章 PRDCによる金融リスク計算システム"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+第III-1章では、金融システムをデータと計算関数の組合せとして捉え、`map()`を`future_map()`へ置き換えることで、一台のコンピュータ上の計算を並列化した。第III-2章では、同じ設計をリモート関数、ジョブキューおよび複数のワーカーへ拡張した。
+
+本章では、第II-9章で構築したPRDC評価を利用し、本書全体の最後に一つの金融リスク計算システムを組み立てる。
+
+以前、このような仕組みを構築するためには、高価な専用ソフトウェア、大規模な計算基盤および多人数の開発体制が必要であった。しかし、データモデルを明確にし、金融計算を入力と出力が明示された関数として設計すれば、小規模な環境でも同じ考え方を再現できる。
+
+本章で構築する流れは次である。
+
+```text
+Trade Data
+Market Data
+Calibration Data
+        ↓
+Scenario Grid
+        ↓
+future_map()
+        ↓
+PRDC Pricing Function
+        ↓
+Risk Table
+        ↓
+Arrow / Parquet
+        ↓
+Risk Report
+```
+
+本章の目的は、PRDCモデルをもう一度詳しく説明することではない。第II部で作成した価格評価関数を、データ中心設計と関数型プログラミングによって多数のシナリオへ適用する方法を示すことである。
+
+## 3.1 金融リスク計算システムの構成
+
+金融リスク計算では、取引条件、市場条件、モデル条件および計算条件を分離する。
+
+```text
+Trade Data
+  商品条件
+  元本
+  満期
+  Coupon条件
+
+Market Data
+  FX Spot
+  Domestic Rate
+  Foreign Rate
+  Discount Rate
+
+Calibration Data
+  FX Volatility
+  Correlation
+  Model Parameters
+
+Calculation Data
+  Path Count
+  Random Seed
+  Worker Setting
+```
+
+第II-9章のPRDCは、Domestic金利、Foreign金利、FX SpotおよびFX Volatilityを使う一因子のGarman--Kohlhagenモデルで評価している。このモデルでは相関係数は価格計算へ直接入らない。
+
+一方、本格的な多因子PRDCでは、Domestic金利、Foreign金利およびFXの相関が必要になる。そこで本章のデータモデルには最初から相関係数を含める。ただし、現在の一因子PRDC評価では、相関係数を将来のモデル拡張用キャリブレーション項目として保存し、実際の価格感応度はFX SpotとFX Volatilityについて計算する。
+
+### 取引データ
+
+```{r}
+#| label: create-prdc-trade-data
+
+tbl_prdc_trade <- tribble(
+  ~trade_ID,
+  ~valuation_date,
+  ~effective_date,
+  ~termination_date,
+  ~intro_coupon_end_date,
+  ~notional,
+  ~intro_coupon_rate,
+  ~coupon_frequency_months,
+  ~coupon_fx_base,
+  ~coupon_leverage,
+  ~coupon_subtraction,
+  ~coupon_floor,
+  ~coupon_cap,
+  "PRDC-001",
+  as.Date("2023-04-11"),
+  as.Date("2015-09-03"),
+  as.Date("2041-09-03"),
+  as.Date("2016-09-03"),
+  300000000,
+  0.022,
+  6L,
+  120,
+  0.122,
+  0.10,
+  0,
+  0.022
+)
+
+show_table_LFL(tbl_prdc_trade)
+```
+
+### 基準市場データとキャリブレーションデータ
+
+```{r}
+#| label: create-prdc-market-calibration-data
+
+tbl_prdc_market <- tribble(
+  ~market_data_ID,
+  ~fx_spot,
+  ~domestic_rate,
+  ~foreign_rate,
+  ~discount_rate,
+  "MKT-BASE",
+  133.2681,
+  0.01,
+  0.03,
+  0.005
+)
+
+tbl_prdc_calibration <- tribble(
+  ~calibration_ID,
+  ~fx_volatility,
+  ~correlation,
+  ~correlation_active,
+  "CAL-BASE",
+  0.10,
+  0.00,
+  FALSE
+)
+
+tbl_prdc_calculation <- tribble(
+  ~calculation_ID,
+  ~number_of_paths,
+  ~random_seed,
+  "CALC-BASE",
+  500L,
+  123L
+)
+
+show_table_LFL(tbl_prdc_market)
+show_table_LFL(tbl_prdc_calibration)
+show_table_LFL(tbl_prdc_calculation)
+```
+
+最初のHTMLドラフトでは計算時間を抑えるため、パス数を500本とする。結果確認後にパス数を増やす。
+
+## 3.2 PRDC価格評価関数
+
+第II-9章で使用した商品条件とモデル条件から、PRDC評価に必要なSchedule、CurveおよびFX Processを作成する。
+
+```{r}
+#| label: define-prdc-scenario-pricing-function
+
+price_prdc_scenario_LFL <- function(
+    trade,
+    market,
+    calibration,
+    calculation
+) {
+  valuation_date <- trade$valuation_date[[1]]
+  effective_date <- trade$effective_date[[1]]
+  termination_date <- trade$termination_date[[1]]
+  intro_coupon_end_date <-
+    trade$intro_coupon_end_date[[1]]
+
+  GaussQuant::set_eval_date_GQL(
+    valuation_date
+  )
+
+  valuation_date_ql <-
+    GaussQuant::date_GQL(
+      valuation_date
+    )
+
+  effective_date_ql <-
+    GaussQuant::date_GQL(
+      effective_date
+    )
+
+  termination_date_ql <-
+    GaussQuant::date_GQL(
+      termination_date
+    )
+
+  intro_coupon_end_date_ql <-
+    GaussQuant::date_GQL(
+      intro_coupon_end_date
+    )
+
+  coupon_schedule <- QuantLib::Schedule(
+    effective_date_ql,
+    termination_date_ql,
+    GaussQuant::period_months_GQL(
+      trade$coupon_frequency_months[[1]]
+    ),
+    QuantLib::TARGET(),
+    "ModifiedFollowing",
+    "ModifiedFollowing",
+    "Backward",
+    FALSE
+  )
+
+  intro_coupon_schedule <- QuantLib::Schedule(
+    effective_date_ql,
+    intro_coupon_end_date_ql,
+    GaussQuant::period_months_GQL(
+      trade$coupon_frequency_months[[1]]
+    ),
+    QuantLib::TARGET(),
+    "ModifiedFollowing",
+    "ModifiedFollowing",
+    "Backward",
+    FALSE
+  )
+
+  intro_coupon_dates <-
+    GaussQuant::schedule_date_vector_GQL(
+      intro_coupon_schedule
+    )
+
+  day_counter <- QuantLib::Actual360()
+
+  domestic_curve <-
+    GaussQuant::flat_curve_GQL(
+      reference_date =
+        valuation_date_ql,
+      rate =
+        market$domestic_rate[[1]],
+      day_counter =
+        day_counter,
+      compounding =
+        "Continuous"
+    )
+
+  foreign_curve <-
+    GaussQuant::flat_curve_GQL(
+      reference_date =
+        valuation_date_ql,
+      rate =
+        market$foreign_rate[[1]],
+      day_counter =
+        day_counter,
+      compounding =
+        "Continuous"
+    )
+
+  discount_curve <-
+    GaussQuant::flat_curve_GQL(
+      reference_date =
+        valuation_date_ql,
+      rate =
+        market$discount_rate[[1]],
+      day_counter =
+        day_counter,
+      compounding =
+        "Continuous"
+    )
+
+  domestic_curve_handle <-
+    QuantLib::YieldTermStructureHandle(
+      domestic_curve
+    )
+
+  foreign_curve_handle <-
+    QuantLib::YieldTermStructureHandle(
+      foreign_curve
+    )
+
+  volatility_curve <-
+    QuantLib::BlackConstantVol(
+      valuation_date_ql,
+      QuantLib::NullCalendar(),
+      GaussQuant::quote_handle_GQL(
+        calibration$fx_volatility[[1]]
+      ),
+      day_counter
+    )
+
+  volatility_handle <-
+    QuantLib::BlackVolTermStructureHandle(
+      volatility_curve
+    )
+
+  fx_process <-
+    GaussQuant::fx_process_GQL(
+      spot =
+        market$fx_spot[[1]],
+      foreign_curve_handle =
+        foreign_curve_handle,
+      domestic_curve_handle =
+        domestic_curve_handle,
+      volatility_handle =
+        volatility_handle
+    )
+
+  result <- GaussQuant::prdc_npv_GQL(
+    valuation_date =
+      valuation_date,
+    coupon_schedule =
+      coupon_schedule,
+    process =
+      fx_process,
+    discount_curve =
+      discount_curve,
+    notional =
+      trade$notional[[1]],
+    fx_base =
+      trade$coupon_fx_base[[1]],
+    leverage =
+      trade$coupon_leverage[[1]],
+    subtraction =
+      trade$coupon_subtraction[[1]],
+    floor_rate =
+      trade$coupon_floor[[1]],
+    cap_rate =
+      trade$coupon_cap[[1]],
+    day_counter =
+      day_counter,
+    intro_coupon_dates =
+      intro_coupon_dates,
+    intro_coupon_rate =
+      trade$intro_coupon_rate[[1]],
+    n_paths =
+      calculation$number_of_paths[[1]],
+    seed =
+      calculation$random_seed[[1]],
+    redemption_amount =
+      trade$notional[[1]],
+    return_details =
+      FALSE
+  )
+
+  tibble(
+    trade_ID =
+      trade$trade_ID[[1]],
+    fx_spot =
+      market$fx_spot[[1]],
+    fx_volatility =
+      calibration$fx_volatility[[1]],
+    correlation =
+      calibration$correlation[[1]],
+    correlation_active =
+      calibration$correlation_active[[1]],
+    number_of_paths =
+      calculation$number_of_paths[[1]],
+    random_seed =
+      calculation$random_seed[[1]],
+    prdc_npv =
+      as.numeric(result)
+  )
+}
+```
+
+この関数は、取引データ、市場データ、キャリブレーションデータおよび計算条件を受け取り、評価結果を一行のtibbleとして返す。
+
+### 基準価格
+
+```{r}
+#| label: calculate-base-prdc-price
+
+tbl_prdc_base_result <-
+  price_prdc_scenario_LFL(
+    trade =
+      tbl_prdc_trade,
+    market =
+      tbl_prdc_market,
+    calibration =
+      tbl_prdc_calibration,
+    calculation =
+      tbl_prdc_calculation
+  )
+
+show_table_LFL(tbl_prdc_base_result)
+```
+
+## 3.3 シナリオグリッドと並列計算
+
+リスク計算では、一つの市場条件だけでなく、複数の市場条件とモデル条件を組み合わせる。
+
+本章では、FX Spot、FX Volatilityおよび相関係数のグリッドを作成する。
+
+```{r}
+#| label: create-prdc-scenario-grid
+
+base_fx_spot <-
+  tbl_prdc_market$fx_spot[[1]]
+
+tbl_prdc_scenario <- tidyr::crossing(
+  fx_spot = base_fx_spot *
+    c(0.90, 0.95, 1.00, 1.05, 1.10),
+  fx_volatility =
+    c(0.075, 0.10, 0.125),
+  correlation =
+    c(-0.50, 0.00, 0.50)
+) |>
+  mutate(
+    scenario_ID = row_number(),
+    correlation_active = FALSE,
+    .before = 1
+  )
+
+show_table_LFL(
+  tbl_prdc_scenario,
+  n = Inf
+)
+```
+
+現行の第II-9章の一因子モデルでは、相関係数は価格へ反映されない。そのため、同じSpotとVolatilityで相関だけが異なるシナリオは同じ価格になる。
+
+これはシステムの欠陥ではなく、モデルの境界を明示している。将来、Domestic金利、Foreign金利およびFXを含む多因子モデルへ拡張した場合も、シナリオ表と並列処理の構造はそのまま利用できる。
+
+### シナリオを価格評価用データへ変換する
+
+```{r}
+#| label: prepare-prdc-scenario-inputs
+
+tbl_prdc_scenario_input <-
+  tbl_prdc_scenario |>
+  mutate(
+    market = purrr::map2(
+      scenario_ID,
+      fx_spot,
+      \(scenario_ID,
+        scenario_fx_spot) {
+        tbl_prdc_market |>
+          mutate(
+            market_data_ID = paste0(
+              "MKT-",
+              stringr::str_pad(
+                scenario_ID,
+                width = 3,
+                pad = "0"
+              )
+            ),
+            fx_spot = scenario_fx_spot
+          )
+      }
+    ),
+    calibration = purrr::map2(
+      fx_volatility,
+      correlation,
+      \(scenario_volatility,
+        scenario_correlation) {
+        tbl_prdc_calibration |>
+          mutate(
+            calibration_ID = paste0(
+              "CAL-V",
+              stringr::str_replace_all(
+                format(
+                  scenario_volatility,
+                  trim = TRUE
+                ),
+                "\\.",
+                "_"
+              ),
+              "-R",
+              stringr::str_replace_all(
+                format(
+                  scenario_correlation,
+                  trim = TRUE
+                ),
+                c(
+                  "-" = "M",
+                  "\\." = "_"
+                )
+              )
+            ),
+            fx_volatility =
+              scenario_volatility,
+            correlation =
+              scenario_correlation,
+            correlation_active =
+              FALSE
+          )
+      }
+    )
+  )
+```
+
+前のコードでは`scenario_ID`を無名関数の外側から直接参照できないため、市場データIDは次の処理で付ける。
+
+```{r}
+#| label: finalize-prdc-scenario-inputs
+
+tbl_prdc_scenario_input <-
+  tbl_prdc_scenario |>
+  mutate(
+    market = purrr::map2(
+      scenario_ID,
+      fx_spot,
+      \(scenario_ID,
+        scenario_fx_spot) {
+        tbl_prdc_market |>
+          mutate(
+            market_data_ID =
+              paste0(
+                "MKT-",
+                stringr::str_pad(
+                  scenario_ID,
+                  width = 3,
+                  pad = "0"
+                )
+              ),
+            fx_spot =
+              scenario_fx_spot
+          )
+      }
+    ),
+    calibration = purrr::map2(
+      fx_volatility,
+      correlation,
+      \(scenario_volatility,
+        scenario_correlation) {
+        tbl_prdc_calibration |>
+          mutate(
+            fx_volatility =
+              scenario_volatility,
+            correlation =
+              scenario_correlation,
+            correlation_active =
+              FALSE
+          )
+      }
+    )
+  )
+```
+
+### `future_map()`による並列価格評価
+
+```{r}
+#| label: define-prdc-future-plan
+
+available_cores <-
+  future::availableCores()
+
+workers <- max(
+  1L,
+  min(
+    2L,
+    available_cores - 1L
+  )
+)
+
+future::plan(
+  future::multisession,
+  workers = workers
+)
+```
+
+```{r}
+#| label: calculate-prdc-scenarios-in-parallel
+
+tbl_prdc_scenario_result <-
+  tbl_prdc_scenario_input |>
+  mutate(
+    result = furrr::future_map2(
+      market,
+      calibration,
+      \(scenario_market,
+        scenario_calibration) {
+        price_prdc_scenario_LFL(
+          trade =
+            tbl_prdc_trade,
+          market =
+            scenario_market,
+          calibration =
+            scenario_calibration,
+          calculation =
+            tbl_prdc_calculation
+        )
+      },
+      .options =
+        furrr::furrr_options(
+          seed = TRUE
+        )
+    )
+  ) |>
+  select(
+    scenario_ID,
+    result
+  ) |>
+  tidyr::unnest(result) |>
+  arrange(scenario_ID)
+
+future::plan(
+  future::sequential
+)
+
+show_table_LFL(
+  tbl_prdc_scenario_result,
+  n = Inf
+)
+```
+
+ここで重要なのは、価格評価関数を変更せず、`map()`を`future_map()`へ置き換えていることである。
+
+```text
+Scenario Data
+      +
+Pricing Function
+      ↓
+future_map()
+      ↓
+Risk Table
+```
+
+## 3.4 感応度とリスクテーブル
+
+基準シナリオを、基準Spot、基準Volatility、相関0として定義する。
+
+```{r}
+#| label: identify-base-prdc-scenario
+
+tbl_prdc_base_scenario <-
+  tbl_prdc_scenario_result |>
+  filter(
+    dplyr::near(
+      fx_spot,
+      tbl_prdc_market$fx_spot[[1]]
+    ),
+    dplyr::near(
+      fx_volatility,
+      tbl_prdc_calibration$
+        fx_volatility[[1]]
+    ),
+    dplyr::near(
+      correlation,
+      0
+    )
+  ) |>
+  slice_head(n = 1)
+
+base_prdc_npv <-
+  tbl_prdc_base_scenario$
+    prdc_npv[[1]]
+```
+
+各シナリオの基準価格との差を計算する。
+
+```{r}
+#| label: create-prdc-risk-table
+
+tbl_prdc_risk <- tbl_prdc_scenario_result |>
+  mutate(
+    base_prdc_npv =
+      base_prdc_npv,
+    npv_change =
+      prdc_npv -
+      base_prdc_npv,
+    npv_change_percent =
+      npv_change /
+      abs(base_prdc_npv),
+    spot_change_percent =
+      fx_spot /
+      tbl_prdc_market$
+        fx_spot[[1]] -
+      1,
+    volatility_change =
+      fx_volatility -
+      tbl_prdc_calibration$
+        fx_volatility[[1]]
+  )
+
+show_table_LFL(
+  tbl_prdc_risk,
+  n = Inf
+)
+```
+
+### FX Spot感応度
+
+基準Volatilityと相関0のシナリオを抽出する。
+
+```{r}
+#| label: summarize-prdc-spot-risk
+
+tbl_prdc_spot_risk <- tbl_prdc_risk |>
+  filter(
+    dplyr::near(
+      fx_volatility,
+      tbl_prdc_calibration$
+        fx_volatility[[1]]
+    ),
+    dplyr::near(
+      correlation,
+      0
+    )
+  ) |>
+  arrange(fx_spot)
+
+show_table_LFL(tbl_prdc_spot_risk)
+```
+
+```{r}
+#| label: plot-prdc-spot-risk
+
+plot_prdc_spot_risk <-
+  tbl_prdc_spot_risk |>
+  ggplot(
+    aes(
+      x = fx_spot,
+      y = prdc_npv
+    )
+  ) +
+  geom_line(
+    linewidth = 0.8
+  ) +
+  geom_point(
+    size = 2
+  ) +
+  labs(
+    x = "FX Spot",
+    y = "PRDC NPV",
+    title = "PRDC FX Spot Sensitivity"
+  )
+
+show_plot_LFL(
+  add_lagrange_theme_LFL(
+    plot_prdc_spot_risk
+  )
+)
+```
+
+### FX Volatility感応度
+
+```{r}
+#| label: summarize-prdc-volatility-risk
+
+tbl_prdc_volatility_risk <-
+  tbl_prdc_risk |>
+  filter(
+    dplyr::near(
+      fx_spot,
+      tbl_prdc_market$fx_spot[[1]]
+    ),
+    dplyr::near(
+      correlation,
+      0
+    )
+  ) |>
+  arrange(fx_volatility)
+
+show_table_LFL(
+  tbl_prdc_volatility_risk
+)
+```
+
+### 相関シナリオの確認
+
+```{r}
+#| label: summarize-prdc-correlation-scenarios
+
+tbl_prdc_correlation_scenario <-
+  tbl_prdc_risk |>
+  filter(
+    dplyr::near(
+      fx_spot,
+      tbl_prdc_market$fx_spot[[1]]
+    ),
+    dplyr::near(
+      fx_volatility,
+      tbl_prdc_calibration$
+        fx_volatility[[1]]
+    )
+  ) |>
+  select(
+    scenario_ID,
+    correlation,
+    correlation_active,
+    prdc_npv,
+    npv_change
+  ) |>
+  arrange(correlation)
+
+show_table_LFL(
+  tbl_prdc_correlation_scenario
+)
+```
+
+現行モデルでは`correlation_active`が`FALSE`であるため、相関だけを変更してもPRDC価格は変化しない。この結果は、シナリオ計算システムが相関を無視しているのではなく、現在の価格評価モデルが相関を持たないことを示している。
+
+多因子モデルを追加する場合には、`price_prdc_scenario_LFL()`の内部だけを変更する。Trade Data、Market Data、Calibration Data、Scenario Grid、`future_map()`およびRisk Tableの構造は変更しない。
+
+## 3.5 Arrow保存と金融リスクレポート
+
+シナリオ入力と計算結果をParquetへ保存する。
+
+```{r}
+#| label: save-prdc-risk-system-data
+
+tbl_prdc_output <- list(
+  trade_data =
+    tbl_prdc_trade,
+  market_data =
+    tbl_prdc_market,
+  calibration_data =
+    tbl_prdc_calibration,
+  scenario_grid =
+    tbl_prdc_scenario,
+  scenario_results =
+    tbl_prdc_scenario_result,
+  risk_table =
+    tbl_prdc_risk
+)
+
+vec_prdc_output_files <- c(
+  trade_data =
+    file.path(
+      "risk_system",
+      "prdc_trade_data.parquet"
+    ),
+  market_data =
+    file.path(
+      "risk_system",
+      "prdc_market_data.parquet"
+    ),
+  calibration_data =
+    file.path(
+      "risk_system",
+      "prdc_calibration_data.parquet"
+    ),
+  scenario_grid =
+    file.path(
+      "risk_system",
+      "prdc_scenario_grid.parquet"
+    ),
+  scenario_results =
+    file.path(
+      "risk_system",
+      "prdc_scenario_results.parquet"
+    ),
+  risk_table =
+    file.path(
+      "risk_system",
+      "prdc_risk_table.parquet"
+    )
+)
+
+vec_prdc_output_paths <-
+  tbl_prdc_output |>
+  purrr::imap_chr(
+    \(data, name) {
+      write_derived_parquet_file_LFL(
+        data,
+        vec_prdc_output_files[[name]]
+      )
+    }
+  )
+
+vec_prdc_output_paths
+```
+
+保存結果を確認する。
+
+```{r}
+#| label: verify-prdc-risk-output
+
+tbl_prdc_risk_check <-
+  read_derived_parquet_file_LFL(
+    file.path(
+      "risk_system",
+      "prdc_risk_table.parquet"
+    )
+  )
+
+tbl_prdc_output_check <- tibble(
+  expected_rows =
+    nrow(tbl_prdc_risk),
+  actual_rows =
+    nrow(tbl_prdc_risk_check),
+  same_columns =
+    identical(
+      names(tbl_prdc_risk),
+      names(tbl_prdc_risk_check)
+    )
+)
+
+show_table_LFL(
+  tbl_prdc_output_check
+)
+```
+
+```{r}
+#| label: assert-prdc-risk-output
+
+stopifnot(
+  nrow(tbl_prdc_risk_check) ==
+    nrow(tbl_prdc_risk),
+  identical(
+    names(tbl_prdc_risk_check),
+    names(tbl_prdc_risk)
+  )
+)
+```
+
+本章では、第II-9章で構築したPRDC評価を、データ中心設計と関数型プログラミングによる金融リスク計算システムへ拡張した。
+
+```text
+Trade Data
+Market Data
+Calibration Data
+        ↓
+Scenario Grid
+        ↓
+future_map()
+        ↓
+PRDC Pricing
+        ↓
+Risk Table
+        ↓
+Parquet
+        ↓
+Report
+```
+
+この仕組みの中心は、特定のミドルウェアや高価な計算基盤ではない。データの役割を分離し、価格評価を入力と出力が明確な関数として設計することである。
+
+計算対象をPRDCから債券、OIS、Swap、CDSまたは他の金融商品へ変更する場合も、差し替えるのは価格評価関数である。データの準備、シナリオ生成、並列実行、結果集計およびParquet保存というパイプラインは変わらない。
+
+本書では、第I部でデータを整理し、第II部で金融計算関数を構築し、第III部でそれらを並列・分散計算可能なシステムへ統合した。かつて大規模な費用と人員を必要とした金融計算システムも、データモデルと関数型の計算設計を守ることで、比較的小規模な環境から構築を始めることができる。

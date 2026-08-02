@@ -1769,6 +1769,7 @@ read_derived_parquet_file_LFL <- function(
 
 .load_lagrange_packages_LFL <- function() {
   packages <- c(
+    "QuantLib",
     "tidyverse",
     "broom",
     "lubridate",
@@ -1789,8 +1790,9 @@ read_derived_parquet_file_LFL <- function(
     "zoo",
     "tidymodels",
     "glmnet",
-    "QuantLib",
-    "GaussQuant"
+
+    "GaussQuant",
+    "nloptr"
   )
   missing_packages <- packages |>
     purrr::keep(

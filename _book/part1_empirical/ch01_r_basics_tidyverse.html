@@ -189,6 +189,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <a href="../part1_empirical/ch06_event_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-6章 イベントスタディ</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch07_machine_learning_factor_selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-7章 機械学習によるファクター選定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch08_constrained_portfolio_optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-8章 制約付きポートフォリオ最適化とバックテスト</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -243,6 +253,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../part2_quantive_riemann/ch09_exotic_derivatives_prdc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-9章 エキゾチック・デリバティブとPRDC</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第III部 金融クオンツ計算とエンタープライズ</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch01_centric_parallel_comput.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 データ中心設計と並列計算</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch02_distribute_comput_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散計算とジョブ管理</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch03_impl_enterprise_calc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 PRDCによる金融リスク計算システム</span></a>
   </div>
 </li>
       </ul>
@@ -1727,12 +1763,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 5</span></span>
 <span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   chr_method             num_pi num_elapsed_seconds num_absolute_error</span></span>
 <span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                   &lt;dbl&gt;               &lt;dbl&gt;              &lt;dbl&gt;</span></span>
-<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                    3.1414               2.990        0.00016693 </span></span>
-<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 workers) 3.1415               2.73         0.000094774</span></span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                    3.1414                6.75        0.00016693 </span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 workers) 3.1415                3.34        0.000094774</span></span>
 <span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   num_speedup</span></span>
 <span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         &lt;dbl&gt;</span></span>
 <span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1      1     </span></span>
-<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2      1.0952</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2      2.0210</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> tbl_pi_benchmark <span class="sc">|&gt;</span></span>
@@ -1802,7 +1838,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>arrow<span class="sc">::</span><span class="fu">write_parquet</span>(tbl_arrow_price, <span class="at">sink =</span> path_parquet)</span>
 <span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a>path_parquet</span>
-<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "C:\\Users\\besuk\\AppData\\Local\\Temp\\RtmpAZXub4/financial_prices.parquet"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "C:\\Users\\besuk\\AppData\\Local\\Temp\\RtmpaYQefz/financial_prices.parquet"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>arrow<span class="sc">::</span><span class="fu">read_parquet</span>(path_parquet) <span class="sc">|&gt;</span></span>

@@ -1,0 +1,632 @@
+---
+title: "第I-7章 機械学習によるファクター選定"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+本章では、第2章から第6章までに作成した財務データ、株式リターン、ファクター・データおよびイベントスタディ結果を利用し、翌期リターンの予測に有効なファクターを機械学習によって選定する。
+
+分析には`tidymodels`を用いる。目的は複雑なモデルを競わせることではなく、データ準備、前処理、学習、評価、予測という一連の流れを、再利用可能なワークフローとして理解することである。
+
+本章では、次の順序で処理を進める。
+
+```text
+既存のArrow／Parquetデータ
+        ↓
+目的変数と特徴量の作成
+        ↓
+tidymodelsワークフロー
+        ↓
+LASSO・Elastic Netによるファクター選定
+        ↓
+期待リターンの推定
+        ↓
+第8章へデータを渡す
+```
+
+## 7.1 機械学習によるファクター分析
+
+第4章では、企業規模と簿価時価比率からSMBとHMLを構築した。第5章では、それらのファクターを使って企業別の期待リターンを推定した。
+
+本章では、あらかじめ少数の変数だけを選ぶのではなく、財務、価格、リスク、市場環境に関する複数の候補から、翌期リターンの予測に有効な変数を選定する。
+
+LASSOは、回帰係数に罰則を加え、一部の係数を0にする。
+
+$$
+\min_{\beta}
+\left[
+\frac{1}{N}
+\sum_{i=1}^{N}
+(y_i-x_i^\top\beta)^2
++
+\lambda
+\sum_{j=1}^{p}
+|\beta_j|
+\right]
+$$
+
+係数が0にならなかった変数を、予測に利用されたファクターとして確認できる。
+
+## 7.2 分析データの作成
+
+### 既存データの読込み
+
+```{r}
+#| label: read-chapter-07-data
+
+tbl_financial <- read_derived_parquet_file_LFL(
+  file.path(
+    "fundamentals",
+    "annual_firm_characteristics.parquet"
+  )
+)
+
+tbl_monthly <- read_derived_parquet_file_LFL(
+  file.path(
+    "returns",
+    "monthly_stock_returns.parquet"
+  )
+)
+
+tbl_factor <- read_derived_parquet_file_LFL(
+  file.path(
+    "factors",
+    "fama_french_factors.parquet"
+  )
+)
+```
+
+```{r}
+#| label: chapter-07-input-overview
+
+tbl_input_overview <- tribble(
+  ~data, ~observations, ~variables,
+  "annual_firm_characteristics",
+  nrow(tbl_financial),
+  ncol(tbl_financial),
+  "monthly_stock_returns",
+  nrow(tbl_monthly),
+  ncol(tbl_monthly),
+  "fama_french_factors",
+  nrow(tbl_factor),
+  ncol(tbl_factor)
+)
+
+show_table_LFL(tbl_input_overview)
+```
+
+### 目的変数
+
+年度$t$の情報から、年度$t+1$の超過リターンを予測する。
+
+$$
+y_{i,t}
+=
+R^e_{i,t+1}
+$$
+
+```{r}
+#| label: create-forward-return
+
+tbl_target <- tbl_financial |>
+  mutate(
+    firm_ID = as.integer(firm_ID),
+    year = as.integer(year)
+  ) |>
+  arrange(firm_ID, year) |>
+  group_by(firm_ID) |>
+  mutate(
+    forward_excess_return = lead(Re),
+    prediction_year = year + 1L
+  ) |>
+  ungroup()
+```
+
+### 価格特徴量
+
+```{r}
+#| label: create-price-features
+
+tbl_price_features <- tbl_monthly |>
+  mutate(
+    firm_ID = as.integer(firm_ID),
+    year = as.integer(year)
+  ) |>
+  filter(is.finite(R)) |>
+  group_by(firm_ID, year) |>
+  summarise(
+    momentum = prod(1 + R) - 1,
+    volatility = sd(R),
+    downside_risk = sqrt(mean(pmin(R, 0)^2)),
+    average_market_equity = mean(ME, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+### 市場環境特徴量
+
+```{r}
+#| label: create-market-features
+
+tbl_market_features <- tbl_factor |>
+  group_by(year) |>
+  summarise(
+    market_premium = prod(1 + R_Me) - 1,
+    smb_return = prod(1 + SMB) - 1,
+    hml_return = prod(1 + HML) - 1,
+    market_volatility = sd(R_Me),
+    .groups = "drop"
+  )
+```
+
+### 学習データ
+
+```{r}
+#| label: create-machine-learning-data
+
+vec_candidate_features <- c(
+  "ROE",
+  "BE",
+  "ME",
+  "lagged_BE",
+  "lagged_ME",
+  "lagged_BEME",
+  "sales",
+  "X",
+  "NOA",
+  "NFO"
+)
+
+vec_available_features <- intersect(
+  vec_candidate_features,
+  names(tbl_target)
+)
+
+tbl_ml <- tbl_target |>
+  select(
+    firm_ID,
+    year,
+    prediction_year,
+    forward_excess_return,
+    any_of("industry_ID"),
+    all_of(vec_available_features)
+  ) |>
+  left_join(
+    tbl_price_features,
+    by = c("firm_ID", "year")
+  ) |>
+  left_join(
+    tbl_market_features,
+    by = "year"
+  ) |>
+  mutate(
+    across(
+      where(is.numeric),
+      \(x) replace(x, !is.finite(x), NA_real_)
+    )
+  ) |>
+  filter(!is.na(forward_excess_return)) |>
+  arrange(year, firm_ID)
+
+show_table_LFL(tbl_ml, n = 20)
+```
+
+## 7.3 tidymodelsによる学習
+
+`tidymodels`では、前処理とモデルを別々に管理し、それらを`workflow()`でまとめる。
+
+```text
+recipe
+  ↓
+model specification
+  ↓
+workflow
+  ↓
+resampling
+  ↓
+tuning
+  ↓
+prediction
+```
+
+### 前処理
+
+```{r}
+#| label: define-machine-learning-recipe
+
+factor_recipe <- recipes::recipe(
+  forward_excess_return ~ .,
+  data = tbl_ml
+) |>
+  recipes::update_role(
+    firm_ID,
+    year,
+    prediction_year,
+    new_role = "id"
+  ) |>
+  recipes::step_unknown(
+    recipes::all_nominal_predictors()
+  ) |>
+  recipes::step_novel(
+    recipes::all_nominal_predictors()
+  ) |>
+  recipes::step_dummy(
+    recipes::all_nominal_predictors()
+  ) |>
+  recipes::step_impute_median(
+    recipes::all_numeric_predictors()
+  ) |>
+  recipes::step_zv(
+    recipes::all_predictors()
+  ) |>
+  recipes::step_normalize(
+    recipes::all_numeric_predictors()
+  )
+```
+
+### 時系列分割
+
+ランダム分割ではなく、年度の順序を維持して学習期間と評価期間を分ける。
+
+```{r}
+#| label: create-time-split
+
+vec_analysis_years <- sort(unique(tbl_ml$year))
+
+split_year <- vec_analysis_years[
+  max(
+    2L,
+    floor(length(vec_analysis_years) * 0.7)
+  )
+]
+
+tbl_training <- tbl_ml |>
+  filter(year <= split_year)
+
+tbl_testing <- tbl_ml |>
+  filter(year > split_year)
+
+tbl_split_overview <- tribble(
+  ~sample, ~observations, ~first_year, ~last_year,
+  "training",
+  nrow(tbl_training),
+  min(tbl_training$year),
+  max(tbl_training$year),
+  "testing",
+  nrow(tbl_testing),
+  min(tbl_testing$year),
+  max(tbl_testing$year)
+)
+
+show_table_LFL(tbl_split_overview)
+```
+
+## 7.4 ファクター選定
+
+LASSO、Ridge、Elastic Netは、同じ`glmnet`エンジンで表現できる。
+
+- `mixture = 1`：LASSO
+- `mixture = 0`：Ridge
+- `0 < mixture < 1`：Elastic Net
+
+```{r}
+#| label: define-elastic-net-workflow
+
+elastic_net_spec <- parsnip::linear_reg(
+  penalty = tune::tune(),
+  mixture = tune::tune()
+) |>
+  parsnip::set_engine("glmnet")
+
+elastic_net_workflow <- workflows::workflow() |>
+  workflows::add_recipe(factor_recipe) |>
+  workflows::add_model(elastic_net_spec)
+```
+
+本ドラフトでは、まず小さなグリッドを使って処理全体が動くことを確認する。
+
+```{r}
+#| label: define-small-tuning-grid
+
+tbl_parameter_grid <- tidyr::crossing(
+  penalty = c(0.0001, 0.001, 0.01, 0.1),
+  mixture = c(0, 0.5, 1)
+)
+```
+
+```{r}
+#| label: create-validation-folds
+
+set.seed(1234)
+
+validation_folds <- rsample::vfold_cv(
+  tbl_training,
+  v = min(5L, nrow(tbl_training))
+)
+```
+
+```{r}
+#| label: tune-factor-model
+
+factor_tuning <- tune::tune_grid(
+  elastic_net_workflow,
+  resamples = validation_folds,
+  grid = tbl_parameter_grid,
+  metrics = yardstick::metric_set(
+    yardstick::rmse,
+    yardstick::mae
+  )
+)
+```
+
+```{r}
+#| label: select-factor-model
+
+best_parameters <- tune::select_best(
+  factor_tuning,
+  metric = "rmse"
+)
+
+show_table_LFL(best_parameters)
+
+final_factor_workflow <- tune::finalize_workflow(
+  elastic_net_workflow,
+  best_parameters
+)
+
+final_factor_fit <- parsnip::fit(
+  final_factor_workflow,
+  data = tbl_training
+)
+```
+
+選択された変数を係数から確認する。
+
+```{r}
+#| label: show-selected-factors
+
+tbl_selected_factors <- final_factor_fit |>
+  workflows::extract_fit_parsnip() |>
+  broom::tidy() |>
+  filter(
+    term != "(Intercept)",
+    estimate != 0
+  ) |>
+  arrange(desc(abs(estimate)))
+
+show_table_LFL(tbl_selected_factors, n = 30)
+```
+
+## 7.5 期待リターンの推定
+
+### テスト期間の予測
+
+```{r}
+#| label: predict-testing-data
+
+tbl_test_predictions <- predict(
+  final_factor_fit,
+  new_data = tbl_testing
+) |>
+  bind_cols(
+    tbl_testing |>
+      select(
+        firm_ID,
+        year,
+        prediction_year,
+        forward_excess_return
+      )
+  ) |>
+  rename(
+    predicted_return = .pred,
+    realized_return = forward_excess_return
+  )
+```
+
+```{r}
+#| label: evaluate-testing-data
+
+tbl_prediction_metrics <- yardstick::metric_set(
+  yardstick::rmse,
+  yardstick::mae,
+  yardstick::rsq
+)(
+  tbl_test_predictions,
+  truth = realized_return,
+  estimate = predicted_return
+)
+
+show_table_LFL(tbl_prediction_metrics)
+```
+
+### 全データによる最終モデル
+
+```{r}
+#| label: fit-final-factor-model
+
+final_factor_fit_all <- parsnip::fit(
+  final_factor_workflow,
+  data = tbl_ml
+)
+
+tbl_security_scores <- predict(
+  final_factor_fit_all,
+  new_data = tbl_ml
+) |>
+  bind_cols(
+    tbl_ml |>
+      select(
+        firm_ID,
+        year,
+        prediction_year,
+        forward_excess_return
+      )
+  ) |>
+  rename(
+    expected_return = .pred,
+    realized_return = forward_excess_return
+  ) |>
+  group_by(prediction_year) |>
+  mutate(
+    score_rank = percent_rank(expected_return),
+    score_decile = ntile(expected_return, 10L)
+  ) |>
+  ungroup()
+```
+
+## 7.6 ポートフォリオ候補の作成
+
+ここでは最適化を行わず、予測値によって銘柄を並べ、分位ポートフォリオを作成する。
+
+```{r}
+#| label: create-decile-portfolios
+
+tbl_decile_returns <- tbl_security_scores |>
+  group_by(
+    prediction_year,
+    score_decile
+  ) |>
+  summarise(
+    securities = n(),
+    average_expected_return = mean(
+      expected_return,
+      na.rm = TRUE
+    ),
+    average_realized_return = mean(
+      realized_return,
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  )
+
+show_table_LFL(tbl_decile_returns, n = Inf)
+```
+
+最上位10分位と最下位10分位の差を確認する。
+
+```{r}
+#| label: create-long-short-portfolio
+
+tbl_long_short <- tbl_decile_returns |>
+  filter(score_decile %in% c(1L, 10L)) |>
+  select(
+    prediction_year,
+    score_decile,
+    average_realized_return
+  ) |>
+  pivot_wider(
+    names_from = score_decile,
+    values_from = average_realized_return,
+    names_prefix = "decile_"
+  ) |>
+  mutate(
+    long_short_return =
+      decile_10 - decile_1
+  )
+
+show_table_LFL(tbl_long_short, n = Inf)
+```
+
+## 7.7 第8章へのデータ保存
+
+第8章では、期待リターン、過去リターン、投資対象銘柄を使って制約付きポートフォリオを構築する。
+
+```{r}
+#| label: prepare-chapter-08-data
+
+tbl_expected_returns <- tbl_security_scores |>
+  transmute(
+    rebalance_year = prediction_year,
+    firm_ID,
+    expected_return,
+    score_rank,
+    score_decile
+  )
+
+tbl_asset_return_history <- tbl_monthly |>
+  transmute(
+    firm_ID = as.integer(firm_ID),
+    month_ID = as.integer(month_ID),
+    month_date = as.Date(month_date),
+    return = R
+  ) |>
+  filter(is.finite(return))
+tbl_investment_universe <- tbl_expected_returns |>
+  left_join(
+    tbl_financial |>
+      transmute(
+        rebalance_year = as.integer(year) + 1L,
+        firm_ID = as.integer(firm_ID),
+        market_equity = ME
+      ),
+    by = c(
+      "rebalance_year", "firm_ID")
+  ) |>
+  filter(
+    is.finite(expected_return),
+    is.finite(market_equity),
+    market_equity > 0
+  )
+```
+
+```{r}
+#| label: save-chapter-07-data
+
+tbl_chapter_07_outputs <- list(
+  expected_returns = tbl_expected_returns,
+  security_scores = tbl_security_scores,
+  factor_selection = tbl_selected_factors,
+  asset_return_history = tbl_asset_return_history,
+  investment_universe = tbl_investment_universe
+)
+
+vec_chapter_07_files <- c(
+  expected_returns = file.path(
+    "portfolios",
+    "expected_returns.parquet"
+  ),
+  security_scores = file.path(
+    "factors",
+    "security_scores.parquet"
+  ),
+  factor_selection = file.path(
+    "factors",
+    "factor_selection.parquet"
+  ),
+  asset_return_history = file.path(
+    "portfolios",
+    "asset_return_history.parquet"
+  ),
+  investment_universe = file.path(
+    "portfolios",
+    "investment_universe.parquet"
+  )
+)
+
+vec_chapter_07_paths <- tbl_chapter_07_outputs |>
+  imap_chr(
+    \(data, name) {
+      write_derived_parquet_file_LFL(
+        data,
+        vec_chapter_07_files[[name]]
+      )
+    }
+  )
+
+vec_chapter_07_paths
+```
+
+本章では、既存の財務データ、株式リターンおよびファクター・データから機械学習用データを作成し、`tidymodels`のワークフローによってファクター選定と期待リターン推定を行った。
+
+第8章では、この期待リターンを制約付きポートフォリオ最適化へ接続する。

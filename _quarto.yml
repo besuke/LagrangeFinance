@@ -1,11 +1,13 @@
 project:
   type: book
   execute-dir: project
+
 book:
   title: "ラグランジェ・ファイナンス"
   subtitle: "金融データ分析・数理モデル・並列計算"
   author: "Eiichi Horigome"
   output-file: "lagrange-finance"
+
   chapters:
     - index.qmd
 
@@ -17,6 +19,8 @@ book:
         - part1_empirical/ch04_factor_models.qmd
         - part1_empirical/ch05_asset_pricing.qmd
         - part1_empirical/ch06_event_study.qmd
+        - part1_empirical/ch07_machine_learning_factor_selection.qmd
+        - part1_empirical/ch08_constrained_portfolio_optimization.qmd
 
     - part: "第II部 金融工学　無裁定モデル"
       chapters:
@@ -29,6 +33,12 @@ book:
         - part2_quantive_riemann/ch07_callable_hull_white.qmd
         - part2_quantive_riemann/ch08_credit_risk_cds.qmd
         - part2_quantive_riemann/ch09_exotic_derivatives_prdc.qmd
+
+    - part: "第III部 金融クオンツ計算とエンタープライズ"
+      chapters:
+        - part3_enterprise_riemann/ch01_centric_parallel_comput.qmd
+        - part3_enterprise_riemann/ch02_distribute_comput_jobtask.qmd
+        - part3_enterprise_riemann/ch03_impl_enterprise_calc.qmd
 
 format:
   html:

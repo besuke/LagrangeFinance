@@ -1,0 +1,477 @@
+---
+title: "第III-2章 分散計算とジョブ管理"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+第III-1章では、金融システムをデータと計算関数の組合せとして捉え、`purrr::map()`による逐次処理を`furrr::future_map()`へ置き換えることで、一台のコンピュータ上で並列計算を実行した。
+
+しかし、計算件数やシナリオ数がさらに増えると、一台のコンピュータだけでは処理時間やメモリ容量に限界が生じる。その場合には、計算を複数のコンピュータへ分配する分散計算が必要になる。
+
+本章の目的は、特定の金融商品を評価することではない。第III-1章で確認したデータ中心設計と関数型プログラミングを、複数の計算資源へ拡張するための基本構造を理解することである。
+
+本章では、次の流れを扱う。
+
+```text
+入力データ
+    ↓
+計算タスク
+    ↓
+リモート関数
+    ↓
+ジョブキュー
+    ↓
+ワーカー
+    ↓
+計算結果
+```
+
+## 2.1 分散計算の基本構造
+
+並列計算と分散計算は似ているが、計算資源の配置が異なる。
+
+一台のコンピュータで複数のプロセスを使う場合は、ローカル並列計算である。
+
+```text
+Computer
+├── Worker 1
+├── Worker 2
+├── Worker 3
+└── Worker 4
+```
+
+複数のコンピュータへ計算を分配する場合は、分散計算である。
+
+```text
+Master
+├── Computer 1
+├── Computer 2
+├── Computer 3
+└── Computer 4
+```
+
+分散計算では、次の役割を分離する。
+
+```text
+Master
+  タスクを作る
+  ワーカーへ送る
+  結果を集める
+
+Worker
+  データを受け取る
+  関数を実行する
+  結果を返す
+```
+
+この役割分担を確認するため、簡単なタスク表を作成する。
+
+```{r}
+#| label: create-distributed-task-table
+
+tbl_task <- tribble(
+  ~task_ID, ~input_value, ~worker_group,
+  1L, 10, "A",
+  2L, 20, "A",
+  3L, 30, "B",
+  4L, 40, "B",
+  5L, 50, "C",
+  6L, 60, "C"
+)
+
+show_table_LFL(tbl_task)
+```
+
+計算関数は、入力を受け取り、結果を返す。
+
+```{r}
+#| label: define-distributed-task-function
+
+calculate_task_result_LFL <- function(
+    task_ID,
+    input_value,
+    worker_group
+) {
+  tibble(
+    task_ID = task_ID,
+    worker_group = worker_group,
+    input_value = input_value,
+    output_value = sqrt(input_value)
+  )
+}
+```
+
+第III-1章と同じく、計算関数は作業ディレクトリや画面出力へ依存しない。
+
+## 2.2 リモート関数の考え方
+
+分散計算では、関数を別のコンピュータで実行する。
+
+```text
+Data
+  ↓
+Serialize
+  ↓
+Remote Function
+  ↓
+Deserialize
+  ↓
+Result
+```
+
+ここで重要なのは、利用者から見た処理の形が変わらないことである。
+
+ローカル関数は次のように呼び出す。
+
+```r
+result <- calculate_task_result_LFL(
+  task_ID = 1L,
+  input_value = 10,
+  worker_group = "A"
+)
+```
+
+リモート関数でも、考え方は同じである。
+
+```r
+result <- remote_calculate_task(
+  task_ID = 1L,
+  input_value = 10,
+  worker_group = "A"
+)
+```
+
+違いは、関数が実行される場所だけである。
+
+本章では実際の通信サーバを起動せず、リモート関数の入出力を表として表現する。
+
+```{r}
+#| label: create-remote-request-table
+
+tbl_remote_request <- tbl_task |>
+  transmute(
+    request_ID = paste0(
+      "REQ-",
+      stringr::str_pad(
+        task_ID,
+        width = 3,
+        pad = "0"
+      )
+    ),
+    task_ID,
+    payload = purrr::pmap(
+      list(
+        task_ID,
+        input_value,
+        worker_group
+      ),
+      \(task_ID, input_value, worker_group) {
+        list(
+          task_ID = task_ID,
+          input_value = input_value,
+          worker_group = worker_group
+        )
+      }
+    )
+  )
+
+show_table_LFL(
+  tbl_remote_request |>
+    select(
+      request_ID,
+      task_ID
+    )
+)
+```
+
+擬似的なリモート関数を定義する。
+
+```{r}
+#| label: define-remote-function
+
+remote_calculate_task_LFL <- function(payload) {
+  calculate_task_result_LFL(
+    task_ID = payload$task_ID,
+    input_value = payload$input_value,
+    worker_group = payload$worker_group
+  )
+}
+```
+
+リクエストを関数へ渡す。
+
+```{r}
+#| label: run-remote-function-example
+
+tbl_remote_result <- tbl_remote_request |>
+  mutate(
+    response = purrr::map(
+      payload,
+      remote_calculate_task_LFL
+    )
+  ) |>
+  select(
+    request_ID,
+    response
+  ) |>
+  tidyr::unnest(response)
+
+show_table_LFL(tbl_remote_result)
+```
+
+gRPCは、このリクエストとレスポンスを、ネットワークを介して送受信するための仕組みである。本章では通信仕様の詳細ではなく、入力と出力を明示した関数として設計することを重視する。
+
+## 2.3 ジョブキューとワーカー
+
+分散計算では、すべてのタスクを同時に実行できるとは限らない。
+
+そのため、タスクをジョブとして登録し、実行可能な計算資源へ順番に割り当てる。
+
+```text
+Task
+  ↓
+Job Queue
+  ↓
+Scheduler
+  ↓
+Worker
+  ↓
+Result
+```
+
+ジョブ表を作成する。
+
+```{r}
+#| label: create-job-table
+
+tbl_job <- tbl_task |>
+  transmute(
+    job_ID = paste0(
+      "JOB-",
+      stringr::str_pad(
+        task_ID,
+        width = 3,
+        pad = "0"
+      )
+    ),
+    task_ID,
+    status = "queued",
+    worker_group,
+    input_value
+  )
+
+show_table_LFL(tbl_job)
+```
+
+ジョブの状態は、一般に次のように変化する。
+
+```text
+queued
+  ↓
+running
+  ↓
+completed
+```
+
+失敗した場合は、`failed`として記録する。
+
+```{r}
+#| label: create-job-status-history
+
+tbl_job_status <- tribble(
+  ~job_ID, ~status, ~sequence,
+  "JOB-001", "queued", 1L,
+  "JOB-001", "running", 2L,
+  "JOB-001", "completed", 3L,
+  "JOB-002", "queued", 1L,
+  "JOB-002", "running", 2L,
+  "JOB-002", "failed", 3L
+)
+
+show_table_LFL(tbl_job_status)
+```
+
+Slurmは、ジョブ、ワーカー、キューおよび計算資源を管理する仕組みである。
+
+```text
+sbatch
+  ジョブを登録する
+
+squeue
+  ジョブの状態を確認する
+
+srun
+  計算資源上でコマンドを実行する
+```
+
+RからSlurmを利用する場合も、計算関数そのものを変更するのではなく、どこで実行するかを切り替える。
+
+```r
+future::plan(
+  future.batchtools::batchtools_slurm
+)
+```
+
+実際のSlurm設定は、Linuxサーバまたはクラスター環境が必要になる。本章では、再現可能なローカルコードを中心とし、ジョブ管理の概念だけを確認する。
+
+## 2.4 分散システムにおけるデータ設計
+
+分散計算では、計算速度だけでなく、データ転送量が重要になる。
+
+大きなデータ全体を毎回ワーカーへ送ると、計算時間より通信時間が長くなる場合がある。
+
+そのため、入力データを次のように分離する。
+
+```text
+共通データ
+  Market Data
+  Calibration Data
+
+タスク固有データ
+  Trade Data
+  Scenario Data
+```
+
+共通データは一度だけ読み込み、各タスクには必要な識別子や変更部分だけを渡す。
+
+```{r}
+#| label: create-distributed-data-model
+
+tbl_market_data <- tribble(
+  ~market_data_ID, ~discount_rate, ~fx_spot,
+  "MKT-001", 0.020, 150,
+  "MKT-002", 0.025, 155
+)
+
+tbl_calibration_data <- tribble(
+  ~calibration_ID, ~volatility, ~correlation,
+  "CAL-001", 0.15, 0.20,
+  "CAL-002", 0.20, 0.40
+)
+
+tbl_trade_data <- tribble(
+  ~trade_ID, ~notional, ~maturity,
+  "TRD-001", 1000000, 3,
+  "TRD-002", 2000000, 5
+)
+
+tbl_scenario_data <- tidyr::crossing(
+  trade_ID = tbl_trade_data$trade_ID,
+  market_data_ID =
+    tbl_market_data$market_data_ID,
+  calibration_ID =
+    tbl_calibration_data$calibration_ID
+) |>
+  mutate(
+    scenario_ID = row_number(),
+    .before = 1
+  )
+
+show_table_LFL(tbl_scenario_data)
+```
+
+計算時に必要なデータだけを結合する。
+
+```{r}
+#| label: join-distributed-data
+
+tbl_distributed_input <- tbl_scenario_data |>
+  left_join(
+    tbl_trade_data,
+    by = "trade_ID"
+  ) |>
+  left_join(
+    tbl_market_data,
+    by = "market_data_ID"
+  ) |>
+  left_join(
+    tbl_calibration_data,
+    by = "calibration_ID"
+  )
+
+show_table_LFL(tbl_distributed_input)
+```
+
+Arrow／Parquetを使うと、各データを別々に保存し、必要な列と行だけを読み込める。
+
+```text
+trade_data.parquet
+market_data.parquet
+calibration_data.parquet
+scenario_data.parquet
+```
+
+```{r}
+#| label: save-distributed-data-model
+
+tbl_distributed_files <- list(
+  trade_data = tbl_trade_data,
+  market_data = tbl_market_data,
+  calibration_data =
+    tbl_calibration_data,
+  scenario_data = tbl_scenario_data
+)
+
+vec_distributed_paths <- tbl_distributed_files |>
+  purrr::imap_chr(
+    \(data, name) {
+      write_derived_parquet_file_LFL(
+        data,
+        file.path(
+          "distributed",
+          paste0(name, ".parquet")
+        )
+      )
+    }
+  )
+
+vec_distributed_paths
+```
+
+これにより、データの種類ごとに更新、再利用および検証ができる。
+
+## 2.5 次章への接続
+
+第III-1章では、一台のコンピュータ上で`future`と`furrr`を利用した並列計算を確認した。
+
+本章では、その考え方を複数のコンピュータへ拡張するために、次の構造を確認した。
+
+```text
+Data
+  ↓
+Remote Function
+  ↓
+Job Queue
+  ↓
+Worker
+  ↓
+Result
+```
+
+また、分散計算では、取引データ、市場データ、キャリブレーションデータおよびシナリオデータを分離することが重要である。
+
+```text
+Trade Data
+Market Data
+Calibration Data
+Scenario Data
+        ↓
+Calculation Function
+        ↓
+Risk Table
+```
+
+計算場所がローカルプロセス、別のコンピュータまたはクラスターへ変わっても、データを関数へ渡し、結果を表として受け取るという設計は変わらない。
+
+次章では、第II部で構築した金融商品の価格評価関数を利用し、多数のシナリオを並列計算する金融リスクシステムを構築する。
