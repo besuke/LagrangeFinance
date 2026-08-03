@@ -1,10 +1,10 @@
-project:
+﻿project:
   type: book
   execute-dir: project
 
 book:
-  title: "ラグランジェ・ファイナンス"
-  subtitle: "金融データ分析・数理モデル・並列計算"
+  title: "金融モデル構築からエンタープライズへ"
+  subtitle: "Rによる金融データモデリング・金融工学・並列分散コンピューティング"
   author: "Eiichi Horigome"
   output-file: "lagrange-finance"
 
