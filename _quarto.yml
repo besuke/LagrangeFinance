@@ -3,7 +3,7 @@
   execute-dir: project
 
 book:
-  title: "金融モデル構築からエンタープライズへ"
+  title: "エンタープライズ金融モデル構築"
   subtitle: "Rによる金融データモデリング・金融工学・並列分散コンピューティング"
   author: "Eiichi Horigome"
   output-file: "lagrange-finance"
@@ -34,7 +34,7 @@ book:
         - part2_quantive_riemann/ch08_credit_risk_cds.qmd
         - part2_quantive_riemann/ch09_exotic_derivatives_prdc.qmd
 
-    - part: "第III部 金融クオンツ計算とエンタープライズ"
+    - part: "第III部 並列・分散コンピューティングによるエンタープライズ化"
       chapters:
         - part3_enterprise_riemann/ch01_centric_parallel_comput.qmd
         - part3_enterprise_riemann/ch02_distribute_comput_jobtask.qmd
