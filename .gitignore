@@ -11,22 +11,25 @@ _freeze/
 *.docx
 
 # 完成版のQuarto HTMLをGit管理する
-
 !/_book/
 !/_book/**
 
 # 完成版のPDFをGit管理する
-
 !/_pdf_build/
 !/_pdf_build/lagrange-finance.pdf
+
+# 完成版の対象外PDFをGit管理する
+!/_pdf_exclude_build/
+!/_pdf_exclude_build/lagrange-finance-exclude.pdf
 
 .DS_Store
 **pycache**/
 .ipynb_checkpoints/
 .quarto/
 **/*.quarto_ipynb
+**/*_files/
+site_libs/
 
-simulation_data/derived/
 *.bak
 *.bak_*
 *.tmp
@@ -36,23 +39,10 @@ part1_empirical/PV.png
 part1_empirical/IRR.pdf
 
 # Local cleanup and rendering intermediates
-
 _render_single/
 commit_and_clean_lagrangefinance*.ps1
 clean_lagrangefinance_local*.ps1
 render_html*.log
-index.aux
-index.log
-index.tex
-index.toc
-
-/.quarto/
-
-# Quarto / R generated local files
-.RData
-.Rhistory
-.quarto/
-**/*_files/
 
 # LaTeX temporary files
 *.aux
@@ -64,23 +54,4 @@ index.toc
 *.fls
 *.fdb_latexmk
 *.synctex.gz
-
-# Quarto / R generated local files
-.RData
-.Rhistory
-.quarto/
-**/*_files/
-
-# LaTeX temporary files
-*.aux
-*.log
-*.out
-*.toc
-*.lof
-*.lot
-*.fls
-*.fdb_latexmk
-*.synctex.gz
-
-# Quarto HTML generated libraries
-site_libs/
+*.tex
