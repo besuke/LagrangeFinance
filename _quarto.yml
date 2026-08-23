@@ -1,16 +1,15 @@
-﻿project:
+project:
   type: book
   execute-dir: project
-
 book:
   title: "エンタープライズ金融モデル構築"
   subtitle: "Rによる金融データモデリング・金融工学・並列分散コンピューティング"
   author: "Eiichi Horigome"
+  cover-image: images/cover.png
   output-file: "lagrange-finance"
-
   chapters:
     - index.qmd
-
+    
     - part: "第I部 金融工学　均衡モデル"
       chapters:
         - part1_empirical/ch01_r_basics_tidyverse.qmd

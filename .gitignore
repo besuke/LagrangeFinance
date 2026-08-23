@@ -45,3 +45,42 @@ index.aux
 index.log
 index.tex
 index.toc
+
+/.quarto/
+
+# Quarto / R generated local files
+.RData
+.Rhistory
+.quarto/
+**/*_files/
+
+# LaTeX temporary files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Quarto / R generated local files
+.RData
+.Rhistory
+.quarto/
+**/*_files/
+
+# LaTeX temporary files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Quarto HTML generated libraries
+site_libs/

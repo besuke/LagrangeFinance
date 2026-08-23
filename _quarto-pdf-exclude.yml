@@ -1,0 +1,51 @@
+﻿project:
+  output-dir: _pdf_exclude_build
+
+book:
+  output-file: "lagrange-finance-exclude"
+
+format:
+  pdf:
+    pdf-engine: lualatex
+    documentclass: ltjsbook
+    papersize: a4
+    toc: true
+    number-sections: false
+    keep-tex: true
+
+    classoption:
+      - openany
+
+    include-in-header:
+      text: |
+        \usepackage[haranoaji]{luatexja-preset}
+        \usepackage{graphicx}
+        \usepackage{eso-pic}
+        \usepackage{xcolor}
+
+        \newcommand{\ExcludeWatermark}{%
+          \AtPageCenter{%
+            \makebox(0,0){%
+              \rotatebox{45}{%
+                \textcolor[gray]{0.30}{%
+                  \fontsize{100}{110}\selectfont
+                  \bfseries 対象外%
+                }%
+              }%
+            }%
+          }%
+        }
+
+        \newcommand{\ExcludeWatermarkOn}{%
+          \AddToShipoutPictureFG{\ExcludeWatermark}%
+        }
+
+        \newcommand{\ExcludeWatermarkOff}{%
+          \ClearShipoutPictureFG%
+        }
+
+    geometry:
+      - top=25mm
+      - bottom=25mm
+      - left=25mm
+      - right=25mm

@@ -1,11 +1,28 @@
+---
+title: "はじめに"
+---
 
-<div style="text-align:right; font-style:italic; margin-top:2em; margin-bottom:2em;">
+::: {.content-visible when-format="html"}
+<div style="text-align: right; font-style: italic; margin-top: 2em; margin-bottom: 2em;">
 
-“All models are wrong, but some are useful.”
-"「すべてのモデルは正しくない。しかし、その中には有用なものもある。」*  
+“All models are wrong, but some are useful.”  
+「すべてのモデルは正しくない。しかし、その中には有用なものもある。」  
 — George E. P. Box
 
 </div>
+:::
+
+::: {.content-visible when-format="pdf"}
+```{=latex}
+\begin{flushright}
+\itshape
+“All models are wrong, but some are useful.”\\
+「すべてのモデルは正しくない。しかし、その中には有用なものもある。」\\
+— George E. P. Box
+\end{flushright}
+\vspace{1em}
+```
+:::
 
 # 金融モデル構築からエンタープライズへ
 
@@ -20,8 +37,9 @@
 という新しい潮流が生まれている。
 
 なお、本書は三部構成となっている。
+
 第I部では、均衡モデルを中心とした実証ファイナンスを扱い、財務データや市場データを用いた分析手法を学ぶ。第II部では、無裁定価格理論を中心として、債券、金利期間構造、デリバティブ、信用リスクなどの金融工学モデルを実装する。さらに第III部では、第II部で実装した無裁定価格モデルを基盤として、並列処理および分散処理環境へ展開し、大規模な金融工学計算を実装する方法を扱う。
+
 また、その実装基盤としてRおよびtidyverseを採用する。Rは統計解析言語として広く利用されているが、本書では、優れたデータハンドリング機能、ベクトル演算、関数型プログラミングの特徴を備えた実装基盤として位置付けている。これらの特徴を活かすことで、金融データの取得・加工から価格評価、リスク計測、さらには並列・分散コンピューティング環境を利用した大規模金融工学計算までを、一貫した設計思想のもとで実装することができる。
 
 本書の目的は、金融理論を理解することだけではなく、それらをソフトウェアとして実装し、現代の金融工学システムを構築するための基礎技術を体系的に習得することにある。
-
