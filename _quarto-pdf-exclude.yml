@@ -1,4 +1,4 @@
-﻿project:
+project:
   output-dir: _pdf_exclude_build
 
 book:
@@ -27,8 +27,8 @@ format:
           \AtPageCenter{%
             \makebox(0,0){%
               \rotatebox{45}{%
-                \textcolor[gray]{0.30}{%
-                  \fontsize{100}{110}\selectfont
+                \textcolor[gray]{0.82}{%
+                  \fontsize{170}{180}\selectfont
                   \bfseries 対象外%
                 }%
               }%
