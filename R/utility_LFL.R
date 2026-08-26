@@ -1790,7 +1790,7 @@ read_derived_parquet_file_LFL <- function(
     "zoo",
     "tidymodels",
     "glmnet",
-
+    "torch",
     "GaussQuant",
     "nloptr"
   )

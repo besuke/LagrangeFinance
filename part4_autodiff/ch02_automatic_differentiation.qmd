@@ -1,0 +1,790 @@
+---
+title: "第IV-2章 自動微分の数学と計算グラフ"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+# 自動微分の数学と計算グラフ
+
+前章では、金融工学の計算基盤が、解析解から数値計算、Monte Carlo、
+Grid Computing、Multi-core CPU、GPUへと発展してきた過程を整理した。
+
+計算資源の拡大は、大規模な価格評価やリスク計測を可能にした一方で、
+Greeksを有限差分によって求める場合には、リスクファクターごとに価格を再計算する必要がある。
+リスクファクターの数が増えるほど、このBump & Revalueの計算負荷は大きくなる。
+
+Automatic Differentiation（自動微分）は、この問題に対して、
+価格計算そのものを微分可能な計算グラフとして扱う。
+
+本章では、金融リスク感応度を偏微分として整理したうえで、
+有限差分、連鎖律、Computational Graph、Forward Mode、Reverse Modeを順に確認する。
+最後にRの`torch`を用いて、自動微分の最小例を実装する。
+
+## 金融リスク感応度と偏微分
+
+金融商品の価格を、複数の市場変数に依存する関数として
+
+$$
+V = V(x_1,x_2,\ldots,x_n)
+$$
+
+と表す。
+
+ここで、$x_i$は株価、為替レート、金利、Volatilityなどのリスクファクターである。
+
+各リスクファクターに対する一次感応度は、
+
+$$
+\frac{\partial V}{\partial x_i}
+$$
+
+で表される。
+
+したがって、すべての一次感応度をまとめると、
+
+$$
+\boxed{
+\nabla V
+=
+\left(
+\frac{\partial V}{\partial x_1},
+\frac{\partial V}{\partial x_2},
+\ldots,
+\frac{\partial V}{\partial x_n}
+\right)
+}
+$$
+
+となる。
+
+OptionのDeltaやVega、金利商品のDV01、為替商品のFX Deltaは、
+対象となるリスクファクターは異なるものの、
+数学的にはいずれも価格関数の偏微分として統一的に捉えることができる。
+
+二次感応度も同様である。
+
+例えばOptionのGammaは、
+
+$$
+\Gamma
+=
+\frac{\partial^2 V}{\partial S^2}
+$$
+
+であり、異なる二つのリスクファクターに対するCross Gammaは、
+
+$$
+\frac{\partial^2 V}
+{\partial x_i \partial x_j}
+$$
+
+として表される。
+
+このように、金融リスク計測の多くは、
+価格関数の一次または二次の微分を求める問題として整理できる。
+
+## 有限差分とBump & Revalue
+
+最も直接的な感応度計算の一つが有限差分である。
+
+リスクファクター$x$を微小量$h$だけ変化させるForward Differenceでは、
+
+$$
+\frac{\partial V}{\partial x}
+\approx
+\frac{V(x+h)-V(x)}{h}
+$$
+
+と近似する。
+
+Central Differenceでは、
+
+$$
+\boxed{
+\frac{\partial V}{\partial x}
+\approx
+\frac{V(x+h)-V(x-h)}{2h}
+}
+$$
+
+となる。
+
+金融実務では、市場データを一定量Bumpし、商品を再評価することから、
+この方法はBump & Revalueと呼ばれる。
+
+実装が比較的容易であり、既存のPricing Engineをそのまま利用できるという利点がある。
+
+一方で、$n$個のリスクファクターについてCentral Differenceを計算する場合、
+単純には各リスクファクターについてUpとDownの再評価が必要になる。
+
+$$
+\text{Number of Revaluations}
+\approx
+2n
+$$
+
+Monte Carloによる価格評価自体が重い場合、この再評価回数は大きな負荷となる。
+
+また、有限差分にはBump幅$h$の選択という問題もある。
+
+$h$が大きすぎれば近似誤差が大きくなり、
+小さすぎれば浮動小数点演算による丸め誤差の影響を受けやすくなる。
+
+したがって、
+
+$$
+\boxed{
+\text{Finite Difference}
+=
+\text{Approximation}
++
+\text{Repeated Pricing}
+}
+$$
+
+という性質を持つ。
+
+## 自動微分は数値微分でも記号微分でもない
+
+自動微分は有限差分による数値微分とは異なる。
+
+また、数式全体を記号的に変形して導関数を求めるSymbolic Differentiationとも異なる。
+
+例えば、
+
+$$
+y = \exp(x^2)
+$$
+
+を考える。
+
+記号微分では、
+
+$$
+\frac{dy}{dx}
+=
+2x\exp(x^2)
+$$
+
+という新しい数式を導出する。
+
+一方、自動微分では、元の計算を
+
+$$
+x
+\rightarrow
+x^2
+\rightarrow
+\exp(x^2)
+\rightarrow
+y
+$$
+
+という基本演算の列として捉える。
+
+各演算の局所的な微分を既知として、
+連鎖律によって全体の微分を構成する。
+
+したがって、自動微分の中心にあるのは、
+
+$$
+\boxed{
+\text{Elementary Operations}
++
+\text{Chain Rule}
+}
+$$
+
+である。
+
+## 連鎖律
+
+自動微分を理解するうえで最も重要な数学が連鎖律である。
+
+例えば、
+
+$$
+y=f(x),
+\qquad
+z=g(y),
+\qquad
+V=h(z)
+$$
+
+とする。
+
+$x$に対する$V$の感応度は、
+
+$$
+\boxed{
+\frac{\partial V}{\partial x}
+=
+\frac{\partial V}{\partial z}
+\frac{\partial z}{\partial y}
+\frac{\partial y}{\partial x}
+}
+$$
+
+となる。
+
+金融商品の価格計算も、多数の小さな計算を順番に実行することで構成される。
+
+例えば金利商品では、
+
+$$
+\text{Market Quote}
+\rightarrow
+\text{Yield Curve}
+\rightarrow
+\text{Discount Factor}
+\rightarrow
+\text{Cash Flow}
+\rightarrow
+PV
+$$
+
+という計算を考えることができる。
+
+市場クォート$q$から金利$r$が構築され、
+その金利から割引係数$D$が計算され、
+最終的に価格$V$が得られるなら、
+
+$$
+q
+\rightarrow
+r
+\rightarrow
+D
+\rightarrow
+V
+$$
+
+である。
+
+したがって、
+
+$$
+\frac{\partial V}{\partial q}
+=
+\frac{\partial V}{\partial D}
+\frac{\partial D}{\partial r}
+\frac{\partial r}{\partial q}
+$$
+
+となる。
+
+この連鎖律をプログラムの計算過程全体に適用することが、
+Automatic Differentiationの基本的な考え方である。
+
+## Computational Graph
+
+プログラムによる計算を、変数と演算の関係として表したものを
+Computational Graphと呼ぶ。
+
+簡単な例として、
+
+$$
+a=x^2,
+\qquad
+b=3a,
+\qquad
+V=b+1
+$$
+
+を考える。
+
+計算グラフは、
+
+```text
+x
+|
+v
+x^2
+|
+v
+a
+|
+v
+* 3
+|
+v
+b
+|
+v
++ 1
+|
+v
+V
+```
+
+と表すことができる。
+
+$x$から$V$へ向かう方向が通常の価格計算である。
+
+一方、最終結果$V$から$x$へ向かって局所微分を掛け合わせれば、
+
+$$
+\frac{\partial V}{\partial x}
+$$
+
+を求めることができる。
+
+この「計算を行った経路を逆向きにたどる」という考え方が、
+Reverse Modeの直感的な理解につながる。
+
+## Forward Mode Automatic Differentiation
+
+Forward Modeでは、入力側から出力側へ向かって、
+値と同時に微分値を伝播させる。
+
+例えば、
+
+$$
+x
+\rightarrow
+a=f(x)
+\rightarrow
+b=g(a)
+\rightarrow
+V=h(b)
+$$
+
+という計算では、
+
+$$
+\frac{\partial a}{\partial x},
+\qquad
+\frac{\partial b}{\partial x},
+\qquad
+\frac{\partial V}{\partial x}
+$$
+
+を順方向に計算する。
+
+概念的には、
+
+$$
+(x,\dot{x})
+\rightarrow
+(a,\dot{a})
+\rightarrow
+(b,\dot{b})
+\rightarrow
+(V,\dot{V})
+$$
+
+と、値と微分値を同時に運ぶ。
+
+Forward Modeは、入力変数が少なく出力変数が多い問題に適している。
+
+## Reverse Mode Automatic Differentiation
+
+Reverse Modeでは、まず通常どおりForward計算を行い、
+最終出力を求める。
+
+その後、出力側から入力側へ向かって微分値を逆伝播する。
+
+金融商品の価格を、
+
+$$
+V=V(x_1,x_2,\ldots,x_n)
+$$
+
+とする。
+
+通常のPricingでは、
+
+$$
+(x_1,x_2,\ldots,x_n)
+\longrightarrow
+V
+$$
+
+と計算する。
+
+Reverse Modeでは、得られた$V$から逆方向に、
+
+$$
+V
+\longrightarrow
+\left(
+\frac{\partial V}{\partial x_1},
+\frac{\partial V}{\partial x_2},
+\ldots,
+\frac{\partial V}{\partial x_n}
+\right)
+$$
+
+と感応度を伝播する。
+
+金融リスク計測では、一つの価格やポートフォリオ価値に対して、
+多数の市場リスクファクターの感応度を求めることが多い。
+
+したがって、
+
+$$
+\boxed{
+\text{Many Inputs}
+\longrightarrow
+\text{Few Outputs}
+}
+$$
+
+という構造を持つ金融計算では、Reverse Modeが特に重要となる。
+
+## AADと金融工学
+
+金融分野では、Reverse Mode Automatic Differentiationを
+Adjoint Algorithmic Differentiation（AAD）という名称で扱うことが多い。
+
+従来のBump & Revalueでは、
+
+$$
+x_1 \rightarrow V_1,
+\quad
+x_2 \rightarrow V_2,
+\quad
+\ldots,
+\quad
+x_n \rightarrow V_n
+$$
+
+のように、多数の再評価を行う。
+
+これに対してAADでは、Pricing計算の過程を利用して、
+最終価格から各入力への感応度を逆向きに伝播させる。
+
+概念的には、
+
+```text
+Market Risk Factors
+x1  x2  x3  ...  xn
+ \   |   |       /
+  \  |   |      /
+   Computational Graph
+          |
+          v
+        Price V
+          |
+          | backward
+          v
+dV/dx1 dV/dx2 ... dV/dxn
+```
+
+となる。
+
+重要なのは、AADがより高速なCPUを用いるという話ではなく、
+リスク計算のアルゴリズムそのものを変更するという点である。
+
+## R torchによる最小の自動微分
+
+ここから、Rの`torch`を使って実際に自動微分を確認する。
+
+次の関数を考える。
+
+$$
+y=x^2+3x+1
+$$
+
+解析的には、
+
+$$
+\frac{dy}{dx}
+=
+2x+3
+$$
+
+である。
+
+$x=2$なら、
+
+$$
+\frac{dy}{dx}
+=
+2\times2+3
+=
+7
+$$
+
+となる。
+
+`torch`では、微分対象のTensorに`requires_grad = TRUE`を指定する。
+
+```{r}
+x <- torch_tensor(
+  2,
+  requires_grad = TRUE
+)
+
+y <- x^2 + 3 * x + 1
+
+y
+```
+
+`backward()`を実行すると、計算グラフを逆向きにたどって勾配が計算される。
+
+```{r}
+y$backward()
+
+x$grad
+```
+
+理論値は、
+
+```{r}
+analytic_grad <- 2 * 2 + 3
+
+analytic_grad
+```
+
+である。
+
+`torch`による自動微分と解析解が一致することを確認できる。
+
+ここで重要なのは、`torch`が
+
+$$
+y=x^2+3x+1
+$$
+
+という数式を記号微分したのではないことである。
+
+実際に実行されたTensor演算からComputational Graphを構築し、
+そのグラフに対して連鎖律を逆方向に適用している。
+
+## 二変数関数のGradient
+
+次に、
+
+$$
+V(x,y)
+=
+x^2+xy+y^2
+$$
+
+を考える。
+
+偏微分は、
+
+$$
+\frac{\partial V}{\partial x}
+=
+2x+y
+$$
+
+$$
+\frac{\partial V}{\partial y}
+=
+x+2y
+$$
+
+である。
+
+$x=2,\ y=3$なら、
+
+$$
+\frac{\partial V}{\partial x}=7,
+\qquad
+\frac{\partial V}{\partial y}=8
+$$
+
+となる。
+
+```{r}
+x <- torch_tensor(
+  2,
+  requires_grad = TRUE
+)
+
+y <- torch_tensor(
+  3,
+  requires_grad = TRUE
+)
+
+value <- x^2 + x * y + y^2
+
+value$backward()
+
+tbl_gradient_result <- tribble(
+  ~variable, ~autograd,
+  "x", x$grad$item(),
+  "y", y$grad$item()
+)
+
+tbl_gradient_result
+```
+
+この例では、一つのScalar出力`value`から、
+二つの入力$x$と$y$に対するGradientを一度の`backward()`で取得している。
+
+これは金融商品の価格
+
+$$
+V
+=
+V(S,r,\sigma,\ldots)
+$$
+
+から、
+
+$$
+\Delta,
+\qquad
+\rho,
+\qquad
+Vega,
+\qquad
+\ldots
+$$
+
+を求める構造と同じである。
+
+## 金融リスク計測への接続
+
+ここまでの内容を金融工学へ置き換えると、
+
+```text
+Market Data
+    |
+    v
+Model Parameters
+    |
+    v
+Pricing Model
+    |
+    v
+Price
+    |
+    | backward()
+    v
+Risk Sensitivities
+```
+
+となる。
+
+すなわち、
+
+$$
+\boxed{
+\text{Pricing}
++
+\text{Computational Graph}
++
+\text{Reverse Mode}
+=
+\text{Risk Sensitivities}
+}
+$$
+
+という構造である。
+
+第IV部では、この考え方を段階的に金融商品へ適用する。
+
+まずOptionについて、
+
+$$
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+$$
+
+を自動微分で求める。
+
+次に金利商品について、
+
+$$
+DV01
+$$
+
+およびYield Curve全体のリスク感応度へ拡張する。
+
+最後にPRDCについて、
+
+$$
+FX
++
+JPY\ Rates
++
+Foreign\ Rates
+$$
+
+という複数のリスクファクターを持つ商品へ適用する。
+
+## まとめ
+
+本章では、自動微分の数学的な基礎を整理した。
+
+有限差分は、
+
+$$
+\text{Bump}
+\rightarrow
+\text{Revalue}
+\rightarrow
+\text{Approximate Sensitivity}
+$$
+
+という方法である。
+
+これに対して自動微分は、
+
+$$
+\text{Pricing Operations}
+\rightarrow
+\text{Computational Graph}
+\rightarrow
+\text{Chain Rule}
+\rightarrow
+\text{Exact Derivative of the Program}
+$$
+
+という考え方をとる。
+
+特に金融工学では、
+
+$$
+(x_1,x_2,\ldots,x_n)
+\longrightarrow
+V
+$$
+
+という多数入力・少数出力の問題が多いため、
+Reverse Mode Automatic Differentiation、すなわちAADが重要となる。
+
+Rの`torch`では、このReverse Modeを
+
+```r
+value$backward()
+```
+
+によって実行し、
+
+```r
+x$grad
+```
+
+によって入力変数に対するGradientを取得できる。
+
+次章ではBlack-Scholes Optionを題材として、
+解析的Greeks、有限差分、自動微分を比較し、
+
+$$
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+$$
+
+を実際に計算する。

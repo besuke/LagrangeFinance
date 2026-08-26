@@ -1,0 +1,1000 @@
+---
+title: "第IV-3章 Option Greeksと自動微分"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+# Option Greeksと自動微分
+
+前章では、金融リスク感応度を価格関数の偏微分として捉え、
+有限差分、連鎖律、Computational Graph、Forward Mode、
+Reverse Mode Automatic Differentiationの関係を整理した。
+
+本章では、最も基本的なデリバティブであるEuropean Optionを題材として、
+自動微分を実際の金融工学へ適用する。
+
+Black-Scholesモデルには解析解が存在するため、
+
+$$
+\text{Analytical Greeks}
+\quad\longleftrightarrow\quad
+\text{Finite Difference}
+\quad\longleftrightarrow\quad
+\text{Automatic Differentiation}
+$$
+
+の三つの方法を同じ条件で比較できる。
+
+対象とするGreeksは、
+
+$$
+\boxed{
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+}
+$$
+
+である。
+
+解析解によって理論値を確認し、有限差分による近似を計算した後、
+Rの`torch`を用いて同じ価格関数を自動微分する。
+
+## Black-Scholesモデル
+
+配当を考慮しない株式を考える。
+
+株価過程をRisk-Neutral Measureの下で、
+
+$$
+dS_t
+=
+rS_tdt
++
+\sigma S_tdW_t
+$$
+
+とする。
+
+ここで、
+
+- $S_t$：時点$t$の株価
+- $r$：無リスク金利
+- $\sigma$：Volatility
+- $W_t$：Brownian Motion
+
+である。
+
+満期$T$、Strike$K$のEuropean Call OptionのPayoffは、
+
+$$
+\max(S_T-K,0)
+$$
+
+である。
+
+Black-Scholes価格は、
+
+$$
+\boxed{
+C
+=
+S_0N(d_1)
+-
+Ke^{-rT}N(d_2)
+}
+$$
+
+で与えられる。
+
+ただし、
+
+$$
+d_1
+=
+\frac{
+\ln(S_0/K)
++
+\left(r+\frac{1}{2}\sigma^2\right)T
+}{
+\sigma\sqrt{T}
+}
+$$
+
+$$
+d_2
+=
+d_1-\sigma\sqrt{T}
+$$
+
+である。
+
+$N(\cdot)$は標準正規分布の累積分布関数を表す。
+
+## Option Greeks
+
+Option価格は、
+
+$$
+C=C(S,K,r,\sigma,T)
+$$
+
+という複数変数の関数である。
+
+したがって、各市場変数に対する感応度を偏微分として定義できる。
+
+### Delta
+
+Deltaは原資産価格$S$に対する一次感応度である。
+
+$$
+\boxed{
+\Delta
+=
+\frac{\partial C}{\partial S}
+}
+$$
+
+Black-Scholes Callでは、
+
+$$
+\boxed{
+\Delta=N(d_1)
+}
+$$
+
+となる。
+
+Deltaは、原資産価格が微小に変化したときのOption価格の変化を表す。
+
+### Gamma
+
+Gammaは原資産価格に対する二次感応度である。
+
+$$
+\boxed{
+\Gamma
+=
+\frac{\partial^2C}{\partial S^2}
+}
+$$
+
+Black-Scholesでは、
+
+$$
+\boxed{
+\Gamma
+=
+\frac{\phi(d_1)}
+{S\sigma\sqrt{T}}
+}
+$$
+
+である。
+
+$\phi(\cdot)$は標準正規分布の確率密度関数である。
+
+GammaはDeltaそのものが原資産価格の変化によって
+どの程度変化するかを表す。
+
+### Vega
+
+VegaはVolatilityに対する感応度である。
+
+$$
+\boxed{
+Vega
+=
+\frac{\partial C}{\partial\sigma}
+}
+$$
+
+Black-Scholesでは、
+
+$$
+\boxed{
+Vega
+=
+S\phi(d_1)\sqrt{T}
+}
+$$
+
+となる。
+
+### Theta
+
+Thetaは時間経過に対するOption価格の感応度である。
+
+残存期間$T$に対する偏微分をまず
+
+$$
+\frac{\partial C}{\partial T}
+$$
+
+と定義する。
+
+市場慣行でいうCalendar-Time Thetaは、
+時間$t$の経過によって残存期間$T$が短くなるため、
+
+$$
+\boxed{
+\Theta
+=
+-\frac{\partial C}{\partial T}
+}
+$$
+
+となる。
+
+配当を考慮しないCall Optionでは、
+
+$$
+\boxed{
+\Theta
+=
+-
+\frac{S\phi(d_1)\sigma}
+{2\sqrt{T}}
+-
+rKe^{-rT}N(d_2)
+}
+$$
+
+である。
+
+自動微分では`T`を微分した結果と市場慣行のThetaの符号を
+区別する必要がある。
+
+## 計算条件
+
+本章では、次の条件を使用する。
+
+```{r}
+tbl_option_input <- tribble(
+  ~parameter, ~value,
+  "spot",     100,
+  "strike",   100,
+  "rate",     0.05,
+  "vol",      0.20,
+  "maturity", 1.00
+)
+
+tbl_option_input
+```
+
+計算では、
+
+```{r}
+spot <- 100
+strike <- 100
+rate <- 0.05
+vol <- 0.20
+maturity <- 1.00
+```
+
+とする。
+
+## RによるBlack-Scholes価格
+
+まず通常のR関数としてBlack-Scholes Call価格を定義する。
+
+```{r}
+black_scholes_call <- function(
+    spot,
+    strike,
+    rate,
+    vol,
+    maturity
+) {
+  d1 <- (
+    log(spot / strike) +
+      (rate + 0.5 * vol^2) * maturity
+  ) / (
+    vol * sqrt(maturity)
+  )
+
+  d2 <- d1 - vol * sqrt(maturity)
+
+  spot * pnorm(d1) -
+    strike *
+      exp(-rate * maturity) *
+      pnorm(d2)
+}
+```
+
+価格を計算する。
+
+```{r}
+bs_price <- black_scholes_call(
+  spot = spot,
+  strike = strike,
+  rate = rate,
+  vol = vol,
+  maturity = maturity
+)
+
+bs_price
+```
+
+## 解析的Greeks
+
+次に解析式からGreeksを計算する。
+
+```{r}
+d1 <- (
+  log(spot / strike) +
+    (rate + 0.5 * vol^2) * maturity
+) / (
+  vol * sqrt(maturity)
+)
+
+d2 <- d1 - vol * sqrt(maturity)
+
+analytic_delta <- pnorm(d1)
+
+analytic_gamma <- dnorm(d1) / (
+  spot * vol * sqrt(maturity)
+)
+
+analytic_vega <- spot *
+  dnorm(d1) *
+  sqrt(maturity)
+
+analytic_theta <- -(
+  spot *
+    dnorm(d1) *
+    vol /
+    (2 * sqrt(maturity))
+) -
+  rate *
+    strike *
+    exp(-rate * maturity) *
+    pnorm(d2)
+
+tbl_analytic_greeks <- tribble(
+  ~greek, ~value,
+  "Delta", analytic_delta,
+  "Gamma", analytic_gamma,
+  "Vega",  analytic_vega,
+  "Theta", analytic_theta
+)
+
+tbl_analytic_greeks
+```
+
+これが本章における基準値となる。
+
+## 有限差分によるGreeks
+
+次にBump & Revalueによって同じGreeksを求める。
+
+### Delta
+
+DeltaはCentral Differenceで、
+
+$$
+\Delta
+\approx
+\frac{
+C(S+h)-C(S-h)
+}{
+2h
+}
+$$
+
+とする。
+
+```{r}
+spot_bump <- 0.01
+
+fd_delta <- (
+  black_scholes_call(
+    spot + spot_bump,
+    strike,
+    rate,
+    vol,
+    maturity
+  ) -
+  black_scholes_call(
+    spot - spot_bump,
+    strike,
+    rate,
+    vol,
+    maturity
+  )
+) / (
+  2 * spot_bump
+)
+
+fd_delta
+```
+
+### Gamma
+
+Gammaは二階中心差分によって、
+
+$$
+\Gamma
+\approx
+\frac{
+C(S+h)-2C(S)+C(S-h)
+}{
+h^2
+}
+$$
+
+とする。
+
+```{r}
+fd_gamma <- (
+  black_scholes_call(
+    spot + spot_bump,
+    strike,
+    rate,
+    vol,
+    maturity
+  ) -
+  2 * bs_price +
+  black_scholes_call(
+    spot - spot_bump,
+    strike,
+    rate,
+    vol,
+    maturity
+  )
+) / (
+  spot_bump^2
+)
+
+fd_gamma
+```
+
+### Vega
+
+Volatilityを$h_\sigma$だけBumpする。
+
+```{r}
+vol_bump <- 1e-4
+
+fd_vega <- (
+  black_scholes_call(
+    spot,
+    strike,
+    rate,
+    vol + vol_bump,
+    maturity
+  ) -
+  black_scholes_call(
+    spot,
+    strike,
+    rate,
+    vol - vol_bump,
+    maturity
+  )
+) / (
+  2 * vol_bump
+)
+
+fd_vega
+```
+
+### Theta
+
+残存期間$T$に対する微分をCentral Differenceで計算し、
+Calendar-Time Thetaに変換する。
+
+```{r}
+time_bump <- 1 / 365
+
+fd_dv_dt <- (
+  black_scholes_call(
+    spot,
+    strike,
+    rate,
+    vol,
+    maturity + time_bump
+  ) -
+  black_scholes_call(
+    spot,
+    strike,
+    rate,
+    vol,
+    maturity - time_bump
+  )
+) / (
+  2 * time_bump
+)
+
+fd_theta <- -fd_dv_dt
+
+fd_theta
+```
+
+有限差分結果をまとめる。
+
+```{r}
+tbl_finite_difference_greeks <- tribble(
+  ~greek, ~value,
+  "Delta", fd_delta,
+  "Gamma", fd_gamma,
+  "Vega",  fd_vega,
+  "Theta", fd_theta
+)
+
+tbl_finite_difference_greeks
+```
+
+## torchによるBlack-Scholes価格
+
+ここから同じBlack-Scholes価格を`torch`で実装する。
+
+`torch`では、微分したい入力Tensorに
+
+```r
+requires_grad = TRUE
+```
+
+を指定する。
+
+まず標準正規分布の累積分布関数を、
+
+$$
+N(x)
+=
+\frac{1}{2}
+\left[
+1+
+\operatorname{erf}
+\left(
+\frac{x}{\sqrt{2}}
+\right)
+\right]
+$$
+
+として実装する。
+
+```{r}
+torch_norm_cdf <- function(x) {
+  0.5 * (
+    1 +
+      torch_erf(
+        x / sqrt(2)
+      )
+  )
+}
+```
+
+Black-Scholes Call価格をTensor演算だけで記述する。
+
+```{r}
+black_scholes_call_torch <- function(
+    spot,
+    strike,
+    rate,
+    vol,
+    maturity
+) {
+  d1 <- (
+    torch_log(spot / strike) +
+      (rate + 0.5 * vol^2) * maturity
+  ) / (
+    vol * torch_sqrt(maturity)
+  )
+
+  d2 <- d1 -
+    vol * torch_sqrt(maturity)
+
+  spot * torch_norm_cdf(d1) -
+    strike *
+      torch_exp(-rate * maturity) *
+      torch_norm_cdf(d2)
+}
+```
+
+## Delta・Vega・Thetaの自動微分
+
+微分対象をTensorとして作成する。
+
+```{r}
+spot_t <- torch_tensor(
+  spot,
+  requires_grad = TRUE
+)
+
+strike_t <- torch_tensor(
+  strike
+)
+
+rate_t <- torch_tensor(
+  rate
+)
+
+vol_t <- torch_tensor(
+  vol,
+  requires_grad = TRUE
+)
+
+maturity_t <- torch_tensor(
+  maturity,
+  requires_grad = TRUE
+)
+```
+
+価格を計算する。
+
+```{r}
+price_t <- black_scholes_call_torch(
+  spot = spot_t,
+  strike = strike_t,
+  rate = rate_t,
+  vol = vol_t,
+  maturity = maturity_t
+)
+
+price_t
+```
+
+一つのScalar価格から複数の入力に対するGradientを計算する。
+
+```{r}
+first_grad <- autograd_grad(
+  outputs = price_t,
+  inputs = list(
+    spot_t,
+    vol_t,
+    maturity_t
+  ),
+  create_graph = TRUE
+)
+
+ad_delta <- first_grad[[1]]$item()
+ad_vega <- first_grad[[2]]$item()
+
+# torchが返すのは残存期間Tに対する dV/dT。
+# Calendar-Time Thetaは符号を反転する。
+ad_theta <- -first_grad[[3]]$item()
+
+tribble(
+  ~greek, ~value,
+  "Delta", ad_delta,
+  "Vega",  ad_vega,
+  "Theta", ad_theta
+)
+```
+
+ここでは、価格計算を一度構築した後、
+Reverse ModeによってSpot、Volatility、Maturityへ感応度を伝播させている。
+
+## Gammaの二階自動微分
+
+Gammaは、
+
+$$
+\Gamma
+=
+\frac{\partial}{\partial S}
+\left(
+\frac{\partial C}{\partial S}
+\right)
+$$
+
+である。
+
+したがって、まずDeltaの計算グラフを保持し、
+そのDeltaをさらにSpotで微分する。
+
+```{r}
+delta_t <- first_grad[[1]]
+
+gamma_grad <- autograd_grad(
+  outputs = delta_t,
+  inputs = list(spot_t)
+)
+
+ad_gamma <- gamma_grad[[1]]$item()
+
+ad_gamma
+```
+
+これは、
+
+$$
+C
+\xrightarrow{\text{AD}}
+\Delta
+\xrightarrow{\text{AD}}
+\Gamma
+$$
+
+という二階自動微分である。
+
+## 三つの方法を比較する
+
+解析解、有限差分、自動微分を一つの表にまとめる。
+
+```{r}
+tbl_autodiff_greeks <- tribble(
+  ~greek, ~value,
+  "Delta", ad_delta,
+  "Gamma", ad_gamma,
+  "Vega",  ad_vega,
+  "Theta", ad_theta
+)
+
+tbl_greeks_comparison <- tbl_analytic_greeks |>
+  rename(analytic = value) |>
+  left_join(
+    tbl_finite_difference_greeks |>
+      rename(finite_difference = value),
+    by = "greek"
+  ) |>
+  left_join(
+    tbl_autodiff_greeks |>
+      rename(autodiff = value),
+    by = "greek"
+  ) |>
+  mutate(
+    fd_error = finite_difference - analytic,
+    ad_error = autodiff - analytic
+  )
+
+tbl_greeks_comparison
+```
+
+Black-Scholesでは解析解が存在するため、
+自動微分の結果を直接検証できる。
+
+有限差分も適切なBump幅を選べば高い精度を得られるが、
+その結果は$h$の選択に依存する。
+
+一方、自動微分ではBump幅を設定する必要がない。
+
+## Bump幅と有限差分誤差
+
+有限差分では、Bump幅が結果に影響する。
+
+Deltaについて複数のBump幅を比較する。
+
+```{r}
+tbl_delta_bump <- tibble(
+  bump = 10^seq(
+    -1,
+    -7,
+    by = -1
+  )
+) |>
+  mutate(
+    delta = map_dbl(
+      bump,
+      ~ (
+        black_scholes_call(
+          spot + .x,
+          strike,
+          rate,
+          vol,
+          maturity
+        ) -
+        black_scholes_call(
+          spot - .x,
+          strike,
+          rate,
+          vol,
+          maturity
+        )
+      ) / (
+        2 * .x
+      )
+    ),
+    error = delta - analytic_delta
+  )
+
+tbl_delta_bump
+```
+
+この比較から、有限差分には
+
+$$
+\boxed{
+\text{Truncation Error}
+\quad\text{vs}\quad
+\text{Floating-Point Error}
+}
+$$
+
+というBump幅のトレードオフがあることが分かる。
+
+自動微分では、有限差分のようなBump幅の調整を必要としない。
+
+## 一階GreeksをGradientとして見る
+
+Option価格を、
+
+$$
+C=C(S,r,\sigma,T)
+$$
+
+と考えれば、一次GreeksはGradientの成分である。
+
+$$
+\nabla C
+=
+\left(
+\frac{\partial C}{\partial S},
+\frac{\partial C}{\partial r},
+\frac{\partial C}{\partial\sigma},
+\frac{\partial C}{\partial T}
+\right)
+$$
+
+すなわち、
+
+$$
+\nabla C
+=
+\left(
+\Delta,
+\rho,
+Vega,
+-\Theta
+\right)
+$$
+
+と見ることができる。
+
+この見方は、次章の金利リスクへ直接つながる。
+
+Optionでは入力変数が数個であったが、
+Yield Curveでは、
+
+$$
+V
+=
+V(r_1,r_2,\ldots,r_n)
+$$
+
+となり、Gradientの次元が大きくなる。
+
+その各成分が、Curve上の各点に対する金利リスク感応度となる。
+
+## 解析解がなくても微分できる
+
+Black-Scholesを使用した理由は、
+自動微分にBlack-Scholes解析解が必要だからではない。
+
+むしろ逆である。
+
+本章では自動微分の結果を検算するために、
+解析解を持つBlack-Scholesを利用した。
+
+自動微分が必要とするのは、
+
+$$
+\boxed{
+\text{価格計算が微分可能な演算で構成されていること}
+}
+$$
+
+である。
+
+したがって、価格がMonte Carloによって
+
+$$
+\hat V
+=
+\frac{1}{M}
+\sum_{m=1}^{M}
+D_T
+\Phi
+\left(
+S_T^{(m)}
+\right)
+$$
+
+として計算される場合でも、
+Path生成からPayoff、Discountingまでを微分可能なTensor演算として構成すれば、
+同じComputational Graphの考え方を適用できる。
+
+これは、後に扱うPRDCのような複雑な商品へ自動微分を拡張するための重要な性質である。
+
+## まとめ
+
+本章では、Black-Scholes European Call Optionを題材として、
+
+$$
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+$$
+
+を三つの方法で計算した。
+
+```text
+Analytical Formula
+        |
+        v
+Exact Benchmark
+
+Finite Difference
+        |
+        v
+Bump & Revalue
+
+Automatic Differentiation
+        |
+        v
+Computational Graph
+        |
+        v
+backward / autograd
+```
+
+Black-Scholesでは解析的Greeksが得られるため、
+有限差分と自動微分の結果を検算できる。
+
+しかし、自動微分の本当の利点は解析解のあるOptionにあるのではない。
+
+商品が複雑になり、入力リスクファクターが増え、
+
+$$
+V
+=
+V(x_1,x_2,\ldots,x_n)
+$$
+
+となったとき、
+
+$$
+\nabla V
+=
+\left(
+\frac{\partial V}{\partial x_1},
+\ldots,
+\frac{\partial V}{\partial x_n}
+\right)
+$$
+
+を計算グラフから取得できることにある。
+
+次章ではこの考え方を金利商品へ拡張する。
+
+まずSwapの価格を
+
+$$
+V=V(r)
+$$
+
+としてDV01を求め、
+さらに、
+
+$$
+V=V(r_1,r_2,\ldots,r_n)
+$$
+
+というYield Curve全体のGradientへ進む。
+
+これにより、
+
+$$
+\boxed{
+\text{Option Greeks}
+\longrightarrow
+\text{DV01}
+\longrightarrow
+\text{Curve Risk / GPS}
+}
+$$
+
+という金融リスク感応度の拡張を確認する。

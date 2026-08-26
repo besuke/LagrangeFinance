@@ -1,0 +1,1367 @@
+---
+title: "第IV-5章 PRDCの為替・金利リスクと自動微分"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+# PRDCの為替・金利リスクと自動微分
+
+第IV部では、Automatic Differentiationを金融リスク計測へ段階的に適用してきた。
+
+第IV-3章ではOptionについて、
+
+$$
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+$$
+
+を計算した。
+
+第IV-4章では金利商品について、
+
+$$
+DV01
+\quad\longrightarrow\quad
+Bucketed\ DV01
+\quad\longrightarrow\quad
+GPS
+$$
+
+へ拡張した。
+
+本章では、第II部・第III部で扱ったPRDCを題材として、
+為替と複数の金利リスクを同じComputational Graphの中で扱う。
+
+PRDCの価値を概念的に、
+
+$$
+\boxed{
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX},
+\ldots
+\right)
+}
+$$
+
+と表す。
+
+本章の目的は、一つのPRDC価格から、
+
+$$
+\boxed{
+\Delta_{FX},
+\quad
+\mathbf{DV01}_{JPY},
+\quad
+\mathbf{DV01}_{Foreign},
+\quad
+Vega_{FX}
+}
+$$
+
+を自動微分によって取得することである。
+
+これにより、
+
+$$
+\boxed{
+\text{Pricing Engine}
+\longrightarrow
+\text{Differentiable Risk Engine}
+}
+$$
+
+という第IV部全体の流れを完成させる。
+
+## PRDCと複数のリスクファクター
+
+PRDCは、為替と複数通貨の金利を同時に扱うハイブリッド商品である。
+
+単純なOptionでは、
+
+$$
+V=V(S,\sigma,r,T)
+$$
+
+と少数の入力変数を考えればよかった。
+
+PRDCでは、
+
+```text
+FX Spot
+   |
+   +-------------------+
+   |                   |
+   v                   v
+FX Process        Coupon Formula
+   ^
+   |
+JPY Rates <----> Foreign Rates
+   |                   |
+   v                   v
+Discounting       FX Drift / Forward
+   \                   /
+    \                 /
+     ------ PRDC ------
+             |
+             v
+            NPV
+```
+
+という複数の経路から価格が構成される。
+
+したがって、一つの市場変数を変更した場合でも、
+その影響は複数の計算経路を通って最終価格へ伝わる。
+
+例えばJPY金利は、
+
+- JPY Discount Factor
+- FXのRisk-Neutral Drift
+- 将来Couponの期待値
+
+へ影響する。
+
+Foreign Rateも、
+
+- FX Forward
+- FXのRisk-Neutral Drift
+- 将来Couponの期待値
+
+へ影響する。
+
+このような商品では、連鎖律をプログラム全体へ適用する
+Automatic Differentiationの考え方が特に重要になる。
+
+## 本章で用いる簡略PRDC
+
+PRDCには多様なCoupon構造、Callable条件、Notional Exchange、
+Target Redemption、Barrierなどが存在する。
+
+本章では自動微分の構造を明確にするため、
+第II部・第III部で扱ったPRDCの考え方を簡略化し、
+為替連動Couponを、
+
+$$
+c_i
+=
+\min
+\left[
+c_{\max},
+\max
+\left(
+0,
+c_0
++
+L
+\left(
+\frac{S_i}{S_{\mathrm{ref}}}
+-
+1
+\right)
+\right)
+\right]
+$$
+
+とする。
+
+ここで、
+
+- $c_0$：Base Coupon
+- $L$：FX Leverage
+- $S_i$：Coupon DateのFX Spot
+- $S_{\mathrm{ref}}$：Reference FX
+- $c_{\max}$：Coupon Cap
+
+である。
+
+Coupon Cash Flowは、
+
+$$
+CF_i
+=
+N\alpha_i c_i
+$$
+
+とする。
+
+このPayoffは自動微分の仕組みを説明するための教育用の簡略形であり、
+実際のPRDC契約では、第II部・第III部で構築したPayoffへ置き換えることができる。
+
+重要なのはPayoffの具体的な形ではなく、
+
+$$
+\boxed{
+\text{FX}
++
+\text{JPY Curve}
++
+\text{Foreign Curve}
++
+\text{Volatility}
+\longrightarrow
+\text{PRDC NPV}
+}
+$$
+
+という計算グラフを微分可能な演算として構成することである。
+
+## FXのRisk-Neutral Dynamics
+
+JPYをDomestic Currency、
+Foreign Currencyを外貨とする。
+
+簡略化したLognormal FX Processとして、
+
+$$
+\frac{dS_t}{S_t}
+=
+\left(
+r_{JPY}(t)
+-
+r_{Foreign}(t)
+\right)dt
++
+\sigma_{FX}dW_t
+$$
+
+を用いる。
+
+離散化すると、
+
+$$
+S_{t+\Delta t}
+=
+S_t
+\exp
+\left[
+\left(
+r_{JPY}
+-
+r_{Foreign}
+-
+\frac12\sigma_{FX}^2
+\right)\Delta t
++
+\sigma_{FX}\sqrt{\Delta t}Z
+\right]
+$$
+
+となる。
+
+ここで、
+
+$$
+Z\sim N(0,1)
+$$
+
+である。
+
+この式から、FX Path自身が、
+
+$$
+S_t
+=
+S_t
+\left(
+S_0,
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX},
+Z
+\right)
+$$
+
+という関数になっていることが分かる。
+
+したがってPRDC価格を微分すると、
+CouponだけではなくFX Path生成まで連鎖律が伝播する。
+
+## Monte Carlo Pricing
+
+PRDCのMonte Carlo価格を、
+
+$$
+\hat V
+=
+\frac{1}{M}
+\sum_{m=1}^{M}
+\left[
+\sum_{i=1}^{n}
+D_{JPY}(0,t_i)
+CF_i^{(m)}
++
+D_{JPY}(0,T)N
+\right]
+$$
+
+とする。
+
+ここで、
+
+$$
+M
+$$
+
+はPath数である。
+
+JPY Discount Factorは、期間ごとの短期金利を用いて、
+
+$$
+D_{JPY}(0,t_i)
+=
+\exp
+\left[
+-
+\sum_{j=1}^{i}
+r_{JPY,j}\Delta t_j
+\right]
+$$
+
+とする。
+
+したがって計算全体は、
+
+```text
+JPY Curve --------+
+                  |
+Foreign Curve ----+----> FX Paths
+                  |         |
+FX Spot ----------+         v
+                  |      Coupons
+FX Vol -----------+         |
+                            v
+JPY Curve ------------> Discount Factors
+                            |
+                            v
+                         PRDC NPV
+```
+
+となる。
+
+## 計算条件
+
+本章では5年間、年1回Couponを支払う簡略PRDCを考える。
+
+```{r}
+tbl_prdc_input <- tribble(
+  ~parameter, ~value,
+  "notional",      100000000,
+  "fx_spot",       150.00,
+  "reference_fx",  150.00,
+  "fixed_coupon",  0.0200,
+  "leverage",      0.80,
+  "coupon_cap",    0.0800,
+  "fx_vol",        0.1200,
+  "n_paths",       20000
+)
+
+tbl_prdc_input
+```
+
+JPY CurveとForeign Curveを設定する。
+
+```{r}
+tbl_prdc_curve <- tribble(
+  ~year, ~jpy_rate, ~foreign_rate,
+  1, 0.0100, 0.0400,
+  2, 0.0120, 0.0380,
+  3, 0.0140, 0.0360,
+  4, 0.0160, 0.0340,
+  5, 0.0180, 0.0320
+)
+
+tbl_prdc_curve
+```
+
+## torchによるMonte Carlo Path生成
+
+Monte Carloで使用する乱数を固定する。
+
+```{r}
+torch_manual_seed(1234)
+
+n_paths <- 20000
+n_steps <- nrow(tbl_prdc_curve)
+
+z <- torch_randn(
+  c(
+    n_paths,
+    n_steps
+  )
+)
+```
+
+乱数$Z$はリスクファクターではないため、
+`requires_grad = TRUE`は指定しない。
+
+一方、微分対象となる市場変数には、
+`requires_grad = TRUE`を指定する。
+
+```{r}
+fx_spot_t <- torch_tensor(
+  150.00,
+  requires_grad = TRUE
+)
+
+jpy_curve_t <- torch_tensor(
+  tbl_prdc_curve$jpy_rate,
+  requires_grad = TRUE
+)
+
+foreign_curve_t <- torch_tensor(
+  tbl_prdc_curve$foreign_rate,
+  requires_grad = TRUE
+)
+
+fx_vol_t <- torch_tensor(
+  0.1200,
+  requires_grad = TRUE
+)
+```
+
+その他の契約条件をTensorとして準備する。
+
+```{r}
+notional_t <- torch_tensor(
+  100000000
+)
+
+reference_fx_t <- torch_tensor(
+  150.00
+)
+
+fixed_coupon_t <- torch_tensor(
+  0.0200
+)
+
+leverage_t <- torch_tensor(
+  0.80
+)
+
+coupon_cap <- 0.0800
+
+dt_t <- torch_ones(
+  n_steps
+)
+```
+
+## 微分可能なPRDC Pricing Function
+
+PRDCのMonte Carlo Pricingを、
+Tensor演算だけで構成する。
+
+```{r}
+prdc_price_torch <- function(
+    fx_spot,
+    jpy_curve,
+    foreign_curve,
+    fx_vol,
+    z,
+    notional,
+    reference_fx,
+    fixed_coupon,
+    leverage,
+    coupon_cap,
+    dt
+) {
+  drift_step <- (
+    jpy_curve -
+      foreign_curve -
+      0.5 * fx_vol^2
+  ) * dt
+
+  diffusion_step <- fx_vol *
+    torch_sqrt(dt) *
+    z
+
+  log_fx_path <- torch_log(
+    fx_spot
+  ) +
+    torch_cumsum(
+      drift_step +
+        diffusion_step,
+      dim = 2
+    )
+
+  fx_path <- torch_exp(
+    log_fx_path
+  )
+
+  raw_coupon_rate <- fixed_coupon +
+    leverage * (
+      fx_path / reference_fx -
+        1
+    )
+
+  coupon_rate <- torch_clamp(
+    raw_coupon_rate,
+    min = 0,
+    max = coupon_cap
+  )
+
+  coupon_cf <- notional *
+    coupon_rate *
+    dt
+
+  discount_factor <- torch_exp(
+    -torch_cumsum(
+      jpy_curve * dt,
+      dim = 1
+    )
+  )
+
+  pv_coupon <- torch_sum(
+    coupon_cf *
+      discount_factor,
+    dim = 2
+  )
+
+  pv_redemption <- notional *
+    discount_factor[n_steps]
+
+  torch_mean(
+    pv_coupon +
+      pv_redemption
+  )
+}
+```
+
+この関数の中では、
+
+- FX Path生成
+- Coupon計算
+- JPY Discounting
+- Monte Carlo Average
+
+のすべてがTensor演算として接続されている。
+
+したがって、最終的な`prdc_npv`から、
+入力された市場リスクファクターまで計算グラフが維持される。
+
+## PRDC NPV
+
+価格を計算する。
+
+```{r}
+prdc_npv <- prdc_price_torch(
+  fx_spot = fx_spot_t,
+  jpy_curve = jpy_curve_t,
+  foreign_curve = foreign_curve_t,
+  fx_vol = fx_vol_t,
+  z = z,
+  notional = notional_t,
+  reference_fx = reference_fx_t,
+  fixed_coupon = fixed_coupon_t,
+  leverage = leverage_t,
+  coupon_cap = coupon_cap,
+  dt = dt_t
+)
+
+prdc_npv
+```
+
+この一つのScalarが、
+
+$$
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX}
+\right)
+$$
+
+という多変数関数になっている。
+
+## 一度のReverse Modeで複数リスクを取得する
+
+一つの価格から複数の入力に対するGradientを計算する。
+
+```{r}
+prdc_grad <- autograd_grad(
+  outputs = prdc_npv,
+  inputs = list(
+    fx_spot_t,
+    jpy_curve_t,
+    foreign_curve_t,
+    fx_vol_t
+  )
+)
+
+fx_delta_t <- prdc_grad[[1]]
+jpy_rate_grad_t <- prdc_grad[[2]]
+foreign_rate_grad_t <- prdc_grad[[3]]
+fx_vega_t <- prdc_grad[[4]]
+```
+
+ここで、
+
+$$
+fx\_delta
+=
+\frac{\partial V}{\partial S_{FX}}
+$$
+
+$$
+jpy\_rate\_grad_i
+=
+\frac{\partial V}{\partial r_{JPY,i}}
+$$
+
+$$
+foreign\_rate\_grad_i
+=
+\frac{\partial V}{\partial r_{Foreign,i}}
+$$
+
+$$
+fx\_vega
+=
+\frac{\partial V}{\partial\sigma_{FX}}
+$$
+
+である。
+
+## FX Delta
+
+FX Deltaは、
+
+$$
+\boxed{
+\Delta_{FX}
+=
+\frac{\partial V}{\partial S_{FX}}
+}
+$$
+
+である。
+
+```{r}
+fx_delta <- fx_delta_t$item()
+
+fx_delta
+```
+
+PRDCのCoupon構造によって、
+FX Deltaの符号や大きさは大きく変化する。
+
+本章の簡略PayoffではFX上昇によってCouponが増加する形を用いているが、
+実際のPRDCではCurrency Pairの定義やCoupon Formulaによって
+感応度の符号は異なる。
+
+## JPY Curve Risk
+
+JPY Curveの各Nodeに対する感応度は、
+
+$$
+\boxed{
+\frac{\partial V}
+{\partial r_{JPY,i}}
+}
+$$
+
+である。
+
+1bp単位へ換算すると、
+
+$$
+\boxed{
+DV01_{JPY,i}
+=
+\frac{\partial V}
+{\partial r_{JPY,i}}
+\times10^{-4}
+}
+$$
+
+となる。
+
+```{r}
+tbl_jpy_risk <- tibble(
+  year = tbl_prdc_curve$year,
+  rate = tbl_prdc_curve$jpy_rate,
+  sensitivity = as.numeric(
+    jpy_rate_grad_t
+  )
+) |>
+  mutate(
+    dv01 = sensitivity * 1e-4
+  )
+
+tbl_jpy_risk
+```
+
+JPY金利はDiscountingだけでなくFX Driftにも入っている。
+
+したがって、
+
+$$
+\frac{\partial V}
+{\partial r_{JPY,i}}
+$$
+
+には、
+
+$$
+\boxed{
+\text{JPY Discount Risk}
++
+\text{FX Drift Risk}
++
+\text{Coupon Risk}
+}
+$$
+
+が連鎖律を通じて含まれる。
+
+## Foreign Curve Risk
+
+Foreign Curveについても同様に、
+
+$$
+\boxed{
+DV01_{Foreign,i}
+=
+\frac{\partial V}
+{\partial r_{Foreign,i}}
+\times10^{-4}
+}
+$$
+
+である。
+
+```{r}
+tbl_foreign_risk <- tibble(
+  year = tbl_prdc_curve$year,
+  rate = tbl_prdc_curve$foreign_rate,
+  sensitivity = as.numeric(
+    foreign_rate_grad_t
+  )
+) |>
+  mutate(
+    dv01 = sensitivity * 1e-4
+  )
+
+tbl_foreign_risk
+```
+
+Foreign Rateは本章の簡略モデルでは直接Discountingには使用していない。
+
+しかし、
+
+$$
+r_{JPY}-r_{Foreign}
+$$
+
+を通じてFX Driftへ入り、
+FX PathからCouponへ感応度が伝播する。
+
+つまり、
+
+$$
+r_{Foreign}
+\rightarrow
+FX\ Path
+\rightarrow
+Coupon
+\rightarrow
+PRDC\ NPV
+$$
+
+という経路が存在する。
+
+## FX Vega
+
+FX Volatilityに対する感応度は、
+
+$$
+\boxed{
+Vega_{FX}
+=
+\frac{\partial V}
+{\partial\sigma_{FX}}
+}
+$$
+
+である。
+
+```{r}
+fx_vega <- fx_vega_t$item()
+
+fx_vega
+```
+
+Volatilityを1 percentage point、
+すなわち0.01だけ変化させた場合の近似価格変化として、
+
+$$
+Vega01_{FX}
+=
+\frac{\partial V}
+{\partial\sigma_{FX}}
+\times0.01
+$$
+
+を定義することもできる。
+
+```{r}
+fx_vega_01 <- fx_vega * 0.01
+
+fx_vega_01
+```
+
+PRDCのCouponにはFloorやCapが存在するため、
+Volatilityの変化は単純な線形効果ではない。
+
+Monte Carlo Pathの分布が変化し、
+FloorやCapへ到達するPathの割合も変化する。
+
+自動微分では、このPath生成からPayoffまでの連鎖を
+同じ計算グラフの中で扱う。
+
+## PRDC Risk Summary
+
+主要なScalar Riskをまとめる。
+
+```{r}
+tbl_prdc_risk_summary <- tribble(
+  ~metric, ~value,
+  "NPV", prdc_npv$item(),
+  "FX Delta", fx_delta,
+  "FX Vega", fx_vega,
+  "FX Vega 1pct", fx_vega_01,
+  "JPY Total DV01", sum(
+    tbl_jpy_risk$dv01
+  ),
+  "Foreign Total DV01", sum(
+    tbl_foreign_risk$dv01
+  )
+)
+
+tbl_prdc_risk_summary
+```
+
+さらにCurve RiskはVectorとして保持する。
+
+```{r}
+tbl_curve_risk <- bind_rows(
+  tbl_jpy_risk |>
+    mutate(
+      curve = "JPY"
+    ),
+  tbl_foreign_risk |>
+    mutate(
+      curve = "Foreign"
+    )
+) |>
+  select(
+    curve,
+    year,
+    rate,
+    sensitivity,
+    dv01
+  )
+
+tbl_curve_risk
+```
+
+これにより、一つのPRDC価格から、
+
+$$
+\boxed{
+\nabla V
+=
+\left(
+\Delta_{FX},
+\mathbf{DV01}_{JPY},
+\mathbf{DV01}_{Foreign},
+Vega_{FX}
+\right)
+}
+$$
+
+を取得したことになる。
+
+## 有限差分との検算
+
+自動微分の結果を確認するため、
+FX DeltaをFinite Differenceで検算する。
+
+Monte Carloで有限差分を比較する場合には、
+乱数の違いによるNoiseを避けるため、
+同じ乱数を使うCommon Random Numbersが重要である。
+
+本章では同じ`z`を使用して、
+FX SpotだけをBumpする。
+
+```{r}
+fx_bump <- 0.01
+
+fx_up <- torch_tensor(
+  150.00 + fx_bump
+)
+
+fx_down <- torch_tensor(
+  150.00 - fx_bump
+)
+
+jpy_curve_fd <- torch_tensor(
+  tbl_prdc_curve$jpy_rate
+)
+
+foreign_curve_fd <- torch_tensor(
+  tbl_prdc_curve$foreign_rate
+)
+
+fx_vol_fd <- torch_tensor(
+  0.1200
+)
+
+price_up <- prdc_price_torch(
+  fx_spot = fx_up,
+  jpy_curve = jpy_curve_fd,
+  foreign_curve = foreign_curve_fd,
+  fx_vol = fx_vol_fd,
+  z = z,
+  notional = notional_t,
+  reference_fx = reference_fx_t,
+  fixed_coupon = fixed_coupon_t,
+  leverage = leverage_t,
+  coupon_cap = coupon_cap,
+  dt = dt_t
+)
+
+price_down <- prdc_price_torch(
+  fx_spot = fx_down,
+  jpy_curve = jpy_curve_fd,
+  foreign_curve = foreign_curve_fd,
+  fx_vol = fx_vol_fd,
+  z = z,
+  notional = notional_t,
+  reference_fx = reference_fx_t,
+  fixed_coupon = fixed_coupon_t,
+  leverage = leverage_t,
+  coupon_cap = coupon_cap,
+  dt = dt_t
+)
+
+fd_fx_delta <- (
+  price_up$item() -
+    price_down$item()
+) / (
+  2 * fx_bump
+)
+
+tribble(
+  ~method, ~fx_delta,
+  "Finite difference", fd_fx_delta,
+  "Automatic differentiation", fx_delta
+)
+```
+
+同じ乱数を用いることで、
+差分結果にMonte Carlo Noiseが混入することを抑えている。
+
+## Floor・Capと微分可能性
+
+本章のCouponでは、
+
+$$
+\max(0,x)
+$$
+
+および、
+
+$$
+\min(c_{\max},x)
+$$
+
+を使用している。
+
+これらの関数はKinkを持ち、
+境界点では通常の意味で微分不可能である。
+
+`torch_clamp()`などの自動微分ライブラリは、
+こうした演算について実装上定義された局所Gradientを使用して
+Reverse Modeを実行する。
+
+Monte Carloでは、連続分布のもとでPathがKinkへ
+厳密に一致する確率は通常ゼロであるため、
+Pathwise Derivativeを利用できる場合が多い。
+
+ただし、Digital Payoff、Barrier Hit Indicator、
+Exercise Decisionなど不連続性の強い商品では、
+単純なPathwise Automatic Differentiationだけでは
+安定した感応度が得られない場合がある。
+
+その場合には、
+
+- Smoothing
+- Likelihood Ratio Method
+- Conditional Expectation
+- Pathwise / LRM Hybrid
+- Differentiable Approximation
+
+などを検討する必要がある。
+
+これは、Automatic Differentiationが
+「あらゆる金融商品をそのまま微分すればよい」
+という意味ではないことを示している。
+
+## Monte CarloとAutomatic Differentiation
+
+PRDCのような商品では、
+
+$$
+\hat V
+=
+\frac{1}{M}
+\sum_{m=1}^{M}
+V^{(m)}
+$$
+
+というMonte Carlo Averageを微分する。
+
+条件が整えば、
+
+$$
+\frac{\partial}{\partial x}
+E
+\left[
+V(x,Z)
+\right]
+=
+E
+\left[
+\frac{\partial V(x,Z)}
+{\partial x}
+\right]
+$$
+
+と考えることができる。
+
+つまり各PathのPricing Calculationを微分可能に構成すれば、
+そのAverageであるMonte Carlo Priceについても
+Automatic Differentiationを適用できる。
+
+この考え方が、
+
+$$
+\boxed{
+Monte\ Carlo
++
+Automatic\ Differentiation
+}
+$$
+
+を結び付ける。
+
+## GPUへの拡張
+
+第IV-1章で確認したように、
+Monte CarloはGPUと相性が良い。
+
+本章の実装でも、
+
+```r
+z
+```
+
+は、
+
+$$
+M\times n
+$$
+
+のTensorであり、
+FX Path全体をLoopではなくTensor演算として計算している。
+
+したがって計算デバイスをGPUへ移せる環境では、
+
+$$
+\boxed{
+Monte\ Carlo
++
+GPU
++
+Automatic\ Differentiation
+}
+$$
+
+という組み合わせが可能になる。
+
+ここで重要なのは、
+GPUによるHardware Accelerationと、
+Automatic DifferentiationによるAlgorithmic Accelerationが
+同じTensor計算基盤の上で共存できることである。
+
+## AADとして見るPRDC Risk
+
+PRDCのPricing Graphをもう一度整理する。
+
+```text
+             FX Spot
+                |
+                |
+JPY Curve ------+------ Foreign Curve
+    |           |            |
+    |           v            |
+    |        FX Paths <------+
+    |           |
+    |           v
+    |        Coupons <------- FX Vol
+    |           |
+    v           v
+Discount Factors
+        \       /
+         \     /
+          PRDC NPV
+             |
+             | Reverse Mode / AAD
+             v
+   +---------+---------+----------+
+   |                   |          |
+ FX Delta          JPY DV01   Foreign DV01
+                                  |
+                              FX Vega
+```
+
+Forward計算では、
+
+$$
+\text{Risk Factors}
+\longrightarrow
+\text{PRDC NPV}
+$$
+
+を求める。
+
+Reverse計算では、
+
+$$
+\text{PRDC NPV}
+\longrightarrow
+\text{Risk Factors}
+$$
+
+へ勾配を伝播する。
+
+このForwardとReverseの組み合わせが、
+PRDCをDifferentiable Pricing Modelとして扱うという意味である。
+
+## 第IV部を通したリスク計測の拡張
+
+第IV部で扱った商品を並べると、
+自動微分の役割が明確になる。
+
+### Option
+
+$$
+V
+=
+V(S,\sigma,T)
+$$
+
+$$
+\Downarrow
+$$
+
+$$
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+$$
+
+### Interest Rate
+
+$$
+V
+=
+V(r_1,r_2,\ldots,r_n)
+$$
+
+$$
+\Downarrow
+$$
+
+$$
+DV01,\quad
+Bucketed\ DV01,\quad
+GPS
+$$
+
+### PRDC
+
+$$
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX}
+\right)
+$$
+
+$$
+\Downarrow
+$$
+
+$$
+\boxed{
+\Delta_{FX},
+\quad
+\mathbf{DV01}_{JPY},
+\quad
+\mathbf{DV01}_{Foreign},
+\quad
+Vega_{FX}
+}
+$$
+
+つまり、商品が複雑になっても基本的な数学は変わらない。
+
+$$
+\boxed{
+\text{Risk}
+=
+\text{Derivative of Price}
+}
+$$
+
+である。
+
+変わるのは、価格関数を構成するComputational Graphの規模である。
+
+## まとめ
+
+本章では、PRDCを題材として、
+為替と複数金利カーブを持つ多因子商品の
+Automatic Differentiationを実装した。
+
+Monte Carlo Pricingを、
+
+$$
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX}
+\right)
+$$
+
+という微分可能なTensor計算として構成し、
+
+$$
+\boxed{
+\nabla V
+=
+\left(
+\frac{\partial V}{\partial S_{FX}},
+\frac{\partial V}{\partial\mathbf r_{JPY}},
+\frac{\partial V}{\partial\mathbf r_{Foreign}},
+\frac{\partial V}{\partial\sigma_{FX}}
+\right)
+}
+$$
+
+をReverse Modeによって取得した。
+
+これにより、
+
+```text
+Option
+  |
+  v
+Greeks
+  |
+  v
+Interest Rate
+  |
+  v
+DV01 / GPS
+  |
+  v
+PRDC
+  |
+  v
+FX + JPY Rates + Foreign Rates + Volatility
+```
+
+という第IV部の流れが完成する。
+
+第IV部で重要なのは、
+`torch`という特定のライブラリの操作方法そのものではない。
+
+価格計算を、
+
+$$
+\boxed{
+\text{Differentiable Computational Graph}
+}
+$$
+
+として設計することである。
+
+1970年代の解析的Greeksから始まり、
+Monte Carlo、Grid Computing、Multi-core CPU、GPUへと
+金融工学の計算基盤は発展してきた。
+
+そしてAutomatic Differentiationは、
+
+$$
+\boxed{
+\text{より多くの計算機を使う}
+}
+$$
+
+だけではなく、
+
+$$
+\boxed{
+\text{価格計算そのものからリスクを生成する}
+}
+$$
+
+という新しい方向を与える。
+
+これによってPricing Engineは、
+
+$$
+\boxed{
+\text{Pricing Engine}
+\longrightarrow
+\text{Differentiable Risk Engine}
+}
+$$
+
+へ発展する。
+
+これが、第IV部で構築した自動微分による金融工学システムの到達点である。
