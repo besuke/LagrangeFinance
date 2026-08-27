@@ -1,16 +1,16 @@
-project:
+﻿project:
   type: book
   execute-dir: project
 book:
-  title: "エンタープライズ金融モデル構築"
-  subtitle: "Rによる金融データモデリング・金融工学・並列分散コンピューティング"
+  title: "繧ｨ繝ｳ繧ｿ繝ｼ繝励Λ繧､繧ｺ驥題檮繝｢繝・Ν讒狗ｯ・
+  subtitle: "R縺ｫ繧医ｋ驥題檮繝・・繧ｿ繝｢繝・Μ繝ｳ繧ｰ繝ｻ驥題檮蟾･蟄ｦ繝ｻ荳ｦ蛻怜・謨｣繧ｳ繝ｳ繝斐Η繝ｼ繝・ぅ繝ｳ繧ｰ"
   author: "Eiichi Horigome"
   cover-image: images/cover.png
-  output-file: "lagrange-finance"
+  output-file: "lagrangeFinance"
   chapters:
     - index.qmd
-    
-    - part: "第I部 金融工学　均衡モデル"
+
+    - part: "隨ｬI驛ｨ 驥題檮蟾･蟄ｦ縲蝮・｡｡繝｢繝・Ν"
       chapters:
         - part1_empirical/ch01_r_basics_tidyverse.qmd
         - part1_empirical/ch02_financial_data.qmd
@@ -21,7 +21,7 @@ book:
         - part1_empirical/ch07_machine_learning_factor_selection.qmd
         - part1_empirical/ch08_constrained_portfolio_optimization.qmd
 
-    - part: "第II部 金融工学　無裁定モデル"
+    - part: "隨ｬII驛ｨ 驥題檮蟾･蟄ｦ縲辟｡陬∝ｮ壹Δ繝・Ν"
       chapters:
         - part2_quantive_riemann/ch01_deterministic_cashflow_valuation.qmd
         - part2_quantive_riemann/ch02_interest_rate_curves.qmd
@@ -33,11 +33,19 @@ book:
         - part2_quantive_riemann/ch08_credit_risk_cds.qmd
         - part2_quantive_riemann/ch09_exotic_derivatives_prdc.qmd
 
-    - part: "第III部 並列・分散コンピューティングによるエンタープライズ化"
+    - part: "隨ｬIII驛ｨ 荳ｦ蛻励・蛻・淵繧ｳ繝ｳ繝斐Η繝ｼ繝・ぅ繝ｳ繧ｰ縺ｫ繧医ｋ繧ｨ繝ｳ繧ｿ繝ｼ繝励Λ繧､繧ｺ蛹・
       chapters:
         - part3_enterprise_riemann/ch01_centric_parallel_comput.qmd
         - part3_enterprise_riemann/ch02_distribute_comput_jobtask.qmd
         - part3_enterprise_riemann/ch03_impl_enterprise_calc.qmd
+
+    - part: "隨ｬIV驛ｨ 閾ｪ蜍募ｾｮ蛻・→谺｡荳紋ｻ｣驥題檮繝ｪ繧ｹ繧ｯ險域ｸｬ"
+      chapters:
+        - part4_autodiff/ch01_computational_evolution.qmd
+        - part4_autodiff/ch02_automatic_differentiation.qmd
+        - part4_autodiff/ch03_option_greeks_autodiff.qmd
+        - part4_autodiff/ch04_interest_rate_risk_autodiff.qmd
+        - part4_autodiff/ch05_prdc_autodiff.qmd
 
 format:
   html:
