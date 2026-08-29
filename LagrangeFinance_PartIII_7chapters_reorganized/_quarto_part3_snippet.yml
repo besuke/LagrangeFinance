@@ -1,0 +1,9 @@
+    - part: "第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ"
+      chapters:
+        - part3_enterprise_riemann/ch01_computational_evolution_parallel.qmd
+        - part3_enterprise_riemann/ch02_distributed_computing_jobtask.qmd
+        - part3_enterprise_riemann/ch03_enterprise_financial_computing.qmd
+        - part3_enterprise_riemann/ch04_automatic_differentiation.qmd
+        - part3_enterprise_riemann/ch05_option_greeks_autodiff.qmd
+        - part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.qmd
+        - part3_enterprise_riemann/ch07_prdc_autodiff.qmd

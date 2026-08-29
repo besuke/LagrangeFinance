@@ -1,0 +1,250 @@
+---
+title: "第III-3章 エンタープライズ金融計算システムの構築"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+第III-1章ではローカル並列計算、第III-2章では分散計算とJob / Task Controlを扱った。本章では、それらを金融リスク計算へ統合する。具体例としてPRDCを使い、Trade Data、Market Data、Calibration Data、Scenario Grid、Pricing Function、Risk Tableというエンタープライズ金融計算の基本構造を示す。
+
+```text
+Trade Data
+Market Data
+Calibration Data
+        |
+        v
+Scenario Grid
+        |
+        v
+Job / Task
+        |
+        v
+Pricing Function
+        |
+        v
+Risk Table
+        |
+        v
+Aggregation / Report
+```
+
+## PRDC取引・市場・計算条件
+
+```{r}
+#| label: create-prdc-trade-data
+
+tbl_prdc_trade <- tribble(
+  ~trade_ID, ~notional, ~maturity_years,
+  "PRDC-001", 300000000, 15
+)
+
+show_table_LFL(tbl_prdc_trade)
+```
+
+```{r}
+#| label: create-prdc-market-calibration-data
+
+tbl_prdc_market <- tribble(
+  ~market_data_ID, ~fx_spot, ~domestic_rate, ~foreign_rate,
+  "MKT-BASE", 150, 0.010, 0.030
+)
+
+tbl_prdc_calibration <- tribble(
+  ~calibration_ID, ~fx_volatility, ~correlation,
+  "CAL-BASE", 0.10, 0.20
+)
+
+tbl_prdc_calculation <- tribble(
+  ~calculation_ID, ~number_of_paths, ~random_seed,
+  "CALC-BASE", 500L, 123L
+)
+
+show_table_LFL(tbl_prdc_market)
+show_table_LFL(tbl_prdc_calibration)
+show_table_LFL(tbl_prdc_calculation)
+```
+
+## Scenario Pricing Function
+
+本章では計算基盤に焦点を当てるため、Scenario Pricing Functionは軽量な代理モデルとして表現する。第II部で構築したPRDC Pricing Functionへ置き換えても、Task生成と並列実行の構造は変わらない。
+
+```{r}
+#| label: define-prdc-scenario-pricing-function
+
+price_prdc_scenario_LFL <- function(
+    trade,
+    fx_spot,
+    fx_volatility,
+    domestic_rate,
+    foreign_rate
+) {
+  horizon <- trade$maturity_years[[1]]
+
+  fx_forward <- fx_spot *
+    exp((domestic_rate - foreign_rate) * horizon)
+
+  volatility_adjustment <- exp(
+    0.5 * fx_volatility^2 * horizon
+  )
+
+  tibble(
+    trade_ID = trade$trade_ID[[1]],
+    fx_spot = fx_spot,
+    fx_volatility = fx_volatility,
+    domestic_rate = domestic_rate,
+    foreign_rate = foreign_rate,
+    prdc_proxy_npv = trade$notional[[1]] *
+      fx_forward / fx_spot *
+      volatility_adjustment
+  )
+}
+```
+
+## Scenario Grid
+
+```{r}
+#| label: create-prdc-scenario-grid
+
+base_fx_spot <- tbl_prdc_market$fx_spot[[1]]
+
+tbl_prdc_scenario <- tidyr::crossing(
+  fx_spot = base_fx_spot * c(0.90, 0.95, 1.00, 1.05, 1.10),
+  fx_volatility = c(0.075, 0.10, 0.125),
+  domestic_rate = c(0.005, 0.010, 0.015),
+  foreign_rate = c(0.025, 0.030, 0.035)
+) |>
+  mutate(
+    scenario_ID = row_number(),
+    .before = 1
+  )
+
+show_table_LFL(
+  tbl_prdc_scenario,
+  n = 10
+)
+```
+
+## 並列シナリオ計算
+
+```{r}
+#| label: define-prdc-future-plan
+
+available_cores <- future::availableCores()
+workers <- max(1L, min(2L, available_cores - 1L))
+
+future::plan(
+  future::multisession,
+  workers = workers
+)
+```
+
+```{r}
+#| label: calculate-prdc-scenarios-in-parallel
+#| warning: false
+
+tbl_prdc_scenario_result <- tbl_prdc_scenario |>
+  mutate(
+    result = furrr::future_pmap(
+      list(
+        fx_spot,
+        fx_volatility,
+        domestic_rate,
+        foreign_rate
+      ),
+      \(fx_spot, fx_volatility, domestic_rate, foreign_rate) {
+        price_prdc_scenario_LFL(
+          trade = tbl_prdc_trade,
+          fx_spot = fx_spot,
+          fx_volatility = fx_volatility,
+          domestic_rate = domestic_rate,
+          foreign_rate = foreign_rate
+        )
+      },
+      .options = furrr::furrr_options(seed = TRUE)
+    )
+  ) |>
+  select(
+    scenario_ID,
+    result
+  ) |>
+  tidyr::unnest(result)
+```
+
+## Risk Table
+
+```{r}
+#| label: create-prdc-risk-table
+
+tbl_prdc_risk <- tbl_prdc_scenario_result |>
+  arrange(
+    fx_spot,
+    fx_volatility,
+    domestic_rate,
+    foreign_rate
+  ) |>
+  mutate(
+    npv_change = prdc_proxy_npv -
+      median(prdc_proxy_npv)
+  )
+
+show_table_LFL(
+  tbl_prdc_risk,
+  n = 10
+)
+```
+
+```{r}
+#| label: summarize-prdc-spot-risk
+
+tbl_prdc_spot_risk <- tbl_prdc_risk |>
+  group_by(fx_spot) |>
+  summarise(
+    mean_npv = mean(prdc_proxy_npv),
+    .groups = "drop"
+  )
+
+show_table_LFL(tbl_prdc_spot_risk)
+```
+
+```{r}
+#| label: save-prdc-risk-system-data
+
+prdc_risk_output_path <- write_derived_parquet_file_LFL(
+  tbl_prdc_risk,
+  file.path(
+    "risk_system",
+    "prdc_risk_table.parquet"
+  )
+)
+
+prdc_risk_output_path
+```
+
+## 計算資源の拡張と残る問題
+
+ここまでの並列・分散計算は、Pricingを多数回実行することでリスクを求める設計である。計算資源を増やせば処理時間を短縮できるが、Risk Factorが増えるほどBump & RevalueのPricing回数が増えるという構造そのものは残る。
+
+```text
+Hardware Acceleration
+        |
+        v
+More Workers / More Cores
+        |
+        v
+Faster Revaluation
+        |
+        v
+But still many Revaluations
+```
+
+次章では、計算資源を増やすだけでなく、Pricing Programそのものを微分可能にするAutomatic Differentiationへ進む。ここが、Hardware AccelerationからAlgorithmic Accelerationへの転換点である。

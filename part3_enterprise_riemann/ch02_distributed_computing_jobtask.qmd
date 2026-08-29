@@ -1,0 +1,244 @@
+---
+title: "第III-2章 分散コンピューティングとJob / Task Control"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+第III-1章では、一台のコンピュータ上で`future` / `furrr`を利用して金融計算を並列化した。本章では、その構造を複数の計算資源へ拡張し、Task、Job Queue、Scheduler、Workerという分散計算の基本構造を整理する。
+
+```text
+Input Data
+    |
+    v
+Task Generation
+    |
+    v
+Job Queue
+    |
+    v
+Scheduler
+    |
+ +--+--+--+
+ |  |  |  |
+ W1 W2 W3 W4
+ |  |  |  |
+ +--+--+--+
+    |
+    v
+Result Aggregation
+```
+
+## 分散計算の基本構造
+
+```{r}
+#| label: create-distributed-task-table
+
+tbl_task <- tribble(
+  ~task_ID, ~input_value, ~worker_group,
+  1L, 10, "A",
+  2L, 20, "A",
+  3L, 30, "B",
+  4L, 40, "B",
+  5L, 50, "C",
+  6L, 60, "C"
+)
+
+show_table_LFL(tbl_task)
+```
+
+```{r}
+#| label: define-distributed-task-function
+
+calculate_task_result_LFL <- function(task_ID, input_value, worker_group) {
+  tibble(
+    task_ID = task_ID,
+    worker_group = worker_group,
+    input_value = input_value,
+    output_value = sqrt(input_value)
+  )
+}
+```
+
+## Remote Function
+
+```{r}
+#| label: create-remote-request-table
+
+tbl_remote_request <- tbl_task |>
+  transmute(
+    request_ID = paste0(
+      "REQ-",
+      stringr::str_pad(task_ID, width = 3, pad = "0")
+    ),
+    task_ID,
+    payload = purrr::pmap(
+      list(task_ID, input_value, worker_group),
+      \(task_ID, input_value, worker_group) {
+        list(
+          task_ID = task_ID,
+          input_value = input_value,
+          worker_group = worker_group
+        )
+      }
+    )
+  )
+
+show_table_LFL(
+  tbl_remote_request |>
+    select(request_ID, task_ID)
+)
+```
+
+```{r}
+#| label: define-remote-function
+
+remote_calculate_task_LFL <- function(payload) {
+  calculate_task_result_LFL(
+    task_ID = payload$task_ID,
+    input_value = payload$input_value,
+    worker_group = payload$worker_group
+  )
+}
+```
+
+```{r}
+#| label: run-remote-function-example
+
+tbl_remote_result <- tbl_remote_request |>
+  mutate(
+    response = purrr::map(
+      payload,
+      remote_calculate_task_LFL
+    )
+  ) |>
+  select(request_ID, response) |>
+  tidyr::unnest(response)
+
+show_table_LFL(tbl_remote_result)
+```
+
+## Job QueueとScheduler
+
+```{r}
+#| label: create-job-table
+
+tbl_job <- tbl_task |>
+  transmute(
+    job_ID = paste0(
+      "JOB-",
+      stringr::str_pad(task_ID, width = 3, pad = "0")
+    ),
+    task_ID,
+    status = "queued",
+    worker_group,
+    input_value
+  )
+
+show_table_LFL(tbl_job)
+```
+
+```{r}
+#| label: create-job-status-history
+
+tbl_job_status <- tribble(
+  ~job_ID, ~status, ~sequence,
+  "JOB-001", "queued", 1L,
+  "JOB-001", "running", 2L,
+  "JOB-001", "completed", 3L,
+  "JOB-002", "queued", 1L,
+  "JOB-002", "running", 2L,
+  "JOB-002", "failed", 3L
+)
+
+show_table_LFL(tbl_job_status)
+```
+
+SlurmのようなSchedulerでは、TaskをJobとして登録し、利用可能なWorkerへ割り当てる。R側のPricing Functionは可能な限り変更せず、「どこで実行するか」を実行基盤側へ分離することが重要である。
+
+## 分散システムのデータ設計
+
+```{r}
+#| label: create-distributed-data-model
+
+tbl_market_data <- tribble(
+  ~market_data_ID, ~discount_rate, ~fx_spot,
+  "MKT-001", 0.020, 150,
+  "MKT-002", 0.025, 155
+)
+
+tbl_calibration_data <- tribble(
+  ~calibration_ID, ~volatility, ~correlation,
+  "CAL-001", 0.15, 0.20,
+  "CAL-002", 0.20, 0.40
+)
+
+tbl_trade_data <- tribble(
+  ~trade_ID, ~notional, ~maturity,
+  "TRD-001", 1000000, 3,
+  "TRD-002", 2000000, 5
+)
+
+tbl_scenario_data <- tidyr::crossing(
+  trade_ID = tbl_trade_data$trade_ID,
+  market_data_ID = tbl_market_data$market_data_ID,
+  calibration_ID = tbl_calibration_data$calibration_ID
+) |>
+  mutate(
+    scenario_ID = row_number(),
+    .before = 1
+  )
+
+show_table_LFL(tbl_scenario_data)
+```
+
+```{r}
+#| label: join-distributed-data
+
+tbl_distributed_input <- tbl_scenario_data |>
+  left_join(tbl_trade_data, by = "trade_ID") |>
+  left_join(tbl_market_data, by = "market_data_ID") |>
+  left_join(tbl_calibration_data, by = "calibration_ID")
+
+show_table_LFL(tbl_distributed_input)
+```
+
+```{r}
+#| label: save-distributed-data-model
+
+tbl_distributed_files <- list(
+  trade_data = tbl_trade_data,
+  market_data = tbl_market_data,
+  calibration_data = tbl_calibration_data,
+  scenario_data = tbl_scenario_data
+)
+
+vec_distributed_paths <- tbl_distributed_files |>
+  purrr::imap_chr(
+    \(data, name) {
+      write_derived_parquet_file_LFL(
+        data,
+        file.path(
+          "distributed",
+          paste0(name, ".parquet")
+        )
+      )
+    }
+  )
+
+vec_distributed_paths
+```
+
+## まとめ
+
+並列計算では一台のマシン内部で計算を分割した。分散計算では、TaskをJobとして管理し、Schedulerを介して複数のWorkerへ配布する。次章では、この計算基盤の上に、Portfolio・Scenario・Pricing・Risk Aggregationを組み合わせたエンタープライズ金融計算システムを構築する。

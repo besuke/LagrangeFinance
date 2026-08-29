@@ -1,0 +1,862 @@
+---
+title: "第III-5章 Option Greeks：GaussQuant vs Monte Carlo + torch"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+# Option Greeks：GaussQuantとMonte Carlo自動微分
+
+前章では、Automatic Differentiationを、偏微分、連鎖律、Computational Graph、
+Reverse Modeという観点から整理した。
+
+本章では、解析的なBlack-Scholes式を`torch`で書き直すのではなく、
+既存の金融工学ライブラリであるGaussQuantを基準値として利用し、
+同じEuropean OptionをMonte Carlo SimulationとRの`torch`によって評価する。
+
+比較する量は、
+
+$$
+\boxed{
+NPV,\quad
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+}
+$$
+
+である。
+
+本章の中心は、
+
+$$
+\boxed{
+\text{GaussQuant}
+\quad\longleftrightarrow\quad
+\text{Monte Carlo + torch + Automatic Differentiation}
+}
+$$
+
+という比較である。
+
+GaussQuantはQuantLibを利用した既存のPricing Engineとして使い、
+`torch`ではMonte Carlo PricingそのものをDifferentiable Computational Graphとして構築する。
+
+## 計算条件
+
+同じEuropean Call OptionをGaussQuantとMonte Carloで評価する。
+
+```{r}
+#| label: option-input
+
+valuation_date <- "2026-01-02"
+maturity_date <- "2027-01-02"
+
+spot_value <- 100
+strike_value <- 100
+risk_free_rate_value <- 0.03
+dividend_yield_value <- 0
+volatility_value <- 0.20
+
+maturity_value <- as.numeric(
+  as.Date(maturity_date) -
+    as.Date(valuation_date)
+) / 365
+
+n_paths <- 200000L
+mc_seed <- 1234L
+
+tbl_option_input <- tribble(
+  ~parameter, ~value,
+  "spot", spot_value,
+  "strike", strike_value,
+  "risk_free_rate", risk_free_rate_value,
+  "dividend_yield", dividend_yield_value,
+  "volatility", volatility_value,
+  "maturity", maturity_value,
+  "n_paths", n_paths
+)
+
+tbl_option_input
+```
+
+ここでは比較を明確にするため、フラットな金利、配当利回り、Volatilityを用いる。
+
+## GaussQuantによる基準価格とGreeks
+
+GaussQuantでは、European OptionをQuantLibオブジェクトとして構築できる。
+
+```{r}
+#| label: gaussquant-option
+
+option_gql <- GaussQuant::make_european_option_GQL(
+  spot = spot_value,
+  strike = strike_value,
+  maturity_date = maturity_date,
+  option_type = "call",
+  valuation_date = valuation_date,
+  risk_free_rate = risk_free_rate_value,
+  dividend_yield = dividend_yield_value,
+  volatility = volatility_value
+)
+```
+
+価格とGreeksをまとめて取得する。
+
+```{r}
+#| label: gaussquant-option-summary
+
+tbl_gaussquant_greeks <- GaussQuant::option_summary_GQL(
+  option_gql
+) |>
+  filter(
+    metric %in% c(
+      "npv",
+      "delta",
+      "gamma",
+      "vega",
+      "theta"
+    )
+  )
+
+tbl_gaussquant_greeks
+```
+
+ここで得られる値を、本章におけるBenchmarkとする。
+
+## Monte CarloによるOption Pricing
+
+Risk-Neutral Measureの下で、配当利回り$q$を持つ株価過程を、
+
+$$
+\frac{dS_t}{S_t}
+=
+(r-q)dt
++
+\sigma dW_t
+$$
+
+とする。
+
+満期$T$の株価は、
+
+$$
+\boxed{
+S_T
+=
+S_0
+\exp
+\left[
+\left(
+r-q-\frac12\sigma^2
+\right)T
++
+\sigma\sqrt{T}Z
+\right]
+}
+$$
+
+である。
+
+ここで、
+
+$$
+Z\sim N(0,1)
+$$
+
+である。
+
+European CallのMonte Carlo価格は、
+
+$$
+\boxed{
+\hat V
+=
+e^{-rT}
+\frac{1}{M}
+\sum_{m=1}^{M}
+\max
+\left(
+S_T^{(m)}-K,
+0
+\right)
+}
+$$
+
+となる。
+
+## Common Random Numbers
+
+GaussQuantとの比較や感応度の検算では、Monte Carlo Noiseをできるだけ抑える必要がある。
+
+本章では乱数を一度だけ生成し、価格計算と感応度計算で同じ乱数を使用する。
+
+```{r}
+#| label: monte-carlo-random-numbers
+
+torch_manual_seed(
+  mc_seed
+)
+
+z_t <- torch_randn(
+  n_paths
+)
+```
+
+乱数$Z$は市場リスクファクターではないため、
+`requires_grad = TRUE`は指定しない。
+
+## 微分可能なMonte Carlo Pricing
+
+Monte Carlo PricingをTensor演算だけで構成する。
+
+```{r}
+#| label: monte-carlo-pricing-function
+
+european_call_mc_torch <- function(
+    spot,
+    strike,
+    rate,
+    dividend_yield,
+    volatility,
+    maturity,
+    z
+) {
+  terminal_spot <- spot *
+    torch_exp(
+      (
+        rate -
+          dividend_yield -
+          0.5 * volatility^2
+      ) * maturity +
+        volatility *
+          torch_sqrt(maturity) *
+          z
+    )
+
+  payoff <- torch_relu(
+    terminal_spot -
+      strike
+  )
+
+  torch_exp(
+    -rate * maturity
+  ) *
+    torch_mean(
+      payoff
+    )
+}
+```
+
+この関数では、
+
+$$
+S_0,\quad r,\quad q,\quad \sigma,\quad T
+$$
+
+からTerminal Spot、Payoff、Discounting、Monte Carlo Averageまでが
+一つのComputational Graphとして接続される。
+
+## torch Tensorの設定
+
+微分対象となる市場変数をTensorとして定義する。
+
+```{r}
+#| label: option-risk-tensors
+
+spot_t <- torch_tensor(
+  spot_value,
+  requires_grad = TRUE
+)
+
+strike_t <- torch_tensor(
+  strike_value
+)
+
+rate_t <- torch_tensor(
+  risk_free_rate_value,
+  requires_grad = TRUE
+)
+
+dividend_yield_t <- torch_tensor(
+  dividend_yield_value
+)
+
+volatility_t <- torch_tensor(
+  volatility_value,
+  requires_grad = TRUE
+)
+
+maturity_t <- torch_tensor(
+  maturity_value,
+  requires_grad = TRUE
+)
+```
+
+## Monte Carlo NPV
+
+同じ乱数を用いてMonte Carlo価格を計算する。
+
+```{r}
+#| label: monte-carlo-option-npv
+
+option_npv_mc_t <- european_call_mc_torch(
+  spot = spot_t,
+  strike = strike_t,
+  rate = rate_t,
+  dividend_yield = dividend_yield_t,
+  volatility = volatility_t,
+  maturity = maturity_t,
+  z = z_t
+)
+
+option_npv_mc_t
+```
+
+## Delta・Vega・Thetaの自動微分
+
+Monte Carlo価格を最終出力としてReverse Mode Automatic Differentiationを行う。
+
+```{r}
+#| label: monte-carlo-first-order-greeks
+
+first_grad <- autograd_grad(
+  outputs = option_npv_mc_t,
+  inputs = list(
+    spot_t,
+    volatility_t,
+    maturity_t
+  )
+)
+
+delta_mc <- first_grad[[1]]$item()
+vega_mc <- first_grad[[2]]$item()
+
+# maturity は残存期間 T なので、
+# Calendar-Time Theta は -dV/dT とする。
+theta_mc <- -first_grad[[3]]$item()
+
+tbl_mc_first_order_greeks <- tribble(
+  ~metric, ~value,
+  "delta", delta_mc,
+  "vega", vega_mc,
+  "theta", theta_mc
+)
+
+tbl_mc_first_order_greeks
+```
+
+ここで、
+
+$$
+\Delta
+=
+\frac{\partial V}{\partial S_0},
+\qquad
+Vega
+=
+\frac{\partial V}{\partial\sigma},
+\qquad
+Theta
+=
+-\frac{\partial V}{\partial T}
+$$
+
+をMonte Carlo Pricing Graphから直接取得している。
+
+## GammaとPayoffのKink
+
+Gammaには注意が必要である。
+
+European CallのPayoff、
+
+$$
+\max(S_T-K,0)
+$$
+
+はStrikeでKinkを持つ。
+
+Pathwise Automatic DifferentiationでこのPayoffをそのまま二階微分すると、
+各Pathではほとんど至るところで二階微分がゼロとなるため、
+Monte Carlo Gammaを単純な二階ADだけで安定して推定することはできない。
+
+これは自動微分の失敗ではなく、Payoffの非滑らかさに由来する。
+
+そこで本章ではGammaについて、Payoffを滑らかに近似した
+Smooth Payoffを用いて二階自動微分を確認する。
+
+## Smooth PayoffによるGamma
+
+正の部分、
+
+$$
+x^+
+=
+\max(x,0)
+$$
+
+を、
+
+$$
+\boxed{
+x^+
+\approx
+\frac12
+\left(
+x+\sqrt{x^2+\varepsilon^2}
+\right)
+}
+$$
+
+で滑らかに近似する。
+
+$\varepsilon$を小さくすれば通常のCall Payoffへ近づく。
+
+```{r}
+#| label: smooth-payoff-function
+
+smooth_positive_part_torch <- function(
+    x,
+    epsilon
+) {
+  0.5 * (
+    x +
+      torch_sqrt(
+        x^2 +
+          epsilon^2
+      )
+  )
+}
+```
+
+Smooth Payoffを使ったMonte Carlo Pricing Functionを定義する。
+
+```{r}
+#| label: smooth-monte-carlo-pricing-function
+
+european_call_mc_smooth_torch <- function(
+    spot,
+    strike,
+    rate,
+    dividend_yield,
+    volatility,
+    maturity,
+    z,
+    epsilon = 0.25
+) {
+  terminal_spot <- spot *
+    torch_exp(
+      (
+        rate -
+          dividend_yield -
+          0.5 * volatility^2
+      ) * maturity +
+        volatility *
+          torch_sqrt(maturity) *
+          z
+    )
+
+  payoff <- smooth_positive_part_torch(
+    terminal_spot -
+      strike,
+    epsilon = epsilon
+  )
+
+  torch_exp(
+    -rate * maturity
+  ) *
+    torch_mean(
+      payoff
+    )
+}
+```
+
+Gamma用に新しい計算グラフを構築する。
+
+```{r}
+#| label: monte-carlo-gamma-graph
+
+spot_gamma_t <- torch_tensor(
+  spot_value,
+  requires_grad = TRUE
+)
+
+volatility_gamma_t <- torch_tensor(
+  volatility_value
+)
+
+maturity_gamma_t <- torch_tensor(
+  maturity_value
+)
+
+option_npv_gamma_t <- european_call_mc_smooth_torch(
+  spot = spot_gamma_t,
+  strike = strike_t,
+  rate = torch_tensor(
+    risk_free_rate_value
+  ),
+  dividend_yield = dividend_yield_t,
+  volatility = volatility_gamma_t,
+  maturity = maturity_gamma_t,
+  z = z_t,
+  epsilon = 0.25
+)
+```
+
+まずDeltaを計算し、Gradient Graphを保持する。
+
+```{r}
+#| label: monte-carlo-delta-for-gamma
+
+delta_gamma_t <- autograd_grad(
+  outputs = option_npv_gamma_t,
+  inputs = list(
+    spot_gamma_t
+  ),
+  create_graph = TRUE
+)[[1]]
+
+delta_gamma_t
+```
+
+さらにDeltaをSpotで微分する。
+
+```{r}
+#| label: monte-carlo-gamma
+
+gamma_mc <- autograd_grad(
+  outputs = delta_gamma_t,
+  inputs = list(
+    spot_gamma_t
+  )
+)[[1]]$item()
+
+gamma_mc
+```
+
+これは、
+
+$$
+V
+\xrightarrow{\text{AD}}
+\Delta
+\xrightarrow{\text{AD}}
+\Gamma
+$$
+
+という二階Automatic Differentiationである。
+
+ただし、このGammaはSmooth Payoffによる近似値である点に注意する。
+
+## GaussQuantとMonte Carlo + torchの比較
+
+Monte Carloの結果をまとめる。
+
+```{r}
+#| label: monte-carlo-greeks-summary
+
+tbl_mc_greeks <- tribble(
+  ~metric, ~value,
+  "npv", option_npv_mc_t$item(),
+  "delta", delta_mc,
+  "gamma", gamma_mc,
+  "vega", vega_mc,
+  "theta", theta_mc
+)
+
+tbl_mc_greeks
+```
+
+GaussQuantと比較する。
+
+```{r}
+#| label: gaussquant-monte-carlo-comparison
+
+tbl_option_greeks_comparison <- tbl_gaussquant_greeks |>
+  rename(
+    gaussquant = value
+  ) |>
+  left_join(
+    tbl_mc_greeks |>
+      rename(
+        monte_carlo_torch = value
+      ),
+    by = "metric"
+  ) |>
+  mutate(
+    difference = monte_carlo_torch -
+      gaussquant,
+    relative_difference = if_else(
+      gaussquant == 0,
+      NA_real_,
+      difference /
+        abs(
+          gaussquant
+        )
+    )
+  )
+
+tbl_option_greeks_comparison
+```
+
+比較の構造は、
+
+$$
+\boxed{
+\text{GaussQuant / QuantLib}
+\quad\longleftrightarrow\quad
+\text{Monte Carlo + torch AD}
+}
+$$
+
+となる。
+
+NPV、Delta、Vega、Thetaは、Monte Carlo Path上の微分をそのまま利用するPathwise Derivativeである。
+
+GammaについてはCall PayoffのKinkがあるため、
+Smooth Payoffによる二階ADを使用している。
+
+## Monte Carlo標準誤差
+
+Monte Carlo価格には統計誤差が存在する。
+
+価格の差を解釈するため、標準誤差も確認する。
+
+```{r}
+#| label: monte-carlo-standard-error
+
+with_no_grad({
+  terminal_spot_se_t <- torch_tensor(
+    spot_value
+  ) *
+    torch_exp(
+      (
+        risk_free_rate_value -
+          dividend_yield_value -
+          0.5 * volatility_value^2
+      ) * maturity_value +
+        volatility_value *
+          sqrt(
+            maturity_value
+          ) *
+          z_t
+    )
+
+  discounted_payoff_se_t <- exp(
+    -risk_free_rate_value *
+      maturity_value
+  ) *
+    torch_relu(
+      terminal_spot_se_t -
+        strike_value
+    )
+
+  mc_standard_error <- torch_std(
+    discounted_payoff_se_t
+  )$item() /
+    sqrt(
+      n_paths
+    )
+})
+
+tbl_mc_error <- tribble(
+  ~metric, ~value,
+  "Monte Carlo NPV", option_npv_mc_t$item(),
+  "Monte Carlo standard error", mc_standard_error,
+  "GaussQuant NPV",
+  tbl_gaussquant_greeks |>
+    filter(
+      metric == "npv"
+    ) |>
+    pull(
+      value
+    )
+)
+
+tbl_mc_error
+```
+
+GaussQuantとMonte Carlo価格の差がMonte Carlo Standard Errorと同程度であれば、
+差の多くはSimulation Noiseとして説明できる。
+
+## Automatic Differentiationの意味
+
+本章で重要なのは、Black-Scholesの解析式を自動微分したことではない。
+
+Monte Carlo Pricingを、
+
+$$
+\boxed{
+\text{Risk Factors}
+\rightarrow
+\text{Simulation}
+\rightarrow
+\text{Payoff}
+\rightarrow
+\text{Discounting}
+\rightarrow
+\text{NPV}
+}
+$$
+
+というDifferentiable Computational Graphとして構築したことである。
+
+Forward計算では、
+
+$$
+S_0,\sigma,T
+\longrightarrow
+V
+$$
+
+を計算する。
+
+Reverse計算では、
+
+$$
+V
+\longrightarrow
+\Delta,\ Vega,\ Theta
+$$
+
+へGradientを伝播する。
+
+したがって、
+
+$$
+\boxed{
+\text{Monte Carlo Pricing Engine}
++
+\text{Reverse Mode AD}
+=
+\text{Differentiable Risk Engine}
+}
+$$
+
+となる。
+
+## PRDCへの接続
+
+European Optionでは、Risk Factorは少数であった。
+
+しかし同じ考え方は、
+
+$$
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX}
+\right)
+$$
+
+というPRDCにも適用できる。
+
+違いはComputational Graphの規模だけである。
+
+```text
+European Option
+    |
+    v
+Spot + Volatility
+    |
+    v
+Monte Carlo
+    |
+    v
+Delta / Vega / Theta
+
+          ↓
+
+PRDC
+    |
+    v
+FX + JPY Curve + Foreign Curve + Volatility
+    |
+    v
+Monte Carlo
+    |
+    v
+FX Delta + JPY DV01 + Foreign DV01 + Vega
+```
+
+本章のMonte Carlo + torch実装は、
+第III-7章で扱うPRDC Riskへの直接の準備となる。
+
+## まとめ
+
+本章では、European Optionについて、
+
+$$
+\boxed{
+\text{GaussQuant}
+\quad vs \quad
+\text{Monte Carlo + torch Automatic Differentiation}
+}
+$$
+
+を比較した。
+
+GaussQuantでは、QuantLibを利用して、
+
+$$
+NPV,\quad
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+$$
+
+を取得した。
+
+一方、`torch`ではMonte Carlo PricingをTensor演算として構築し、
+Reverse Mode Automatic Differentiationによって、
+
+$$
+\Delta,\quad
+Vega,\quad
+Theta
+$$
+
+をPricing Graphから直接取得した。
+
+GammaについてはPayoffのKinkによるPathwise二階微分の問題を確認し、
+Smooth Payoffを用いた二階Automatic Differentiationを適用した。
+
+この比較によって、自動微分の目的は解析公式を置き換えることではなく、
+
+$$
+\boxed{
+\text{複雑なPricing Algorithmそのものを微分する}
+}
+$$
+
+ことにあると分かる。
+
+次章ではこの考え方を金利商品へ拡張し、
+
+$$
+\boxed{
+DV01
+\rightarrow
+Bucketed\ DV01
+\rightarrow
+GPS
+}
+$$
+
+をYield Curve全体のGradientとして捉える。

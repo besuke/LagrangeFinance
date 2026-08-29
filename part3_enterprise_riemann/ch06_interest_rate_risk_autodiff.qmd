@@ -1,0 +1,1158 @@
+---
+title: "第III-6章 金利リスク：DV01からCurve Gradientへ"
+---
+
+# 金利リスクと自動微分
+
+前章では、Black-Scholes Optionを題材として、
+Delta、Gamma、Vega、Thetaを解析解、有限差分、自動微分によって計算した。
+
+本章では、自動微分を金利商品へ拡張する。
+
+Optionでは、
+
+$$
+V = V(S,\sigma,T,\ldots)
+$$
+
+という少数のリスクファクターを扱った。
+
+一方、金利商品では、価格は一つの金利だけでなく、
+Yield Curve上の多数の点に依存する。
+
+$$
+V
+=
+V(r_1,r_2,\ldots,r_n)
+$$
+
+したがって、金利リスク計測では、
+
+$$
+\frac{\partial V}{\partial r}
+$$
+
+という一つの感応度から、
+
+$$
+\nabla_{\mathbf r}V
+=
+\left(
+\frac{\partial V}{\partial r_1},
+\frac{\partial V}{\partial r_2},
+\ldots,
+\frac{\partial V}{\partial r_n}
+\right)
+$$
+
+というCurve全体のGradientへ進む必要がある。
+
+本章では、まず単一のフラット金利を用いたSwapのDV01を計算し、
+その後、複数ノードを持つYield Curveへ拡張する。
+
+最終的に、
+
+$$
+\boxed{
+\text{DV01}
+\longrightarrow
+\text{Bucketed DV01}
+\longrightarrow
+\text{GPS}
+\longrightarrow
+\text{Curve Gradient}
+}
+$$
+
+という流れを、自動微分によって統一的に捉える。
+
+## 金利商品の現在価値
+
+将来キャッシュフロー$CF_i$の現在価値は、
+
+$$
+V
+=
+\sum_{i=1}^{n}
+CF_iD(0,t_i)
+$$
+
+である。
+
+単純化して、連続複利のフラット金利$r$を用いると、
+
+$$
+D(0,t_i)
+=
+e^{-rt_i}
+$$
+
+なので、
+
+$$
+\boxed{
+V(r)
+=
+\sum_{i=1}^{n}
+CF_i(r)e^{-rt_i}
+}
+$$
+
+となる。
+
+ここで重要なのは、金利商品では割引係数だけでなく、
+キャッシュフロー自身も金利に依存する場合があることである。
+
+したがって、
+
+$$
+\frac{\partial V}{\partial r}
+=
+\sum_i
+\left[
+\frac{\partial CF_i}{\partial r}D_i
++
+CF_i\frac{\partial D_i}{\partial r}
+\right]
+$$
+
+となる。
+
+これは、金利リスクが単なるDiscounting Riskではなく、
+Projected Cash Flowの変化も含むことを意味する。
+
+## Fixed Leg
+
+元本$N$、固定金利$K$、Accrual Factor $\alpha_i$とすると、
+固定レッグのキャッシュフローは、
+
+$$
+CF_i^{\mathrm{fix}}
+=
+NK\alpha_i
+$$
+
+である。
+
+したがって、
+
+$$
+PV_{\mathrm{fix}}
+=
+\sum_i
+NK\alpha_i e^{-rt_i}
+$$
+
+となる。
+
+$r$で微分すると、
+
+$$
+\boxed{
+\frac{\partial PV_{\mathrm{fix}}}{\partial r}
+=
+-
+\sum_i
+t_iNK\alpha_i e^{-rt_i}
+}
+$$
+
+である。
+
+金利が上昇すると割引係数が低下するため、
+Fixed Legの現在価値は低下する。
+
+## Floating Leg
+
+本章では、自動微分の仕組みを明確にするため、
+Floating Couponを単純化して、
+
+$$
+CF_i^{\mathrm{float}}(r)
+=
+N
+\left(
+e^{r\alpha_i}
+-
+1
+\right)
+$$
+
+とする。
+
+このとき、
+
+$$
+PV_{\mathrm{float}}
+=
+\sum_i
+N
+\left(
+e^{r\alpha_i}
+-
+1
+\right)
+e^{-rt_i}
+$$
+
+である。
+
+微分すると、
+
+$$
+\frac{\partial PV_{\mathrm{float}}}{\partial r}
+=
+\sum_i
+N e^{-rt_i}
+\left[
+\alpha_i e^{r\alpha_i}
+-
+t_i
+\left(
+e^{r\alpha_i}-1
+\right)
+\right]
+$$
+
+となる。
+
+Floating Legでは、
+
+$$
+\boxed{
+\text{Projected Cash Flow Risk}
++
+\text{Discounting Risk}
+}
+$$
+
+の両方が金利感応度に含まれる。
+
+## Swap NPV
+
+Receive Float / Pay Fixed Swapを考える。
+
+$$
+\boxed{
+V_{\mathrm{swap}}
+=
+PV_{\mathrm{float}}
+-
+PV_{\mathrm{fixed}}
+}
+$$
+
+したがって、
+
+$$
+\boxed{
+\frac{\partial V_{\mathrm{swap}}}{\partial r}
+=
+\frac{\partial PV_{\mathrm{float}}}{\partial r}
+-
+\frac{\partial PV_{\mathrm{fixed}}}{\partial r}
+}
+$$
+
+となる。
+
+## DV01
+
+DV01は、金利が1bp変化したときの価格変化を表す。
+
+1bpは、
+
+$$
+1\text{bp}
+=
+10^{-4}
+$$
+
+なので、微分による局所近似では、
+
+$$
+\boxed{
+DV01
+\approx
+\frac{\partial V}{\partial r}
+\times
+10^{-4}
+}
+$$
+
+となる。
+
+符号については、業務システムやポジション表示の慣行により
+異なる場合があるため、本章では
+
+$$
+\frac{\partial V}{\partial r}\times10^{-4}
+$$
+
+をsigned DV01として扱う。
+
+## torchによるSwap評価
+
+まず計算条件を設定する。
+
+```{r}
+#| label: interest-rate-risk-01
+swap_input <- tribble(
+  ~parameter, ~value,
+  "notional",   100000000,
+  "fixed_rate", 0.0200,
+  "rate",       0.0250,
+  "years",      5
+)
+
+swap_input
+```
+
+半年ごとの支払いを想定する。
+
+```{r}
+#| label: interest-rate-risk-02
+notional <- 100000000
+fixed_rate <- 0.0200
+rate_value <- 0.0250
+
+payment_time <- seq(
+  0.5,
+  5.0,
+  by = 0.5
+)
+
+accrual <- rep(
+  0.5,
+  length(payment_time)
+)
+```
+
+`torch` Tensorへ変換する。
+
+```{r}
+#| label: interest-rate-risk-03
+rate <- torch_tensor(
+  rate_value,
+  requires_grad = TRUE
+)
+
+time_t <- torch_tensor(
+  payment_time
+)
+
+accrual_t <- torch_tensor(
+  accrual
+)
+
+notional_t <- torch_tensor(
+  notional
+)
+
+fixed_rate_t <- torch_tensor(
+  fixed_rate
+)
+```
+
+割引係数を計算する。
+
+```{r}
+#| label: interest-rate-risk-04
+df <- torch_exp(
+  -rate * time_t
+)
+```
+
+Fixed Legを計算する。
+
+```{r}
+#| label: interest-rate-risk-05
+fixed_cf <- notional_t *
+  fixed_rate_t *
+  accrual_t
+
+pv_fixed <- torch_sum(
+  fixed_cf * df
+)
+
+pv_fixed
+```
+
+Floating Legを計算する。
+
+```{r}
+#| label: interest-rate-risk-06
+float_cf <- notional_t *
+  (
+    torch_exp(
+      rate * accrual_t
+    ) -
+      1
+  )
+
+pv_float <- torch_sum(
+  float_cf * df
+)
+
+pv_float
+```
+
+Receive Float / Pay FixedのSwap NPVは、
+
+```{r}
+#| label: interest-rate-risk-07
+swap_npv <- pv_float - pv_fixed
+
+swap_npv
+```
+
+となる。
+
+## 自動微分によるDV01
+
+価格に対して`backward()`を実行する。
+
+```{r}
+#| label: interest-rate-risk-08
+swap_npv$backward()
+
+rate$grad
+```
+
+`rate$grad`は、
+
+$$
+\frac{\partial V}{\partial r}
+$$
+
+を表す。
+
+1bpへ換算する。
+
+```{r}
+#| label: interest-rate-risk-09
+swap_result <- tribble(
+  ~metric, ~value,
+  "npv",   swap_npv$item(),
+  "dV_dr", rate$grad$item(),
+  "dv01",  rate$grad$item() * 1e-4
+)
+
+swap_result
+```
+
+ここで実行していることは、
+
+```text
+rate
+  |
+  +------> floating cash flow
+  |
+  +------> discount factor
+             |
+             v
+          cash-flow PV
+             |
+             v
+          swap NPV
+             |
+             | backward()
+             v
+           dV/dr
+```
+
+というComputational Graphを逆向きにたどることである。
+
+## 有限差分との比較
+
+同じSwap価格を通常のR関数として定義する。
+
+```{r}
+#| label: interest-rate-risk-10
+swap_value_flat <- function(
+    rate,
+    notional,
+    fixed_rate,
+    payment_time,
+    accrual
+) {
+  df <- exp(
+    -rate * payment_time
+  )
+
+  fixed_cf <- notional *
+    fixed_rate *
+    accrual
+
+  float_cf <- notional *
+    (
+      exp(
+        rate * accrual
+      ) -
+        1
+    )
+
+  sum(
+    float_cf * df
+  ) -
+    sum(
+      fixed_cf * df
+    )
+}
+```
+
+1bp BumpによるForward Differenceを計算する。
+
+```{r}
+#| label: interest-rate-risk-11
+bump <- 1e-4
+
+base_npv <- swap_value_flat(
+  rate = rate_value,
+  notional = notional,
+  fixed_rate = fixed_rate,
+  payment_time = payment_time,
+  accrual = accrual
+)
+
+up_npv <- swap_value_flat(
+  rate = rate_value + bump,
+  notional = notional,
+  fixed_rate = fixed_rate,
+  payment_time = payment_time,
+  accrual = accrual
+)
+
+fd_dv01 <- up_npv - base_npv
+
+fd_dv01
+```
+
+Central Differenceによる一次微分も確認する。
+
+```{r}
+#| label: interest-rate-risk-12
+down_npv <- swap_value_flat(
+  rate = rate_value - bump,
+  notional = notional,
+  fixed_rate = fixed_rate,
+  payment_time = payment_time,
+  accrual = accrual
+)
+
+fd_dv_dr <- (
+  up_npv -
+    down_npv
+) / (
+  2 * bump
+)
+
+fd_dv01_central <- fd_dv_dr *
+  1e-4
+
+tribble(
+  ~method, ~dv01,
+  "Forward bump", fd_dv01,
+  "Central difference", fd_dv01_central,
+  "Automatic differentiation", rate$grad$item() * 1e-4
+)
+```
+
+有限差分では価格を複数回評価する必要があるのに対し、
+自動微分では構築された計算グラフを利用して感応度を得る。
+
+## フラット金利からYield Curveへ
+
+実際の金利市場では、単一の金利$r$ではなく、
+満期ごとに異なる金利を持つ。
+
+例えば、
+
+$$
+\mathbf r
+=
+(r_1,r_2,\ldots,r_n)
+$$
+
+とする。
+
+価格は、
+
+$$
+\boxed{
+V
+=
+V(r_1,r_2,\ldots,r_n)
+}
+$$
+
+となる。
+
+したがって必要なのはScalar Derivativeではなく、
+
+$$
+\boxed{
+\nabla_{\mathbf r}V
+=
+\left(
+\frac{\partial V}{\partial r_1},
+\frac{\partial V}{\partial r_2},
+\ldots,
+\frac{\partial V}{\partial r_n}
+\right)
+}
+$$
+
+というGradientである。
+
+各成分を1bpへ換算すれば、
+
+$$
+\boxed{
+DV01_i
+=
+\frac{\partial V}{\partial r_i}
+\times10^{-4}
+}
+$$
+
+となる。
+
+これがBucketed DV01やPoint Sensitivityの基本になる。
+
+## Curve NodeをTensorとして持つ
+
+単純化したZero Curveを考える。
+
+```{r}
+#| label: interest-rate-risk-13
+curve_tbl <- tribble(
+  ~tenor, ~rate,
+  0.5, 0.0180,
+  1.0, 0.0190,
+  2.0, 0.0210,
+  3.0, 0.0225,
+  5.0, 0.0250
+)
+
+curve_tbl
+```
+
+Curve Rate全体を一つのTensorとして定義する。
+
+```{r}
+#| label: interest-rate-risk-14
+curve_rate <- torch_tensor(
+  curve_tbl$rate,
+  requires_grad = TRUE
+)
+
+curve_time <- torch_tensor(
+  curve_tbl$tenor
+)
+```
+
+簡単なZero Coupon Cash Flowを考える。
+
+```{r}
+#| label: interest-rate-risk-15
+cash_flow <- torch_tensor(
+  c(
+    500000,
+    500000,
+    500000,
+    500000,
+    102500000
+  )
+)
+```
+
+各Node Rateをその満期のZero Rateとして使用する。
+
+```{r}
+#| label: interest-rate-risk-16
+curve_df <- torch_exp(
+  -curve_rate * curve_time
+)
+
+curve_pv <- torch_sum(
+  cash_flow * curve_df
+)
+
+curve_pv
+```
+
+自動微分を実行する。
+
+```{r}
+#| label: interest-rate-risk-17
+curve_pv$backward()
+
+curve_rate$grad
+```
+
+これにより、
+
+$$
+\left(
+\frac{\partial V}{\partial r_{0.5}},
+\frac{\partial V}{\partial r_{1}},
+\frac{\partial V}{\partial r_{2}},
+\frac{\partial V}{\partial r_{3}},
+\frac{\partial V}{\partial r_{5}}
+\right)
+$$
+
+が一度に得られる。
+
+1bp換算する。
+
+```{r}
+#| label: interest-rate-risk-18
+bucketed_dv01 <- tibble(
+  tenor = curve_tbl$tenor,
+  rate = curve_tbl$rate,
+  sensitivity = as.numeric(
+    curve_rate$grad
+  ),
+  dv01 = sensitivity * 1e-4
+)
+
+bucketed_dv01
+```
+
+## GPSとしてのPoint Sensitivity
+
+本章では、Yield Curve上の各Grid Pointに対する価格感応度を
+GPS（Grid Point Sensitivity）として扱う。
+
+各Grid Point$r_i$に対して、
+
+$$
+\boxed{
+GPS_i
+=
+\frac{\partial V}{\partial r_i}
+}
+$$
+
+である。
+
+1bp単位で表示する場合は、
+
+$$
+\boxed{
+GPS01_i
+=
+GPS_i
+\times10^{-4}
+}
+$$
+
+となる。
+
+したがって、
+
+$$
+\mathbf{GPS}
+=
+\left(
+\frac{\partial V}{\partial r_1},
+\ldots,
+\frac{\partial V}{\partial r_n}
+\right)
+$$
+
+は、数学的にはそのままCurve Gradientである。
+
+```{r}
+#| label: interest-rate-risk-19
+gps_tbl <- bucketed_dv01 |>
+  transmute(
+    tenor,
+    grid_rate = rate,
+    gps = sensitivity,
+    gps01 = dv01
+  )
+
+gps_tbl
+```
+
+この考え方によって、
+
+$$
+\boxed{
+\text{DV01}
+=
+\text{Scalar Risk}
+}
+$$
+
+から、
+
+$$
+\boxed{
+\text{GPS}
+=
+\text{Vector Risk}
+}
+$$
+
+へ拡張できる。
+
+## Total DV01とBucketed Risk
+
+単純化された設定では、Bucketed DV01を合計することで、
+Curve全体を同時に1bp動かしたときの感応度に対応する量を得ることができる。
+
+```{r}
+#| label: interest-rate-risk-20
+total_bucketed_dv01 <- bucketed_dv01 |>
+  summarise(
+    total_dv01 = sum(
+      dv01
+    )
+  )
+
+total_bucketed_dv01
+```
+
+ただし、実務ではCurve Construction、Interpolation、
+複数Curve、Quote Mappingなどが存在するため、
+
+$$
+\text{Parallel DV01}
+=
+\sum_i
+\text{Bucketed DV01}_i
+$$
+
+が常に厳密に成立するとは限らない。
+
+重要なのは、各リスクファクターに対する局所感応度を
+Gradientとして保持することである。
+
+## Market QuoteからCurve Riskへ
+
+実務の金利リスクでは、直接Zero RateをBumpするだけでは不十分である。
+
+実際の計算は、
+
+$$
+\text{Market Quotes}
+\rightarrow
+\text{Bootstrap}
+\rightarrow
+\text{Yield Curve}
+\rightarrow
+\text{Discount Factors}
+\rightarrow
+\text{Cash Flows}
+\rightarrow
+V
+$$
+
+という計算グラフを持つ。
+
+Market Quoteを、
+
+$$
+\mathbf q
+=
+(q_1,q_2,\ldots,q_m)
+$$
+
+Yield Curve Nodeを、
+
+$$
+\mathbf r
+=
+(r_1,r_2,\ldots,r_n)
+$$
+
+とすると、
+
+$$
+V
+=
+V
+\left(
+\mathbf r(\mathbf q)
+\right)
+$$
+
+である。
+
+連鎖律より、
+
+$$
+\boxed{
+\frac{\partial V}{\partial q_j}
+=
+\sum_i
+\frac{\partial V}{\partial r_i}
+\frac{\partial r_i}{\partial q_j}
+}
+$$
+
+となる。
+
+行列表現では、
+
+$$
+\boxed{
+\nabla_{\mathbf q}V
+=
+J_{\mathbf r,\mathbf q}^{T}
+\nabla_{\mathbf r}V
+}
+$$
+
+である。
+
+ここで、
+
+$$
+J_{\mathbf r,\mathbf q}
+$$
+
+はMarket QuoteからCurve NodeへのJacobianである。
+
+この式は、金利リスク計測とAutomatic Differentiationをつなぐ
+重要な関係である。
+
+## Multi-Curveへの拡張
+
+実際のSwapでは、Discount CurveとForward Curveを分離する
+Multi-Curve Frameworkが一般的である。
+
+この場合、価格は、
+
+$$
+V
+=
+V
+\left(
+\mathbf r^{disc},
+\mathbf r^{fwd}
+\right)
+$$
+
+と表される。
+
+したがって、
+
+$$
+\nabla V
+=
+\left(
+\nabla_{\mathbf r^{disc}}V,
+\nabla_{\mathbf r^{fwd}}V
+\right)
+$$
+
+となる。
+
+すなわち、
+
+$$
+\boxed{
+\text{Discount Risk}
++
+\text{Forward Risk}
+}
+$$
+
+を別々のGradientとして取得できる。
+
+これは次章で扱うPRDCに直接つながる。
+
+PRDCでは、
+
+$$
+\text{JPY Curve}
++
+\text{Foreign Curve}
++
+\text{FX}
+$$
+
+という複数のリスクファクターを同時に扱うためである。
+
+## 自動微分による金利リスク計測の意味
+
+有限差分によるBucketed Riskでは、
+Curve Nodeの数だけBump & Revalueを繰り返す必要がある。
+
+例えば100個のCurve Nodeに対してCentral Differenceを使えば、
+
+$$
+2\times100
+=
+200
+$$
+
+回の再評価が必要になる。
+
+一方、自動微分では、
+
+$$
+V
+=
+V(r_1,r_2,\ldots,r_{100})
+$$
+
+という計算グラフを構築し、
+
+$$
+V
+\longrightarrow
+\nabla_{\mathbf r}V
+$$
+
+と逆伝播する。
+
+したがって、金利リスク計測は、
+
+```text
+Yield Curve
+r1 r2 r3 ... rn
+ \  |  |     /
+  \ |  |    /
+ Pricing Graph
+      |
+      v
+     NPV
+      |
+      | backward()
+      v
+dV/dr1 ... dV/drn
+```
+
+として捉えることができる。
+
+これは、
+
+$$
+\boxed{
+\text{Scalar Pricing}
+\longrightarrow
+\text{Vector Risk}
+}
+$$
+
+への変換である。
+
+## まとめ
+
+本章では、Option Greeksで確認した自動微分を
+金利商品へ拡張した。
+
+まず単一のフラット金利について、
+
+$$
+V=V(r)
+$$
+
+から、
+
+$$
+\boxed{
+DV01
+=
+\frac{\partial V}{\partial r}
+\times10^{-4}
+}
+$$
+
+を求めた。
+
+次にYield Curveを、
+
+$$
+\mathbf r
+=
+(r_1,\ldots,r_n)
+$$
+
+というTensorとして扱い、
+
+$$
+\boxed{
+\nabla_{\mathbf r}V
+=
+\left(
+\frac{\partial V}{\partial r_1},
+\ldots,
+\frac{\partial V}{\partial r_n}
+\right)
+}
+$$
+
+を一度のReverse Mode Automatic Differentiationで取得した。
+
+これにより、
+
+$$
+\boxed{
+\text{DV01}
+\rightarrow
+\text{Bucketed DV01}
+\rightarrow
+\text{GPS}
+\rightarrow
+\text{Curve Gradient}
+}
+$$
+
+という金利リスク計測を統一的に表現できる。
+
+さらに、
+
+$$
+\text{Market Quote}
+\rightarrow
+\text{Curve}
+\rightarrow
+\text{PV}
+$$
+
+という計算グラフに対して連鎖律を適用すれば、
+Market Quote単位のRiskへ拡張できる。
+
+次章では、この考え方をPRDCへ適用する。
+
+PRDC価格を、
+
+$$
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX},
+\ldots
+\right)
+$$
+
+と表し、
+
+$$
+\boxed{
+\Delta_{FX},
+\quad
+\mathbf{DV01}_{JPY},
+\quad
+\mathbf{DV01}_{Foreign},
+\quad
+Vega_{FX}
+}
+$$
+
+を同じComputational Graphから計算する。
+
+これにより、第III部の最終段階として、
+為替と複数金利カーブを持つ多因子商品の
+Differentiable Risk Engineを構築する。
