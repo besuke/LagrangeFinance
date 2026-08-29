@@ -1,5 +1,5 @@
 ---
-title: "第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分"
+title: "第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測"
 execute:
   eval: true
   echo: true
@@ -51,8 +51,9 @@ $$
 
 本章の目的は、単にPRDCのGreeksを計算することではない。**Monte Carlo PricingとRisk Calculationを別々の処理として繰り返すのではなく、PricingそのものからRiskを生成する**というDifferentiable Risk Engineの設計を示すことである。
 
-## III-7.1 金利為替系デリバティブのモデル構造
+## III-7.1 多因子市場モデル
 
+### III-7.1.1 市場リスクファクター
 PRDCは、為替と複数通貨の金利を同時に扱うハイブリッド商品である。
 
 単純なOptionでは、
@@ -110,7 +111,7 @@ Foreign Rateも、
 このような商品では、連鎖律をプログラム全体へ適用する
 Automatic Differentiationの考え方が特に重要になる。
 
-### III-7.1.1 為替連動クーポン
+### III-7.1.2 為替連動クーポン
 
 PRDCには多様なCoupon構造、Callable条件、Notional Exchange、
 Target Redemption、Barrierなどが存在する。
@@ -182,7 +183,7 @@ $$
 
 という計算グラフを微分可能な演算として構成することである。
 
-### III-7.1.2 為替のリスク中立過程
+### III-7.1.3 為替のリスク中立過程
 
 JPYをDomestic Currency、
 Foreign Currencyを外貨とする。
@@ -352,7 +353,7 @@ tbl_prdc_curve <- tribble(
 tbl_prdc_curve
 ```
 
-### III-7.2.2 torchによる為替パス生成
+### III-7.2.2 深層学習ライブラリによる為替パス生成
 
 Monte Carloで使用する乱数を固定する。
 
@@ -429,7 +430,7 @@ dt_t <- torch_ones(
 )
 ```
 
-### III-7.2.3 微分可能なプライシング関数
+### III-7.2.3 微分可能なプライシング
 
 PRDCのMonte Carlo Pricingを、
 Tensor演算だけで構成する。
@@ -525,7 +526,7 @@ prdc_price_torch <- function(
 したがって、最終的な`prdc_npv`から、
 入力された市場リスクファクターまで計算グラフが維持される。
 
-### III-7.2.4 NPVの計算
+### III-7.2.4 モンテカルロによる現在価値
 
 価格を計算する。
 
@@ -564,7 +565,7 @@ $$
 
 という多変数関数になっている。
 
-## III-7.3 自動微分による市場リスク計測
+## III-7.3 自動微分による多因子感応度
 
 Forward計算で得られたScalar NPVを出発点として、複数の市場入力へGradientを逆伝播させる。PRDCのように「多数入力・少数出力」となるPricingでは、Reverse Modeの利点が最も現れやすい。
 
@@ -881,7 +882,7 @@ $$
 
 を取得したことになる。
 
-## III-7.4 有限差分法による感応度の検証
+## III-7.4 有限差分法による検証
 
 自動微分の結果を確認するため、
 FX DeltaをFinite Differenceで検算する。
@@ -964,7 +965,7 @@ tbl_fx_delta_check
 同じ乱数を用いることで、
 差分結果にMonte Carlo Noiseが混入することを抑えている。
 
-## III-7.5 非線形ペイオフと自動微分
+## III-7.5 微分不可なペイオフのケース
 
 本章のCouponでは、
 
@@ -1010,7 +1011,7 @@ Exercise Decisionなど不連続性の強い商品では、
 「あらゆる金融商品をそのまま微分すればよい」
 という意味ではないことを示している。
 
-### III-7.5.1 モンテカルロと自動微分
+### III-7.5.2 微分不可なペイオフの感応度
 
 PRDCのような商品では、
 
@@ -1058,7 +1059,7 @@ $$
 
 を結び付ける。
 
-## III-7.6 大規模リスク計測への展開
+## III-7.6 大規模市場リスク計測への展開
 
 第III-1章で確認したように、
 Monte CarloはGPUと相性が良い。
@@ -1097,7 +1098,7 @@ GPUによるHardware Accelerationと、
 Automatic DifferentiationによるAlgorithmic Accelerationが
 同じTensor計算基盤の上で共存できることである。
 
-### III-7.6.1 AADによる統合リスク計測
+### III-7.6.2 自動微分による多因子感応度の一括計算
 
 PRDCのPricing Graphをもう一度整理する。
 
@@ -1140,7 +1141,7 @@ $$
 このForwardとReverseの組み合わせが、
 PRDCをDifferentiable Pricing Modelとして扱うという意味である。
 
-### III-7.6.2 第III部を通したリスク計測の発展
+### III-7.6.3 エンタープライズ・リスク計算への展開
 
 第III部で扱った商品を並べると、
 自動微分の役割が明確になる。

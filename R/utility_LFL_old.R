@@ -4,6 +4,189 @@ create_lagrange_theme_LFL <- function(base_size = 12) {
   ggthemes::theme_economist(base_size = base_size)
 }
 
+replace_fixed_once_LFL <- function(
+    file_path,
+    old_text,
+    new_text,
+    label
+) {
+  text <- readr::read_file(file_path)
+  
+  occurrences <- stringr::str_count(
+    text,
+    stringr::fixed(old_text)
+  )
+  
+  if (occurrences != 1L) {
+    base::stop(
+      base::paste0(
+        "[", label, "] expected 1 match, found ",
+        occurrences, " in ", file_path
+      ),
+      call. = FALSE
+    )
+  }
+  
+  text <- stringr::str_replace(
+    text,
+    stringr::fixed(old_text),
+    new_text
+  )
+  
+  readr::write_file(text, file_path)
+  base::invisible(file_path)
+}
+
+replace_regex_LFL <- function(
+    file_path,
+    pattern,
+    replacement
+) {
+  text <- readr::read_file(file_path)
+  
+  text <- stringr::str_replace_all(
+    text,
+    pattern,
+    replacement
+  )
+  
+  readr::write_file(text, file_path)
+  base::invisible(file_path)
+}
+
+vec_part1_files <- base::file.path(
+  "part1_empirical",
+  base::c(
+    "ch01_r_basics_tidyverse.qmd",
+    "ch02_financial_data.qmd",
+    "ch03_stock_data_time_series.qmd",
+    "ch04_factor_models.qmd",
+    "ch05_asset_pricing.qmd",
+    "ch06_event_study.qmd",
+    "ch07_machine_learning_factor_selection.qmd",
+    "ch08_constrained_portfolio_optimization.qmd"
+  )
+)
+
+if (!base::all(base::file.exists(vec_part1_files))) {
+  base::stop(
+    "Run this script from the LagrangeFinance project root.",
+    call. = FALSE
+  )
+}
+
+# I-1
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[1]],
+  old_text = "arrow::write_parquet(tbl_arrow_price, sink = path_parquet)\n\npath_parquet",
+  new_text = "arrow::write_parquet(tbl_arrow_price, sink = path_parquet)\n\nbase::basename(path_parquet)",
+  label = "I-1 temporary parquet path"
+)
+
+# I-2
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[2]],
+  old_text = "financial_output_path\nfile.info(financial_output_path)[, c(\"size\", \"mtime\")]",
+  new_text = "base::invisible(financial_output_path)",
+  label = "I-2 naked financial output path"
+)
+
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[2]],
+  old_text = "output_file = financial_output_path,",
+  new_text = "output_file = relative_path_LFL(financial_output_path),",
+  label = "I-2 verification output path"
+)
+
+# I-3
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[3]],
+  old_text = "\noutput_paths\n```",
+  new_text = "\nbase::invisible(output_paths)\n```",
+  label = "I-3 naked output paths"
+)
+
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[3]],
+  old_text = "output_file = output_paths[[data_name]],",
+  new_text = "output_file = relative_path_LFL(output_paths[[data_name]]),",
+  label = "I-3 verification output path"
+)
+
+# I-4
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[4]],
+  old_text = 'title: "第I-4章 ファクターモデル析"',
+  new_text = 'title: "第I-4章 ファクターモデル分析"',
+  label = "I-4 title"
+)
+
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[4]],
+  old_text = "output_file = vec_factor_output_path,",
+  new_text = "output_file = relative_path_LFL(vec_factor_output_path),",
+  label = "I-4 factor output path"
+)
+
+# I-6
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[6]],
+  old_text = 'tibble(\n  directory = c(\n    "project",\n    "raw_events",\n    "derived_events"\n  ),\n  path = c(\n    project_dir,\n    raw_event_data_dir,\n    derived_event_data_dir\n  )\n)',
+  new_text = 'tibble::tibble(\n  directory = base::c(\n    "project",\n    "raw_events",\n    "derived_events"\n  ),\n  path = base::c(\n    ".",\n    base::file.path("data", "raw", "events"),\n    base::file.path("data", "derived", "events")\n  )\n) |>\n  show_table_LFL()',
+  label = "I-6 directory display"
+)
+
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[6]],
+  old_text = "path = unname(vec_input_path)",
+  new_text = "path = base::unname(vec_input_file)",
+  label = "I-6 input path display"
+)
+
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[6]],
+  old_text = "path = unname(vec_output_path)",
+  new_text = "path = relative_path_LFL(base::unname(vec_output_path))",
+  label = "I-6 output path display"
+)
+
+# I-7
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[7]],
+  old_text = "\nvec_chapter_07_paths\n```",
+  new_text = '\ntibble::tibble(\n  output = base::names(vec_chapter_07_paths),\n  path = relative_path_LFL(\n    base::unname(vec_chapter_07_paths)\n  )\n) |>\n  show_table_LFL()\n```',
+  label = "I-7 output path display"
+)
+
+# I-8
+replace_fixed_once_LFL(
+  file_path = vec_part1_files[[8]],
+  old_text = "\nvec_chapter_08_paths\n```",
+  new_text = '\ntibble::tibble(\n  output = base::names(vec_chapter_08_paths),\n  path = relative_path_LFL(\n    base::unname(vec_chapter_08_paths)\n  )\n) |>\n  show_table_LFL()\n```',
+  label = "I-8 output path display"
+)
+
+# Remove explicit n = Inf from Part I table logging.
+purrr::walk(
+  vec_part1_files,
+  \(file_path) {
+    replace_regex_LFL(
+      file_path = file_path,
+      pattern = ",\\s*n\\s*=\\s*Inf",
+      replacement = ""
+    )
+  }
+)
+
+base::cat(
+  "\nPart I output cleanup completed.\n",
+  "Next:\n",
+  "  git diff -- part1_empirical\n",
+  "  quarto render --to html\n",
+  sep = ""
+)
+
+
 #' Add the LagrangeFinance ggplot theme
 #'
 #' @param plot_object A ggplot object.

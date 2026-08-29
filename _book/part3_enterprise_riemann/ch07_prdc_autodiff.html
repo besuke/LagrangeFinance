@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分 – エンタープライズ金融モデル構築</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-9e3e5b9121e68b3f077afb32f2c64d95.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">エンタープライズ金融モデル構築</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第I部 金融工学　均衡モデル</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch01_r_basics_tidyverse.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-1章 Rによるデータ分析の基礎</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch02_financial_data.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-2章 財務データの整理と分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch03_stock_data_time_series.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-3章 株式データと時系列分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch04_factor_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-4章 ファクターモデル分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch05_asset_pricing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-5章 資産価格モデルとポートフォリオ最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch06_event_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-6章 イベント・スタディ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch07_machine_learning_factor_selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-7章 機械学習によるファクター選定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch08_constrained_portfolio_optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-8章 制約付きポートフォリオ最適化とバックテスト</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第II部 金融工学　無裁定モデル</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-1章 確定キャッシュフロー債券評価</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物の最割安銘柄・BPV</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch03_ois_swaps_multicurve.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-3章 OISスワップとマルチカーブ評価</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch04_black_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-4章 株価・為替と幾何ブラウン運動モデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch05_normal_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 金利モデル（期間構造なし）ノーマルモデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch06_sabr_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 SABRモデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch07_callable_hull_white.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 金利期間構造モデルと期限前償還債評価</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch08_credit_risk_cds.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-8章 信用リスクとクレジットデリバティブ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch09_exotic_derivatives_prdc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-9章 金利為替系デリバティブ</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融工学における計算技術の発展と並列コンピューティング</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 エンタープライズ金融計算システムの構築</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#iii-7.1-金利為替系デリバティブと複数のリスクファクター" id="toc-iii-7.1-金利為替系デリバティブと複数のリスクファクター" class="nav-link active" data-scroll-target="#iii-7.1-金利為替系デリバティブと複数のリスクファクター">III-7.1 金利為替系デリバティブと複数のリスクファクター</a></li>
+  <li><a href="#iii-7.2-本章で用いる簡略金利為替系デリバティブ" id="toc-iii-7.2-本章で用いる簡略金利為替系デリバティブ" class="nav-link" data-scroll-target="#iii-7.2-本章で用いる簡略金利為替系デリバティブ">III-7.2 本章で用いる簡略金利為替系デリバティブ</a></li>
+  <li><a href="#iii-7.3-fxのrisk-neutral-dynamics" id="toc-iii-7.3-fxのrisk-neutral-dynamics" class="nav-link" data-scroll-target="#iii-7.3-fxのrisk-neutral-dynamics">III-7.3 FXのRisk-Neutral Dynamics</a></li>
+  <li><a href="#iii-7.4-モンテカルロ-pricing" id="toc-iii-7.4-モンテカルロ-pricing" class="nav-link" data-scroll-target="#iii-7.4-モンテカルロ-pricing">III-7.4 モンテカルロ Pricing</a></li>
+  <li><a href="#iii-7.5-計算条件" id="toc-iii-7.5-計算条件" class="nav-link" data-scroll-target="#iii-7.5-計算条件">III-7.5 計算条件</a></li>
+  <li><a href="#iii-7.6-torchによるモンテカルロ-path生成" id="toc-iii-7.6-torchによるモンテカルロ-path生成" class="nav-link" data-scroll-target="#iii-7.6-torchによるモンテカルロ-path生成">III-7.6 torchによるモンテカルロ Path生成</a></li>
+  <li><a href="#iii-7.7-微分可能な金利為替系デリバティブ-pricing-function" id="toc-iii-7.7-微分可能な金利為替系デリバティブ-pricing-function" class="nav-link" data-scroll-target="#iii-7.7-微分可能な金利為替系デリバティブ-pricing-function">III-7.7 微分可能な金利為替系デリバティブ Pricing Function</a></li>
+  <li><a href="#iii-7.8-金利為替系デリバティブ-npv" id="toc-iii-7.8-金利為替系デリバティブ-npv" class="nav-link" data-scroll-target="#iii-7.8-金利為替系デリバティブ-npv">III-7.8 金利為替系デリバティブ NPV</a></li>
+  <li><a href="#iii-7.9-一度のreverse-modeで複数リスクを取得する" id="toc-iii-7.9-一度のreverse-modeで複数リスクを取得する" class="nav-link" data-scroll-target="#iii-7.9-一度のreverse-modeで複数リスクを取得する">III-7.9 一度のReverse Modeで複数リスクを取得する</a></li>
+  <li><a href="#iii-7.10-fx-delta" id="toc-iii-7.10-fx-delta" class="nav-link" data-scroll-target="#iii-7.10-fx-delta">III-7.10 FX Delta</a></li>
+  <li><a href="#iii-7.11-jpy-curve-risk" id="toc-iii-7.11-jpy-curve-risk" class="nav-link" data-scroll-target="#iii-7.11-jpy-curve-risk">III-7.11 JPY Curve Risk</a></li>
+  <li><a href="#iii-7.12-foreign-curve-risk" id="toc-iii-7.12-foreign-curve-risk" class="nav-link" data-scroll-target="#iii-7.12-foreign-curve-risk">III-7.12 Foreign Curve Risk</a></li>
+  <li><a href="#iii-7.13-fx-vega" id="toc-iii-7.13-fx-vega" class="nav-link" data-scroll-target="#iii-7.13-fx-vega">III-7.13 FX Vega</a></li>
+  <li><a href="#iii-7.14-金利為替系デリバティブ-risk-summary" id="toc-iii-7.14-金利為替系デリバティブ-risk-summary" class="nav-link" data-scroll-target="#iii-7.14-金利為替系デリバティブ-risk-summary">III-7.14 金利為替系デリバティブ Risk Summary</a></li>
+  <li><a href="#iii-7.15-有限差分との検算" id="toc-iii-7.15-有限差分との検算" class="nav-link" data-scroll-target="#iii-7.15-有限差分との検算">III-7.15 有限差分との検算</a></li>
+  <li><a href="#iii-7.16-floorキャップと微分可能性" id="toc-iii-7.16-floorキャップと微分可能性" class="nav-link" data-scroll-target="#iii-7.16-floorキャップと微分可能性">III-7.16 Floor・キャップと微分可能性</a></li>
+  <li><a href="#iii-7.17-モンテカルロと自動微分" id="toc-iii-7.17-モンテカルロと自動微分" class="nav-link" data-scroll-target="#iii-7.17-モンテカルロと自動微分">III-7.17 モンテカルロと自動微分</a></li>
+  <li><a href="#iii-7.18-gpuへの拡張" id="toc-iii-7.18-gpuへの拡張" class="nav-link" data-scroll-target="#iii-7.18-gpuへの拡張">III-7.18 GPUへの拡張</a></li>
+  <li><a href="#iii-7.19-aadとして見る金利為替系デリバティブ-risk" id="toc-iii-7.19-aadとして見る金利為替系デリバティブ-risk" class="nav-link" data-scroll-target="#iii-7.19-aadとして見る金利為替系デリバティブ-risk">III-7.19 AADとして見る金利為替系デリバティブ Risk</a></li>
+  <li><a href="#iii-7.20-第iii部を通したリスク計測の拡張" id="toc-iii-7.20-第iii部を通したリスク計測の拡張" class="nav-link" data-scroll-target="#iii-7.20-第iii部を通したリスク計測の拡張">III-7.20 第III部を通したリスク計測の拡張</a>
+  <ul class="collapse">
+  <li><a href="#iii-7.20.1-option" id="toc-iii-7.20.1-option" class="nav-link" data-scroll-target="#iii-7.20.1-option">III-7.20.1 Option</a></li>
+  <li><a href="#iii-7.20.2-interest-rate" id="toc-iii-7.20.2-interest-rate" class="nav-link" data-scroll-target="#iii-7.20.2-interest-rate">III-7.20.2 Interest Rate</a></li>
+  <li><a href="#iii-7.20.3-金利為替系デリバティブ" id="toc-iii-7.20.3-金利為替系デリバティブ" class="nav-link" data-scroll-target="#iii-7.20.3-金利為替系デリバティブ">III-7.20.3 金利為替系デリバティブ</a></li>
+  </ul></li>
+  <li><a href="#iii-7.21-まとめ" id="toc-iii-7.21-まとめ" class="nav-link" data-scroll-target="#iii-7.21-まとめ">III-7.21 まとめ</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>第III部では、二つの方向からクオンツ計算の高度化を進めてきた。前半ではParallel / Distributed Computingによって大量のPricingを処理する計算基盤を構築し、後半ではPricingそのものをDifferentiable Computational Graphとして設計することで、Automatic DifferentiationからRisk Sensitivityを直接取得した。</p>
+<p>最終章では、この二つの考え方が同時に必要となる代表例としてPRDCを扱う。PRDCはFX、複数通貨のYield Curve、Volatilityなど多数のRisk Factorを持ち、価格評価にはMonte Carlo Simulationが必要となる。したがって、<strong>大規模計算をどう実行するか</strong>と、<strong>多数の感応度をどう効率的に生成するか</strong>という第III部の二つの課題が一つの商品に集約される。</p>
+<p>第III-5章ではOption Greeks、第III-6章ではDV01からCurve Gradientへと、価格関数の入力次元を段階的に増やしてきた。本章ではさらに、</p>
+<p><span class="math display">\[
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX}
+\right)
+\]</span></p>
+<p>という多因子Monte Carlo Pricingを一つの計算Graphとして構成し、</p>
+<p><span class="math display">\[
+\boxed{
+\Delta_{FX},
+\quad
+\mathbf{DV01}_{JPY},
+\quad
+\mathbf{DV01}_{Foreign},
+\quad
+Vega_{FX}
+}
+\]</span></p>
+<p>を一度のReverse-mode Automatic Differentiationから取得する。</p>
+<p>本章の目的は、単にPRDCのGreeksを計算することではない。<strong>Monte Carlo PricingとRisk Calculationを別々の処理として繰り返すのではなく、PricingそのものからRiskを生成する</strong>というDifferentiable Risk Engineの設計を示すことである。</p>
+<section id="iii-7.1-金利為替系デリバティブと複数のリスクファクター" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.1-金利為替系デリバティブと複数のリスクファクター">III-7.1 金利為替系デリバティブと複数のリスクファクター</h2>
+<p>PRDCは、為替と複数通貨の金利を同時に扱うハイブリッド商品である。</p>
+<p>単純なOptionでは、</p>
+<p><span class="math display">\[
+V=V(S,\sigma,r,T)
+\]</span></p>
+<p>と少数の入力変数を考えればよかった。</p>
+<p>PRDCでは、</p>
+<pre class="text"><code>FX Spot
+   |
+   +-------------------+
+   |                   |
+   v                   v
+FX Process        Coupon Formula
+   ^
+   |
+JPY Rates &lt;----&gt; Foreign Rates
+   |                   |
+   v                   v
+Discounting       FX Drift / Forward
+   \                   /
+    \                 /
+     ------ PRDC ------
+             |
+             v
+            NPV</code></pre>
+<p>という複数の経路から価格が構成される。</p>
+<p>したがって、一つの市場変数を変更した場合でも、 その影響は複数の計算経路を通って最終価格へ伝わる。</p>
+<p>例えばJPY金利は、</p>
+<ul>
+<li>JPY Discount Factor</li>
+<li>FXのRisk-Neutral Drift</li>
+<li>将来Couponの期待値</li>
+</ul>
+<p>へ影響する。</p>
+<p>Foreign Rateも、</p>
+<ul>
+<li>FX Forward</li>
+<li>FXのRisk-Neutral Drift</li>
+<li>将来Couponの期待値</li>
+</ul>
+<p>へ影響する。</p>
+<p>このような商品では、連鎖律をプログラム全体へ適用する Automatic Differentiationの考え方が特に重要になる。</p>
+</section>
+<section id="iii-7.2-本章で用いる簡略金利為替系デリバティブ" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.2-本章で用いる簡略金利為替系デリバティブ">III-7.2 本章で用いる簡略金利為替系デリバティブ</h2>
+<p>PRDCには多様なCoupon構造、Callable条件、Notional Exchange、 Target Redemption、Barrierなどが存在する。</p>
+<p>本章では自動微分の構造を明確にするため、 第II部・第III部で扱ったPRDCの考え方を簡略化し、 為替連動Couponを、</p>
+<p><span class="math display">\[
+c_i
+=
+\min
+\left[
+c_{\max},
+\max
+\left(
+0,
+c_0
++
+L
+\left(
+\frac{S_i}{S_{\mathrm{ref}}}
+-
+1
+\right)
+\right)
+\right]
+\]</span></p>
+<p>とする。</p>
+<p>ここで、</p>
+<ul>
+<li><span class="math inline">\(c_0\)</span>：Base Coupon</li>
+<li><span class="math inline">\(L\)</span>：FX Leverage</li>
+<li><span class="math inline">\(S_i\)</span>：Coupon DateのFX Spot</li>
+<li><span class="math inline">\(S_{\mathrm{ref}}\)</span>：Reference FX</li>
+<li><span class="math inline">\(c_{\max}\)</span>：Coupon Cap</li>
+</ul>
+<p>である。</p>
+<p>Coupon Cash Flowは、</p>
+<p><span class="math display">\[
+CF_i
+=
+N\alpha_i c_i
+\]</span></p>
+<p>とする。</p>
+<p>このPayoffはAutomatic Differentiationの構造を明確にするための教育用モデルである。実際のPRDCではCoupon Formula、Callable条件、Notional Exchangeなどを追加する必要があるが、重要なのは、それらを同じDifferentiable Computational Graphの中へ組み込めることである。</p>
+<p>重要なのはPayoffの具体的な形ではなく、</p>
+<p><span class="math display">\[
+\boxed{
+\text{FX}
++
+\text{JPY Curve}
++
+\text{Foreign Curve}
++
+\text{Volatility}
+\longrightarrow
+\text{PRDC NPV}
+}
+\]</span></p>
+<p>という計算グラフを微分可能な演算として構成することである。</p>
+</section>
+<section id="iii-7.3-fxのrisk-neutral-dynamics" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.3-fxのrisk-neutral-dynamics">III-7.3 FXのRisk-Neutral Dynamics</h2>
+<p>JPYをDomestic Currency、 Foreign Currencyを外貨とする。</p>
+<p>簡略化したLognormal FX Processとして、</p>
+<p><span class="math display">\[
+\frac{dS_t}{S_t}
+=
+\left(
+r_{JPY}(t)
+-
+r_{Foreign}(t)
+\right)dt
++
+\sigma_{FX}dW_t
+\]</span></p>
+<p>を用いる。</p>
+<p>離散化すると、</p>
+<p><span class="math display">\[
+S_{t+\Delta t}
+=
+S_t
+\exp
+\left[
+\left(
+r_{JPY}
+-
+r_{Foreign}
+-
+\frac12\sigma_{FX}^2
+\right)\Delta t
++
+\sigma_{FX}\sqrt{\Delta t}Z
+\right]
+\]</span></p>
+<p>となる。</p>
+<p>ここで、</p>
+<p><span class="math display">\[
+Z\sim N(0,1)
+\]</span></p>
+<p>である。</p>
+<p>この式から、FX Path自身が、</p>
+<p><span class="math display">\[
+S_{t_i}
+=
+S_{t_i}
+\left(
+S_0,
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX},
+Z
+\right)
+\]</span></p>
+<p>という関数になっていることが分かる。</p>
+<p>したがってPRDC価格を微分すると、 CouponだけではなくFX Path生成まで連鎖律が伝播する。</p>
+</section>
+<section id="iii-7.4-モンテカルロ-pricing" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.4-モンテカルロ-pricing">III-7.4 モンテカルロ Pricing</h2>
+<p>PRDCのMonte Carlo価格を、</p>
+<p><span class="math display">\[
+\hat V
+=
+\frac{1}{M}
+\sum_{m=1}^{M}
+\left[
+\sum_{i=1}^{n}
+D_{JPY}(0,t_i)
+CF_i^{(m)}
++
+D_{JPY}(0,T)N
+\right]
+\]</span></p>
+<p>とする。</p>
+<p>ここで、</p>
+<p><span class="math display">\[
+M
+\]</span></p>
+<p>はPath数である。</p>
+<p>JPY Discount Factorは、期間ごとの短期金利を用いて、</p>
+<p><span class="math display">\[
+D_{JPY}(0,t_i)
+=
+\exp
+\left[
+-
+\sum_{j=1}^{i}
+r_{JPY,j}\Delta t_j
+\right]
+\]</span></p>
+<p>とする。</p>
+<p>したがって計算全体は、</p>
+<pre class="text"><code>JPY Curve --------+
+                  |
+Foreign Curve ----+----&gt; FX Paths
+                  |         |
+FX Spot ----------+         v
+                  |      Coupons
+FX Vol -----------+         |
+                            v
+JPY Curve ------------&gt; Discount Factors
+                            |
+                            v
+                         PRDC NPV</code></pre>
+<p>となる。</p>
+</section>
+<section id="iii-7.5-計算条件" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.5-計算条件">III-7.5 計算条件</h2>
+<p>本章では5年間、年1回Couponを支払う簡略PRDCを考える。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tbl_prdc_input <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>parameter, <span class="sc">~</span>value,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"notional"</span>,      <span class="dv">100000000</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"fx_spot"</span>,       <span class="fl">150.00</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"reference_fx"</span>,  <span class="fl">150.00</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"fixed_coupon"</span>,  <span class="fl">0.0200</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"leverage"</span>,      <span class="fl">0.80</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"coupon_cap"</span>,    <span class="fl">0.0800</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"fx_vol"</span>,        <span class="fl">0.1200</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"n_paths"</span>,       <span class="dv">20000</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>tbl_prdc_input</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 8 × 2</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   parameter           value</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;               &lt;dbl&gt;</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 notional     100000000   </span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 fx_spot            150   </span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 reference_fx       150   </span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 fixed_coupon         0.02</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 leverage             0.8 </span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 coupon_cap           0.08</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 fx_vol               0.12</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 n_paths          20000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>JPY CurveとForeign Curveを設定する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tbl_prdc_curve <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>year, <span class="sc">~</span>jpy_rate, <span class="sc">~</span>foreign_rate,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dv">1</span>, <span class="fl">0.0100</span>, <span class="fl">0.0400</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dv">2</span>, <span class="fl">0.0120</span>, <span class="fl">0.0380</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="dv">3</span>, <span class="fl">0.0140</span>, <span class="fl">0.0360</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="dv">4</span>, <span class="fl">0.0160</span>, <span class="fl">0.0340</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="dv">5</span>, <span class="fl">0.0180</span>, <span class="fl">0.0320</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>tbl_prdc_curve</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    year jpy_rate foreign_rate</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt;    &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     1    0.01         0.04 </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     2    0.012        0.038</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     3    0.014        0.036</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     4    0.016        0.034</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5     5    0.018        0.032</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="iii-7.6-torchによるモンテカルロ-path生成" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.6-torchによるモンテカルロ-path生成">III-7.6 torchによるモンテカルロ Path生成</h2>
+<p>Monte Carloで使用する乱数を固定する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">torch_manual_seed</span>(<span class="dv">1234</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>n_paths <span class="ot">&lt;-</span> <span class="dv">20000</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>n_steps <span class="ot">&lt;-</span> <span class="fu">nrow</span>(tbl_prdc_curve)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">torch_randn</span>(</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    n_paths,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    n_steps</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>乱数<span class="math inline">\(Z\)</span>はリスクファクターではないため、 <code>requires_grad = TRUE</code>は指定しない。</p>
+<p>一方、微分対象となる市場変数には、 <code>requires_grad = TRUE</code>を指定する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>fx_spot_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fl">150.00</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">requires_grad =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>jpy_curve_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  tbl_prdc_curve<span class="sc">$</span>jpy_rate,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">requires_grad =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>foreign_curve_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  tbl_prdc_curve<span class="sc">$</span>foreign_rate,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">requires_grad =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>fx_vol_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.1200</span>,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">requires_grad =</span> <span class="cn">TRUE</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>その他の契約条件をTensorとして準備する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>notional_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dv">100000000</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>reference_fx_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fl">150.00</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>fixed_coupon_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.0200</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>leverage_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.80</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>coupon_cap_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.0800</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>dt_t <span class="ot">&lt;-</span> <span class="fu">torch_ones</span>(</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  n_steps</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="iii-7.7-微分可能な金利為替系デリバティブ-pricing-function" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.7-微分可能な金利為替系デリバティブ-pricing-function">III-7.7 微分可能な金利為替系デリバティブ Pricing Function</h2>
+<p>PRDCのMonte Carlo Pricingを、 Tensor演算だけで構成する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prdc_price_torch <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    fx_spot,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    jpy_curve,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    foreign_curve,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    fx_vol,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    z,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    notional,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    reference_fx,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    fixed_coupon,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    leverage,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    coupon_cap,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    dt</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  drift_step <span class="ot">&lt;-</span> (</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    jpy_curve <span class="sc">-</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      foreign_curve <span class="sc">-</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.5</span> <span class="sc">*</span> fx_vol<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">*</span> dt</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  diffusion_step <span class="ot">&lt;-</span> fx_vol <span class="sc">*</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">torch_sqrt</span>(dt) <span class="sc">*</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    z</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  log_fx_path <span class="ot">&lt;-</span> <span class="fu">torch_log</span>(</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    fx_spot</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">torch_cumsum</span>(</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>      drift_step <span class="sc">+</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>        diffusion_step,</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">dim =</span> <span class="dv">2</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>  fx_path <span class="ot">&lt;-</span> <span class="fu">torch_exp</span>(</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>    log_fx_path</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  raw_coupon_rate <span class="ot">&lt;-</span> fixed_coupon <span class="sc">+</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    leverage <span class="sc">*</span> (</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>      fx_path <span class="sc">/</span> reference_fx <span class="sc">-</span></span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  coupon_rate <span class="ot">&lt;-</span> <span class="fu">torch_minimum</span>(</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">torch_maximum</span>(</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>      raw_coupon_rate,</span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>      <span class="fu">torch_zeros_like</span>(raw_coupon_rate)</span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>    coupon_cap</span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>  coupon_cf <span class="ot">&lt;-</span> notional <span class="sc">*</span></span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>    coupon_rate <span class="sc">*</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>    dt</span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>  discount_factor <span class="ot">&lt;-</span> <span class="fu">torch_exp</span>(</span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="fu">torch_cumsum</span>(</span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>      jpy_curve <span class="sc">*</span> dt,</span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>      <span class="at">dim =</span> <span class="dv">1</span></span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>  pv_coupon <span class="ot">&lt;-</span> <span class="fu">torch_sum</span>(</span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>    coupon_cf <span class="sc">*</span></span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>      discount_factor,</span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>    <span class="at">dim =</span> <span class="dv">2</span></span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>  pv_redemption <span class="ot">&lt;-</span> notional <span class="sc">*</span></span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>    discount_factor[n_steps]</span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>  <span class="fu">torch_mean</span>(</span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>    pv_coupon <span class="sc">+</span></span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>      pv_redemption</span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>この関数の中では、</p>
+<ul>
+<li>FX Path生成</li>
+<li>Coupon計算</li>
+<li>JPY Discounting</li>
+<li>Monte Carlo Average</li>
+</ul>
+<p>のすべてがTensor演算として接続されている。</p>
+<p>したがって、最終的な<code>prdc_npv</code>から、 入力された市場リスクファクターまで計算グラフが維持される。</p>
+</section>
+<section id="iii-7.8-金利為替系デリバティブ-npv" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.8-金利為替系デリバティブ-npv">III-7.8 金利為替系デリバティブ NPV</h2>
+<p>価格を計算する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>prdc_npv <span class="ot">&lt;-</span> <span class="fu">prdc_price_torch</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">fx_spot =</span> fx_spot_t,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">jpy_curve =</span> jpy_curve_t,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">foreign_curve =</span> foreign_curve_t,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">fx_vol =</span> fx_vol_t,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> z,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">notional =</span> notional_t,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference_fx =</span> reference_fx_t,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">fixed_coupon =</span> fixed_coupon_t,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">leverage =</span> leverage_t,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon_cap =</span> coupon_cap_t,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">dt =</span> dt_t</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>prdc_npv</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; torch_tensor</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 104242624</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [ CPUFloatType{} ][ grad_fn = &lt;MeanBackward0&gt; ]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>この一つのScalarが、</p>
+<p><span class="math display">\[
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX}
+\right)
+\]</span></p>
+<p>という多変数関数になっている。</p>
+</section>
+<section id="iii-7.9-一度のreverse-modeで複数リスクを取得する" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.9-一度のreverse-modeで複数リスクを取得する">III-7.9 一度のReverse Modeで複数リスクを取得する</h2>
+<p>Forward計算で得られたScalar NPVを出発点として、複数の市場入力へGradientを逆伝播させる。PRDCのように「多数入力・少数出力」となるPricingでは、Reverse Modeの利点が最も現れやすい。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prdc_grad <span class="ot">&lt;-</span> <span class="fu">autograd_grad</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">outputs =</span> prdc_npv,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">inputs =</span> <span class="fu">list</span>(</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    fx_spot_t,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    jpy_curve_t,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    foreign_curve_t,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    fx_vol_t</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>fx_delta_t <span class="ot">&lt;-</span> prdc_grad[[<span class="dv">1</span>]]</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>jpy_rate_grad_t <span class="ot">&lt;-</span> prdc_grad[[<span class="dv">2</span>]]</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>foreign_rate_grad_t <span class="ot">&lt;-</span> prdc_grad[[<span class="dv">3</span>]]</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>fx_vega_t <span class="ot">&lt;-</span> prdc_grad[[<span class="dv">4</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>ここで、</p>
+<p><span class="math display">\[
+fx\_delta
+=
+\frac{\partial V}{\partial S_{FX}}
+\]</span></p>
+<p><span class="math display">\[
+jpy\_rate\_grad_i
+=
+\frac{\partial V}{\partial r_{JPY,i}}
+\]</span></p>
+<p><span class="math display">\[
+foreign\_rate\_grad_i
+=
+\frac{\partial V}{\partial r_{Foreign,i}}
+\]</span></p>
+<p><span class="math display">\[
+fx\_vega
+=
+\frac{\partial V}{\partial\sigma_{FX}}
+\]</span></p>
+<p>である。</p>
+</section>
+<section id="iii-7.10-fx-delta" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.10-fx-delta">III-7.10 FX Delta</h2>
+<p>FX Deltaは、</p>
+<p><span class="math display">\[
+\boxed{
+\Delta_{FX}
+=
+\frac{\partial V}{\partial S_{FX}}
+}
+\]</span></p>
+<p>である。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fx_delta <span class="ot">&lt;-</span> fx_delta_t<span class="sc">$</span><span class="fu">item</span>()</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>fx_delta</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 473469.3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>PRDCのCoupon構造によって、 FX Deltaの符号や大きさは大きく変化する。</p>
+<p>本章の簡略PayoffではFX上昇によってCouponが増加する形を用いているが、 実際のPRDCではCurrency Pairの定義やCoupon Formulaによって 感応度の符号は異なる。</p>
+</section>
+<section id="iii-7.11-jpy-curve-risk" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.11-jpy-curve-risk">III-7.11 JPY Curve Risk</h2>
+<p>JPY Curveの各Nodeに対する感応度は、</p>
+<p><span class="math display">\[
+\boxed{
+\frac{\partial V}
+{\partial r_{JPY,i}}
+}
+\]</span></p>
+<p>である。</p>
+<p>1bp単位へ換算すると、</p>
+<p><span class="math display">\[
+\boxed{
+DV01_{JPY,i}
+=
+\frac{\partial V}
+{\partial r_{JPY,i}}
+\times10^{-4}
+}
+\]</span></p>
+<p>となる。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>tbl_jpy_risk <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">year =</span> tbl_prdc_curve<span class="sc">$</span>year,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">rate =</span> tbl_prdc_curve<span class="sc">$</span>jpy_rate,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sensitivity =</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    jpy_rate_grad_t</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">dv01 =</span> sensitivity <span class="sc">*</span> <span class="fl">1e-4</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>tbl_jpy_risk</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 4</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    year  rate sensitivity    dv01</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;   &lt;dbl&gt;</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     1 0.01    -33222176 -3322.2</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     2 0.012   -53479396 -5347.9</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     3 0.014   -67464704 -6746.5</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     4 0.016   -77671080 -7767.1</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5     5 0.018   -86089920 -8609.0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>JPY金利はDiscountingだけでなくFX Driftにも入っている。</p>
+<p>したがって、</p>
+<p><span class="math display">\[
+\frac{\partial V}
+{\partial r_{JPY,i}}
+\]</span></p>
+<p>には、</p>
+<p><span class="math display">\[
+\boxed{
+\text{JPY Discount Risk}
++
+\text{FX Drift Risk}
++
+\text{Coupon Risk}
+}
+\]</span></p>
+<p>が連鎖律を通じて含まれる。</p>
+</section>
+<section id="iii-7.12-foreign-curve-risk" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.12-foreign-curve-risk">III-7.12 Foreign Curve Risk</h2>
+<p>Foreign Curveについても同様に、</p>
+<p><span class="math display">\[
+\boxed{
+DV01_{Foreign,i}
+=
+\frac{\partial V}
+{\partial r_{Foreign,i}}
+\times10^{-4}
+}
+\]</span></p>
+<p>である。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tbl_foreign_risk <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">year =</span> tbl_prdc_curve<span class="sc">$</span>year,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">rate =</span> tbl_prdc_curve<span class="sc">$</span>foreign_rate,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">sensitivity =</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    foreign_rate_grad_t</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">dv01 =</span> sensitivity <span class="sc">*</span> <span class="fl">1e-4</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>tbl_foreign_risk</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 4</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    year  rate sensitivity     dv01</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     1 0.04    -71020400 -7102.0 </span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     2 0.038   -48264380 -4826.4 </span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     3 0.036   -31967060 -3196.7 </span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     4 0.034   -19592504 -1959.3 </span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5     5 0.032    -9121757  -912.18</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Foreign Rateは本章の簡略モデルでは直接Discountingには使用していない。</p>
+<p>しかし、</p>
+<p><span class="math display">\[
+r_{JPY}-r_{Foreign}
+\]</span></p>
+<p>を通じてFX Driftへ入り、 FX PathからCouponへ感応度が伝播する。</p>
+<p>つまり、</p>
+<p><span class="math display">\[
+r_{Foreign}
+\rightarrow
+FX\ Path
+\rightarrow
+Coupon
+\rightarrow
+PRDC\ NPV
+\]</span></p>
+<p>という経路が存在する。</p>
+</section>
+<section id="iii-7.13-fx-vega" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.13-fx-vega">III-7.13 FX Vega</h2>
+<p>FX Volatilityに対する感応度は、</p>
+<p><span class="math display">\[
+\boxed{
+Vega_{FX}
+=
+\frac{\partial V}
+{\partial\sigma_{FX}}
+}
+\]</span></p>
+<p>である。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>fx_vega <span class="ot">&lt;-</span> fx_vega_t<span class="sc">$</span><span class="fu">item</span>()</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>fx_vega</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 40120812</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Volatilityを1 percentage point、 すなわち0.01だけ変化させた場合の近似価格変化として、</p>
+<p><span class="math display">\[
+Vega01_{FX}
+=
+\frac{\partial V}
+{\partial\sigma_{FX}}
+\times0.01
+\]</span></p>
+<p>を定義することもできる。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>fx_vega_01 <span class="ot">&lt;-</span> fx_vega <span class="sc">*</span> <span class="fl">0.01</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>fx_vega_01</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 401208.1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>PRDCのCouponにはFloorやCapが存在するため、 Volatilityの変化は単純な線形効果ではない。</p>
+<p>Monte Carlo Pathの分布が変化し、 FloorやCapへ到達するPathの割合も変化する。</p>
+<p>自動微分では、このPath生成からPayoffまでの連鎖を 同じ計算グラフの中で扱う。</p>
+</section>
+<section id="iii-7.14-金利為替系デリバティブ-risk-summary" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.14-金利為替系デリバティブ-risk-summary">III-7.14 金利為替系デリバティブ Risk Summary</h2>
+<p>主要なScalar Riskをまとめる。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tbl_prdc_risk_summary <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>metric, <span class="sc">~</span>value,</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"NPV"</span>, prdc_npv<span class="sc">$</span><span class="fu">item</span>(),</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"FX Delta"</span>, fx_delta,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"FX Vega"</span>, fx_vega,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"FX Vega 1pct"</span>, fx_vega_01,</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"JPY Total DV01"</span>, <span class="fu">sum</span>(</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    tbl_jpy_risk<span class="sc">$</span>dv01</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Foreign Total DV01"</span>, <span class="fu">sum</span>(</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    tbl_foreign_risk<span class="sc">$</span>dv01</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>tbl_prdc_risk_summary</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 2</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   metric                  value</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                   &lt;dbl&gt;</span></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 NPV                104242624 </span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 FX Delta              473469.</span></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 FX Vega             40120812 </span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 FX Vega 1pct          401208.</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 JPY Total DV01        -31793.</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 Foreign Total DV01    -17997.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>さらにCurve RiskはVectorとして保持する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tbl_curve_risk <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  tbl_jpy_risk <span class="sc">|&gt;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">curve =</span> <span class="st">"JPY"</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  tbl_foreign_risk <span class="sc">|&gt;</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">curve =</span> <span class="st">"Foreign"</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    curve,</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    year,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    rate,</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    sensitivity,</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    dv01</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>tbl_curve_risk</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    curve    year  rate sensitivity     dv01</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt;       &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 JPY         1 0.01    -33222176 -3322.2 </span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 JPY         2 0.012   -53479396 -5347.9 </span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 JPY         3 0.014   -67464704 -6746.5 </span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 JPY         4 0.016   -77671080 -7767.1 </span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 JPY         5 0.018   -86089920 -8609.0 </span></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 Foreign     1 0.04    -71020400 -7102.0 </span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 Foreign     2 0.038   -48264380 -4826.4 </span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 Foreign     3 0.036   -31967060 -3196.7 </span></span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 Foreign     4 0.034   -19592504 -1959.3 </span></span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 Foreign     5 0.032    -9121757  -912.18</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>これにより、一つのPRDC価格から、</p>
+<p><span class="math display">\[
+\boxed{
+\nabla V
+=
+\left(
+\Delta_{FX},
+\mathbf{DV01}_{JPY},
+\mathbf{DV01}_{Foreign},
+Vega_{FX}
+\right)
+}
+\]</span></p>
+<p>を取得したことになる。</p>
+</section>
+<section id="iii-7.15-有限差分との検算" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.15-有限差分との検算">III-7.15 有限差分との検算</h2>
+<p>自動微分の結果を確認するため、 FX DeltaをFinite Differenceで検算する。</p>
+<p>Monte Carloで有限差分を比較する場合には、 乱数の違いによるNoiseを避けるため、 同じ乱数を使うCommon Random Numbersが重要である。</p>
+<p>本章では同じ<code>z</code>を使用して、 FX SpotだけをBumpする。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fx_bump <span class="ot">&lt;-</span> <span class="fl">0.01</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>fx_up <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fl">150.00</span> <span class="sc">+</span> fx_bump</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>fx_down <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>  <span class="fl">150.00</span> <span class="sc">-</span> fx_bump</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>jpy_curve_fd <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  tbl_prdc_curve<span class="sc">$</span>jpy_rate</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>foreign_curve_fd <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>  tbl_prdc_curve<span class="sc">$</span>foreign_rate</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>fx_vol_fd <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.1200</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>price_up <span class="ot">&lt;-</span> <span class="fu">prdc_price_torch</span>(</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">fx_spot =</span> fx_up,</span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">jpy_curve =</span> jpy_curve_fd,</span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">foreign_curve =</span> foreign_curve_fd,</span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">fx_vol =</span> fx_vol_fd,</span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> z,</span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">notional =</span> notional_t,</span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference_fx =</span> reference_fx_t,</span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">fixed_coupon =</span> fixed_coupon_t,</span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">leverage =</span> leverage_t,</span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon_cap =</span> coupon_cap_t,</span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">dt =</span> dt_t</span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>price_down <span class="ot">&lt;-</span> <span class="fu">prdc_price_torch</span>(</span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">fx_spot =</span> fx_down,</span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">jpy_curve =</span> jpy_curve_fd,</span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">foreign_curve =</span> foreign_curve_fd,</span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>  <span class="at">fx_vol =</span> fx_vol_fd,</span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">z =</span> z,</span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>  <span class="at">notional =</span> notional_t,</span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference_fx =</span> reference_fx_t,</span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">fixed_coupon =</span> fixed_coupon_t,</span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">leverage =</span> leverage_t,</span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon_cap =</span> coupon_cap_t,</span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">dt =</span> dt_t</span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>fd_fx_delta <span class="ot">&lt;-</span> (</span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a>  price_up<span class="sc">$</span><span class="fu">item</span>() <span class="sc">-</span></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>    price_down<span class="sc">$</span><span class="fu">item</span>()</span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>) <span class="sc">/</span> (</span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>  <span class="dv">2</span> <span class="sc">*</span> fx_bump</span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>tbl_fx_delta_check <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>method, <span class="sc">~</span>fx_delta,</span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Finite difference"</span>, fd_fx_delta,</span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Automatic differentiation"</span>, fx_delta</span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>tbl_fx_delta_check</span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                    fx_delta</span></span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                        &lt;dbl&gt;</span></span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Finite difference          474000 </span></span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Automatic differentiation  473469.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>同じ乱数を用いることで、 差分結果にMonte Carlo Noiseが混入することを抑えている。</p>
+</section>
+<section id="iii-7.16-floorキャップと微分可能性" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.16-floorキャップと微分可能性">III-7.16 Floor・キャップと微分可能性</h2>
+<p>本章のCouponでは、</p>
+<p><span class="math display">\[
+\max(0,x)
+\]</span></p>
+<p>および、</p>
+<p><span class="math display">\[
+\min(c_{\max},x)
+\]</span></p>
+<p>を使用している。</p>
+<p>これらの関数はKinkを持ち、 境界点では通常の意味で微分不可能である。</p>
+<p><code>torch_minimum()</code>や<code>torch_maximum()</code>などのTensor演算は、 こうした演算について実装上定義された局所Gradientを使用して Reverse Modeを実行する。</p>
+<p>Monte Carloでは、連続分布のもとでPathがKinkへ 厳密に一致する確率は通常ゼロであるため、 Pathwise Derivativeを利用できる場合が多い。</p>
+<p>ただし、Digital Payoff、Barrier Hit Indicator、 Exercise Decisionなど不連続性の強い商品では、 単純なPathwise Automatic Differentiationだけでは 安定した感応度が得られない場合がある。</p>
+<p>その場合には、</p>
+<ul>
+<li>Smoothing</li>
+<li>Likelihood Ratio Method</li>
+<li>Conditional Expectation</li>
+<li>Pathwise / LRM Hybrid</li>
+<li>Differentiable Approximation</li>
+</ul>
+<p>などを検討する必要がある。</p>
+<p>これは、Automatic Differentiationが 「あらゆる金融商品をそのまま微分すればよい」 という意味ではないことを示している。</p>
+</section>
+<section id="iii-7.17-モンテカルロと自動微分" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.17-モンテカルロと自動微分">III-7.17 モンテカルロと自動微分</h2>
+<p>PRDCのような商品では、</p>
+<p><span class="math display">\[
+\hat V
+=
+\frac{1}{M}
+\sum_{m=1}^{M}
+V^{(m)}
+\]</span></p>
+<p>というMonte Carlo Averageを微分する。</p>
+<p>条件が整えば、</p>
+<p><span class="math display">\[
+\frac{\partial}{\partial x}
+E
+\left[
+V(x,Z)
+\right]
+=
+E
+\left[
+\frac{\partial V(x,Z)}
+{\partial x}
+\right]
+\]</span></p>
+<p>と考えることができる。</p>
+<p>つまり各PathのPricing Calculationを微分可能に構成すれば、 そのAverageであるMonte Carlo Priceについても Automatic Differentiationを適用できる。</p>
+<p>この考え方が、</p>
+<p><span class="math display">\[
+\boxed{
+Monte\ Carlo
++
+Automatic\ Differentiation
+}
+\]</span></p>
+<p>を結び付ける。</p>
+</section>
+<section id="iii-7.18-gpuへの拡張" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.18-gpuへの拡張">III-7.18 GPUへの拡張</h2>
+<p>第III-1章で確認したように、 Monte CarloはGPUと相性が良い。</p>
+<p>本章の実装でも、</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>z</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>は、</p>
+<p><span class="math display">\[
+M\times n
+\]</span></p>
+<p>のTensorであり、 FX Path全体をLoopではなくTensor演算として計算している。</p>
+<p>したがって計算デバイスをGPUへ移せる環境では、</p>
+<p><span class="math display">\[
+\boxed{
+Monte\ Carlo
++
+GPU
++
+Automatic\ Differentiation
+}
+\]</span></p>
+<p>という組み合わせが可能になる。</p>
+<p>ここで重要なのは、 GPUによるHardware Accelerationと、 Automatic DifferentiationによるAlgorithmic Accelerationが 同じTensor計算基盤の上で共存できることである。</p>
+</section>
+<section id="iii-7.19-aadとして見る金利為替系デリバティブ-risk" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.19-aadとして見る金利為替系デリバティブ-risk">III-7.19 AADとして見る金利為替系デリバティブ Risk</h2>
+<p>PRDCのPricing Graphをもう一度整理する。</p>
+<pre class="text"><code>FX Spot -----------+
+JPY Curve ---------+----&gt; FX Paths ----&gt; Coupons ----+
+Foreign Curve -----+                                 |
+FX Vol ------------+                                 v
+JPY Curve --------------------&gt; Discount Factors -&gt; PRDC NPV
+                                                      |
+                                                      | Reverse Mode / AAD
+                                                      v
+                                  +-------------------+-------------------+
+                                  |                   |                   |
+                              FX Delta           JPY DV01          Foreign DV01
+                                  |                                       |
+                                  +---------------- FX Vega ---------------+</code></pre>
+<p>Forward計算では、</p>
+<p><span class="math display">\[
+\text{Risk Factors}
+\longrightarrow
+\text{PRDC NPV}
+\]</span></p>
+<p>を求める。</p>
+<p>Reverse計算では、</p>
+<p><span class="math display">\[
+\text{PRDC NPV}
+\longrightarrow
+\text{Risk Factors}
+\]</span></p>
+<p>へ勾配を伝播する。</p>
+<p>このForwardとReverseの組み合わせが、 PRDCをDifferentiable Pricing Modelとして扱うという意味である。</p>
+</section>
+<section id="iii-7.20-第iii部を通したリスク計測の拡張" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.20-第iii部を通したリスク計測の拡張">III-7.20 第III部を通したリスク計測の拡張</h2>
+<p>第III部で扱った商品を並べると、 自動微分の役割が明確になる。</p>
+<section id="iii-7.20.1-option" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.20.1-option">III-7.20.1 Option</h3>
+<p><span class="math display">\[
+V
+=
+V(S,\sigma,T)
+\]</span></p>
+<p><span class="math display">\[
+\Downarrow
+\]</span></p>
+<p><span class="math display">\[
+\Delta,\quad
+\Gamma,\quad
+Vega,\quad
+Theta
+\]</span></p>
+</section>
+<section id="iii-7.20.2-interest-rate" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.20.2-interest-rate">III-7.20.2 Interest Rate</h3>
+<p><span class="math display">\[
+V
+=
+V(r_1,r_2,\ldots,r_n)
+\]</span></p>
+<p><span class="math display">\[
+\Downarrow
+\]</span></p>
+<p><span class="math display">\[
+DV01,\quad
+Bucketed\ DV01,\quad
+GPS
+\]</span></p>
+</section>
+<section id="iii-7.20.3-金利為替系デリバティブ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.20.3-金利為替系デリバティブ">III-7.20.3 金利為替系デリバティブ</h3>
+<p><span class="math display">\[
+V
+=
+V
+\left(
+S_{FX},
+\mathbf r_{JPY},
+\mathbf r_{Foreign},
+\sigma_{FX}
+\right)
+\]</span></p>
+<p><span class="math display">\[
+\Downarrow
+\]</span></p>
+<p><span class="math display">\[
+\boxed{
+\Delta_{FX},
+\quad
+\mathbf{DV01}_{JPY},
+\quad
+\mathbf{DV01}_{Foreign},
+\quad
+Vega_{FX}
+}
+\]</span></p>
+<p>つまり、商品が複雑になっても基本的な数学は変わらない。</p>
+<p><span class="math display">\[
+\boxed{
+\text{Risk}
+=
+\text{Derivative of Price}
+}
+\]</span></p>
+<p>である。</p>
+<p>変わるのは、価格関数を構成するComputational Graphの規模である。</p>
+</section>
+</section>
+<section id="iii-7.21-まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.21-まとめ">III-7.21 まとめ</h2>
+<p>本章では、PRDCを題材として、FX Spot、JPY Curve、Foreign Curve、FX Volatilityを同時に持つ多因子Monte Carlo PricingをRの<code>torch</code>で構成した。Pricing FunctionをTensor演算だけで接続することで、Monte Carlo Path生成、Coupon計算、Discounting、NPVまでを一つのDifferentiable Computational Graphとして扱うことができた。</p>
+<p>その結果、一度のForward PricingとReverse Passから、</p>
+<p><span class="math display">\[
+\boxed{
+\nabla V
+=
+\left(
+\Delta_{FX},
+\mathbf{DV01}_{JPY},
+\mathbf{DV01}_{Foreign},
+Vega_{FX}
+\right)
+}
+\]</span></p>
+<p>を取得した。ここで重要なのは、Risk FactorごとにPricing Engineを何度も呼び出すBump &amp; Revalueから、<strong>Pricing GraphそのものがRiskを生成する構造</strong>へ移行したことである。</p>
+<p>第III部全体を振り返ると、前半では<code>future</code> / <code>furrr</code>を中心にTaskを分割し、複数Core・複数Worker・分散環境へ計算を配布する方法を扱った。これは計算資源を増やすことによる<strong>Hardware / Infrastructure Acceleration</strong>である。後半では<code>torch</code>を用いて、価格計算にReverse-mode Automatic Differentiationを組み込み、感応度計算の方法そのものを変えた。これは<strong>Algorithmic Acceleration</strong>である。</p>
+<p>したがって、第III部の到達点は単なるParallel Computingでも、Automatic Differentiationの数式例でもない。大量のPricingを柔軟な計算資源へ配布し、そのPricing Graphから多数のRisk Sensitivityを同時に生成できる計算基盤である。</p>
+<p><span class="math display">\[
+\boxed{
+\text{Scale Up / Scale Out}
++
+\text{Automatic Differentiation}
+=
+\text{Enterprise Differentiable Risk Engine}
+}
+\]</span></p>
+<p>これが、非同期並列化と自動微分を組み合わせたクオンツのエンタープライズ実装である。</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="pagination-link" aria-label="第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

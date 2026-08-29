@@ -1,7 +1,0 @@
-# Chapter 3: Financial Data
-
-This chapter will contain R code translated from the original Python notebook.
-
-```{r}
-library(tidyverse)
-

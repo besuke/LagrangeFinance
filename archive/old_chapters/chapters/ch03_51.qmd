@@ -1,9 +1,0 @@
-# Chapter 03
-
-```{r}
-#| message: false
-#| warning: false
-# ch03_51: tidyverseのインストール
-
-install.packages("tidyverse")
-```
