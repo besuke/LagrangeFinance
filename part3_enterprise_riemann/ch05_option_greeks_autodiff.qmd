@@ -132,7 +132,7 @@ tbl_gaussquant_greeks
 
 ここで得られる値を、本章におけるBenchmarkとする。
 
-## III-5.3 モンテカルロによるOption Pricing
+## III-5.3 微分可能なモンテカルロ評価
 
 Risk-Neutral Measureの下で、配当利回り$q$を持つ株価過程を、
 
@@ -193,7 +193,7 @@ $$
 
 となる。
 
-## III-5.4 Common Random Numbers
+### III-5.3.1 共通乱数
 
 GaussQuantとの比較や感応度の検算では、Monte Carlo Noiseをできるだけ抑える必要がある。
 
@@ -214,7 +214,7 @@ z_t <- torch_randn(
 乱数$Z$は市場リスクファクターではないため、
 `requires_grad = TRUE`は指定しない。
 
-## III-5.5 微分可能なモンテカルロ Pricing
+### III-5.3.2 微分可能なプライシング
 
 Monte Carlo PricingをTensor演算だけで構成する。
 
@@ -265,7 +265,7 @@ $$
 からTerminal Spot、Payoff、Discounting、Monte Carlo Averageまでが
 一つのComputational Graphとして接続される。
 
-## III-5.6 torch Tensorの設定
+### III-5.3.3 torchテンソルの設定
 
 微分対象となる市場変数をTensorとして定義する。
 
@@ -301,7 +301,7 @@ maturity_t <- torch_tensor(
 )
 ```
 
-## III-5.7 モンテカルロ NPV
+### III-5.3.4 モンテカルロNPV
 
 同じ乱数を用いてMonte Carlo価格を計算する。
 
@@ -321,7 +321,7 @@ option_npv_mc_t <- european_call_mc_torch(
 option_npv_mc_t
 ```
 
-## III-5.8 Delta・Vega・Thetaの自動微分
+## III-5.4 一次グリークスの自動微分
 
 Monte Carlo価格を最終出力としてReverse Mode Automatic Differentiationを行う。
 
@@ -372,7 +372,7 @@ $$
 
 をMonte Carlo Pricing Graphから直接取得している。
 
-## III-5.9 GammaとペイオフのKink
+## III-5.5 ガンマと非滑らかなペイオフ
 
 Gammaには注意が必要である。
 
@@ -393,7 +393,7 @@ Monte Carlo Gammaを単純な二階ADだけで安定して推定することは�
 そこで本章ではGammaについて、Payoffを滑らかに近似した
 Smooth Payoffを用いて二階自動微分を確認する。
 
-## III-5.10 Smooth ペイオフによるGamma
+### III-5.5.1 平滑化ペイオフによるガンマ
 
 正の部分、
 
@@ -556,7 +556,7 @@ $$
 
 ただし、このGammaはSmooth Payoffによる近似値である点に注意する。
 
-## III-5.11 GaussQuantとモンテカルロ + torchの比較
+## III-5.6 GaussQuantとモンテカルロ・torchの比較
 
 Monte Carloの結果をまとめる。
 

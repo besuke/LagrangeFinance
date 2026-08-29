@@ -51,7 +51,7 @@ $$
 
 本章の目的は、単にPRDCのGreeksを計算することではない。**Monte Carlo PricingとRisk Calculationを別々の処理として繰り返すのではなく、PricingそのものからRiskを生成する**というDifferentiable Risk Engineの設計を示すことである。
 
-## III-7.1 金利為替系デリバティブと複数のリスクファクター
+## III-7.1 金利為替系デリバティブのモデル構造
 
 PRDCは、為替と複数通貨の金利を同時に扱うハイブリッド商品である。
 
@@ -110,7 +110,7 @@ Foreign Rateも、
 このような商品では、連鎖律をプログラム全体へ適用する
 Automatic Differentiationの考え方が特に重要になる。
 
-## III-7.2 本章で用いる簡略金利為替系デリバティブ
+### III-7.1.1 為替連動クーポン
 
 PRDCには多様なCoupon構造、Callable条件、Notional Exchange、
 Target Redemption、Barrierなどが存在する。
@@ -182,7 +182,7 @@ $$
 
 という計算グラフを微分可能な演算として構成することである。
 
-## III-7.3 FXのRisk-Neutral Dynamics
+### III-7.1.2 為替のリスク中立過程
 
 JPYをDomestic Currency、
 Foreign Currencyを外貨とする。
@@ -253,7 +253,7 @@ $$
 したがってPRDC価格を微分すると、
 CouponだけではなくFX Path生成まで連鎖律が伝播する。
 
-## III-7.4 モンテカルロ Pricing
+## III-7.2 多因子モンテカルロによる価格評価
 
 PRDCのMonte Carlo価格を、
 
@@ -315,7 +315,7 @@ JPY Curve ------------> Discount Factors
 
 となる。
 
-## III-7.5 計算条件
+### III-7.2.1 計算条件
 
 本章では5年間、年1回Couponを支払う簡略PRDCを考える。
 
@@ -352,7 +352,7 @@ tbl_prdc_curve <- tribble(
 tbl_prdc_curve
 ```
 
-## III-7.6 torchによるモンテカルロ Path生成
+### III-7.2.2 torchによる為替パス生成
 
 Monte Carloで使用する乱数を固定する。
 
@@ -429,7 +429,7 @@ dt_t <- torch_ones(
 )
 ```
 
-## III-7.7 微分可能な金利為替系デリバティブ Pricing Function
+### III-7.2.3 微分可能なプライシング関数
 
 PRDCのMonte Carlo Pricingを、
 Tensor演算だけで構成する。
@@ -525,7 +525,7 @@ prdc_price_torch <- function(
 したがって、最終的な`prdc_npv`から、
 入力された市場リスクファクターまで計算グラフが維持される。
 
-## III-7.8 金利為替系デリバティブ NPV
+### III-7.2.4 NPVの計算
 
 価格を計算する。
 
@@ -564,7 +564,7 @@ $$
 
 という多変数関数になっている。
 
-## III-7.9 一度のReverse Modeで複数リスクを取得する
+## III-7.3 自動微分による市場リスク計測
 
 Forward計算で得られたScalar NPVを出発点として、複数の市場入力へGradientを逆伝播させる。PRDCのように「多数入力・少数出力」となるPricingでは、Reverse Modeの利点が最も現れやすい。
 
@@ -614,7 +614,7 @@ $$
 
 である。
 
-## III-7.10 FX Delta
+### III-7.3.1 FXデルタ
 
 FX Deltaは、
 
@@ -642,7 +642,7 @@ FX Deltaの符号や大きさは大きく変化する。
 実際のPRDCではCurrency Pairの定義やCoupon Formulaによって
 感応度の符号は異なる。
 
-## III-7.11 JPY Curve Risk
+### III-7.3.2 円金利リスク
 
 JPY Curveの各Nodeに対する感応度は、
 
@@ -708,7 +708,7 @@ $$
 
 が連鎖律を通じて含まれる。
 
-## III-7.12 Foreign Curve Risk
+### III-7.3.3 外貨金利リスク
 
 Foreign Curveについても同様に、
 
@@ -765,7 +765,7 @@ $$
 
 という経路が存在する。
 
-## III-7.13 FX Vega
+### III-7.3.4 FXベガ
 
 FX Volatilityに対する感応度は、
 
@@ -816,7 +816,7 @@ FloorやCapへ到達するPathの割合も変化する。
 自動微分では、このPath生成からPayoffまでの連鎖を
 同じ計算グラフの中で扱う。
 
-## III-7.14 金利為替系デリバティブ Risk Summary
+### III-7.3.5 リスク集計
 
 主要なScalar Riskをまとめる。
 
@@ -881,7 +881,7 @@ $$
 
 を取得したことになる。
 
-## III-7.15 有限差分との検算
+## III-7.4 有限差分法による感応度の検証
 
 自動微分の結果を確認するため、
 FX DeltaをFinite Differenceで検算する。
@@ -964,7 +964,7 @@ tbl_fx_delta_check
 同じ乱数を用いることで、
 差分結果にMonte Carlo Noiseが混入することを抑えている。
 
-## III-7.16 Floor・キャップと微分可能性
+## III-7.5 非線形ペイオフと自動微分
 
 本章のCouponでは、
 
@@ -1010,7 +1010,7 @@ Exercise Decisionなど不連続性の強い商品では、
 「あらゆる金融商品をそのまま微分すればよい」
 という意味ではないことを示している。
 
-## III-7.17 モンテカルロと自動微分
+### III-7.5.1 モンテカルロと自動微分
 
 PRDCのような商品では、
 
@@ -1058,7 +1058,7 @@ $$
 
 を結び付ける。
 
-## III-7.18 GPUへの拡張
+## III-7.6 大規模リスク計測への展開
 
 第III-1章で確認したように、
 Monte CarloはGPUと相性が良い。
@@ -1097,7 +1097,7 @@ GPUによるHardware Accelerationと、
 Automatic DifferentiationによるAlgorithmic Accelerationが
 同じTensor計算基盤の上で共存できることである。
 
-## III-7.19 AADとして見る金利為替系デリバティブ Risk
+### III-7.6.1 AADによる統合リスク計測
 
 PRDCのPricing Graphをもう一度整理する。
 
@@ -1140,12 +1140,12 @@ $$
 このForwardとReverseの組み合わせが、
 PRDCをDifferentiable Pricing Modelとして扱うという意味である。
 
-## III-7.20 第III部を通したリスク計測の拡張
+### III-7.6.2 第III部を通したリスク計測の発展
 
 第III部で扱った商品を並べると、
 自動微分の役割が明確になる。
 
-### III-7.20.1 Option
+#### オプション
 
 $$
 V
@@ -1164,7 +1164,7 @@ Vega,\quad
 Theta
 $$
 
-### III-7.20.2 Interest Rate
+#### 金利商品
 
 $$
 V
@@ -1182,7 +1182,7 @@ Bucketed\ DV01,\quad
 GPS
 $$
 
-### III-7.20.3 金利為替系デリバティブ
+#### 金利為替系デリバティブ
 
 $$
 V
@@ -1226,7 +1226,7 @@ $$
 
 変わるのは、価格関数を構成するComputational Graphの規模である。
 
-## III-7.21 まとめ
+## III-7.7 まとめ
 
 本章では、PRDCを題材として、FX Spot、JPY Curve、Foreign Curve、FX Volatilityを同時に持つ多因子Monte Carlo PricingをRの`torch`で構成した。Pricing FunctionをTensor演算だけで接続することで、Monte Carlo Path生成、Coupon計算、Discounting、NPVまでを一つのDifferentiable Computational Graphとして扱うことができた。
 

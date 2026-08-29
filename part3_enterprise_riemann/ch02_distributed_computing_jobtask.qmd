@@ -72,7 +72,7 @@ calculate_task_result_LFL <- function(task_ID, input_value, worker_group) {
 }
 ```
 
-## III-2.2 Remote FunctionとWorker実行
+## III-2.2 リモート関数とワーカー実行
 
 ```{r}
 #| label: create-remote-request-table
@@ -130,7 +130,7 @@ tbl_remote_result <- tbl_remote_request |>
 show_table_LFL(tbl_remote_result)
 ```
 
-## III-2.3 Job QueueとScheduler
+## III-2.3 ジョブ・キューとスケジューラ
 
 ```{r}
 #| label: create-job-table
