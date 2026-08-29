@@ -15,7 +15,11 @@ execute:
 source(file.path("R", "utility_LFL.R"))
 ```
 
-第III-1章ではローカル並列計算、第III-2章では分散計算とJob / Task Controlを扱った。本章では、それらを金融リスク計算へ統合する。具体例としてPRDCを使い、Trade Data、Market Data、Calibration Data、Scenario Grid、Pricing Function、Risk Tableというエンタープライズ金融計算の基本構造を示す。
+第III-1章ではLocal Parallel Computing、第III-2章ではJob / Task Controlを含むDistributed Computingを扱った。本章では、それらを実際の金融リスク計算システムの形へ統合する。
+
+エンタープライズ金融計算では、Pricing Functionだけがシステムなのではない。Trade Data、Market Data、Calibration Data、Scenario、Calculation Configurationを分離して管理し、それらをTaskへ変換し、並列・分散実行し、最終的にRisk Tableへ集約する必要がある。
+
+本章ではPRDCを例に、**Data → Scenario → Task → Pricing → Risk → Output**という一連のPipelineをRで構築する。
 
 ```text
 Trade Data
@@ -38,7 +42,7 @@ Risk Table
 Aggregation / Report
 ```
 
-## PRDC取引・市場・計算条件
+## III-3.1 金利為替系デリバティブ取引・市場・計算条件
 
 ```{r}
 #| label: create-prdc-trade-data
@@ -74,7 +78,7 @@ show_table_LFL(tbl_prdc_calibration)
 show_table_LFL(tbl_prdc_calculation)
 ```
 
-## Scenario Pricing Function
+## III-3.2 Scenario Pricing Function
 
 本章では計算基盤に焦点を当てるため、Scenario Pricing Functionは軽量な代理モデルとして表現する。第II部で構築したPRDC Pricing Functionへ置き換えても、Task生成と並列実行の構造は変わらない。
 
@@ -110,7 +114,7 @@ price_prdc_scenario_LFL <- function(
 }
 ```
 
-## Scenario Grid
+## III-3.3 Scenario Grid
 
 ```{r}
 #| label: create-prdc-scenario-grid
@@ -134,7 +138,7 @@ show_table_LFL(
 )
 ```
 
-## 並列シナリオ計算
+## III-3.4 並列シナリオ計算
 
 ```{r}
 #| label: define-prdc-future-plan
@@ -150,8 +154,8 @@ future::plan(
 
 ```{r}
 #| label: calculate-prdc-scenarios-in-parallel
-#| warning: false
 
+#| warning: false
 tbl_prdc_scenario_result <- tbl_prdc_scenario |>
   mutate(
     result = furrr::future_pmap(
@@ -173,14 +177,18 @@ tbl_prdc_scenario_result <- tbl_prdc_scenario |>
       .options = furrr::furrr_options(seed = TRUE)
     )
   ) |>
-  select(
-    scenario_ID,
-    result
-  ) |>
+  select(scenario_ID, result) |>
   tidyr::unnest(result)
+
+future::plan(future::sequential)
+
+show_table_LFL(
+  tbl_prdc_scenario_result,
+  n = 10
+)
 ```
 
-## Risk Table
+## III-3.5 Risk Table
 
 ```{r}
 #| label: create-prdc-risk-table
@@ -227,10 +235,19 @@ prdc_risk_output_path <- write_derived_parquet_file_LFL(
   )
 )
 
-prdc_risk_output_path
+tbl_prdc_risk_output <- tibble(
+  file_path = file.path(
+    "data",
+    "derived",
+    "risk_system",
+    "prdc_risk_table.parquet"
+  )
+)
+
+show_table_LFL(tbl_prdc_risk_output)
 ```
 
-## 計算資源の拡張と残る問題
+## III-3.6 計算資源の拡張と残る問題
 
 ここまでの並列・分散計算は、Pricingを多数回実行することでリスクを求める設計である。計算資源を増やせば処理時間を短縮できるが、Risk Factorが増えるほどBump & RevalueのPricing回数が増えるという構造そのものは残る。
 
@@ -247,4 +264,6 @@ Faster Revaluation
 But still many Revaluations
 ```
 
-次章では、計算資源を増やすだけでなく、Pricing Programそのものを微分可能にするAutomatic Differentiationへ進む。ここが、Hardware AccelerationからAlgorithmic Accelerationへの転換点である。
+ここまでで、第III部前半のテーマである「計算を分割し、より多くの計算資源で処理する」構造が完成した。しかし、計算資源を増やしても、SensitivityのためにPricingそのものを繰り返す構造は残る。
+
+次章では発想を変え、Pricing Programそのものを微分可能なComputational Graphとして構築するAutomatic Differentiationへ進む。ここが、**Hardware / Infrastructure AccelerationからAlgorithmic Accelerationへの転換点**である。

@@ -1,15 +1,25 @@
 ---
-title: "第III-4章 自動微分とDifferentiable Pricing"
+title: "第III-4章 自動微分と微分可能なプライシング"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
 ---
 
-# 自動微分の数学と計算グラフ
+```{r}
+#| label: load-utility
+#| include: false
 
-前章では、金融工学の計算基盤が、解析解から数値計算、Monte Carlo、
-Grid Computing、Multi-core CPU、GPUへと発展してきた過程を整理した。
+source(file.path("R", "utility_LFL.R"))
+```
 
-計算資源の拡大は、大規模な価格評価やリスク計測を可能にした一方で、
-Greeksを有限差分によって求める場合には、リスクファクターごとに価格を再計算する必要がある。
-リスクファクターの数が増えるほど、このBump & Revalueの計算負荷は大きくなる。
+第III-1章から第III-3章では、金融計算をTaskへ分割し、Parallel / Distributed Computingによって大量のPricingを処理する仕組みを構築した。これは計算資源を増やすことで処理時間を短縮する方法である。
+
+しかしGreeksやCurve Riskを有限差分で求める場合、Risk Factorごとに価格を再計算する必要がある。WorkerやGPUを増やせば一回ごとの再評価は速くなるが、Bump & Revalueが必要とするPricing回数そのものは減らない。
+
+そこで本章から、計算資源の拡張ではなく**計算方法そのものを変える**方向へ進む。
 
 Automatic Differentiation（自動微分）は、この問題に対して、
 価格計算そのものを微分可能な計算グラフとして扱う。
@@ -18,7 +28,7 @@ Automatic Differentiation（自動微分）は、この問題に対して、
 有限差分、連鎖律、Computational Graph、Forward Mode、Reverse Modeを順に確認する。
 最後にRの`torch`を用いて、自動微分の最小例を実装する。
 
-## 金融リスク感応度と偏微分
+## III-4.1 金融リスク感応度と偏微分
 
 金融商品の価格を、複数の市場変数に依存する関数として
 
@@ -81,7 +91,7 @@ $$
 このように、金融リスク計測の多くは、
 価格関数の一次または二次の微分を求める問題として整理できる。
 
-## 有限差分とBump & Revalue
+## III-4.2 有限差分とバンプ・アンド・リバリュー
 
 最も直接的な感応度計算の一つが有限差分である。
 
@@ -142,7 +152,7 @@ $$
 
 という性質を持つ。
 
-## 自動微分は数値微分でも記号微分でもない
+## III-4.3 自動微分は数値微分でも記号微分でもない
 
 自動微分は有限差分による数値微分とは異なる。
 
@@ -195,7 +205,7 @@ $$
 
 である。
 
-## 連鎖律
+## III-4.4 連鎖律
 
 自動微分を理解するうえで最も重要な数学が連鎖律である。
 
@@ -274,7 +284,7 @@ $$
 この連鎖律をプログラムの計算過程全体に適用することが、
 Automatic Differentiationの基本的な考え方である。
 
-## Computational Graph
+## III-4.5 Computational Graph
 
 プログラムによる計算を、変数と演算の関係として表したものを
 Computational Graphと呼ぶ。
@@ -330,7 +340,7 @@ $$
 この「計算を行った経路を逆向きにたどる」という考え方が、
 Reverse Modeの直感的な理解につながる。
 
-## Forward Mode Automatic Differentiation
+## III-4.6 フォワード Mode 自動微分
 
 Forward Modeでは、入力側から出力側へ向かって、
 値と同時に微分値を伝播させる。
@@ -375,7 +385,7 @@ $$
 
 Forward Modeは、入力変数が少なく出力変数が多い問題に適している。
 
-## Reverse Mode Automatic Differentiation
+## III-4.7 Reverse Mode 自動微分
 
 Reverse Modeでは、まず通常どおりForward計算を行い、
 最終出力を求める。
@@ -430,7 +440,7 @@ $$
 
 という構造を持つ金融計算では、Reverse Modeが特に重要となる。
 
-## AADと金融工学
+## III-4.8 AADと金融工学
 
 金融分野では、Reverse Mode Automatic Differentiationを
 Adjoint Algorithmic Differentiation（AAD）という名称で扱うことが多い。
@@ -474,7 +484,7 @@ dV/dx1 dV/dx2 ... dV/dxn
 重要なのは、AADがより高速なCPUを用いるという話ではなく、
 リスク計算のアルゴリズムそのものを変更するという点である。
 
-## R torchによる最小の自動微分
+## III-4.9 R torchによる最小の自動微分
 
 ここから、Rの`torch`を使って実際に自動微分を確認する。
 
@@ -553,7 +563,7 @@ $$
 実際に実行されたTensor演算からComputational Graphを構築し、
 そのグラフに対して連鎖律を逆方向に適用している。
 
-## 二変数関数のGradient
+## III-4.10 二変数関数のGradient
 
 次に、
 
@@ -607,13 +617,13 @@ value <- x^2 + x * y + y^2
 
 value$backward()
 
-gradient_result <- tribble(
+tbl_gradient_result <- tribble(
   ~variable, ~autograd,
   "x", x$grad$item(),
   "y", y$grad$item()
 )
 
-gradient_result
+tbl_gradient_result
 ```
 
 この例では、一つのScalar出力`value`から、
@@ -641,7 +651,7 @@ $$
 
 を求める構造と同じである。
 
-## 金融リスク計測への接続
+## III-4.11 金融リスク計測への接続
 
 ここまでの内容を金融工学へ置き換えると、
 
@@ -713,7 +723,7 @@ $$
 
 という複数のリスクファクターを持つ商品へ適用する。
 
-## まとめ
+## III-4.12 まとめ
 
 本章では、自動微分の数学的な基礎を整理した。
 
@@ -768,8 +778,7 @@ x$grad
 
 によって入力変数に対するGradientを取得できる。
 
-次章ではBlack-Scholes Optionを題材として、
-解析的Greeks、有限差分、自動微分を比較し、
+次章ではEuropean Optionを題材として、GaussQuantによる基準値とMonte Carlo + `torch`を比較し、
 
 $$
 \Delta,\quad

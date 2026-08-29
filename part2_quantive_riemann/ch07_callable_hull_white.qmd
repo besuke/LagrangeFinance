@@ -1,5 +1,5 @@
 ---
-title: "第II-7章 金利期間構造モデル Early Termination債評価"
+title: "第II-7章 金利期間構造モデルと期限前償還債評価"
 execute:
   eval: true
   echo: true
@@ -64,9 +64,9 @@ suppressPackageStartupMessages({
 })
 ```
 
-## 7.1 Hull–Whiteモデルと債券条件
+## II-7.1 ハル–ホワイトモデルと債券条件
 
-### 7.1.1 Hull–White 1-factorモデル
+### II-7.1.1 ハル–ホワイト 1-factorモデル
 
 Hull–Whiteモデルでは、短期金利 $r_t$ を次のGaussian過程で表す。
 
@@ -104,7 +104,7 @@ $$
 
 Hull–WhiteモデルはGaussianモデルであるため、短期金利が負になる可能性を持つ。前章までのNormalモデルと同様、ゼロ金利近傍を扱いやすい一方、極端な負の金利も理論上許容する。
 
-### 7.1.2 債券条件
+### II-7.1.2 債券条件
 
 5年満期、年率3%、半年払いの固定利付債を考える。市場利回りも3%とし、オプションを含まないBullet Bondの価格がおおむね額面付近となる条件を設定する。
 
@@ -150,7 +150,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### 7.1.3 Bullet Bond
+### II-7.1.3 Bullet Bond
 
 クーポンスケジュールを作成し、コール条項を含まない固定利付債を評価する。
 
@@ -213,7 +213,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### 7.1.4 初期カーブとHull–Whiteモデル
+### II-7.1.4 初期カーブとハル–ホワイトモデル
 
 Callable BondとSwaptionを同じ初期カーブとHull–Whiteパラメータで評価する。
 
@@ -256,9 +256,9 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 7.2 Callable Bondの構築とTree評価
+## II-7.2 Callable Bondの構築とツリー評価
 
-### 7.2.1 コールスケジュール
+### II-7.2.1 コールスケジュール
 
 スケジュールには発行日と満期日も含まれる。最初の2クーポン期間をノンコールとし、満期日を除く残りのクーポン日をコール可能日とする。
 
@@ -296,7 +296,7 @@ GaussQuant::show_tbl_GQH(
 ```
 
 
-### 7.2.2 Callable BondのTree評価
+### II-7.2.2 Callable Bondのツリー評価
 
 Callable Bondを作成し、Hull–Whiteモデルに基づく金利TreeをPricing Engineとして設定する。
 
@@ -357,7 +357,7 @@ GaussQuant::show_tbl_GQH(
 
 Callable Bond価格がBullet Bond価格を下回る差額は、投資家が発行体へ与えている期限前償還権の価値と解釈できる。
 
-## 7.3 Hull–Whiteパラメータ感応度
+## II-7.3 ハル–ホワイトパラメータ感応度
 
 短期金利のボラティリティが高いほど、将来金利が大きく低下する可能性も高くなる。したがって、発行体のコール権は一般に高くなり、Callable Bond価格は低下する。
 
@@ -423,7 +423,7 @@ GaussQuant::show_tbl_GQH(
 
 パラメータ感応度は他の条件を固定した比較である。市場カリブレーション後のパラメータは互いに独立ではないため、実務上のリスク分析ではカーブとボラティリティ市場を同時に考慮する必要がある。
 
-## 7.4 Bermudan Receiver Swaptionとの比較
+## II-7.4 Bermudan Receiver スワップションとの比較
 
 発行体が債券をコールする誘因は、市場金利がクーポン金利を下回ったときに強くなる。これは固定金利を受け取るReceiver Swapの価値が、金利低下時に上昇する性質と対応する。
 
@@ -509,9 +509,9 @@ Callable BondとBermudan Receiver Swaptionは、同じHull–Whiteモデルと�
 
 したがって、`pricing_difference`が厳密にゼロとなることは要求しない。この比較の目的は、Callable Bondに埋め込まれた金利低下時のオプション価値を、Receiver Swaptionとの関係から理解することである。
 
-## 7.5 VasicekモデルとHull–Whiteモデル
+## II-7.5 Vasicekモデルとハル–ホワイトモデル
 
-### 7.5.1 Vasicekモデルとの違い
+### II-7.5.1 Vasicekモデルとの違い
 
 Vasicekモデルは、短期金利が一定の長期平均へ回帰するGaussianモデルである。
 
@@ -537,7 +537,7 @@ Hull–WhiteモデルもGaussian平均回帰モデルであるが、時間依存
 
 Vasicekモデルは金利期間構造の長期的な形状をモデルパラメータから生成する。Hull–Whiteモデルは、観測カーブを出発点として、その周りの確率的変動を表現する。
 
-### 7.5.2 VasicekとHull–Whiteのゼロ金利曲線
+### II-7.5.2 Vasicekとハル–ホワイトのゼロ金利曲線
 
 Vasicekでは初期短期金利を変えると、モデルが生成する期間構造全体が変化する。Hull–Whiteでは状態変数がゼロであれば初期カーブを再現し、状態変数のショックが平均回帰しながら期間構造へ影響する。
 
@@ -645,24 +645,22 @@ short_rate_curve_plot <- ggplot2::ggplot(
     x = "Residual maturity (years)",
     y = "Continuously compounded zero rate",
     linetype = "Scenario"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   short_rate_curve_tbl,
   "Short-rate model zero-rate curves",
   n = 30
 )
-
-print(short_rate_curve_plot)
+show_plot_LFL(short_rate_curve_plot)
 ```
 
 Hull–Whiteの`base curve`が初期フラットカーブ付近に位置することが、初期期間構造へ適合する性質を表している。状態変数のショックは短期側で大きく、満期が長くなるほど平均回帰によって影響が小さくなる。
 
 
-## 7.6 カリブレーションと数値検証
+## II-7.6 カリブレーションと数値検証
 
-### 7.6.1 Hull–Whiteモデルのカリブレーション
+### II-7.6.1 ハル–ホワイトモデルのカリブレーション
 
 Hull–Whiteモデルのパラメータ $a$ と $\sigma$ は、Swaption市場の価格またはインプライド・ボラティリティへ適合させる。
 
@@ -670,7 +668,7 @@ Hull–Whiteモデルのパラメータ $a$ と $\sigma$ は、Swaption市場の
 
 単一の市場商品から $a$ と $\sigma$ の双方を安定して識別することはできない。複数満期のSwaptionを利用する場合には、複数のCalibration Helperを同時に用いて両パラメータを推定する。
 
-### 7.6.2 1Y×5Y ATM Swap
+### II-7.6.2 1Y×5Y ATM Swap
 
 ```{r chapter07-calibration-swap}
 GaussQuant::set_eval_date_GQL(trade_date)
@@ -747,7 +745,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### 7.6.3 One-helper calibration
+### II-7.6.3 One-helper calibration
 
 ```{r chapter07-one-helper-calibration}
 market_normal_volatility <- 36.06 / 10000
@@ -848,7 +846,7 @@ GaussQuant::show_tbl_GQH(
 
 `c(TRUE, FALSE)`は、最初のパラメータ $a$ を固定し、2番目のパラメータ $\sigma$ だけを最適化する指定である。
 
-### 7.6.4 European SwaptionのEngine比較
+### II-7.6.4 ヨーロピアン スワップションのEngine比較
 
 カリブレーションに用いた1Y×5Y ATM Swapを原資産とするEuropean Payer Swaptionを作成し、次の3つの方法で評価する。
 
@@ -942,7 +940,7 @@ GaussQuant::show_tbl_GQH(
 
 カリブレーション対象と同じATM Swaptionであるため、Hull–White価格とBachelier市場価格は近い値になることが期待される。Jamshidianと十分に細かいTreeの差は、主にTree離散化誤差を表す。
 
-### 7.6.5 Tree stepの収束
+### II-7.6.5 ツリー stepの収束
 
 Hull–White Treeでは、時間軸と金利状態を有限個のnodeへ離散化する。Tree stepが少ない場合、金利分布とオプションPayoffの非線形性を粗くしか表現できない。
 
@@ -1008,21 +1006,19 @@ tree_convergence_plot <- ggplot2::ggplot(
     subtitle = "Dashed line: Jamshidian price",
     x = "Tree steps",
     y = "Swaption NPV"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   tree_convergence_tbl,
   "Hull-White tree convergence",
   n = 20
 )
-
-print(tree_convergence_plot)
+show_plot_LFL(tree_convergence_plot)
 ```
 
 Tree stepを増やすほど、Tree価格がJamshidian価格へ近づくことを確認する。Bermudan SwaptionやCallable Bondには一般的なJamshidian解析解を利用できないため、European SwaptionでTree精度を検証してから、早期行使商品へ同じTree設定を適用することが重要である。
 
-## 7.7 まとめ
+## II-7.7 まとめ
 
 Callable Bondは、Bullet Bondから発行体の期限前償還権を差し引いた商品として理解できる。金利が低下すると発行体のコール権は価値を持ち、投資家が保有するCallable Bondの価格上昇は抑制される。
 

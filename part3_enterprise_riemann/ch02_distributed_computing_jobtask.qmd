@@ -1,5 +1,5 @@
 ---
-title: "第III-2章 分散コンピューティングとJob / Task Control"
+title: "第III-2章 分散コンピューティングとジョブ・タスク制御"
 execute:
   eval: true
   echo: true
@@ -15,7 +15,9 @@ execute:
 source(file.path("R", "utility_LFL.R"))
 ```
 
-第III-1章では、一台のコンピュータ上で`future` / `furrr`を利用して金融計算を並列化した。本章では、その構造を複数の計算資源へ拡張し、Task、Job Queue、Scheduler、Workerという分散計算の基本構造を整理する。
+第III-1章では、金融工学と計算技術の発展を振り返り、一台のPC上で`future` / `furrr`を利用する並列計算を実装した。そこで使える計算資源は、あくまで一台のMachineに搭載されたCPU CoreとMemoryの範囲に限られる。
+
+実務のRisk Calculationでは、Trade、Scenario、Monte Carlo Pathを多数の独立Taskへ分割し、それらを複数の計算資源へ配布する必要がある。本章では、PC内のParallel Computingから一段進み、**Task生成 → Job Queue → Scheduler → Worker → Result Aggregation**という分散コンピューティングの基本構造をRで表現する。
 
 ```text
 Input Data
@@ -39,7 +41,7 @@ Scheduler
 Result Aggregation
 ```
 
-## 分散計算の基本構造
+## III-2.1 分散計算の基本構造
 
 ```{r}
 #| label: create-distributed-task-table
@@ -70,7 +72,7 @@ calculate_task_result_LFL <- function(task_ID, input_value, worker_group) {
 }
 ```
 
-## Remote Function
+## III-2.2 Remote FunctionとWorker実行
 
 ```{r}
 #| label: create-remote-request-table
@@ -128,7 +130,7 @@ tbl_remote_result <- tbl_remote_request |>
 show_table_LFL(tbl_remote_result)
 ```
 
-## Job QueueとScheduler
+## III-2.3 Job QueueとScheduler
 
 ```{r}
 #| label: create-job-table
@@ -166,7 +168,7 @@ show_table_LFL(tbl_job_status)
 
 SlurmのようなSchedulerでは、TaskをJobとして登録し、利用可能なWorkerへ割り当てる。R側のPricing Functionは可能な限り変更せず、「どこで実行するか」を実行基盤側へ分離することが重要である。
 
-## 分散システムのデータ設計
+## III-2.4 分散システムのデータ設計
 
 ```{r}
 #| label: create-distributed-data-model
@@ -236,9 +238,21 @@ vec_distributed_paths <- tbl_distributed_files |>
     }
   )
 
-vec_distributed_paths
+tbl_distributed_paths <- tibble(
+  data_name = names(vec_distributed_paths),
+  file_path = file.path(
+    "data",
+    "derived",
+    "distributed",
+    paste0(names(vec_distributed_paths), ".parquet")
+  )
+)
+
+show_table_LFL(tbl_distributed_paths)
 ```
 
-## まとめ
+## III-2.5 まとめ
 
-並列計算では一台のマシン内部で計算を分割した。分散計算では、TaskをJobとして管理し、Schedulerを介して複数のWorkerへ配布する。次章では、この計算基盤の上に、Portfolio・Scenario・Pricing・Risk Aggregationを組み合わせたエンタープライズ金融計算システムを構築する。
+本章では、一台のMachine内部の並列化から、複数の計算資源を前提とする分散処理へ考え方を拡張した。重要なのは、計算関数そのものよりも、TaskをJobとして管理し、Queueへ投入し、SchedulerがWorkerへ配布し、結果を再び集約するというControl Planeである。
+
+この構造があれば、Workerの実体はLocal Process、別Server、Container、Cloud Batch、HPC Clusterへ置き換えることができる。次章では、この計算基盤の上にTrade Data、Market Data、Calibration、Scenario、Pricing、Risk Aggregationを統合し、エンタープライズ金融計算システムとして組み立てる。

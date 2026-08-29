@@ -1,11 +1,21 @@
 ---
-title: "第III-6章 金利リスク：DV01からCurve Gradientへ"
+title: "第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
 ---
 
-# 金利リスクと自動微分
+```{r}
+#| label: load-utility
+#| include: false
 
-前章では、Black-Scholes Optionを題材として、
-Delta、Gamma、Vega、Thetaを解析解、有限差分、自動微分によって計算した。
+source(file.path("R", "utility_LFL.R"))
+```
+
+前章では、European OptionをGaussQuantとMonte Carlo + `torch`で評価し、Delta、Gamma、Vega、ThetaをAutomatic Differentiationから取得した。OptionではRisk Factorの数が比較的少なかったが、金利商品ではYield Curve上の多数のNodeが同時に価格へ影響する。
 
 本章では、自動微分を金利商品へ拡張する。
 
@@ -66,7 +76,7 @@ $$
 
 という流れを、自動微分によって統一的に捉える。
 
-## 金利商品の現在価値
+## III-6.1 金利商品の現在価値
 
 将来キャッシュフロー$CF_i$の現在価値は、
 
@@ -121,7 +131,7 @@ $$
 これは、金利リスクが単なるDiscounting Riskではなく、
 Projected Cash Flowの変化も含むことを意味する。
 
-## Fixed Leg
+## III-6.2 Fixed Leg
 
 元本$N$、固定金利$K$、Accrual Factor $\alpha_i$とすると、
 固定レッグのキャッシュフローは、
@@ -162,7 +172,7 @@ $$
 金利が上昇すると割引係数が低下するため、
 Fixed Legの現在価値は低下する。
 
-## Floating Leg
+## III-6.3 Floating Leg
 
 本章では、自動微分の仕組みを明確にするため、
 Floating Couponを単純化して、
@@ -228,7 +238,7 @@ $$
 
 の両方が金利感応度に含まれる。
 
-## Swap NPV
+## III-6.4 Swap NPV
 
 Receive Float / Pay Fixed Swapを考える。
 
@@ -256,7 +266,7 @@ $$
 
 となる。
 
-## DV01
+## III-6.5 金利感応度
 
 DV01は、金利が1bp変化したときの価格変化を表す。
 
@@ -291,13 +301,13 @@ $$
 
 をsigned DV01として扱う。
 
-## torchによるSwap評価
+## III-6.6 torchによるSwap評価
 
 まず計算条件を設定する。
 
 ```{r}
 #| label: interest-rate-risk-01
-swap_input <- tribble(
+tbl_swap_input <- tribble(
   ~parameter, ~value,
   "notional",   100000000,
   "fixed_rate", 0.0200,
@@ -305,7 +315,7 @@ swap_input <- tribble(
   "years",      5
 )
 
-swap_input
+tbl_swap_input
 ```
 
 半年ごとの支払いを想定する。
@@ -408,7 +418,7 @@ swap_npv
 
 となる。
 
-## 自動微分によるDV01
+## III-6.7 自動微分による金利感応度
 
 価格に対して`backward()`を実行する。
 
@@ -431,14 +441,14 @@ $$
 
 ```{r}
 #| label: interest-rate-risk-09
-swap_result <- tribble(
+tbl_swap_result <- tribble(
   ~metric, ~value,
   "npv",   swap_npv$item(),
   "dV_dr", rate$grad$item(),
   "dv01",  rate$grad$item() * 1e-4
 )
 
-swap_result
+tbl_swap_result
 ```
 
 ここで実行していることは、
@@ -463,7 +473,7 @@ rate
 
 というComputational Graphを逆向きにたどることである。
 
-## 有限差分との比較
+## III-6.8 有限差分との比較
 
 同じSwap価格を通常のR関数として定義する。
 
@@ -550,18 +560,22 @@ fd_dv_dr <- (
 fd_dv01_central <- fd_dv_dr *
   1e-4
 
-tribble(
+tbl_dv01_comparison <- tbl_dv01_comparison <- tribble(
   ~method, ~dv01,
   "Forward bump", fd_dv01,
   "Central difference", fd_dv01_central,
   "Automatic differentiation", rate$grad$item() * 1e-4
 )
+
+tbl_dv01_comparison
+
+tbl_dv01_comparison
 ```
 
 有限差分では価格を複数回評価する必要があるのに対し、
 自動微分では構築された計算グラフを利用して感応度を得る。
 
-## フラット金利からYield Curveへ
+## III-6.9 フラット金利からYield Curveへ
 
 実際の金利市場では、単一の金利$r$ではなく、
 満期ごとに異なる金利を持つ。
@@ -620,13 +634,13 @@ $$
 
 これがBucketed DV01やPoint Sensitivityの基本になる。
 
-## Curve NodeをTensorとして持つ
+## III-6.10 Curve NodeをTensorとして持つ
 
 単純化したZero Curveを考える。
 
 ```{r}
 #| label: interest-rate-risk-13
-curve_tbl <- tribble(
+tbl_curve <- tribble(
   ~tenor, ~rate,
   0.5, 0.0180,
   1.0, 0.0190,
@@ -635,7 +649,7 @@ curve_tbl <- tribble(
   5.0, 0.0250
 )
 
-curve_tbl
+tbl_curve
 ```
 
 Curve Rate全体を一つのTensorとして定義する。
@@ -643,12 +657,12 @@ Curve Rate全体を一つのTensorとして定義する。
 ```{r}
 #| label: interest-rate-risk-14
 curve_rate <- torch_tensor(
-  curve_tbl$rate,
+  tbl_curve$rate,
   requires_grad = TRUE
 )
 
 curve_time <- torch_tensor(
-  curve_tbl$tenor
+  tbl_curve$tenor
 )
 ```
 
@@ -709,19 +723,19 @@ $$
 
 ```{r}
 #| label: interest-rate-risk-18
-bucketed_dv01 <- tibble(
-  tenor = curve_tbl$tenor,
-  rate = curve_tbl$rate,
+tbl_bucketed_dv01 <- tibble(
+  tenor = tbl_curve$tenor,
+  rate = tbl_curve$rate,
   sensitivity = as.numeric(
     curve_rate$grad
   ),
   dv01 = sensitivity * 1e-4
 )
 
-bucketed_dv01
+tbl_bucketed_dv01
 ```
 
-## GPSとしてのPoint Sensitivity
+## III-6.11 GPSとしてのPoint Sensitivity
 
 本章では、Yield Curve上の各Grid Pointに対する価格感応度を
 GPS（Grid Point Sensitivity）として扱う。
@@ -767,7 +781,7 @@ $$
 
 ```{r}
 #| label: interest-rate-risk-19
-gps_tbl <- bucketed_dv01 |>
+tbl_gps <- tbl_bucketed_dv01 |>
   transmute(
     tenor,
     grid_rate = rate,
@@ -775,7 +789,7 @@ gps_tbl <- bucketed_dv01 |>
     gps01 = dv01
   )
 
-gps_tbl
+tbl_gps
 ```
 
 この考え方によって、
@@ -800,21 +814,21 @@ $$
 
 へ拡張できる。
 
-## Total DV01とBucketed Risk
+## III-6.12 Total 金利感応度とBucketed Risk
 
 単純化された設定では、Bucketed DV01を合計することで、
 Curve全体を同時に1bp動かしたときの感応度に対応する量を得ることができる。
 
 ```{r}
 #| label: interest-rate-risk-20
-total_bucketed_dv01 <- bucketed_dv01 |>
+tbl_total_bucketed_dv01 <- tbl_bucketed_dv01 |>
   summarise(
     total_dv01 = sum(
       dv01
     )
   )
 
-total_bucketed_dv01
+tbl_total_bucketed_dv01
 ```
 
 ただし、実務ではCurve Construction、Interpolation、
@@ -832,7 +846,7 @@ $$
 重要なのは、各リスクファクターに対する局所感応度を
 Gradientとして保持することである。
 
-## Market QuoteからCurve Riskへ
+## III-6.13 Market QuoteからCurve Riskへ
 
 実務の金利リスクでは、直接Zero RateをBumpするだけでは不十分である。
 
@@ -921,7 +935,7 @@ $$
 この式は、金利リスク計測とAutomatic Differentiationをつなぐ
 重要な関係である。
 
-## Multi-Curveへの拡張
+## III-6.14 Multi-Curveへの拡張
 
 実際のSwapでは、Discount CurveとForward Curveを分離する
 Multi-Curve Frameworkが一般的である。
@@ -979,7 +993,7 @@ $$
 
 という複数のリスクファクターを同時に扱うためである。
 
-## 自動微分による金利リスク計測の意味
+## III-6.15 自動微分による金利リスク計測の意味
 
 有限差分によるBucketed Riskでは、
 Curve Nodeの数だけBump & Revalueを繰り返す必要がある。
@@ -1043,7 +1057,7 @@ $$
 
 への変換である。
 
-## まとめ
+## III-6.16 まとめ
 
 本章では、Option Greeksで確認した自動微分を
 金利商品へ拡張した。

@@ -51,17 +51,17 @@ $\beta=1$ は対数正規型に近く、$\beta=0$ はNormal型に近い。実務
 
 本章では、まずBlack volatilityのスマイルへSABRモデルを適合させる。次に各パラメータがスマイルの形状へ与える影響を確認する。最後に、負のStrikeを含むNormal volatilityの市場データに対してShifted SABRを適用する。
 
-## 6.1 SABRモデルとパラメータ
+## II-6.1 SABRモデルとパラメータ
 
-### 6.1.1 SABRパラメータの役割
+### II-6.1.1 SABRパラメータの役割
 
 SABRの各パラメータは完全に独立してスマイルを動かすわけではないが、主な役割は次のように整理できる。
 
-### 6.1.2 Alpha
+### II-6.1.2 Alpha
 
 $\alpha$ は初期ボラティリティ水準である。他の条件を固定して$\alpha$を上げると、スマイル全体が概ね上方へ移動する。
 
-### 6.1.3 Beta
+### II-6.1.3 Beta
 
 $\beta$ はフォワード水準に対する弾性を表す。
 
@@ -73,17 +73,17 @@ $$
 
 $\beta=1$ では変動幅がフォワード水準に比例し、Blackモデルに近い。$\beta=0$ では変動幅がフォワード水準に依存せず、Normalモデルに近い。
 
-### 6.1.4 Volatility of volatility
+### II-6.1.4 Volatility of volatility
 
 $\nu$ はvolatility of volatility、すなわちvol-of-volである。$\nu$が大きいほど、ボラティリティが将来大きく変化する可能性が高まり、一般にスマイルの曲率が強くなる。
 
 本章のコードでは、変数名として `volvol` を使用する。
 
-### 6.1.5 Rho
+### II-6.1.5 Rho
 
 $\rho$ はフォワード変化とボラティリティ変化の相関である。負の$\rho$は、フォワード低下時にボラティリティが上昇しやすい構造を表し、低Strike側のボラティリティを相対的に高くする。
 
-### 6.1.6 Hagan近似とカリブレーション
+### II-6.1.6 Hagan近似とカリブレーション
 
 SABRモデルの市場利用では、Haganらによる近似式を用いて、SABRパラメータからBlack volatilityまたはNormal volatilityを計算することが多い。
 
@@ -106,9 +106,9 @@ $$
 
 $\beta$を固定し、RMSEが最小となる $\alpha$、$\nu$、$\rho$ を数値的に求める。
 
-## 6.2 Black SABRのカリブレーション
+## II-6.2 Black SABRのカリブレーション
 
-### 6.2.1 市場データ
+### II-6.2.1 市場データ
 
 フォワードを0.56%、満期を2年、$\beta=0.5$とする。市場Black volatilityはStrikeごとに異なり、明確なスマイルを形成している。
 
@@ -164,7 +164,7 @@ GaussQuant::show_tbl_GQH(
 
 ATMに近いStrikeは0.56%であり、フォワード0.56%と一致する。ATM付近の水準は主に$\alpha$に影響し、両翼の形状が$\nu$と$\rho$の推定に影響する。
 
-### 6.2.2 パラメータ・カリブレーション
+### II-6.2.2 パラメータ・カリブレーション
 
 目的関数では、各StrikeにおけるQuantLibのSABR Black volatilityと市場Black volatilityのRMSEを計算する。
 
@@ -263,7 +263,7 @@ GaussQuant::show_tbl_GQH(
 
 `convergence_code`が0であれば、`optim()`は通常の収束条件を満たして終了している。RMSEは市場ボラティリティとモデル値の平均的な誤差を表す。
 
-### 6.2.3 ボラティリティ・スマイル
+### II-6.2.3 ボラティリティ・スマイル
 
 ```{r chapter06-black-smile}
 black_smile_tbl <- black_market_data |>
@@ -328,22 +328,20 @@ black_smile_plot <- ggplot2::ggplot(
     y = "Black volatility",
     linetype = "Series",
     shape = "Series"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   black_smile_tbl,
   "Black SABR smile table",
   n = 20
 )
-
-print(black_smile_plot)
+show_plot_LFL(black_smile_plot)
 ```
 
 SABRはすべての市場点を完全に通過する補間法ではなく、少数のパラメータでスマイル全体の形状を表現するモデルである。残差が完全にゼロでなくても、Strike方向に滑らかなボラティリティを与えられる点に意味がある。
 
 
-## 6.3 SABRパラメータの感応度
+## II-6.3 SABRパラメータの感応度
 
 推定結果を基準として、一つのパラメータだけを上下させた場合のスマイルを確認する。パラメータ間には相互作用があるため、これは厳密なリスク分解ではなく、形状を理解するための比較である。
 
@@ -480,21 +478,19 @@ sabr_sensitivity_plot <- ggplot2::ggplot(
     x = "Strike",
     y = "Black volatility",
     linetype = "Scenario"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   base_parameter_tbl,
   "SABR sensitivity settings",
   n = 20
 )
-
-print(sabr_sensitivity_plot)
+show_plot_LFL(sabr_sensitivity_plot)
 ```
 
 一般に、$\alpha$はスマイルの水準、$\nu$は曲率、$\rho$は傾きと左右非対称性に強く影響する。$\beta$も水準と傾きの双方へ影響するため、他のパラメータとの識別が難しい。このため、$\beta$を市場慣行や過去推定値に基づいて固定することが多い。
 
-## 6.4 Shifted SABRと負の金利
+## II-6.4 Shifted SABRと負の金利
 
 通常のBlack SABR近似では、フォワードとStrikeが正である必要がある。負の金利を含む市場では、フォワードとStrikeへ同じShift $s$ を加える。
 
@@ -516,9 +512,9 @@ Shift後の値が正であれば、対数やべき乗を含むSABR近似を適�
 
 Shiftは負の金利を消してしまう調整ではない。モデル計算上の座標を移動するだけであり、実際のStrikeとフォワードは元の水準のまま解釈する。
 
-## 6.5 Shifted SABR Normalのカリブレーション
+## II-6.5 Shifted SABR Normalのカリブレーション
 
-### 6.5.1 市場データ
+### II-6.5.1 市場データ
 
 フォワードを0.05%、満期を2年、$\beta=0.5$、Shiftを2.5%とする。市場データにはマイナス0.95%のStrikeが含まれる。
 
@@ -582,7 +578,7 @@ $$
 
 が必要である。本例の最小Strikeはマイナス0.95%、Shiftは2.5%であるため、Shift後のStrikeは正となる。
 
-### 6.5.2 パラメータ・カリブレーション
+### II-6.5.2 パラメータ・カリブレーション
 
 Black SABRと同様に$\beta$を固定し、$\alpha$、$\nu$、$\rho$を推定する。目的関数はNormal volatility単位のRMSEである。
 
@@ -683,7 +679,7 @@ GaussQuant::show_tbl_GQH(
 ```
 
 
-### 6.5.3 Normalボラティリティ・スマイル
+### II-6.5.3 Normalボラティリティ・スマイル
 
 ```{r chapter06-normal-smile}
 normal_smile_tbl <- normal_market_data |>
@@ -750,8 +746,7 @@ normal_smile_plot <- ggplot2::ggplot(
     y = "Normal volatility",
     linetype = "Series",
     shape = "Series"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   normal_smile_tbl |>
@@ -763,15 +758,14 @@ GaussQuant::show_tbl_GQH(
   "Shifted SABR normal smile table",
   n = 20
 )
-
-print(normal_smile_plot)
+show_plot_LFL(normal_smile_plot)
 ```
 
 Black volatilityとNormal volatilityは単位が異なるため、Black SABRのRMSEとShifted SABR NormalのRMSEを数値の大きさだけで直接比較してはならない。Black側は相対ボラティリティ、Normal側は金利の絶対変化幅である。
 
-## 6.6 外挿とモデル比較
+## II-6.6 外挿とモデル比較
 
-### 6.6.1 カリブレーション範囲外のStrike
+### II-6.6.1 カリブレーション範囲外のStrike
 
 SABRモデルは、市場点の間を滑らかにつなぐだけでなく、市場点の外側にもボラティリティを与える。ただし、外挿結果は観測データによる制約が弱く、パラメータの影響を強く受ける。
 
@@ -816,7 +810,7 @@ GaussQuant::show_tbl_GQH(
 
 Shift後のStrikeがゼロ以下となる領域では、この近似式を使用できない。また、数式上計算できる場合でも、カリブレーション範囲から遠い外挿値には注意が必要である。
 
-### 6.6.2 Black SABRとShifted SABR Normal
+### II-6.6.2 Black SABRとShifted SABR Normal
 
 二つのカリブレーション結果を一覧にする。
 
@@ -838,7 +832,7 @@ Black SABRでは、正のフォワードとStrikeからBlack volatilityを計算
 
 どちらも同じ4つのSABRパラメータを用いるが、出力するインプライド・ボラティリティの定義と単位が異なる。したがって、パラメータ値やRMSEを異なるボラティリティ表現の間で単純比較するのではなく、それぞれの市場表示におけるスマイル適合度を確認する。
 
-## 6.7 まとめ
+## II-6.7 まとめ
 
 SABRモデルは、フォワードとそのボラティリティを同時に確率変数として扱い、Strikeごとに異なるインプライド・ボラティリティを少数のパラメータで表現する。
 

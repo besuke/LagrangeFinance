@@ -15,303 +15,52 @@ execute:
 source(file.path("R", "utility_LFL.R"))
 ```
 
-金融工学における計算技術は、理論モデルの発展とともに大きく変化してきた。
-1970年代には、Black-Scholesモデルに代表される解析解が中心であり、
-価格だけでなくDeltaやGamma、VegaなどのGreeksも解析的に導出することができた。
+金融工学は、数学理論だけで発展してきたのではない。1960年代以降、金融理論の発展とコンピュータの発展は互いに影響しながら進んできた。理論上は表現できても計算できなかった問題が、計算機能力の向上によって実務へ取り込まれ、逆に金融商品の複雑化が新しい計算技術を必要としてきた。
 
-しかし、金融商品の複雑化とともに、解析解だけでは扱えない商品が増加した。
-1980年代以降はPDE、有限差分法、Treeなどの数値計算手法が広く用いられるようになり、
-1990年代にはMonte Carlo法がデリバティブ評価とリスク管理の重要な計算基盤となった。
+本章では、まずこの約60年の流れを大きく振り返る。次に、2020年代にCloud、HPC、GPU、Open Source Software、Tensor計算Libraryがそろったことで、金融計算がどこまで変わったのかを整理する。そのうえで、第III部前半の出発点として、一台のPCの複数Coreを利用する並列計算をRの`future` / `furrr`で実装する。
 
-さらに、複雑なエキゾチック商品やハイブリッド商品、ポートフォリオ全体のリスク計測では、
-多数のシナリオと多数のリスクファクターを同時に扱う必要が生じた。
-この計算量の増大に対応するため、2000年代にはオンプレミスのGrid Computingが発展し、
-その後はMulti-core CPU、GPU、分散処理、Cloud Computingへと計算基盤が拡張されていった。
+第III部全体の中心にあるのは、金融計算を高速化する二つの方向である。一つは、CPU、GPU、Grid、Cloudなどの計算資源を拡張する**Hardware / Infrastructure Acceleration**であり、もう一つは、Automatic Differentiationによって計算方法そのものを変える**Algorithmic Acceleration**である。
 
-一方、ハードウェアの高速化だけでは、有限差分による大量のBump & Revalueを
-根本的に削減することはできない。
-そこで注目されるようになったのがAutomatic Differentiation（自動微分）である。
+## III-1.1 金融工学とコンピュータの60年
 
-本章では、1970年代から現在までの金融工学における計算技術の発展を振り返り、
-なぜ自動微分が現代の金融リスク計測に必要となったのかを整理する。
+1960年代から1970年代にかけて、Portfolio Theory、CAPM、Black-Scholes / Mertonモデルなど、現代金融工学の基礎となる理論が整備された。当時の計算資源は現在と比べて極めて限られており、実務へ取り込みやすいモデルは解析解を持つものが中心であった。
 
-## 解析解から数値計算へ
-
-1973年のBlack-ScholesおよびMertonの研究は、現代金融工学の出発点の一つとなった。
-
-ヨーロピアン・コール・オプションの価格を
+1973年のBlack-Scholes / Mertonモデルは、その象徴的な例である。European Optionの価格を
 
 $$
-C = C(S, K, r, \sigma, T)
+C=C(S,K,r,\sigma,T)
 $$
 
-とすると、代表的なGreeksは価格関数の偏微分として表される。
+とすると、Delta、Gamma、VegaなどのGreeksも解析的に表すことができる。
+
+しかし1980年代以降、早期行使、経路依存性、複雑なPayoff、複数のリスクファクターを持つ商品が増えるにつれて、閉形式の解析解だけでは十分でなくなった。PDE、Finite Difference、Binomial / Trinomial Treeなどの数値計算が実務へ広がった。
+
+1990年代にはMonte Carlo Simulationが、複雑なデリバティブ評価やVaRをはじめとするリスク管理の重要な計算基盤となった。価格は多数のPathまたはScenarioの平均として、概念的に
 
 $$
-\Delta = \frac{\partial C}{\partial S},
-\qquad
-\Gamma = \frac{\partial^2 C}{\partial S^2},
-\qquad
-\text{Vega} = \frac{\partial C}{\partial \sigma}
-$$
-
-Black-Scholesモデルでは、価格だけでなくこれらの感応度についても解析的な式を得ることができる。
-
-しかし、1980年代以降、早期行使条項、複雑なペイオフ、複数のリスクファクターを持つ商品が増えるにつれて、
-閉形式の解析解だけでは十分でなくなった。
-そのため、PDE、有限差分法、Binomial Tree、Trinomial Treeなどの数値計算手法が重要になった。
-
-## Monte Carloと計算量の増大
-
-1990年代には、Monte Carlo法が複雑なデリバティブ評価やVaRなどのリスク管理に広く用いられるようになった。
-
-Monte Carlo法による価格評価は、一般に
-
-$$
-\hat{V}
+\hat V
 =
 \frac{1}{M}
-\sum_{m=1}^{M}
-V^{(m)}
+\sum_{m=1}^{M}V^{(m)}
 $$
 
-のように、多数のシナリオの平均として表される。
+と評価される。Path数を増やせば統計的精度を高められる一方、計算量も増加する。さらにPortfolio、Scenario、Risk Factorが増えると、必要となるPricing回数は急速に膨らむ。
 
-シナリオ数を増やすことで統計的な精度を高めることができる一方、
-商品が複雑になるほど一つのシナリオ内で必要となる計算量も増大する。
+2000年代には、大規模Portfolioや複雑なExotic / Hybrid商品の評価を支えるため、金融機関でOn-premise Grid Computingが広く利用されるようになった。PortfolioやScenarioを多数のJobへ分割し、Schedulerが複数のServerへ配布するという構造である。
 
-さらにGreeksを有限差分で求める場合には、各リスクファクターをBumpして価格を再計算する必要がある。
+同じ時期、CPUは単純なClock Speedの向上からMulti-core化へ進んだ。一台のServer内部でも複数のTaskを同時に実行できるようになり、金融計算は「一つずつ順番に計算する」構造から「独立した計算を分割して同時に処理する」構造へ移っていった。
 
-例えば中心差分では、
+2010年代にはGPUによるMassive Parallel ComputingとCloud Computingが急速に普及した。Monte Carloのように、同種の計算を多数のPathへ適用する処理はGPUと相性がよく、Tensor演算によって大規模な計算をまとめて処理できるようになった。
 
-$$
-\frac{\partial V}{\partial x}
-\approx
-\frac{
-V(x+h)-V(x-h)
-}{
-2h
-}
-$$
-
-となる。
-
-リスクファクターが増えるほど、Monte Carlo計算そのものを何度も繰り返す必要があり、
-計算負荷は急速に増加する。
-
-## オンプレミスGrid Computing
-
-2000年代には、エキゾチック商品やハイブリッド商品の価格評価、
-大規模ポートフォリオのリスク計算に対応するため、
-金融機関ではオンプレミスのGrid Computingが重要な役割を担うようになった。
-
-典型的には、ポートフォリオやシナリオを複数のJobに分割し、
-Job Schedulerが多数の計算サーバーへ処理を配布する。
+この流れを大きく整理すると、次のようになる。
 
 ```text
-Portfolio
-    |
-    v
-Job Scheduler
-    |
-    +---------+---------+---------+
-    |         |         |         |
-    v         v         v         v
- Server 1  Server 2  Server 3  Server 4
-```
-
-この方法は、計算を複数のサーバーへ分散することで、
-Monte CarloやBump & Revalueの処理時間を短縮するものである。
-
-すなわち、
-
-$$
-\text{Large Computation}
-\longrightarrow
-\text{Task Decomposition}
-\longrightarrow
-\text{Distributed Execution}
-$$
-
-という発想である。
-
-## Multi-core CPUと並列処理
-
-2000年代半ば以降、CPUの性能向上はクロック周波数の上昇だけではなく、
-複数のCoreを一つのCPUに搭載するMulti-core化へと進んだ。
-
-これにより、金融計算でも一台のサーバー内部で複数の計算を同時に実行できるようになった。
-
-Grid Computingがサーバー間の並列処理であるのに対し、
-Multi-core CPUは一台のサーバー内部における並列処理と考えることができる。
-
-現在のRでは、`future`や`furrr`などを利用することで、
-こうした並列処理を比較的簡潔に記述できる。
-
-## GPUによる大規模並列計算
-
-2010年代にはGPUを汎用数値計算に利用するGPGPUが急速に発展した。
-
-Monte Carlo法では、多数のシナリオに対して同じ種類の計算を繰り返すことが多い。
-このような計算はGPUの大規模並列演算と相性が良い。
-
-概念的には、
-
-$$
-X_{t+\Delta t}^{(m)}
-=
-f
-\left(
-X_t^{(m)},
-Z_t^{(m)}
-\right),
-\qquad
-m=1,\ldots,M
-$$
-
-という状態更新を、多数のPathについて並列に実行する。
-
-GPUの利用により、Monte Carloの計算時間を大きく短縮できるケースが増えた。
-
-## Task Controlと分散計算
-
-大規模な金融リスク計算では、単にCPUやGPUを増やすだけでは十分ではない。
-
-大量のJobについて、
-
-- 生成
-- 分割
-- 配布
-- 実行
-- 監視
-- 再実行
-- 集約
-
-を管理する必要がある。
-
-したがって、金融計算システムではCompute Resourceとともに
-Task Controlが重要になる。
-
-オンプレミスのGrid Schedulerから、Slurm、Container、Kubernetes、
-Cloud Batchなどへと計算管理の仕組みは拡張されてきた。
-
-## Hardware AccelerationからAlgorithmic Accelerationへ
-
-ここまでの発展は、主として計算資源を増やすことによる高速化であった。
-
-$$
-\text{CPU}
-\rightarrow
-\text{Multi-core}
-\rightarrow
-\text{Grid}
-\rightarrow
-\text{GPU}
-$$
-
-これらはHardware Accelerationと考えることができる。
-
-しかし、有限差分によるGreeks計算では、リスクファクターの数が増えるほど
-価格評価を何度も繰り返さなければならない。
-
-すなわち、ハードウェアを高速化しても、
-Bump & Revalueというアルゴリズムそのものが要求する計算回数は減少しない。
-
-ここで発想を転換し、
-
-$$
-\boxed{
-\text{計算機を速くする}
-\quad\longrightarrow\quad
-\text{計算方法そのものを変える}
-}
-$$
-
-という方向が重要になる。
-
-## 自動微分への展開
-
-Automatic Differentiationは、プログラムによって構成された計算を
-Computational Graphとして捉え、連鎖律を用いて微分を計算する方法である。
-
-例えば、
-
-$$
-x
-\rightarrow
-y=f(x)
-\rightarrow
-z=g(y)
-\rightarrow
-V=h(z)
-$$
-
-という計算では、
-
-$$
-\frac{\partial V}{\partial x}
-=
-\frac{\partial V}{\partial z}
-\frac{\partial z}{\partial y}
-\frac{\partial y}{\partial x}
-$$
-
-となる。
-
-金融では、一つの価格に対して多数のリスクファクターが存在することが多い。
-
-$$
-V
-=
-V(x_1,x_2,\ldots,x_n)
-$$
-
-このとき必要なのは、
-
-$$
-\nabla V
-=
-\left(
-\frac{\partial V}{\partial x_1},
-\frac{\partial V}{\partial x_2},
-\ldots,
-\frac{\partial V}{\partial x_n}
-\right)
-$$
-
-である。
-
-このような多数入力・少数出力の問題ではReverse-mode Automatic Differentiationが有効であり、
-金融工学ではAAD（Adjoint Algorithmic Differentiation）として広く知られている。
-
-近年は、PyTorchやRの`torch`によって、
-
-$$
-\text{Tensor}
-+
-\text{GPU}
-+
-\text{Computational Graph}
-+
-\text{Automatic Differentiation}
-$$
-
-を同一の計算環境で扱うことができる。
-
-本部の後半では、この計算基盤を用いて、
-Option Greeks、金利DV01・GPS、そしてPRDCの為替・金利リスク感応度へと進む。
-
-## まとめ
-
-金融工学における計算技術の発展は、次のように整理できる。
-
-```text
-1970s
-Analytical Pricing / Analytical Greeks
+1960s-1970s
+Portfolio Theory / CAPM / Analytical Pricing
         |
         v
 1980s
-PDE / Tree / Numerical Methods
+PDE / Finite Difference / Tree
         |
         v
 1990s
@@ -319,44 +68,142 @@ Monte Carlo / VaR / Bump & Revalue
         |
         v
 2000s
-On-premise Grid Computing
-        |
-        v
-2005-2015
-Multi-core CPU / Parallel Computing
+On-premise Grid / Job Scheduler / Multi-core
         |
         v
 2010s
-GPU / Massive Parallelism / AAD
+GPU / Cloud / Open Source / Tensor Computing
         |
         v
 2020s
-Cloud / Distributed Computing
-Tensor Computing / Automatic Differentiation
+Flexible HPC / Massive Monte Carlo / Automatic Differentiation
 ```
 
-この発展を一言で表せば、
+## III-1.2 2020年代に変わった金融計算の前提
+
+2020年代の変化は、単にコンピュータが高速になったことではない。大きいのは、計算資源を「所有する」ことから、必要なときに必要な規模だけ「利用する」方向へ移ったことである。
+
+従来のOn-premise環境では、大規模な計算を行うにはServer、Storage、Network、Schedulerなどを自ら用意し、最大負荷を想定した設備投資を行う必要があった。現在はCloudやHPC Serviceを利用することで、計算負荷に応じてCPUやGPUを柔軟に追加できる。SaaS型・Managed Service型の計算基盤も増え、インフラの構築と保守に必要な負担は大きく低下した。
+
+同時に、RやPythonを中心とするOpen Source Softwareが成熟した。数値計算、統計、最適化、Machine Learning、Distributed Computing、GPU Tensor計算を、商用の専用計算環境だけに依存せず組み合わせることができる。
+
+この二つが重なることで、以前は大規模金融機関の専用Gridでなければ現実的でなかった計算を、より安価かつ柔軟な環境で実行できるようになった。問題設定と計算環境によって必要時間は大きく異なるものの、数百万から数千万、さらに十分なGPU / HPC資源を用いる場合には数億Path規模を視野に入れたMonte Carlo Simulationも現実的な設計対象となっている。
+
+```text
+On-premise Hardware
+        |
+        v
+Elastic Cloud / HPC
+        +
+Open Source Software
+        +
+CPU / GPU Tensor Computing
+        |
+        v
+Massive Monte Carlo
+```
+
+## III-1.3 ハードウェア高速化だけでは残る問題
+
+計算資源を増やすことで、一回のPricingは速くできる。しかしRisk SensitivityをBump & Revalueで求める場合、Risk FactorごとにPricingを繰り返す構造は残る。
+
+例えば中心差分では、
+
+$$
+\frac{\partial V}{\partial x}
+\approx
+\frac{V(x+h)-V(x-h)}{2h}
+$$
+
+となる。Risk Factorが100個あれば、多数のBumpを作り、そのたびに大規模Monte Carloを再実行する必要がある。
+
+したがって、
 
 $$
 \boxed{
-\text{Pricing Engine}
-\longrightarrow
-\text{Differentiable Risk Engine}
+\text{More Cores / More GPUs}
+\neq
+\text{Fewer Revaluations}
 }
 $$
 
-である。
+である。Hardwareを増やすだけでは、Bump & RevalueというAlgorithmそのものが要求する再計算回数は減らない。
 
-並列計算は「計算を分ける」技術である。
+## III-1.4 自動微分が実用技術になった理由
 
-一方、自動微分は「計算そのものを変える」技術である。
+Automatic Differentiation自体は新しい数学ではない。しかし近年、TensorFlow、Keras、PyTorch、Rの`torch`など、Deep Learningの発展によって成熟したTensor計算Libraryが、安価で安定したAutomatic Differentiation環境を提供するようになった。
 
-次節では、Rの`future` / `furrr`を用いて、一台のPC上で並列計算を実装する。
+これらのLibraryでは、PricingをTensor演算として記述すると、その計算過程がComputational Graphとして保持される。最終的な価格からReverse ModeでGraphを逆向きにたどることで、多数の入力Risk Factorに対するGradientを効率的に取得できる。
 
-## Rにおける並列コンピューティング
+$$
+(x_1,x_2,\ldots,x_n)
+\longrightarrow
+\text{Monte Carlo Pricing}
+\longrightarrow
+V
+$$
 
-金融計算を並列化するときに重要なのは、計算ロジックと入力データを分離することである。
-本書では、データをtibbleとして持ち、計算関数を各行へ適用する構造を基本とする。
+に対して、
+
+$$
+\nabla V
+=
+\left(
+\frac{\partial V}{\partial x_1},
+\ldots,
+\frac{\partial V}{\partial x_n}
+\right)
+$$
+
+を求める。厳密にはForward Pricingに続いてBackward Passを行うが、Risk Factorごとに独立したMonte Carlo Pricingを何度もやり直す必要はない。
+
+ここで金融計算は、
+
+$$
+\boxed{
+\text{Hardware Acceleration}
+\longrightarrow
+\text{Hardware + Algorithmic Acceleration}
+}
+$$
+
+へ進む。
+
+## III-1.5 第III部で扱う二つの計算技術
+
+第III部では、この二つの方向をRで実装する。
+
+前半の第III-2章から第III-4章では、`future` / `furrr`を出発点として、PC内の並列処理、非同期実行、Job / Task Control、分散計算、そしてエンタープライズ金融計算システムの構造を扱う。計算を**どのように分割し、どこで実行するか**が中心となる。
+
+後半の第III-5章から第III-7章では、Rの`torch`を用いてAutomatic DifferentiationによるRisk Sensitivityを実装する。対象はOptionからYield Curve、さらにPRDCの多因子Riskへ段階的に拡張する。
+
+$$
+\text{Option Greeks}
+\longrightarrow
+\text{Interest Rate Curve Risk}
+\longrightarrow
+\text{PRDC Multi-factor Risk}
+$$
+
+本部全体の到達点は、次の形で表すことができる。
+
+$$
+\boxed{
+\text{Scale Up / Scale Out}
++
+\text{Automatic Differentiation}
+=
+\text{Enterprise Differentiable Risk Engine}
+}
+$$
+
+まず本章では、その第一歩として一台のPCの中で計算を分割し、複数Workerへ配布する並列計算を実装する。
+
+## III-1.6 Rにおける並列コンピューティング
+
+Rでは`purrr`による逐次処理と、`future` / `furrr`による並列処理をよく似た形で記述できる。
+金融計算では、入力データをtibbleとして保持し、Pricing Functionを各行へ適用する構造にすると、
+逐次計算から並列計算へ移行しやすい。
 
 ```text
 Trade / Market / Scenario Data
@@ -374,7 +221,9 @@ Trade / Market / Scenario Data
            Result
 ```
 
-### 小さな現在価値計算
+### III-1.6.1 小さな現在価値計算
+
+まず、単純な現在価値計算をTaskとして定義する。
 
 ```{r}
 #| label: define-present-value-function
@@ -388,6 +237,8 @@ calculate_present_value_LFL <- function(cashflow, discount_rate, maturity) {
   )
 }
 ```
+
+計算対象をtibbleとして用意する。
 
 ```{r}
 #| label: create-parallel-calculation-data
@@ -405,7 +256,9 @@ tbl_calculation <- tribble(
 show_table_LFL(tbl_calculation)
 ```
 
-### `purrr::pmap()`による逐次計算
+### III-1.6.2 逐次計算
+
+最初に`purrr::pmap()`で逐次実行する。
 
 ```{r}
 #| label: calculate-sequential-with-pmap
@@ -423,9 +276,10 @@ tbl_sequential_result <- tbl_calculation |>
 show_table_LFL(tbl_sequential_result)
 ```
 
-### `future` / `furrr`による並列計算
+### III-1.6.3 マルチコアによる並列計算
 
-Windows環境でも利用しやすい`multisession`を用いる。
+次に`future::multisession`を利用してWorkerを起動する。
+利用可能なCoreをすべて占有せず、この例では最大2 Workerに制限する。
 
 ```{r}
 #| label: define-future-plan
@@ -446,8 +300,11 @@ tbl_future_setting <- tibble(
 show_table_LFL(tbl_future_setting)
 ```
 
+計算ロジックを変えず、`purrr::pmap()`を`furrr::future_pmap()`へ置き換える。
+
 ```{r}
 #| label: calculate-parallel-with-future-pmap
+#| warning: false
 
 tbl_parallel_result <- tbl_calculation |>
   mutate(
@@ -462,6 +319,8 @@ tbl_parallel_result <- tbl_calculation |>
 
 show_table_LFL(tbl_parallel_result)
 ```
+
+逐次計算と並列計算が同じ結果を返すことを確認する。
 
 ```{r}
 #| label: compare-sequential-parallel-results
@@ -500,15 +359,19 @@ stopifnot(
 )
 ```
 
+計算終了後はPlanを逐次処理へ戻す。
+
 ```{r}
 #| label: restore-sequential-plan
 
 future::plan(future::sequential)
 ```
 
-### 並列化の効果と限界
+## III-1.7 並列化による処理時間の短縮
 
-並列化にはワーカー起動、データ転送、結果回収のオーバーヘッドがある。そのため、計算が小さい場合には逐次処理の方が速いこともある。一方、Monte Carlo、シナリオ計算、ポートフォリオ評価のように独立した計算を大量に繰り返す場合には、並列化の効果が大きくなる。
+小さすぎるTaskではWorker生成やデータ転送のOverheadが支配的になり、
+並列化が必ずしも高速になるとは限らない。
+そこで、一定時間を要する独立Taskを使って逐次処理と並列処理を比較する。
 
 ```{r}
 #| label: define-parallel-benchmark-function
@@ -538,6 +401,7 @@ sequential_time <- system.time(
 
 ```{r}
 #| label: benchmark-parallel-processing
+#| warning: false
 
 future::plan(
   future::multisession,
@@ -570,6 +434,47 @@ tbl_benchmark <- tribble(
 show_table_LFL(tbl_benchmark)
 ```
 
-本章では、金融工学における計算技術の発展を、解析解から数値計算、Monte Carlo、Grid、Multi-core、GPU、Cloud、AD/AADへと整理した。そのうえで、Rの`future` / `furrr`を利用して一台のPC上の計算を並列化した。
+この例の目的は特定の高速化率を保証することではない。
+重要なのは、同じPricing Functionを多数の独立Taskへ適用する場合、
+Taskを複数Workerへ配分することで実行時間を短縮できるという構造である。
 
-次章では、計算資源を一台のPCから複数のコンピュータへ広げ、Job / Task Controlを含む分散コンピューティングへ進む。
+## III-1.8 一台のPCにおける並列化の限界
+
+Multi-coreによる並列化には明確な限界がある。
+一台のコンピュータで利用できるCPU Core、Memory、GPUなどの計算資源には上限があるためである。
+
+さらに実務のRisk Calculationでは、数件のTaskではなく、
+
+- 数十万件のTrade
+- 多数のMarket Scenario
+- Monte Carlo Path
+- Stress Scenario
+- Sensitivity Calculation
+
+を同時に処理することがある。
+
+この規模になると、一台のPCのCoreを増やすだけでは対応できない。
+必要になるのは、Taskを**複数のコンピュータへ配布する仕組み**である。
+
+$$
+\boxed{
+\text{Single Machine Parallelism}
+\longrightarrow
+\text{Distributed Computing}
+}
+$$
+
+また、計算資源を増やしてPricingを高速化しても、SensitivityをBump & Revalueで求める場合には、
+リスクファクターごとにPricingを繰り返す構造そのものは残る。
+この問題は、本部後半の自動微分で改めて扱う。
+
+## III-1.9 まとめ
+
+本章では、金融工学の計算が解析解から数値計算、Monte Carloへ発展するにつれて計算量が増大し、
+その対応としてMulti-core CPUや並列処理が重要になったことを確認した。
+
+Rでは`future` / `furrr`を利用することで、逐次計算の構造を大きく変えずに
+一台のPC上で複数WorkerへTaskを配分できる。
+
+しかし、エンタープライズ金融計算では一台のPCだけでは計算資源が不足する。
+次章では、Taskを複数の計算機へ配布する**分散コンピューティングとJob / Task Control**へ進む。

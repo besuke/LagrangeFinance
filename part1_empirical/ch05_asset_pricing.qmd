@@ -19,9 +19,9 @@ source(file.path("R", "utility_LFL.R"))
 
 前章までに作成した月次株式データ、年次企業データ、ファクターデータを利用し、企業固有リスクと共通ファクターリスクから株式リターンの分散共分散行列を構築する。最後に、平均分散最適化を実行し、目標期待リターンの変化に応じた効率的フロンティアを確認する。
 
-## 5.1 分析対象とデータの接続
+## I-5.1 分析対象とデータの接続
 
-### 5.1.1 共通関数と分析データ
+### I-5.1.1 共通関数と分析データ
 
 本章では、プロジェクト共通のutilityを読み込み、前章までに作成された派生データを利用する。パッケージの導入方法そのものは扱わず、分析に必要な処理から開始する。
 
@@ -52,7 +52,7 @@ tbl_factor <-
   )
 ```
 
-### 5.1.2 推定対象企業の選定
+### I-5.1.2 推定対象企業の選定
 
 企業別の時系列回帰には一定数の観測値が必要である。本章では、2020年末まで上場が継続し、月次観測値が36か月以上存在する企業を推定対象とする。
 
@@ -86,7 +86,7 @@ tbl_annual <- tbl_monthly |>
   )
 ```
 
-### 5.1.3 月次株式リターンとファクターの結合
+### I-5.1.3 月次株式リターンとファクターの結合
 
 月次株式データとファクターデータを `month_ID` で結合する。無リスク金利 `R_F` が月次株式データにも含まれる場合は、重複を避けるため、ファクターデータ側の値を利用する。
 
@@ -101,9 +101,9 @@ tbl_monthly_factor <- tbl_monthly |>
   )
 ```
 
-## 5.2 FF3モデルによる期待リターンの推定
+## I-5.2 FF3モデルによる期待リターンの推定
 
-### 5.2.1 FF3モデル
+### I-5.2.1 FF3モデル
 
 企業 $i$ の時点 $t$ における超過リターンを、次の3ファクター・モデルで表す。
 
@@ -153,7 +153,7 @@ tbl_ff3_models <- tbl_monthly_factor |>
   ungroup()
 ```
 
-### 5.2.2 企業別ファクター・ローディング
+### I-5.2.2 企業別ファクター・ローディング
 
 企業別回帰から得られた係数を横持ち形式に変換し、市場、企業規模、簿価時価比率に対する感応度として整理する。
 
@@ -184,7 +184,7 @@ tbl_ff3_loadings <- tbl_ff3_models |>
 show_table_head_LFL(tbl_ff3_loadings)
 ```
 
-### 5.2.3 ファクター・リスクプレミアム
+### I-5.2.3 ファクター・リスクプレミアム
 
 月次ファクターリターンの標本平均を12倍し、年率換算したファクター・リスクプレミアムを求める。
 
@@ -217,7 +217,7 @@ names(vec_factor_risk_premium) <- vec_factor_names
 show_table_LFL(tbl_factor_risk_premium)
 ```
 
-### 5.2.4 株式資本コスト
+### I-5.2.4 株式資本コスト
 
 FF3モデルに基づく企業 $i$ の期待超過リターンは、ファクター・ローディングとファクター・リスクプレミアムの積和として求められる。
 
@@ -247,9 +247,9 @@ tbl_cost_of_equity <- tbl_ff3_loadings |>
 show_table_head_LFL(tbl_cost_of_equity)
 ```
 
-## 5.3 期待リターンと配当成長率
+## I-5.3 期待リターンと配当成長率
 
-### 5.3.1 期待リターンの企業間分布
+### I-5.3.1 期待リターンの企業間分布
 
 ```{r}
 #| label: plot-cost-of-equity-distribution
@@ -274,7 +274,7 @@ plot_cost_of_equity_distribution <- add_lagrange_theme_LFL(
 show_plot_LFL(plot_cost_of_equity_distribution)
 ```
 
-### 5.3.2 企業規模と期待リターン
+### I-5.3.2 企業規模と期待リターン
 
 ```{r}
 #| label: create-2020-size-groups
@@ -337,7 +337,7 @@ plot_cost_of_equity_by_size <- add_lagrange_theme_LFL(
 show_plot_LFL(plot_cost_of_equity_by_size)
 ```
 
-### 5.3.3 配当利回り
+### I-5.3.3 配当利回り
 
 ```{r}
 #| label: compute-dividend-yield
@@ -364,7 +364,7 @@ tbl_dividend_yield_2020 <- tbl_monthly |>
 show_table_head_LFL(tbl_dividend_yield_2020)
 ```
 
-### 5.3.4 潜在配当成長率
+### I-5.3.4 潜在配当成長率
 
 株式資本コストを $r_i$、配当利回りを $y_i$ とすると、本章で用いる潜在配当成長率 $g_i$ は次式から逆算される。
 
@@ -394,8 +394,8 @@ tbl_implied_dividend_growth <- tbl_dividend_yield_2020 |>
 
 show_table_head_LFL(tbl_implied_dividend_growth)
 ```
-## 5.4 ファクターモデルによるリスク推定
-### 5.4.1 ファクターの分散共分散
+## I-5.4 ファクターモデルによるリスク推定
+### I-5.4.1 ファクターの分散共分散
 
 ```{r}
 #| label: compute-factor-covariance
@@ -413,7 +413,7 @@ matrix_factor_covariance <- convert_covariance_table_to_matrix_LFL(
 show_table_LFL(tbl_factor_covariance)
 ```
 
-### 5.4.2 投資ユニバース
+### I-5.4.2 投資ユニバース
 
 ```{r}
 #| label: select-investment-universe
@@ -450,7 +450,7 @@ n_portfolio_firms <- length(vec_investment_firm_ids)
 show_table_head_LFL(tbl_investment_universe)
 ```
 
-### 5.4.3 企業固有リスク
+### I-5.4.3 企業固有リスク
 
 ```{r}
 #| label: compute-idiosyncratic-variance
@@ -495,7 +495,7 @@ tbl_idiosyncratic_variance <- tbl_monthly_factor |>
 show_table_head_LFL(tbl_idiosyncratic_variance)
 ```
 
-### 5.4.4 株式リターンの分散共分散
+### I-5.4.4 株式リターンの分散共分散
 
 企業別ファクター・ローディングを並べた行列を $\boldsymbol{B}$、企業固有リスクの対角行列を $\boldsymbol{\Sigma}_{\varepsilon}$ とすると、株式リターンの分散共分散行列は次式で構築できる。
 
@@ -544,7 +544,7 @@ rownames(matrix_return_covariance) <- vec_investment_firm_ids
 colnames(matrix_return_covariance) <- vec_investment_firm_ids
 ```
 
-### 5.4.5 期待リターン
+### I-5.4.5 期待リターン
 
 ```{r}
 #| label: build-expected-return-vector
@@ -561,9 +561,9 @@ tibble(
   show_table_head_LFL()
 ```
 
-## 5.5 平均分散最適化
+## I-5.5 平均分散最適化
 
-### 5.5.1 最適化問題
+### I-5.5.1 最適化問題
 
 目標期待リターンを $\mu_p^*$ とすると、ポートフォリオ・ウェイト $\boldsymbol{w}$ は次の問題から求められる。
 
@@ -591,7 +591,7 @@ $$
 
 本章の基本設定では、空売りを禁止する不等式制約は追加しない。
 
-### 5.5.2 目標期待リターンの設定
+### I-5.5.2 目標期待リターンの設定
 
 ```{r}
 #| label: solve-mean-variance-portfolio
@@ -605,7 +605,7 @@ list_mean_variance_portfolio <- compute_mean_variance_portfolio_LFL(
 )
 ```
 
-### 5.5.3 最適ポートフォリオ
+### I-5.5.3 最適ポートフォリオ
 
 ```{r}
 #| label: create-optimal-portfolio-table
@@ -625,7 +625,7 @@ show_table_head_LFL(
 )
 ```
 
-### 5.5.4 最適化結果の検算
+### I-5.5.4 最適化結果の検算
 
 ```{r}
 #| label: validate-optimal-portfolio
@@ -650,9 +650,9 @@ tbl_portfolio_summary <- compute_portfolio_summary_LFL(
 show_table_LFL(tbl_portfolio_summary)
 ```
 
-## 5.6 効率的フロンティア
+## I-5.6 効率的フロンティア
 
-### 5.6.1 目標期待リターンの範囲
+### I-5.6.1 目標期待リターンの範囲
 
 ```{r}
 #| label: create-target-return-grid
@@ -664,7 +664,7 @@ vec_target_returns <- seq(
 )
 ```
 
-### 5.6.2 複数ポートフォリオの推定
+### I-5.6.2 複数ポートフォリオの推定
 
 ```{r}
 #| label: compute-efficient-frontier
@@ -684,7 +684,7 @@ show_table_head_LFL(
 )
 ```
 
-### 5.6.3 効率的フロンティアの描画
+### I-5.6.3 効率的フロンティアの描画
 
 ```{r}
 #| label: plot-efficient-frontier
@@ -709,7 +709,7 @@ plot_efficient_frontier <- add_lagrange_theme_LFL(
 show_plot_LFL(plot_efficient_frontier)
 ```
 
-## 5.7 まとめ
+## I-5.7 まとめ
 
 本章では、Fama--Frenchの3ファクター・モデルを企業別に推定し、市場、企業規模、簿価時価比率に対するファクター・ローディングを求めた。ファクター・リスクプレミアムとの積和から株式資本コストを計算し、配当利回りと組み合わせることで潜在配当成長率を推定した。
 

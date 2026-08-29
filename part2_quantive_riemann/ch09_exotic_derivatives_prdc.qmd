@@ -1,5 +1,5 @@
 ---
-title: "第II-9章 エキゾチック・デリバティブとPRDC"
+title: "第II-9章 金利為替系デリバティブ"
 execute:
   eval: true
   echo: true
@@ -52,9 +52,9 @@ $$
 
 実際のPRDCには、発行体の期限前償還権を含むことが多い。本章では商品の基本構造を明確にするため、**発行体コール権を含まない非Callable PRDC**を評価する。Callable PRDCには、金利・為替の複数因子モデル、相関構造およびLeast-Squares Monte Carloなどが追加で必要となる。
 
-## 9.1 PRDCの商品構造と市場条件
+## II-9.1 金利為替系デリバティブの商品構造と市場条件
 
-### 9.1.1 商品条件
+### II-9.1.1 商品条件
 
 2015年9月3日から2041年9月3日まで、半年ごとにCouponを支払うPRDCを考える。最初の1年間は固定Couponとし、その後はFX連動Couponへ移行する。
 
@@ -85,8 +85,8 @@ coupon_subtraction_prdc <- 0.10
 coupon_floor_prdc <- 0
 coupon_cap_prdc <- 0.022
 
-number_of_paths_prdc <- 3000L
-sensitivity_paths_prdc <- 1000L
+number_of_paths_prdc <- 300L
+sensitivity_paths_prdc <- 100L
 random_seed_prdc <- 123L
 
 GaussQuant::set_eval_date_GQL(
@@ -124,7 +124,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### 9.1.2 Coupon Schedule
+### II-9.1.2 Coupon Schedule
 
 契約開始日から満期までの全Coupon Scheduleと、固定Intro Coupon期間のScheduleを作成する。
 
@@ -209,7 +209,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### 9.1.3 Domestic、ForeignおよびDiscount Curve
+### II-9.1.3 Domestic、ForeignおよびDiscount Curve
 
 FX Quoteを、外国通貨1単位当たりの円貨額として表す。
 
@@ -292,9 +292,9 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-## 9.2 FXプロセスとCoupon Payoff
+## II-9.2 FXプロセスとCoupon ペイオフ
 
-### 9.2.1 FX Process
+### II-9.2.1 FX Process
 
 FX volatilityを10%とし、Garman–Kohlhagen Processを作成する。
 
@@ -336,7 +336,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### 9.2.2 Coupon Payoff
+### II-9.2.2 Coupon ペイオフ
 
 本例のFX連動Couponは次式である。
 
@@ -456,8 +456,7 @@ prdc_payoff_plot <- ggplot2::ggplot(
     subtitle = "Floored and capped FX-linked coupon",
     x = "FX rate",
     y = "Coupon rate"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   coupon_threshold_tbl,
@@ -470,16 +469,15 @@ GaussQuant::show_tbl_GQH(
   "PRDC coupon payoff table",
   n = 60
 )
-
-print(prdc_payoff_plot)
+show_plot_LFL(prdc_payoff_plot)
 ```
 
 現在のFX SpotはCap到達水準を上回っているため、評価時点のCoupon式だけを見ればCapに張り付いている。しかし、満期までのFX分布にはFloor、Linear領域およびCap領域のすべてが含まれ得る。
 
 
-## 9.3 Monte CarloによるPRDC評価
+## II-9.3 モンテカルロによる金利為替系デリバティブ評価
 
-### 9.3.1 Coupon日ベースのFX時間グリッド
+### II-9.3.1 Coupon日ベースのFX時間グリッド
 
 PRDC評価に必要なのは、評価日より後に到来するCoupon日である。GaussQuantの`fx_path_generator_GQL()`は、実際のCoupon日を用いて不均一な時間間隔を保持する。
 
@@ -529,7 +527,7 @@ GaussQuant::show_tbl_GQH(
 
 QuantLibの`StochasticProcess1D$evolve()`へは標準正規変量を渡す。Brownian incrementを外側で二重に時間調整してはならない。GaussQuantのPath Generatorでは、標準正規乱数と各Coupon間の実際の時間差を分けて処理している。
 
-### 9.3.2 サンプルFXパス
+### II-9.3.2 サンプルFXパス
 
 Monte Carlo評価へ進む前に、20本のFXパスを生成し、将来のFX分布とCouponの動きを確認する。
 
@@ -588,19 +586,17 @@ sample_fx_path_plot <- ggplot2::ggplot(
     title = "Sample FX paths for PRDC valuation",
     x = "Time from valuation date (years)",
     y = "FX rate"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   sample_fx_path_tbl,
   "Sample PRDC FX and coupon paths",
   n = 40
 )
-
-print(sample_fx_path_plot)
+show_plot_LFL(sample_fx_path_plot)
 ```
 
-### 9.3.3 PRDCの現在価値
+### II-9.3.3 金利為替系デリバティブの現在価値
 
 各Coupon日の期待Coupon rateは、Monte Carloによって次のように近似する。
 
@@ -700,7 +696,7 @@ GaussQuant::show_tbl_GQH(
 
 本章の元本償還額は固定されているため、Redemption Legは割引率に依存するがFXには依存しない。FX SpotとFX volatilityの影響は、主にCoupon Legを通じて現れる。
 
-### 9.3.4 期待Couponとキャッシュフロー
+### II-9.3.4 期待Couponとキャッシュフロー
 
 ```{r chapter09-expected-coupons}
 expected_coupon_display_tbl <- expected_coupon_tbl |>
@@ -743,9 +739,9 @@ GaussQuant::show_tbl_GQH(
 
 長期のFX期待値はDomestic金利とForeign金利の差の影響を受ける。本例ではForeign金利がDomestic金利より高いため、リスク中立測度の下ではFX Rateに下向きのドリフトが働く。その結果、満期が長くなるほどCap領域からLinear領域またはFloor領域へ移る確率が高くなる。
 
-## 9.4 Couponの期間構造と分布
+## II-9.4 Couponの期間構造と分布
 
-### 9.4.1 期待Couponの期間構造
+### II-9.4.1 期待Couponの期間構造
 
 ```{r chapter09-expected-coupon-plot}
 expected_coupon_plot <- ggplot2::ggplot(
@@ -771,10 +767,8 @@ expected_coupon_plot <- ggplot2::ggplot(
     subtitle = "Monte Carlo expectation at each future coupon date",
     x = "Time from valuation date (years)",
     y = "Expected coupon rate"
-  ) +
-  ggplot2::theme_minimal()
-
-print(expected_coupon_plot)
+  )
+show_plot_LFL(expected_coupon_plot)
 ```
 
 期待Couponは、単に期待FXをCoupon式へ代入した値とは一般に一致しない。
@@ -787,7 +781,7 @@ $$
 
 CapとFloorを含む非線形Payoffでは、FX分布全体を考慮する必要がある。
 
-### 9.4.2 Coupon Cap／Floor到達確率
+### II-9.4.2 Coupon キャップ／Floor到達確率
 
 各Coupon日について、シミュレーションされたCouponがFloorまたはCapに到達する確率を計算する。
 
@@ -812,7 +806,7 @@ GaussQuant::show_tbl_GQH(
 
 Cap確率、Linear領域の確率およびFloor確率は、長期的なCouponの性質を直接示す。現在のSpotがCap水準を上回っていても、長期Couponが常にCapへ固定されるとは限らない。
 
-### 9.4.3 Coupon分布
+### II-9.4.3 Coupon分布
 
 短期、中期、長期の代表的なCoupon日について、Coupon rateの分布を比較する。
 
@@ -887,18 +881,16 @@ coupon_distribution_plot <- ggplot2::ggplot(
     title = "Simulated PRDC coupon distributions",
     x = "Coupon rate",
     y = "Path count"
-  ) +
-  ggplot2::theme_minimal()
-
-print(coupon_distribution_plot)
+  )
+show_plot_LFL(coupon_distribution_plot)
 ```
 
 Coupon分布は連続的な正規分布または対数正規分布ではない。FloorとCapに確率質量が集まり、その間にLinear領域の連続分布が存在する。
 
 
-## 9.5 FX感応度とMonte Carlo誤差
+## II-9.5 FX感応度とモンテカルロ誤差
 
-### 9.5.1 FX Spot感応度
+### II-9.5.1 FX スポット感応度
 
 PRDC CouponはFX Spotへ直接依存する。Spotを上下させたシナリオを比較する。
 
@@ -954,21 +946,19 @@ spot_sensitivity_plot <- ggplot2::ggplot(
     title = "PRDC FX spot sensitivity",
     x = "FX spot",
     y = "PRDC NPV"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   spot_sensitivity_tbl,
   "PRDC FX spot sensitivity",
   n = 20
 )
-
-print(spot_sensitivity_plot)
+show_plot_LFL(spot_sensitivity_plot)
 ```
 
 Spot上昇はCouponを上昇させる方向に働くが、Capへ到達した後の限界効果は小さくなる。Spot低下時も、Floorへ到達するとCouponの低下は止まる。このため、PRDC価値のSpot感応度は全域で一定ではない。
 
-### 9.5.2 FX Volatility感応度
+### II-9.5.2 FX Volatility感応度
 
 PRDC Couponは、FloorとCapを持つ非線形Payoffである。そのため、FX volatilityの変化は将来のFX分布だけでなく、Floor、Linear領域およびCapへ入る確率を変化させる。
 
@@ -1028,21 +1018,19 @@ volatility_sensitivity_plot <- ggplot2::ggplot(
     title = "PRDC FX volatility sensitivity",
     x = "FX volatility",
     y = "PRDC NPV"
-  ) +
-  ggplot2::theme_minimal()
+  )
 
 GaussQuant::show_tbl_GQH(
   volatility_sensitivity_tbl,
   "PRDC FX volatility sensitivity",
   n = 20
 )
-
-print(volatility_sensitivity_plot)
+show_plot_LFL(volatility_sensitivity_plot)
 ```
 
 通常のOptionのように「Volatility上昇は必ず価値上昇」と単純には言えない。PRDC CouponはCap付きの上昇Payoffであると同時にFloorを持ち、現在のSpot、金利差、満期および各境界への到達確率によってVolatility感応度が変わる。
 
-### 9.5.3 Monte Carlo標準誤差
+### II-9.5.3 モンテカルロ標準誤差
 
 Monte Carlo推定値には統計誤差が存在する。各パスについて全CouponとRedemptionの現在価値を計算し、標本平均、標準偏差、標準誤差および信頼区間を求める。
 
@@ -1087,25 +1075,25 @@ GaussQuant::show_tbl_GQH(
 
 パス数を4倍にすると、他の条件が同じであれば標準誤差は概ね半分になる。ただし、計算量も増加する。実務では、パス数を増やすだけでなく、Antithetic Variates、Control Variates、Quasi-Monte Carloなどの分散削減法を併用する。
 
-## 9.6 モデルの限界とPart II総括
+## II-9.6 モデルの限界とPart II総括
 
-### 9.6.1 PRDC評価の限界
+### II-9.6.1 金利為替系デリバティブ評価の限界
 
 本章のモデルは、PRDCの基本的な非線形CouponとMonte Carlo評価を理解するための簡略モデルである。主な制約は次のとおりである。
 
-### 9.6.2 金利を決定論的とした
+### II-9.6.2 金利を決定論的とした
 
 Domestic、ForeignおよびDiscount Curveをフラットかつ決定論的とした。実際の長期PRDCでは、Domestic金利とForeign金利の変動が、FX Forward、割引係数およびCoupon価値へ影響する。
 
-### 9.6.3 FX volatilityを一定とした
+### II-9.6.3 FX volatilityを一定とした
 
 一定のBlack volatilityを使用した。実際のFX Option市場には、満期方向とStrike方向のVolatility Surfaceが存在する。長期PRDCでは、Smile、SkewおよびVolatility term structureの影響が重要となる。
 
-### 9.6.4 相関を明示的に扱っていない
+### II-9.6.4 相関を明示的に扱っていない
 
 本格的なPRDCモデルでは、Domestic金利、Foreign金利およびFXの間の相関を扱う必要がある。金利とFXを別々に評価して単純に合成するだけでは、長期のCross-currencyリスクを十分に表現できない。
 
-### 9.6.5 発行体コール権を含めていない
+### II-9.6.5 発行体コール権を含めていない
 
 実際のPRDCには、発行体がCoupon日に商品を期限前償還できるCallable条項が含まれることが多い。
 
@@ -1129,7 +1117,7 @@ V_{\mathrm{noncallable\ PRDC}}
 V_{\mathrm{issuer\ call}}
 $$
 
-### 9.6.6 Part IIのまとめ
+### II-9.6.6 Part IIのまとめ
 
 第II部では、金融商品のキャッシュフロー、マーケットコンベンション、確率モデルおよび数値計算を段階的に扱った。
 
@@ -1168,7 +1156,7 @@ Part IIを通じた共通原則は、商品ごとに異なる数式を暗記す�
 
 GaussQuantは、QuantLib SWIGの低水準オブジェクトを金融商品の計算層へまとめる。LagrangeFinanceの章側は、商品構造、数式、入力条件、表、グラフおよび金融的解釈に集中する。
 
-## 9.7 まとめ
+## II-9.7 まとめ
 
 PRDCは、将来のFX Rateに連動するCouponを持つ長期の仕組債である。
 

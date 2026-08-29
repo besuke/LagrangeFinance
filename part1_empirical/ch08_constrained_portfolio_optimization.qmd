@@ -35,7 +35,7 @@ source(file.path("R", "utility_LFL.R"))
 バックテストと評価
 ```
 
-## 8.1 ポートフォリオ構築の全体像
+## I-8.1 ポートフォリオ構築の全体像
 
 銘柄数を$N$、ウェイトを$\boldsymbol{w}$、期待リターンを$\boldsymbol{\mu}$、分散共分散行列を$\boldsymbol{\Sigma}$とする。
 
@@ -76,9 +76,9 @@ $$
 
 ここで$\gamma$はリスク回避度である。
 
-## 8.2 投資ユニバースとリスク推定
+## I-8.2 投資ユニバースとリスク推定
 
-### 第7章の出力
+### I-8.2.1 第7章の出力
 
 ```{r}
 #| label: read-chapter-08-data
@@ -124,7 +124,7 @@ tbl_input_overview <- tribble(
 show_table_LFL(tbl_input_overview)
 ```
 
-### 最初のリバランス年度
+### I-8.2.2 最初のリバランス年度
 
 本ドラフトでは、まず1年度分のポートフォリオを構築し、最適化が実行できることを確認する。
 
@@ -146,7 +146,7 @@ tbl_universe_one_year <- tbl_investment_universe |>
 
 対象銘柄を20銘柄に限定することで、最初のドラフトではデータ確認と最適化の流れを見やすくする。
 
-### リターン行列
+### I-8.2.3 リターン行列
 
 ```{r}
 #| label: create-return-matrix
@@ -201,21 +201,21 @@ mat_covariance <- mat_covariance[
 ]
 ```
 
-## 8.3 制約条件
+## I-8.3 制約条件
 
-### 完全投資
+### I-8.3.1 完全投資
 
 $$
 \sum_{i=1}^{N}w_i=1
 $$
 
-### ロングオンリー
+### I-8.3.2 ロングオンリー
 
 $$
 w_i\geq 0
 $$
 
-### 銘柄別ウェイト上限
+### I-8.3.3 銘柄別ウェイト上限
 
 $$
 w_i\leq w_{\max}
@@ -223,7 +223,7 @@ $$
 
 本ドラフトでは、1銘柄の上限を20%とする。
 
-### VaR上限
+### I-8.3.4 VaR上限
 
 正規分布近似によるVaRを、
 
@@ -249,7 +249,7 @@ z_c
 VaR_{\max}
 $$
 
-### 売買回転率
+### I-8.3.5 売買回転率
 
 前回ウェイトを$\boldsymbol{w}_{t-1}$とすると、
 
@@ -265,9 +265,9 @@ $$
 
 最初のドラフトでは、ロングオンリー、完全投資、ウェイト上限、VaR上限までを実装し、売買回転率はバックテスト部分で計算する。
 
-## 8.4 制約付きポートフォリオ最適化
+## I-8.4 制約付きポートフォリオ最適化
 
-### 計算関数
+### I-8.4.1 計算関数
 
 ```{r}
 #| label: define-portfolio-functions
@@ -320,7 +320,7 @@ portfolio_var_LFL <- function(
 }
 ```
 
-### 最適化条件
+### I-8.4.2 最適化条件
 
 ```{r}
 #| label: define-optimization-parameters
@@ -331,7 +331,7 @@ confidence_level <- 0.95
 risk_aversion <- 5
 ```
 
-### `nloptr`による最適化
+### I-8.4.3 `nloptr`による最適化
 
 ```{r}
 #| label: optimize-one-portfolio
@@ -549,7 +549,7 @@ tbl_optimized_weights <- tbl_universe_one_year |>
   ) |>
   arrange(desc(weight))
 
-show_table_LFL(tbl_optimized_weights, n = Inf)
+show_table_LFL(tbl_optimized_weights)
 ```
 
 制約条件を確認する。
@@ -581,7 +581,7 @@ tbl_constraint_check <- tribble(
 show_table_LFL(tbl_constraint_check)
 ```
 
-## 8.5 バックテスト
+## I-8.5 バックテスト
 
 最適化したウェイトを、その後の実現リターンへ適用する。
 
@@ -716,7 +716,7 @@ show_plot_LFL(
 )
 ```
 
-## 8.6 パフォーマンス評価
+## I-8.6 パフォーマンス評価
 
 ```{r}
 #| label: define-performance-functions
@@ -788,7 +788,7 @@ show_table_LFL(tbl_performance_summary)
 
 取引コストと売買回転率は、複数回のリバランスを実装した段階で追加する。本ドラフトでは、最適化、制約確認、実現リターンへの適用、等ウェイトとの比較までを一つの流れとして確認する。
 
-## 8.7 結果の保存
+## I-8.7 結果の保存
 
 ```{r}
 #| label: save-chapter-08-data
@@ -827,7 +827,11 @@ vec_chapter_08_paths <- tbl_chapter_08_outputs |>
     }
   )
 
-vec_chapter_08_paths
+tibble::tibble(
+  output = base::names(vec_chapter_08_paths),
+  path = relative_path_LFL(base::unname(vec_chapter_08_paths))
+) |>
+  show_table_LFL()
 ```
 
 本章では、第7章の期待リターンを使い、ロングオンリー、完全投資、銘柄別ウェイト上限およびVaR上限を満たすポートフォリオを構築した。

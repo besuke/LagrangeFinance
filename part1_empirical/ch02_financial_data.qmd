@@ -18,11 +18,11 @@ source(file.path("R", "utility_LFL.R"))
 
 本章では、企業の財務データを読み込み、データ型、欠損値、年度構成および産業構成を確認する。
 
-## 2.1 分析環境
+## I-2.1 分析環境
 
-## 2.2 財務データの読込みと整備
+## I-2.2 財務データの読込みと整備
 
-### 2.2.1 財務データの読込み
+### I-2.2.1 財務データの読込み
 
 ```{r}
 #| label: read-financial-data
@@ -40,7 +40,7 @@ show_table_LFL(financial_data_raw, n = 10)
 ```
 
 
-### 2.2.2 データ構造の確認
+### I-2.2.2 データ構造の確認
 
 ```{r}
 #| label: inspect-financial-data
@@ -83,10 +83,10 @@ missing_summary <- financial_data_raw |>
   ) |>
   arrange(desc(missing_rate), variable)
 
-show_table_LFL(missing_summary, n = nrow(missing_summary))
+show_table_LFL(missing_summary)
 ```
 
-### 2.2.3 データ型と並び順の整理
+### I-2.2.3 データ型と並び順の整理
 
 企業IDと産業IDは分類変数であるためファクター型へ変換する。年度は整数型へ変換し、前年度の値を正しく取得できるように企業IDと年度の順に並べる。
 
@@ -131,9 +131,9 @@ if (nrow(panel_key_duplicates) > 0) {
 }
 ```
 
-## 2.3 標本構成と売上高分布
+## I-2.3 標本構成と売上高分布
 
-### 2.3.1 年度別の企業数
+### I-2.3.1 年度別の企業数
 
 年度ごとの企業数と観測数を集計する。
 
@@ -149,7 +149,7 @@ firms_by_year <- financial_data |>
   ) |>
   arrange(year)
 
-show_table_LFL(firms_by_year, n = nrow(firms_by_year))
+show_table_LFL(firms_by_year)
 ```
 
 ```{r}
@@ -170,7 +170,7 @@ p_firms_by_year <- firms_by_year |>
 add_lagrange_theme_LFL(p_firms_by_year)
 ```
 
-### 2.3.2 産業別の企業数
+### I-2.3.2 産業別の企業数
 
 最新年度について、産業ごとの企業数を集計する。
 
@@ -214,7 +214,7 @@ p_firms_by_industry <- firms_by_industry |>
 add_lagrange_theme_LFL(p_firms_by_industry)
 ```
 
-### 2.3.3 売上高の分布
+### I-2.3.3 売上高の分布
 
 売上高は企業規模によって大きく異なるため、元の値と自然対数の両方を確認する。
 
@@ -284,9 +284,9 @@ p_log_sales_distribution <- financial_data |>
 add_lagrange_theme_LFL(p_log_sales_distribution)
 ```
 
-## 2.4 株主資本とROE分析
+## I-2.4 株主資本とROE分析
 
-### 2.4.1 株主資本とROE
+### I-2.4.1 株主資本とROE
 
 本章では、営業資産から営業負債を控除した純営業資産と、金融負債から金融資産を控除した純金融負債の差として株主資本を計算する。
 
@@ -392,7 +392,7 @@ p_roe_distribution <- financial_data |>
 add_lagrange_theme_LFL(p_roe_distribution)
 ```
 
-### 2.4.2 産業別のROE
+### I-2.4.2 産業別のROE
 
 ```{r}
 #| label: industry-roe-summary
@@ -447,7 +447,7 @@ add_lagrange_theme_LFL(p_industry_roe) +
   )
 ```
 
-### 2.4.3 企業の順位付け
+### I-2.4.3 企業の順位付け
 
 最新年度について、産業内でROEが高い企業から順に順位を付ける。`dense_rank()`を使うと、同順位がある場合でも次の順位を飛ばさない。
 
@@ -499,9 +499,9 @@ top_firm_by_industry <- latest_roe_ranking |>
 show_table_LFL(top_firm_by_industry, n = 20)
 ```
 
-## 2.5 上級デュポン・モデル
+## I-2.5 上級デュポン・モデル
 
-### 2.5.1 ROEのデュポン分解
+### I-2.5.1 ROEのデュポン分解
 
 上級デュポン・モデルでは、ROEを純営業資産利益率と財務レバレッジの効果へ分解する。
 
@@ -582,7 +582,7 @@ dupont_validation <- financial_data_dupont |>
 show_table_LFL(dupont_validation)
 ```
 
-### 2.5.2 PMとATOの関係
+### I-2.5.2 PMとATOの関係
 
 営業利益率PMと純営業資産回転率ATOは、企業の事業モデルを異なる側面から表す。産業別中央値を使って両者の関係を確認する。
 
@@ -682,9 +682,9 @@ add_lagrange_theme_LFL(p_pm_by_industry) +
   )
 ```
 
-## 2.6 財務指標の要約と中間データ
+## I-2.6 財務指標の要約と中間データ
 
-### 2.6.1 複数の財務指標の要約
+### I-2.6.1 複数の財務指標の要約
 
 複数列に同じ集計を適用する場合は、列名のベクトルと`purrr::map_dfr()`を組み合わせる。
 
@@ -718,10 +718,10 @@ metric_summary <- financial_metrics |>
     }
   )
 
-show_table_LFL(metric_summary, n = nrow(metric_summary))
+show_table_LFL(metric_summary)
 ```
 
-### 2.6.2 中間データの保存
+### I-2.6.2 中間データの保存
 
 第3章では、本章で計算した株主資本、前年度株主資本およびROEなどを株式データと結合する。そのため、上級デュポン・モデルの計算結果を含む整理済みデータを`data/derived/fundamentals/financial_characteristics.parquet`へ保存する。
 
@@ -737,8 +737,13 @@ financial_output_path <-
     )
   )
 
-financial_output_path
-file.info(financial_output_path)[, c("size", "mtime")]
+tbl_financial_output <- tibble::tibble(
+  output_file = relative_path_LFL(financial_output_path),
+  size = base::file.info(financial_output_path)$size,
+  modified = base::file.info(financial_output_path)$mtime
+)
+
+show_table_LFL(tbl_financial_output)
 ```
 
 保存したParquetファイルを読み直し、行数と列名が一致することを確認する。
@@ -767,7 +772,7 @@ stopifnot(
 )
 
 output_summary <- tibble(
-  output_file = financial_output_path,
+  output_file = relative_path_LFL(financial_output_path),
   rows = nrow(financial_output_check),
   columns = ncol(financial_output_check)
 )
@@ -775,7 +780,7 @@ output_summary <- tibble(
 show_table_LFL(output_summary)
 ```
 
-## 2.7 まとめ
+## I-2.7 まとめ
 
 本章では、財務データの構造、欠損値およびパネルデータのキーを確認した。次に、年度別・産業別の企業構成、売上高の分布、株主資本、ROEおよび産業内順位を計算した。最後に、ROEをRNOA、財務レバレッジおよび純借入コストへ分解し、第3章で利用する整理済みデータを`data/derived/fundamentals/financial_characteristics.parquet`へ保存した。
 

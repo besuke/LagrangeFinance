@@ -35,7 +35,7 @@ LASSO・Elastic Netによるファクター選定
 第8章へデータを渡す
 ```
 
-## 7.1 機械学習によるファクター分析
+## I-7.1 機械学習によるファクター分析
 
 第4章では、企業規模と簿価時価比率からSMBとHMLを構築した。第5章では、それらのファクターを使って企業別の期待リターンを推定した。
 
@@ -58,9 +58,9 @@ $$
 
 係数が0にならなかった変数を、予測に利用されたファクターとして確認できる。
 
-## 7.2 分析データの作成
+## I-7.2 分析データの作成
 
-### 既存データの読込み
+### I-7.2.1 既存データの読込み
 
 ```{r}
 #| label: read-chapter-07-data
@@ -106,7 +106,7 @@ tbl_input_overview <- tribble(
 show_table_LFL(tbl_input_overview)
 ```
 
-### 目的変数
+### I-7.2.2 目的変数
 
 年度$t$の情報から、年度$t+1$の超過リターンを予測する。
 
@@ -133,7 +133,7 @@ tbl_target <- tbl_financial |>
   ungroup()
 ```
 
-### 価格特徴量
+### I-7.2.3 価格特徴量
 
 ```{r}
 #| label: create-price-features
@@ -154,7 +154,7 @@ tbl_price_features <- tbl_monthly |>
   )
 ```
 
-### 市場環境特徴量
+### I-7.2.4 市場環境特徴量
 
 ```{r}
 #| label: create-market-features
@@ -170,7 +170,7 @@ tbl_market_features <- tbl_factor |>
   )
 ```
 
-### 学習データ
+### I-7.2.5 学習データ
 
 ```{r}
 #| label: create-machine-learning-data
@@ -222,7 +222,7 @@ tbl_ml <- tbl_target |>
 show_table_LFL(tbl_ml, n = 20)
 ```
 
-## 7.3 tidymodelsによる学習
+## I-7.3 tidymodelsによる学習
 
 `tidymodels`では、前処理とモデルを別々に管理し、それらを`workflow()`でまとめる。
 
@@ -240,7 +240,7 @@ tuning
 prediction
 ```
 
-### 前処理
+### I-7.3.1 前処理
 
 ```{r}
 #| label: define-machine-learning-recipe
@@ -275,7 +275,7 @@ factor_recipe <- recipes::recipe(
   )
 ```
 
-### 時系列分割
+### I-7.3.2 時系列分割
 
 ランダム分割ではなく、年度の順序を維持して学習期間と評価期間を分ける。
 
@@ -312,7 +312,7 @@ tbl_split_overview <- tribble(
 show_table_LFL(tbl_split_overview)
 ```
 
-## 7.4 ファクター選定
+## I-7.4 ファクター選定
 
 LASSO、Ridge、Elastic Netは、同じ`glmnet`エンジンで表現できる。
 
@@ -408,9 +408,9 @@ tbl_selected_factors <- final_factor_fit |>
 show_table_LFL(tbl_selected_factors, n = 30)
 ```
 
-## 7.5 期待リターンの推定
+## I-7.5 期待リターンの推定
 
-### テスト期間の予測
+### I-7.5.1 テスト期間の予測
 
 ```{r}
 #| label: predict-testing-data
@@ -450,7 +450,7 @@ tbl_prediction_metrics <- yardstick::metric_set(
 show_table_LFL(tbl_prediction_metrics)
 ```
 
-### 全データによる最終モデル
+### I-7.5.2 全データによる最終モデル
 
 ```{r}
 #| label: fit-final-factor-model
@@ -485,7 +485,7 @@ tbl_security_scores <- predict(
   ungroup()
 ```
 
-## 7.6 ポートフォリオ候補の作成
+## I-7.6 ポートフォリオ候補の作成
 
 ここでは最適化を行わず、予測値によって銘柄を並べ、分位ポートフォリオを作成する。
 
@@ -510,7 +510,7 @@ tbl_decile_returns <- tbl_security_scores |>
     .groups = "drop"
   )
 
-show_table_LFL(tbl_decile_returns, n = Inf)
+show_table_LFL(tbl_decile_returns)
 ```
 
 最上位10分位と最下位10分位の差を確認する。
@@ -535,10 +535,10 @@ tbl_long_short <- tbl_decile_returns |>
       decile_10 - decile_1
   )
 
-show_table_LFL(tbl_long_short, n = Inf)
+show_table_LFL(tbl_long_short)
 ```
 
-## 7.7 第8章へのデータ保存
+## I-7.7 第8章へのデータ保存
 
 第8章では、期待リターン、過去リターン、投資対象銘柄を使って制約付きポートフォリオを構築する。
 
@@ -624,7 +624,11 @@ vec_chapter_07_paths <- tbl_chapter_07_outputs |>
     }
   )
 
-vec_chapter_07_paths
+tibble::tibble(
+  output = base::names(vec_chapter_07_paths),
+  path = relative_path_LFL(base::unname(vec_chapter_07_paths))
+) |>
+  show_table_LFL()
 ```
 
 本章では、既存の財務データ、株式リターンおよびファクター・データから機械学習用データを作成し、`tidymodels`のワークフローによってファクター選定と期待リターン推定を行った。

@@ -1,5 +1,5 @@
 ---
-title: "第I-6章 イベントスタディ"
+title: "第I-6章 イベント・スタディ"
 execute:
   eval: true
   echo: true
@@ -29,9 +29,9 @@ source(file.path("R", "utility_LFL.R"))
 7. 決算サプライズと短期CARの関係を確認する
 8. イベント単位と日次集計の結果を保存する
 
-## 6.1 イベントスタディの基本設計
+## I-6.1 イベントスタディの基本設計
 
-### 6.1.1 マーケット・モデル
+### I-6.1.1 マーケット・モデル
 
 企業 $i$ の日 $t$ における実現リターンを $R_{i,t}$、市場リターンを $R_{M,t}$ とする。推定期間では、次のマーケット・モデルを推定する。
 
@@ -73,7 +73,7 @@ CAR_{i,t}
 \sum_{\tau=T_1}^{t} AR_{i,\tau}
 $$
 
-### 6.1.2 分析期間
+### I-6.1.2 分析期間
 
 本章では、イベント日0を基準として次の期間を使用する。
 
@@ -86,7 +86,7 @@ $$
 
 推定期間は100取引日、イベント期間は61取引日である。マーケット・モデルの推定には、最低80観測を必要とする。
 
-### 6.1.3 分析環境
+### I-6.1.3 分析環境
 
 ```{r}
 #| label: setup
@@ -165,17 +165,17 @@ tibble(
     "raw_events",
     "derived_events"
   ),
-  path = c(
-    project_dir,
-    raw_event_data_dir,
-    derived_event_data_dir
+  path = base::c(
+    ".",
+    relative_path_LFL(raw_event_data_dir),
+    relative_path_LFL(derived_event_data_dir)
   )
 )
 ```
 
-## 6.2 入力データの読み込みと検証
+## I-6.2 入力データの読み込みと検証
 
-### 6.2.1 入力ファイル
+### I-6.2.1 入力ファイル
 
 本章では次の3ファイルを使用する。
 
@@ -216,11 +216,11 @@ vec_input_path <- purrr::map_chr(
 tibble(
   data_name = names(vec_input_path),
   file_name = basename(vec_input_path),
-  path = unname(vec_input_path)
+  path = relative_path_LFL(base::unname(vec_input_path))
 )
 ```
 
-### 6.2.2 データの読み込み
+### I-6.2.2 データの読み込み
 
 ```{r}
 #| label: read-input-data
@@ -241,7 +241,7 @@ tbl_event_raw <-
   )
 ```
 
-### 6.2.3 必須列の確認
+### I-6.2.3 必須列の確認
 
 ```{r}
 #| label: validate-required-columns
@@ -271,7 +271,7 @@ validate_required_columns_LFL(
 )
 ```
 
-### 6.2.4 データ型の整理
+### I-6.2.4 データ型の整理
 
 ```{r}
 #| label: prepare-input-data
@@ -312,7 +312,7 @@ tbl_event <- tbl_event_raw |>
   )
 ```
 
-### 6.2.5 キーと欠損値の検証
+### I-6.2.5 キーと欠損値の検証
 
 ```{r}
 #| label: validate-keys
@@ -357,7 +357,7 @@ tbl_missing_summary <- bind_rows(
 tbl_missing_summary
 ```
 
-### 6.2.6 入力データの概要
+### I-6.2.6 入力データの概要
 
 ```{r}
 #| label: input-data-overview
@@ -384,7 +384,7 @@ tbl_input_overview <- tribble(
 tbl_input_overview
 ```
 
-### 6.2.7 個別株リターンの分布
+### I-6.2.7 個別株リターンの分布
 
 ```{r}
 #| label: plot-return-distribution
@@ -412,7 +412,7 @@ plot_return_distribution <- tbl_return |>
 plot_return_distribution
 ```
 
-### 6.2.8 市場リターンの時系列
+### I-6.2.8 市場リターンの時系列
 
 ```{r}
 #| label: plot-market-return-series
@@ -439,9 +439,9 @@ plot_market_return_series <- tbl_market |>
 plot_market_return_series
 ```
 
-## 6.3 決算サプライズとイベント分類
+## I-6.3 決算サプライズとイベント分類
 
-### 6.3.1 決算サプライズ
+### I-6.3.1 決算サプライズ
 
 決算サプライズは、実現利益と予想利益の差を期首時価総額で標準化して計算する。
 
@@ -479,7 +479,7 @@ tbl_event |>
   slice_head(n = 20)
 ```
 
-### 6.3.2 イベント強度別の概要
+### I-6.3.2 イベント強度別の概要
 
 ```{r}
 #| label: summarize-event-strength
@@ -509,7 +509,7 @@ tbl_event_strength_summary <- tbl_event |>
 tbl_event_strength_summary
 ```
 
-### 6.3.3 決算サプライズの分布
+### I-6.3.3 決算サプライズの分布
 
 ```{r}
 #| label: plot-earnings-surprise-distribution
@@ -540,7 +540,7 @@ plot_earnings_surprise_distribution <- tbl_event |>
 plot_earnings_surprise_distribution
 ```
 
-### 6.3.4 イベント強度別の箱ひげ図
+### I-6.3.4 イベント強度別の箱ひげ図
 
 ```{r}
 #| label: plot-surprise-by-strength
@@ -572,7 +572,7 @@ plot_surprise_by_strength <- tbl_event |>
 plot_surprise_by_strength
 ```
 
-### 6.3.5 年度別イベント件数
+### I-6.3.5 年度別イベント件数
 
 ```{r}
 #| label: plot-events-by-year
@@ -606,9 +606,9 @@ plot_events_by_year <- tbl_event |>
 plot_events_by_year
 ```
 
-## 6.4 イベント日とイベント・パネル
+## I-6.4 イベント日とイベント・パネル
 
-### 6.4.1 取引日カレンダー
+### I-6.4.1 取引日カレンダー
 
 市場リターンの日付を取引日カレンダーとして使用する。
 
@@ -654,7 +654,7 @@ tbl_return_market <- tbl_return |>
   )
 ```
 
-### 6.4.2 イベント日0
+### I-6.4.2 イベント日0
 
 決算発表は取引終了後に行われると仮定する。そのため、発表日が取引日であっても、その次の取引日をイベント日0とする。
 
@@ -679,7 +679,7 @@ tbl_event |>
   slice_head(n = 20)
 ```
 
-### 6.4.3 発表日からイベント日0までの日数
+### I-6.4.3 発表日からイベント日0までの日数
 
 ```{r}
 #| label: plot-event-date-gap
@@ -715,7 +715,7 @@ plot_event_date_gap <- tbl_event_gap |>
 plot_event_date_gap
 ```
 
-### 6.4.4 イベント・パネル
+### I-6.4.4 イベント・パネル
 
 ```{r}
 #| label: create-event-study-panel
@@ -740,7 +740,7 @@ tbl_event_panel |>
   slice_head(n = 20)
 ```
 
-### 6.4.5 データ利用可能性
+### I-6.4.5 データ利用可能性
 
 ```{r}
 #| label: summarize-event-data-coverage
@@ -799,7 +799,7 @@ tbl_event_coverage |>
   )
 ```
 
-### 6.4.6 推定期間の利用可能日数
+### I-6.4.6 推定期間の利用可能日数
 
 ```{r}
 #| label: plot-estimation-coverage
@@ -831,9 +831,9 @@ plot_estimation_coverage <- tbl_event_coverage |>
 plot_estimation_coverage
 ```
 
-## 6.5 マーケット・モデルの推定
+## I-6.5 マーケット・モデルの推定
 
-### 6.5.1 イベント別回帰
+### I-6.5.1 イベント別回帰
 
 ```{r}
 #| label: estimate-market-models
@@ -850,7 +850,7 @@ tbl_market_model |>
   slice_head(n = 20)
 ```
 
-### 6.5.2 推定結果の概要
+### I-6.5.2 推定結果の概要
 
 ```{r}
 #| label: summarize-market-models
@@ -875,7 +875,7 @@ tbl_market_model_summary <- tbl_market_model |>
 tbl_market_model_summary
 ```
 
-### 6.5.3 ベータの分布
+### I-6.5.3 ベータの分布
 
 ```{r}
 #| label: plot-market-beta
@@ -899,7 +899,7 @@ plot_market_beta <- tbl_market_model |>
 plot_market_beta
 ```
 
-### 6.5.4 アルファの分布
+### I-6.5.4 アルファの分布
 
 ```{r}
 #| label: plot-market-alpha
@@ -926,7 +926,7 @@ plot_market_alpha <- tbl_market_model |>
 plot_market_alpha
 ```
 
-### 6.5.5 決定係数の分布
+### I-6.5.5 決定係数の分布
 
 ```{r}
 #| label: plot-market-model-r-squared
@@ -946,7 +946,7 @@ plot_market_model_r_squared <- tbl_market_model |>
 plot_market_model_r_squared
 ```
 
-### 6.5.6 ベータと決定係数
+### I-6.5.6 ベータと決定係数
 
 ```{r}
 #| label: plot-beta-r-squared
@@ -977,9 +977,9 @@ plot_beta_r_squared <- tbl_market_model |>
 plot_beta_r_squared
 ```
 
-## 6.6 異常リターンと累積異常リターン
+## I-6.6 異常リターンと累積異常リターン
 
-### 6.6.1 ARとCAR
+### I-6.6.1 ARとCAR
 
 ```{r}
 #| label: compute-abnormal-returns
@@ -1008,7 +1008,7 @@ tbl_abnormal_return |>
   slice_head(n = 20)
 ```
 
-### 6.6.2 AARとCAAR
+### I-6.6.2 AARとCAAR
 
 イベント強度 $g$ に属するイベント数を $N_g$ とすると、平均異常リターンは次式で表される。
 
@@ -1108,7 +1108,7 @@ tbl_daily_statistics <- tbl_abnormal_return |>
 tbl_daily_statistics
 ```
 
-### 6.6.3 イベント強度別CAAR
+### I-6.6.3 イベント強度別CAAR
 
 ```{r}
 #| label: plot-caar-by-strength
@@ -1154,7 +1154,7 @@ plot_caar_by_strength <- tbl_daily_statistics |>
 plot_caar_by_strength
 ```
 
-### 6.6.4 イベント日前後のAAR
+### I-6.6.4 イベント日前後のAAR
 
 ```{r}
 #| label: plot-aar-around-event
@@ -1203,7 +1203,7 @@ plot_aar_around_event <- tbl_daily_statistics |>
 plot_aar_around_event
 ```
 
-### 6.6.5 イベント日0のAAR
+### I-6.6.5 イベント日0のAAR
 
 ```{r}
 #| label: plot-event-day-aar
@@ -1236,7 +1236,7 @@ plot_event_day_aar <- tbl_daily_statistics |>
 plot_event_day_aar
 ```
 
-### 6.6.6 イベント日後のCAAR
+### I-6.6.6 イベント日後のCAAR
 
 ```{r}
 #| label: plot-post-event-caar
@@ -1277,7 +1277,7 @@ plot_post_event_caar <- tbl_daily_statistics |>
 plot_post_event_caar
 ```
 
-### 6.6.7 イベント強度別AR分布
+### I-6.6.7 イベント強度別AR分布
 
 ```{r}
 #| label: plot-ar-distribution-by-strength
@@ -1317,9 +1317,9 @@ plot_ar_distribution_by_strength <- tbl_abnormal_return |>
 plot_ar_distribution_by_strength
 ```
 
-## 6.7 イベント・ウィンドウ分析
+## I-6.7 イベント・ウィンドウ分析
 
-### 6.7.1 ウィンドウ定義
+### I-6.7.1 ウィンドウ定義
 
 ```{r}
 #| label: define-summary-windows
@@ -1336,7 +1336,7 @@ tbl_summary_window <- tribble(
 tbl_summary_window
 ```
 
-### 6.7.2 イベント別CAR
+### I-6.7.2 イベント別CAR
 
 ```{r}
 #| label: compute-event-window-returns
@@ -1351,7 +1351,7 @@ tbl_event_window_return |>
   slice_head(n = 20)
 ```
 
-### 6.7.3 イベント強度別の平均CAR
+### I-6.7.3 イベント強度別の平均CAR
 
 ```{r}
 #| label: summarize-event-window-returns
@@ -1404,7 +1404,7 @@ tbl_event_window_summary <- tbl_event_window_return |>
 tbl_event_window_summary
 ```
 
-### 6.7.4 短期CARの分布
+### I-6.7.4 短期CARの分布
 
 ```{r}
 #| label: plot-short-window-car
@@ -1439,7 +1439,7 @@ plot_short_window_car <- tbl_event_window_return |>
 plot_short_window_car
 ```
 
-### 6.7.5 ウィンドウ別平均CAR
+### I-6.7.5 ウィンドウ別平均CAR
 
 ```{r}
 #| label: plot-window-mean-car
@@ -1475,7 +1475,7 @@ plot_window_mean_car <- tbl_event_window_summary |>
 plot_window_mean_car
 ```
 
-### 6.7.6 正のCARとなったイベントの割合
+### I-6.7.6 正のCARとなったイベントの割合
 
 ```{r}
 #| label: plot-positive-car-ratio
@@ -1512,7 +1512,7 @@ plot_positive_car_ratio <- tbl_event_window_summary |>
 plot_positive_car_ratio
 ```
 
-### 6.7.7 平均CARのヒートマップ
+### I-6.7.7 平均CARのヒートマップ
 
 ```{r}
 #| label: plot-window-car-heatmap
@@ -1547,9 +1547,9 @@ plot_window_car_heatmap <- tbl_event_window_summary |>
 plot_window_car_heatmap
 ```
 
-## 6.8 決算サプライズと短期CAR
+## I-6.8 決算サプライズと短期CAR
 
-### 6.8.1 回帰分析
+### I-6.8.1 回帰分析
 
 ```{r}
 #| label: estimate-surprise-regression
@@ -1570,7 +1570,7 @@ broom::tidy(model_surprise_car)
 broom::glance(model_surprise_car)
 ```
 
-### 6.8.2 決算サプライズと短期CAR
+### I-6.8.2 決算サプライズと短期CAR
 
 ```{r}
 #| label: plot-surprise-car
@@ -1608,7 +1608,7 @@ plot_surprise_car <- tbl_surprise_regression |>
 plot_surprise_car
 ```
 
-### 6.8.3 年度別の関係
+### I-6.8.3 年度別の関係
 
 ```{r}
 #| label: plot-surprise-car-by-year
@@ -1648,9 +1648,9 @@ plot_surprise_car_by_year <- tbl_surprise_regression |>
 plot_surprise_car_by_year
 ```
 
-## 6.9 分析結果の保存
+## I-6.9 分析結果の保存
 
-### 6.9.1 イベント単位の結果
+### I-6.9.1 イベント単位の結果
 
 ```{r}
 #| label: prepare-event-level-output
@@ -1680,7 +1680,7 @@ tbl_event_output <- tbl_market_model |>
   arrange(event_ID)
 ```
 
-### 6.9.2 日次結果
+### I-6.9.2 日次結果
 
 ```{r}
 #| label: prepare-daily-output
@@ -1715,7 +1715,7 @@ tbl_event_summary_output <- tbl_daily_statistics |>
   )
 ```
 
-### 6.9.3 Parquet保存
+### I-6.9.3 Parquet保存
 
 ```{r}
 #| label: save-results
@@ -1752,11 +1752,11 @@ vec_output_path <- purrr::imap_chr(
 
 tibble(
   output_name = names(vec_output_path),
-  path = unname(vec_output_path)
+  path = relative_path_LFL(base::unname(vec_output_path))
 )
 ```
 
-### 6.9.4 保存結果の検証
+### I-6.9.4 保存結果の検証
 
 ```{r}
 #| label: verify-results
@@ -1798,7 +1798,7 @@ tbl_output_verification <- purrr::imap_dfr(
 tbl_output_verification
 ```
 
-## 6.10 まとめ
+## I-6.10 まとめ
 
 本章では、決算発表の翌取引日をイベント日0として、マーケット・モデルによるイベントスタディを実施した。推定期間にはイベント日の130取引日前から31取引日前までの100日を使用し、イベント期間には30取引日前から30取引日後までの61日を使用した。
 

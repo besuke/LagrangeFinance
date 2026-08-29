@@ -1,5 +1,5 @@
 ---
-title: "第III-5章 Option Greeks：GaussQuant vs Monte Carlo + torch"
+title: "第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較"
 execute:
   eval: true
   echo: true
@@ -15,10 +15,7 @@ execute:
 source(file.path("R", "utility_LFL.R"))
 ```
 
-# Option Greeks：GaussQuantとMonte Carlo自動微分
-
-前章では、Automatic Differentiationを、偏微分、連鎖律、Computational Graph、
-Reverse Modeという観点から整理した。
+前章では、Bump & RevalueからAutomatic Differentiationへ発想を切り替え、偏微分、連鎖律、Computational Graph、Forward Mode、Reverse Modeを整理した。本章からは、その仕組みを実際の金融商品へ適用する。
 
 本章では、解析的なBlack-Scholes式を`torch`で書き直すのではなく、
 既存の金融工学ライブラリであるGaussQuantを基準値として利用し、
@@ -53,7 +50,7 @@ $$
 GaussQuantはQuantLibを利用した既存のPricing Engineとして使い、
 `torch`ではMonte Carlo PricingそのものをDifferentiable Computational Graphとして構築する。
 
-## 計算条件
+## III-5.1 計算条件
 
 同じEuropean Call OptionをGaussQuantとMonte Carloで評価する。
 
@@ -93,7 +90,7 @@ tbl_option_input
 
 ここでは比較を明確にするため、フラットな金利、配当利回り、Volatilityを用いる。
 
-## GaussQuantによる基準価格とGreeks
+## III-5.2 GaussQuantによる基準価格とグリークス
 
 GaussQuantでは、European OptionをQuantLibオブジェクトとして構築できる。
 
@@ -135,7 +132,7 @@ tbl_gaussquant_greeks
 
 ここで得られる値を、本章におけるBenchmarkとする。
 
-## Monte CarloによるOption Pricing
+## III-5.3 モンテカルロによるOption Pricing
 
 Risk-Neutral Measureの下で、配当利回り$q$を持つ株価過程を、
 
@@ -196,7 +193,7 @@ $$
 
 となる。
 
-## Common Random Numbers
+## III-5.4 Common Random Numbers
 
 GaussQuantとの比較や感応度の検算では、Monte Carlo Noiseをできるだけ抑える必要がある。
 
@@ -217,7 +214,7 @@ z_t <- torch_randn(
 乱数$Z$は市場リスクファクターではないため、
 `requires_grad = TRUE`は指定しない。
 
-## 微分可能なMonte Carlo Pricing
+## III-5.5 微分可能なモンテカルロ Pricing
 
 Monte Carlo PricingをTensor演算だけで構成する。
 
@@ -268,7 +265,7 @@ $$
 からTerminal Spot、Payoff、Discounting、Monte Carlo Averageまでが
 一つのComputational Graphとして接続される。
 
-## torch Tensorの設定
+## III-5.6 torch Tensorの設定
 
 微分対象となる市場変数をTensorとして定義する。
 
@@ -304,7 +301,7 @@ maturity_t <- torch_tensor(
 )
 ```
 
-## Monte Carlo NPV
+## III-5.7 モンテカルロ NPV
 
 同じ乱数を用いてMonte Carlo価格を計算する。
 
@@ -324,7 +321,7 @@ option_npv_mc_t <- european_call_mc_torch(
 option_npv_mc_t
 ```
 
-## Delta・Vega・Thetaの自動微分
+## III-5.8 Delta・Vega・Thetaの自動微分
 
 Monte Carlo価格を最終出力としてReverse Mode Automatic Differentiationを行う。
 
@@ -343,8 +340,8 @@ first_grad <- autograd_grad(
 delta_mc <- first_grad[[1]]$item()
 vega_mc <- first_grad[[2]]$item()
 
-# maturity は残存期間 T なので、
-# Calendar-Time Theta は -dV/dT とする。
+## maturity は残存期間 T なので、
+## Calendar-Time Theta は -dV/dT とする。
 theta_mc <- -first_grad[[3]]$item()
 
 tbl_mc_first_order_greeks <- tribble(
@@ -375,7 +372,7 @@ $$
 
 をMonte Carlo Pricing Graphから直接取得している。
 
-## GammaとPayoffのKink
+## III-5.9 GammaとペイオフのKink
 
 Gammaには注意が必要である。
 
@@ -396,7 +393,7 @@ Monte Carlo Gammaを単純な二階ADだけで安定して推定することは�
 そこで本章ではGammaについて、Payoffを滑らかに近似した
 Smooth Payoffを用いて二階自動微分を確認する。
 
-## Smooth PayoffによるGamma
+## III-5.10 Smooth ペイオフによるGamma
 
 正の部分、
 
@@ -559,7 +556,7 @@ $$
 
 ただし、このGammaはSmooth Payoffによる近似値である点に注意する。
 
-## GaussQuantとMonte Carlo + torchの比較
+## III-5.11 GaussQuantとモンテカルロ + torchの比較
 
 Monte Carloの結果をまとめる。
 
@@ -627,7 +624,7 @@ NPV、Delta、Vega、Thetaは、Monte Carlo Path上の微分をそのまま利�
 GammaについてはCall PayoffのKinkがあるため、
 Smooth Payoffによる二階ADを使用している。
 
-## Monte Carlo標準誤差
+## III-5.12 モンテカルロ標準誤差
 
 Monte Carlo価格には統計誤差が存在する。
 
@@ -690,7 +687,7 @@ tbl_mc_error
 GaussQuantとMonte Carlo価格の差がMonte Carlo Standard Errorと同程度であれば、
 差の多くはSimulation Noiseとして説明できる。
 
-## Automatic Differentiationの意味
+## III-5.13 自動微分の意味
 
 本章で重要なのは、Black-Scholesの解析式を自動微分したことではない。
 
@@ -746,7 +743,7 @@ $$
 
 となる。
 
-## PRDCへの接続
+## III-5.14 金利為替系デリバティブへの接続
 
 European Optionでは、Risk Factorは少数であった。
 
@@ -797,7 +794,7 @@ FX Delta + JPY DV01 + Foreign DV01 + Vega
 本章のMonte Carlo + torch実装は、
 第III-7章で扱うPRDC Riskへの直接の準備となる。
 
-## まとめ
+## III-5.15 まとめ
 
 本章では、European Optionについて、
 
@@ -847,7 +844,7 @@ $$
 
 ことにあると分かる。
 
-次章ではこの考え方を金利商品へ拡張し、
+次章では、少数のRisk Factorを持つOptionから、多数のCurve Nodeを持つ金利商品へ問題の次元を拡張し、
 
 $$
 \boxed{

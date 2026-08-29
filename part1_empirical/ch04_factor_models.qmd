@@ -1,5 +1,5 @@
 ---
-title: "第I-4章 ファクターモデル析"
+title: "第I-4章 ファクターモデル分析"
 execute:
   eval: true
   echo: true
@@ -28,12 +28,12 @@ source(file.path("R", "utility_LFL.R"))
 7. 第5章以降で使用するファクター・データを保存する
 
 
-## 4.1 分析環境
+## I-4.1 分析環境
 本章では、第1章から第3章と同じ共通ユーティリティを利用する。ファイル探索、Parquet読込み、表の表示、グラフのテーマ設定を各章で重複して定義しない。
 
-## 4.2 入力データ
+## I-4.2 入力データ
 
-### 4.2.1 第3章の出力の読込み
+### I-4.2.1 第3章の出力の読込み
 
 第3章で作成した次の2ファイルを読み込む。
 
@@ -98,7 +98,7 @@ tbl_input_overview <- tribble(
 show_table_LFL(tbl_input_overview)
 ```
 
-### 4.2.2 必須列とパネルキー
+### I-4.2.2 必須列とパネルキー
 
 分析を開始する前に、必要な列とパネルキーの一意性を確認する。
 
@@ -158,7 +158,7 @@ show_table_LFL(tbl_monthly_key_duplicates)
 show_table_LFL(tbl_annual_key_duplicates)
 ```
 
-### 4.2.3 分析用補助関数
+### I-4.2.3 分析用補助関数
 
 次の関数は、欠損値や非有限値を除外して要約統計量と加重平均を計算する。
 
@@ -194,9 +194,9 @@ compute_significance_stars <- function(p_value) {
 }
 ```
 
-## 4.3 ポートフォリオ形成と市場リターン
+## I-4.3 ポートフォリオ形成と市場リターン
 
-### 4.3.1 前年度情報の準備
+### I-4.3.1 前年度情報の準備
 
 年度 $t$ の月次リターンに対して、年度 $t-1$ 末に観測された時価総額と株主資本を使用する。これにより、将来情報をポートフォリオ形成に利用することを防ぐ。
 
@@ -243,10 +243,10 @@ tbl_lagged_variable_availability <- tbl_annual |>
     .groups = "drop"
   )
 
-show_table_LFL(tbl_lagged_variable_availability, n = Inf)
+show_table_LFL(tbl_lagged_variable_availability)
 ```
 
-### 4.3.2 市場ポートフォリオ
+### I-4.3.2 市場ポートフォリオ
 
 年度 $t$ の企業 $i$ の市場ポートフォリオ・ウェイトは、前年度末時価総額から計算する。
 
@@ -281,7 +281,7 @@ if (any(abs(tbl_market_weight_check$weight_sum - 1) > 1e-10)) {
   stop("市場ポートフォリオの年度別ウェイト合計が1ではありません。")
 }
 
-show_table_LFL(tbl_market_weight_check, n = Inf)
+show_table_LFL(tbl_market_weight_check)
 ```
 
 市場ポートフォリオの月次リターンは、前年度末時価総額による加重平均である。
@@ -379,7 +379,7 @@ plot_cumulative_market_return <- tbl_market_returns |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_cumulative_market_return))
 ```
 
-### 4.3.3 ポートフォリオ形成ユニバース
+### I-4.3.3 ポートフォリオ形成ユニバース
 
 企業規模と簿価時価比率の両方を利用できる企業を共通の形成ユニバースとする。
 
@@ -447,13 +447,13 @@ if (nrow(tbl_empty_portfolios) > 0) {
   stop("企業が割り当てられていない2×3ポートフォリオがあります。")
 }
 
-show_table_LFL(tbl_formation_breakpoints, n = Inf)
-show_table_LFL(tbl_portfolio_membership_counts, n = Inf)
+show_table_LFL(tbl_formation_breakpoints)
+show_table_LFL(tbl_portfolio_membership_counts)
 ```
 
-## 4.4 単変量ポートフォリオ・ソート
+## I-4.4 単変量ポートフォリオ・ソート
 
-### 4.4.1 企業規模10分位ポートフォリオ
+### I-4.4.1 企業規模10分位ポートフォリオ
 
 企業規模10分位ごとに、等加重リターンと前年度末時価総額加重リターンを計算する。
 
@@ -506,7 +506,7 @@ tbl_size_decile_summary <- tbl_size_decile_returns |>
   ) |>
   arrange(ME_rank10)
 
-show_table_LFL(tbl_size_decile_summary, n = Inf)
+show_table_LFL(tbl_size_decile_summary)
 ```
 
 ```{r}
@@ -546,7 +546,7 @@ plot_size_decile <- tbl_size_decile_summary |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_size_decile))
 ```
 
-### 4.4.2 簿価時価比率10分位ポートフォリオ
+### I-4.4.2 簿価時価比率10分位ポートフォリオ
 
 ```{r}
 #| label: calculate-beme-decile-returns
@@ -585,7 +585,7 @@ tbl_beme_decile_summary <- tbl_beme_decile_returns |>
   ) |>
   arrange(BEME_rank10)
 
-show_table_LFL(tbl_beme_decile_summary, n = Inf)
+show_table_LFL(tbl_beme_decile_summary)
 ```
 
 ```{r}
@@ -625,9 +625,9 @@ plot_beme_decile <- tbl_beme_decile_summary |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_beme_decile))
 ```
 
-## 4.5 CAPM
+## I-4.5 CAPM
 
-### 4.5.1 モデルの推定
+### I-4.5.1 モデルの推定
 
 CAPMでは、ポートフォリオ $p$ の超過リターンを市場超過リターンで説明する。
 
@@ -685,8 +685,8 @@ tbl_capm_alpha <- tbl_capm_results |>
     significance
   )
 
-show_table_LFL(tbl_capm_results, n = Inf)
-show_table_LFL(tbl_capm_fit, n = Inf)
+show_table_LFL(tbl_capm_results)
+show_table_LFL(tbl_capm_fit)
 ```
 
 ```{r}
@@ -709,7 +709,7 @@ plot_capm_alpha <- tbl_capm_alpha |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_capm_alpha))
 ```
 
-### 4.5.2 証券市場線
+### I-4.5.2 証券市場線
 
 ```{r}
 #| label: plot-security-market-line
@@ -760,9 +760,9 @@ plot_security_market_line <- tbl_security_market_line |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_security_market_line))
 ```
 
-## 4.6 2×3ポートフォリオとSMB・HML
+## I-4.6 2×3ポートフォリオとSMB・HML
 
-### 4.6.1 Size--BE/MEポートフォリオ
+### I-4.6.1 Size--BE/MEポートフォリオ
 
 企業規模をSmallとBigの2群、簿価時価比率をLow、Neutral、Highの3群に分ける。
 
@@ -829,7 +829,7 @@ tbl_ff_portfolio_summary <- tbl_ff_portfolio_returns |>
   ) |>
   arrange(FF_portfolio_type)
 
-show_table_LFL(tbl_ff_portfolio_summary, n = Inf)
+show_table_LFL(tbl_ff_portfolio_summary)
 ```
 
 ```{r}
@@ -895,7 +895,7 @@ plot_ff_cumulative <- tbl_ff_portfolio_returns |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_ff_cumulative))
 ```
 
-### 4.6.2 SMBとHML
+### I-4.6.2 SMBとHML
 
 SMBはSmallポートフォリオの平均リターンからBigポートフォリオの平均リターンを引いて計算する。
 
@@ -968,7 +968,7 @@ if (nrow(tbl_invalid_factor_rows) > 0) {
 show_table_LFL(tbl_factor)
 ```
 
-### 4.6.3 ファクターの要約統計量
+### I-4.6.3 ファクターの要約統計量
 
 ```{r}
 #| label: summarize-factors
@@ -999,7 +999,7 @@ tbl_factor_correlation <- tbl_factor |>
   select(R_Me, SMB, HML) |>
   cor(use = "complete.obs")
 
-show_table_LFL(tbl_factor_summary, n = Inf)
+show_table_LFL(tbl_factor_summary)
 tbl_factor_correlation
 ```
 
@@ -1033,9 +1033,9 @@ plot_factor_time_series <- tbl_factor |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_factor_time_series))
 ```
 
-## 4.7 FF3モデルとCAPMの比較
+## I-4.7 FF3モデルとCAPMの比較
 
-### 4.7.1 FF3モデルの推定
+### I-4.7.1 FF3モデルの推定
 
 Fama--Frenchの3ファクター・モデルは、ポートフォリオの超過リターンを市場、SMB、HMLで説明する。
 
@@ -1105,8 +1105,8 @@ tbl_ff3_alpha <- tbl_ff3_results |>
     significance
   )
 
-show_table_LFL(tbl_ff3_results, n = Inf)
-show_table_LFL(tbl_ff3_fit, n = Inf)
+show_table_LFL(tbl_ff3_results)
+show_table_LFL(tbl_ff3_fit)
 ```
 
 ```{r}
@@ -1129,7 +1129,7 @@ plot_ff3_alpha <- tbl_ff3_alpha |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_ff3_alpha))
 ```
 
-### 4.7.2 アルファとモデル適合度の比較
+### I-4.7.2 アルファとモデル適合度の比較
 
 ```{r}
 #| label: compare-models
@@ -1161,8 +1161,8 @@ tbl_model_fit_comparison <- tbl_capm_fit |>
     by = "ME_rank10"
   )
 
-show_table_LFL(tbl_model_alpha_comparison, n = Inf)
-show_table_LFL(tbl_model_fit_comparison, n = Inf)
+show_table_LFL(tbl_model_alpha_comparison)
+show_table_LFL(tbl_model_fit_comparison)
 ```
 
 ```{r}
@@ -1222,7 +1222,7 @@ plot_model_fit <- tbl_model_fit_comparison |>
 show_plot_LFL(add_lagrange_theme_LFL(plot_model_fit))
 ```
 
-## 4.8 ファクター・データの保存
+## I-4.8 ファクター・データの保存
 
 第5章以降で使用するファクター・データを、`data/derived/factors/fama_french_factors.parquet`に保存する。
 
@@ -1260,7 +1260,7 @@ stopifnot(
 )
 
 tbl_factor_output_summary <- tibble(
-  output_file = vec_factor_output_path,
+  output_file = relative_path_LFL(vec_factor_output_path),
   rows = nrow(tbl_factor_output_check),
   columns = ncol(tbl_factor_output_check),
   first_month = min(tbl_factor_output_check$month_ID),
@@ -1270,7 +1270,7 @@ tbl_factor_output_summary <- tibble(
 show_table_LFL(tbl_factor_output_summary)
 ```
 
-## 4.9 まとめ
+## I-4.9 まとめ
 
 本章では、前年度末時価総額を用いて市場ポートフォリオと企業規模ポートフォリオを構築した。また、企業規模と簿価時価比率による独立2×3ソートから6ポートフォリオを作成し、SMBとHMLを計算した。
 
