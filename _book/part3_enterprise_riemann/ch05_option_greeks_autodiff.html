@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較 – エンタープライズ金融モデル構築</title>
+<title>第III-5章 解析解とモンテカルロ自動微分による検証 – エンタープライズ金融モデル構築</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -149,7 +149,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -289,7 +289,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -312,22 +312,22 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
       </ul>
@@ -342,17 +342,25 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#iii-5.1-計算条件" id="toc-iii-5.1-計算条件" class="nav-link active" data-scroll-target="#iii-5.1-計算条件">III-5.1 計算条件</a></li>
-  <li><a href="#iii-5.2-gaussquantによる基準価格とグリークス" id="toc-iii-5.2-gaussquantによる基準価格とグリークス" class="nav-link" data-scroll-target="#iii-5.2-gaussquantによる基準価格とグリークス">III-5.2 GaussQuantによる基準価格とグリークス</a></li>
-  <li><a href="#iii-5.3-モンテカルロによるoption-pricing" id="toc-iii-5.3-モンテカルロによるoption-pricing" class="nav-link" data-scroll-target="#iii-5.3-モンテカルロによるoption-pricing">III-5.3 モンテカルロによるOption Pricing</a></li>
-  <li><a href="#iii-5.4-common-random-numbers" id="toc-iii-5.4-common-random-numbers" class="nav-link" data-scroll-target="#iii-5.4-common-random-numbers">III-5.4 Common Random Numbers</a></li>
-  <li><a href="#iii-5.5-微分可能なモンテカルロ-pricing" id="toc-iii-5.5-微分可能なモンテカルロ-pricing" class="nav-link" data-scroll-target="#iii-5.5-微分可能なモンテカルロ-pricing">III-5.5 微分可能なモンテカルロ Pricing</a></li>
-  <li><a href="#iii-5.6-torch-tensorの設定" id="toc-iii-5.6-torch-tensorの設定" class="nav-link" data-scroll-target="#iii-5.6-torch-tensorの設定">III-5.6 torch Tensorの設定</a></li>
-  <li><a href="#iii-5.7-モンテカルロ-npv" id="toc-iii-5.7-モンテカルロ-npv" class="nav-link" data-scroll-target="#iii-5.7-モンテカルロ-npv">III-5.7 モンテカルロ NPV</a></li>
-  <li><a href="#iii-5.8-deltavegathetaの自動微分" id="toc-iii-5.8-deltavegathetaの自動微分" class="nav-link" data-scroll-target="#iii-5.8-deltavegathetaの自動微分">III-5.8 Delta・Vega・Thetaの自動微分</a></li>
-  <li><a href="#iii-5.9-gammaとペイオフのkink" id="toc-iii-5.9-gammaとペイオフのkink" class="nav-link" data-scroll-target="#iii-5.9-gammaとペイオフのkink">III-5.9 GammaとペイオフのKink</a></li>
-  <li><a href="#iii-5.10-smooth-ペイオフによるgamma" id="toc-iii-5.10-smooth-ペイオフによるgamma" class="nav-link" data-scroll-target="#iii-5.10-smooth-ペイオフによるgamma">III-5.10 Smooth ペイオフによるGamma</a></li>
-  <li><a href="#iii-5.11-gaussquantとモンテカルロ-torchの比較" id="toc-iii-5.11-gaussquantとモンテカルロ-torchの比較" class="nav-link" data-scroll-target="#iii-5.11-gaussquantとモンテカルロ-torchの比較">III-5.11 GaussQuantとモンテカルロ + torchの比較</a></li>
+  <li><a href="#iii-5.1-オプション評価の計算条件" id="toc-iii-5.1-オプション評価の計算条件" class="nav-link active" data-scroll-target="#iii-5.1-オプション評価の計算条件">III-5.1 オプション評価の計算条件</a></li>
+  <li><a href="#iii-5.2-解析解による価格と感応度" id="toc-iii-5.2-解析解による価格と感応度" class="nav-link" data-scroll-target="#iii-5.2-解析解による価格と感応度">III-5.2 解析解による価格と感応度</a>
+  <ul class="collapse">
+  <li><a href="#iii-5.2.1-gaussquantによる解析評価" id="toc-iii-5.2.1-gaussquantによる解析評価" class="nav-link" data-scroll-target="#iii-5.2.1-gaussquantによる解析評価">III-5.2.1 GaussQuantによる解析評価</a></li>
+  </ul></li>
+  <li><a href="#iii-5.3-モンテカルロによる価格評価" id="toc-iii-5.3-モンテカルロによる価格評価" class="nav-link" data-scroll-target="#iii-5.3-モンテカルロによる価格評価">III-5.3 モンテカルロによる価格評価</a>
+  <ul class="collapse">
+  <li><a href="#iii-5.3.1-共通乱数" id="toc-iii-5.3.1-共通乱数" class="nav-link" data-scroll-target="#iii-5.3.1-共通乱数">III-5.3.1 共通乱数</a></li>
+  <li><a href="#iii-5.3.2-微分可能なプライシング" id="toc-iii-5.3.2-微分可能なプライシング" class="nav-link" data-scroll-target="#iii-5.3.2-微分可能なプライシング">III-5.3.2 微分可能なプライシング</a></li>
+  <li><a href="#iii-5.3.3-深層学習ライブラリによるテンソル計算" id="toc-iii-5.3.3-深層学習ライブラリによるテンソル計算" class="nav-link" data-scroll-target="#iii-5.3.3-深層学習ライブラリによるテンソル計算">III-5.3.3 深層学習ライブラリによるテンソル計算</a></li>
+  <li><a href="#iii-5.3.4-モンテカルロによる現在価値" id="toc-iii-5.3.4-モンテカルロによる現在価値" class="nav-link" data-scroll-target="#iii-5.3.4-モンテカルロによる現在価値">III-5.3.4 モンテカルロによる現在価値</a></li>
+  </ul></li>
+  <li><a href="#iii-5.4-自動微分による一次感応度" id="toc-iii-5.4-自動微分による一次感応度" class="nav-link" data-scroll-target="#iii-5.4-自動微分による一次感応度">III-5.4 自動微分による一次感応度</a></li>
+  <li><a href="#iii-5.5-微分不可なペイオフのケース" id="toc-iii-5.5-微分不可なペイオフのケース" class="nav-link" data-scroll-target="#iii-5.5-微分不可なペイオフのケース">III-5.5 微分不可なペイオフのケース</a>
+  <ul class="collapse">
+  <li><a href="#iii-5.5.1-平滑化ペイオフ" id="toc-iii-5.5.1-平滑化ペイオフ" class="nav-link" data-scroll-target="#iii-5.5.1-平滑化ペイオフ">III-5.5.1 平滑化ペイオフ</a></li>
+  <li><a href="#iii-5.5.2-自動微分によるガンマ" id="toc-iii-5.5.2-自動微分によるガンマ" class="nav-link" data-scroll-target="#iii-5.5.2-自動微分によるガンマ">III-5.5.2 自動微分によるガンマ</a></li>
+  </ul></li>
+  <li><a href="#iii-5.6-解析解とモンテカルロ自動微分の比較" id="toc-iii-5.6-解析解とモンテカルロ自動微分の比較" class="nav-link" data-scroll-target="#iii-5.6-解析解とモンテカルロ自動微分の比較">III-5.6 解析解とモンテカルロ自動微分の比較</a></li>
   <li><a href="#iii-5.12-モンテカルロ標準誤差" id="toc-iii-5.12-モンテカルロ標準誤差" class="nav-link" data-scroll-target="#iii-5.12-モンテカルロ標準誤差">III-5.12 モンテカルロ標準誤差</a></li>
   <li><a href="#iii-5.13-自動微分の意味" id="toc-iii-5.13-自動微分の意味" class="nav-link" data-scroll-target="#iii-5.13-自動微分の意味">III-5.13 自動微分の意味</a></li>
   <li><a href="#iii-5.14-金利為替系デリバティブへの接続" id="toc-iii-5.14-金利為替系デリバティブへの接続" class="nav-link" data-scroll-target="#iii-5.14-金利為替系デリバティブへの接続">III-5.14 金利為替系デリバティブへの接続</a></li>
@@ -363,9 +371,9 @@ window.Quarto = {
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></h1>
+<h1 class="title"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></h1>
 </div>
 
 
@@ -405,8 +413,8 @@ Theta
 \]</span></p>
 <p>という比較である。</p>
 <p>GaussQuantはQuantLibを利用した既存のPricing Engineとして使い、 <code>torch</code>ではMonte Carlo PricingそのものをDifferentiable Computational Graphとして構築する。</p>
-<section id="iii-5.1-計算条件" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.1-計算条件">III-5.1 計算条件</h2>
+<section id="iii-5.1-オプション評価の計算条件" class="level2">
+<h2 class="anchored" data-anchor-id="iii-5.1-オプション評価の計算条件">III-5.1 オプション評価の計算条件</h2>
 <p>同じEuropean Call OptionをGaussQuantとMonte Carloで評価する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>valuation_date <span class="ot">&lt;-</span> <span class="st">"2026-01-02"</span></span>
@@ -451,8 +459,10 @@ Theta
 </div>
 <p>ここでは比較を明確にするため、フラットな金利、配当利回り、Volatilityを用いる。</p>
 </section>
-<section id="iii-5.2-gaussquantによる基準価格とグリークス" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.2-gaussquantによる基準価格とグリークス">III-5.2 GaussQuantによる基準価格とグリークス</h2>
+<section id="iii-5.2-解析解による価格と感応度" class="level2">
+<h2 class="anchored" data-anchor-id="iii-5.2-解析解による価格と感応度">III-5.2 解析解による価格と感応度</h2>
+<section id="iii-5.2.1-gaussquantによる解析評価" class="level3">
+<h3 class="anchored" data-anchor-id="iii-5.2.1-gaussquantによる解析評価">III-5.2.1 GaussQuantによる解析評価</h3>
 <p>GaussQuantでは、European OptionをQuantLibオブジェクトとして構築できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>option_gql <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">make_european_option_GQL</span>(</span>
@@ -493,8 +503,9 @@ Theta
 </div>
 <p>ここで得られる値を、本章におけるBenchmarkとする。</p>
 </section>
-<section id="iii-5.3-モンテカルロによるoption-pricing" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.3-モンテカルロによるoption-pricing">III-5.3 モンテカルロによるOption Pricing</h2>
+</section>
+<section id="iii-5.3-モンテカルロによる価格評価" class="level2">
+<h2 class="anchored" data-anchor-id="iii-5.3-モンテカルロによる価格評価">III-5.3 モンテカルロによる価格評価</h2>
 <p>Risk-Neutral Measureの下で、配当利回り<span class="math inline">\(q\)</span>を持つ株価過程を、</p>
 <p><span class="math display">\[
 \frac{dS_t}{S_t}
@@ -542,9 +553,8 @@ S_T^{(m)}-K,
 }
 \]</span></p>
 <p>となる。</p>
-</section>
-<section id="iii-5.4-common-random-numbers" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.4-common-random-numbers">III-5.4 Common Random Numbers</h2>
+<section id="iii-5.3.1-共通乱数" class="level3">
+<h3 class="anchored" data-anchor-id="iii-5.3.1-共通乱数">III-5.3.1 共通乱数</h3>
 <p>GaussQuantとの比較や感応度の検算では、Monte Carlo Noiseをできるだけ抑える必要がある。</p>
 <p>本章では乱数を一度だけ生成し、価格計算と感応度計算で同じ乱数を使用する。</p>
 <div class="cell">
@@ -558,8 +568,8 @@ S_T^{(m)}-K,
 </div>
 <p>乱数<span class="math inline">\(Z\)</span>は市場リスクファクターではないため、 <code>requires_grad = TRUE</code>は指定しない。</p>
 </section>
-<section id="iii-5.5-微分可能なモンテカルロ-pricing" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.5-微分可能なモンテカルロ-pricing">III-5.5 微分可能なモンテカルロ Pricing</h2>
+<section id="iii-5.3.2-微分可能なプライシング" class="level3">
+<h3 class="anchored" data-anchor-id="iii-5.3.2-微分可能なプライシング">III-5.3.2 微分可能なプライシング</h3>
 <p>Monte Carlo PricingをTensor演算だけで構成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>european_call_mc_torch <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -602,8 +612,8 @@ S_0,\quad r,\quad q,\quad \sigma,\quad T
 \]</span></p>
 <p>からTerminal Spot、Payoff、Discounting、Monte Carlo Averageまでが 一つのComputational Graphとして接続される。</p>
 </section>
-<section id="iii-5.6-torch-tensorの設定" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.6-torch-tensorの設定">III-5.6 torch Tensorの設定</h2>
+<section id="iii-5.3.3-深層学習ライブラリによるテンソル計算" class="level3">
+<h3 class="anchored" data-anchor-id="iii-5.3.3-深層学習ライブラリによるテンソル計算">III-5.3.3 深層学習ライブラリによるテンソル計算</h3>
 <p>微分対象となる市場変数をTensorとして定義する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>spot_t <span class="ot">&lt;-</span> <span class="fu">torch_tensor</span>(</span>
@@ -635,8 +645,8 @@ S_0,\quad r,\quad q,\quad \sigma,\quad T
 <span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-5.7-モンテカルロ-npv" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.7-モンテカルロ-npv">III-5.7 モンテカルロ NPV</h2>
+<section id="iii-5.3.4-モンテカルロによる現在価値" class="level3">
+<h3 class="anchored" data-anchor-id="iii-5.3.4-モンテカルロによる現在価値">III-5.3.4 モンテカルロによる現在価値</h3>
 <p>同じ乱数を用いてMonte Carlo価格を計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>option_npv_mc_t <span class="ot">&lt;-</span> <span class="fu">european_call_mc_torch</span>(</span>
@@ -655,8 +665,9 @@ S_0,\quad r,\quad q,\quad \sigma,\quad T
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [ CPUFloatType{1} ][ grad_fn = &lt;MulBackward0&gt; ]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-5.8-deltavegathetaの自動微分" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.8-deltavegathetaの自動微分">III-5.8 Delta・Vega・Thetaの自動微分</h2>
+</section>
+<section id="iii-5.4-自動微分による一次感応度" class="level2">
+<h2 class="anchored" data-anchor-id="iii-5.4-自動微分による一次感応度">III-5.4 自動微分による一次感応度</h2>
 <p>Monte Carlo価格を最終出力としてReverse Mode Automatic Differentiationを行う。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>first_grad <span class="ot">&lt;-</span> <span class="fu">autograd_grad</span>(</span>
@@ -706,8 +717,8 @@ Theta
 \]</span></p>
 <p>をMonte Carlo Pricing Graphから直接取得している。</p>
 </section>
-<section id="iii-5.9-gammaとペイオフのkink" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.9-gammaとペイオフのkink">III-5.9 GammaとペイオフのKink</h2>
+<section id="iii-5.5-微分不可なペイオフのケース" class="level2">
+<h2 class="anchored" data-anchor-id="iii-5.5-微分不可なペイオフのケース">III-5.5 微分不可なペイオフのケース</h2>
 <p>Gammaには注意が必要である。</p>
 <p>European CallのPayoff、</p>
 <p><span class="math display">\[
@@ -717,9 +728,8 @@ Theta
 <p>Pathwise Automatic DifferentiationでこのPayoffをそのまま二階微分すると、 各Pathではほとんど至るところで二階微分がゼロとなるため、 Monte Carlo Gammaを単純な二階ADだけで安定して推定することはできない。</p>
 <p>これは自動微分の失敗ではなく、Payoffの非滑らかさに由来する。</p>
 <p>そこで本章ではGammaについて、Payoffを滑らかに近似した Smooth Payoffを用いて二階自動微分を確認する。</p>
-</section>
-<section id="iii-5.10-smooth-ペイオフによるgamma" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.10-smooth-ペイオフによるgamma">III-5.10 Smooth ペイオフによるGamma</h2>
+<section id="iii-5.5.1-平滑化ペイオフ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-5.5.1-平滑化ペイオフ">III-5.5.1 平滑化ペイオフ</h3>
 <p>正の部分、</p>
 <p><span class="math display">\[
 x^+
@@ -834,6 +844,9 @@ x+\sqrt{x^2+\varepsilon^2}
 <span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  0.6008</span></span>
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [ CPUFloatType{1} ][ grad_fn = &lt;SumBackward1&gt; ]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="iii-5.5.2-自動微分によるガンマ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-5.5.2-自動微分によるガンマ">III-5.5.2 自動微分によるガンマ</h3>
 <p>さらにDeltaをSpotで微分する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>gamma_mc <span class="ot">&lt;-</span> <span class="fu">autograd_grad</span>(</span>
@@ -857,8 +870,9 @@ V
 <p>という二階Automatic Differentiationである。</p>
 <p>ただし、このGammaはSmooth Payoffによる近似値である点に注意する。</p>
 </section>
-<section id="iii-5.11-gaussquantとモンテカルロ-torchの比較" class="level2">
-<h2 class="anchored" data-anchor-id="iii-5.11-gaussquantとモンテカルロ-torchの比較">III-5.11 GaussQuantとモンテカルロ + torchの比較</h2>
+</section>
+<section id="iii-5.6-解析解とモンテカルロ自動微分の比較" class="level2">
+<h2 class="anchored" data-anchor-id="iii-5.6-解析解とモンテカルロ自動微分の比較">III-5.6 解析解とモンテカルロ自動微分の比較</h2>
 <p>Monte Carloの結果をまとめる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>tbl_mc_greeks <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
@@ -1530,13 +1544,13 @@ GPS
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="pagination-link" aria-label="第III-4章 自動微分と微分可能なプライシング">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></span>
+      <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="pagination-link" aria-label="第III-4章 自動微分による市場リスク感応度計測">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="pagination-link" aria-label="第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ">
-        <span class="nav-page-text"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="pagination-link" aria-label="第III-6章 自動微分による多変数金利感応度の計測">
+        <span class="nav-page-text"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

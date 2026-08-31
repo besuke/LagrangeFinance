@@ -560,14 +560,12 @@ fd_dv_dr <- (
 fd_dv01_central <- fd_dv_dr *
   1e-4
 
-tbl_dv01_comparison <- tbl_dv01_comparison <- tribble(
+tbl_dv01_comparison <- tribble(
   ~method, ~dv01,
   "Forward bump", fd_dv01,
   "Central difference", fd_dv01_central,
   "Automatic differentiation", rate$grad$item() * 1e-4
 )
-
-tbl_dv01_comparison
 
 tbl_dv01_comparison
 ```

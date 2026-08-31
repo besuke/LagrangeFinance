@@ -1,11 +1,16 @@
 project:
   output-dir: _pdf_exclude_build
+  render:
+    - part3_enterprise_riemann/ch07_prdc_autodiff.qmd
 
 book:
   output-file: "lagrange-finance-exclude"
 
 format:
   pdf:
+    filters:
+      - watermark-exclude.lua
+
     pdf-engine: lualatex
     documentclass: ltjsbook
     papersize: a4
@@ -23,12 +28,27 @@ format:
         \usepackage{eso-pic}
         \usepackage{xcolor}
 
+        % Cover
+        \renewcommand{\maketitle}{%
+          \thispagestyle{empty}
+          \AddToShipoutPictureBG*{%
+            \AtPageLowerLeft{%
+              \includegraphics[width=\paperwidth,height=\paperheight]{images/cover.png}%
+            }%
+          }
+          \null
+          \clearpage
+        }
+
+        % Exclude watermark
         \newcommand{\ExcludeWatermark}{%
           \AtPageCenter{%
             \makebox(0,0){%
               \rotatebox{45}{%
-                \textcolor[gray]{0.82}{%
-                  \fontsize{170}{180}\selectfont
+                \textcolor[gray]{0.82
+                  
+                }{%
+                  \fontsize{180}{190}\selectfont
                   \bfseries 対象外%
                 }%
               }%

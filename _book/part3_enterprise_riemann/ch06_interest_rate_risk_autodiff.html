@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ – エンタープライズ金融モデル構築</title>
+<title>第III-6章 自動微分による多変数金利感応度の計測 – エンタープライズ金融モデル構築</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -149,7 +149,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -289,7 +289,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -312,22 +312,22 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
       </ul>
@@ -342,16 +342,20 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#iii-6.1-金利商品の現在価値" id="toc-iii-6.1-金利商品の現在価値" class="nav-link active" data-scroll-target="#iii-6.1-金利商品の現在価値">III-6.1 金利商品の現在価値</a></li>
-  <li><a href="#iii-6.2-fixed-leg" id="toc-iii-6.2-fixed-leg" class="nav-link" data-scroll-target="#iii-6.2-fixed-leg">III-6.2 Fixed Leg</a></li>
-  <li><a href="#iii-6.3-floating-leg" id="toc-iii-6.3-floating-leg" class="nav-link" data-scroll-target="#iii-6.3-floating-leg">III-6.3 Floating Leg</a></li>
-  <li><a href="#iii-6.4-swap-npv" id="toc-iii-6.4-swap-npv" class="nav-link" data-scroll-target="#iii-6.4-swap-npv">III-6.4 Swap NPV</a></li>
-  <li><a href="#iii-6.5-金利感応度" id="toc-iii-6.5-金利感応度" class="nav-link" data-scroll-target="#iii-6.5-金利感応度">III-6.5 金利感応度</a></li>
-  <li><a href="#iii-6.6-torchによるswap評価" id="toc-iii-6.6-torchによるswap評価" class="nav-link" data-scroll-target="#iii-6.6-torchによるswap評価">III-6.6 torchによるSwap評価</a></li>
-  <li><a href="#iii-6.7-自動微分による金利感応度" id="toc-iii-6.7-自動微分による金利感応度" class="nav-link" data-scroll-target="#iii-6.7-自動微分による金利感応度">III-6.7 自動微分による金利感応度</a></li>
-  <li><a href="#iii-6.8-有限差分との比較" id="toc-iii-6.8-有限差分との比較" class="nav-link" data-scroll-target="#iii-6.8-有限差分との比較">III-6.8 有限差分との比較</a></li>
-  <li><a href="#iii-6.9-フラット金利からyield-curveへ" id="toc-iii-6.9-フラット金利からyield-curveへ" class="nav-link" data-scroll-target="#iii-6.9-フラット金利からyield-curveへ">III-6.9 フラット金利からYield Curveへ</a></li>
-  <li><a href="#iii-6.10-curve-nodeをtensorとして持つ" id="toc-iii-6.10-curve-nodeをtensorとして持つ" class="nav-link" data-scroll-target="#iii-6.10-curve-nodeをtensorとして持つ">III-6.10 Curve NodeをTensorとして持つ</a></li>
+  <li><a href="#iii-6.1-金利商品の現在価値と感応度" id="toc-iii-6.1-金利商品の現在価値と感応度" class="nav-link active" data-scroll-target="#iii-6.1-金利商品の現在価値と感応度">III-6.1 金利商品の現在価値と感応度</a>
+  <ul class="collapse">
+  <li><a href="#iii-6.1.1-固定レグ" id="toc-iii-6.1.1-固定レグ" class="nav-link" data-scroll-target="#iii-6.1.1-固定レグ">III-6.1.1 固定レグ</a></li>
+  <li><a href="#iii-6.1.2-変動レグ" id="toc-iii-6.1.2-変動レグ" class="nav-link" data-scroll-target="#iii-6.1.2-変動レグ">III-6.1.2 変動レグ</a></li>
+  <li><a href="#iii-6.1.3-スワップの現在価値" id="toc-iii-6.1.3-スワップの現在価値" class="nav-link" data-scroll-target="#iii-6.1.3-スワップの現在価値">III-6.1.3 スワップの現在価値</a></li>
+  </ul></li>
+  <li><a href="#iii-6.2-単一金利に対する感応度" id="toc-iii-6.2-単一金利に対する感応度" class="nav-link" data-scroll-target="#iii-6.2-単一金利に対する感応度">III-6.2 単一金利に対する感応度</a></li>
+  <li><a href="#iii-6.3-深層学習ライブラリによるスワップ評価" id="toc-iii-6.3-深層学習ライブラリによるスワップ評価" class="nav-link" data-scroll-target="#iii-6.3-深層学習ライブラリによるスワップ評価">III-6.3 深層学習ライブラリによるスワップ評価</a></li>
+  <li><a href="#iii-6.4-自動微分による金利感応度" id="toc-iii-6.4-自動微分による金利感応度" class="nav-link" data-scroll-target="#iii-6.4-自動微分による金利感応度">III-6.4 自動微分による金利感応度</a></li>
+  <li><a href="#iii-6.5-有限差分法による検証" id="toc-iii-6.5-有限差分法による検証" class="nav-link" data-scroll-target="#iii-6.5-有限差分法による検証">III-6.5 有限差分法による検証</a></li>
+  <li><a href="#iii-6.6-多変数金利感応度への拡張" id="toc-iii-6.6-多変数金利感応度への拡張" class="nav-link" data-scroll-target="#iii-6.6-多変数金利感応度への拡張">III-6.6 多変数金利感応度への拡張</a>
+  <ul class="collapse">
+  <li><a href="#iii-6.6.1-イールドカーブのテンソル化" id="toc-iii-6.6.1-イールドカーブのテンソル化" class="nav-link" data-scroll-target="#iii-6.6.1-イールドカーブのテンソル化">III-6.6.1 イールドカーブのテンソル化</a></li>
+  </ul></li>
   <li><a href="#iii-6.11-gpsとしてのpoint-sensitivity" id="toc-iii-6.11-gpsとしてのpoint-sensitivity" class="nav-link" data-scroll-target="#iii-6.11-gpsとしてのpoint-sensitivity">III-6.11 GPSとしてのPoint Sensitivity</a></li>
   <li><a href="#iii-6.12-total-金利感応度とbucketed-risk" id="toc-iii-6.12-total-金利感応度とbucketed-risk" class="nav-link" data-scroll-target="#iii-6.12-total-金利感応度とbucketed-risk">III-6.12 Total 金利感応度とBucketed Risk</a></li>
   <li><a href="#iii-6.13-market-quoteからcurve-riskへ" id="toc-iii-6.13-market-quoteからcurve-riskへ" class="nav-link" data-scroll-target="#iii-6.13-market-quoteからcurve-riskへ">III-6.13 Market QuoteからCurve Riskへ</a></li>
@@ -364,9 +368,9 @@ window.Quarto = {
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></h1>
+<h1 class="title"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></h1>
 </div>
 
 
@@ -426,8 +430,8 @@ V(r_1,r_2,\ldots,r_n)
 }
 \]</span></p>
 <p>という流れを、自動微分によって統一的に捉える。</p>
-<section id="iii-6.1-金利商品の現在価値" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.1-金利商品の現在価値">III-6.1 金利商品の現在価値</h2>
+<section id="iii-6.1-金利商品の現在価値と感応度" class="level2">
+<h2 class="anchored" data-anchor-id="iii-6.1-金利商品の現在価値と感応度">III-6.1 金利商品の現在価値と感応度</h2>
 <p>将来キャッシュフロー<span class="math inline">\(CF_i\)</span>の現在価値は、</p>
 <p><span class="math display">\[
 V
@@ -466,9 +470,8 @@ CF_i\frac{\partial D_i}{\partial r}
 \]</span></p>
 <p>となる。</p>
 <p>これは、金利リスクが単なるDiscounting Riskではなく、 Projected Cash Flowの変化も含むことを意味する。</p>
-</section>
-<section id="iii-6.2-fixed-leg" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.2-fixed-leg">III-6.2 Fixed Leg</h2>
+<section id="iii-6.1.1-固定レグ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-6.1.1-固定レグ">III-6.1.1 固定レグ</h3>
 <p>元本<span class="math inline">\(N\)</span>、固定金利<span class="math inline">\(K\)</span>、Accrual Factor <span class="math inline">\(\alpha_i\)</span>とすると、 固定レッグのキャッシュフローは、</p>
 <p><span class="math display">\[
 CF_i^{\mathrm{fix}}
@@ -497,8 +500,8 @@ t_iNK\alpha_i e^{-rt_i}
 <p>である。</p>
 <p>金利が上昇すると割引係数が低下するため、 Fixed Legの現在価値は低下する。</p>
 </section>
-<section id="iii-6.3-floating-leg" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.3-floating-leg">III-6.3 Floating Leg</h2>
+<section id="iii-6.1.2-変動レグ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-6.1.2-変動レグ">III-6.1.2 変動レグ</h3>
 <p>本章では、自動微分の仕組みを明確にするため、 Floating Couponを単純化して、</p>
 <p><span class="math display">\[
 CF_i^{\mathrm{float}}(r)
@@ -551,8 +554,8 @@ e^{r\alpha_i}-1
 \]</span></p>
 <p>の両方が金利感応度に含まれる。</p>
 </section>
-<section id="iii-6.4-swap-npv" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.4-swap-npv">III-6.4 Swap NPV</h2>
+<section id="iii-6.1.3-スワップの現在価値" class="level3">
+<h3 class="anchored" data-anchor-id="iii-6.1.3-スワップの現在価値">III-6.1.3 スワップの現在価値</h3>
 <p>Receive Float / Pay Fixed Swapを考える。</p>
 <p><span class="math display">\[
 \boxed{
@@ -575,8 +578,9 @@ PV_{\mathrm{fixed}}
 \]</span></p>
 <p>となる。</p>
 </section>
-<section id="iii-6.5-金利感応度" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.5-金利感応度">III-6.5 金利感応度</h2>
+</section>
+<section id="iii-6.2-単一金利に対する感応度" class="level2">
+<h2 class="anchored" data-anchor-id="iii-6.2-単一金利に対する感応度">III-6.2 単一金利に対する感応度</h2>
 <p>DV01は、金利が1bp変化したときの価格変化を表す。</p>
 <p>1bpは、</p>
 <p><span class="math display">\[
@@ -601,8 +605,8 @@ DV01
 \]</span></p>
 <p>をsigned DV01として扱う。</p>
 </section>
-<section id="iii-6.6-torchによるswap評価" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.6-torchによるswap評価">III-6.6 torchによるSwap評価</h2>
+<section id="iii-6.3-深層学習ライブラリによるスワップ評価" class="level2">
+<h2 class="anchored" data-anchor-id="iii-6.3-深層学習ライブラリによるスワップ評価">III-6.3 深層学習ライブラリによるスワップ評価</h2>
 <p>まず計算条件を設定する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tbl_swap_input <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
@@ -713,8 +717,8 @@ DV01
 </div>
 <p>となる。</p>
 </section>
-<section id="iii-6.7-自動微分による金利感応度" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.7-自動微分による金利感応度">III-6.7 自動微分による金利感応度</h2>
+<section id="iii-6.4-自動微分による金利感応度" class="level2">
+<h2 class="anchored" data-anchor-id="iii-6.4-自動微分による金利感応度">III-6.4 自動微分による金利感応度</h2>
 <p>価格に対して<code>backward()</code>を実行する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>swap_npv<span class="sc">$</span><span class="fu">backward</span>()</span>
@@ -764,8 +768,8 @@ DV01
            dV/dr</code></pre>
 <p>というComputational Graphを逆向きにたどることである。</p>
 </section>
-<section id="iii-6.8-有限差分との比較" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.8-有限差分との比較">III-6.8 有限差分との比較</h2>
+<section id="iii-6.5-有限差分法による検証" class="level2">
+<h2 class="anchored" data-anchor-id="iii-6.5-有限差分法による検証">III-6.5 有限差分法による検証</h2>
 <p>同じSwap価格を通常のR関数として定義する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>swap_value_flat <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -844,7 +848,7 @@ DV01
 <span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>fd_dv01_central <span class="ot">&lt;-</span> fd_dv_dr <span class="sc">*</span></span>
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>  <span class="fl">1e-4</span></span>
 <span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>tbl_dv01_comparison <span class="ot">&lt;-</span> tbl_dv01_comparison <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>tbl_dv01_comparison <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>method, <span class="sc">~</span>dv01,</span>
 <span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Forward bump"</span>, fd_dv01,</span>
 <span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Central difference"</span>, fd_dv01_central,</span>
@@ -857,20 +861,12 @@ DV01
 <span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                      &lt;dbl&gt;</span></span>
 <span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Forward bump              46634.</span></span>
 <span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Central difference        46646.</span></span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Automatic differentiation 46646.</span></span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>tbl_dv01_comparison</span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
-<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                      dv01</span></span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                      &lt;dbl&gt;</span></span>
-<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Forward bump              46634.</span></span>
-<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Central difference        46646.</span></span>
-<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Automatic differentiation 46646.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Automatic differentiation 46646.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>有限差分では価格を複数回評価する必要があるのに対し、 自動微分では構築された計算グラフを利用して感応度を得る。</p>
 </section>
-<section id="iii-6.9-フラット金利からyield-curveへ" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.9-フラット金利からyield-curveへ">III-6.9 フラット金利からYield Curveへ</h2>
+<section id="iii-6.6-多変数金利感応度への拡張" class="level2">
+<h2 class="anchored" data-anchor-id="iii-6.6-多変数金利感応度への拡張">III-6.6 多変数金利感応度への拡張</h2>
 <p>実際の金利市場では、単一の金利<span class="math inline">\(r\)</span>ではなく、 満期ごとに異なる金利を持つ。</p>
 <p>例えば、</p>
 <p><span class="math display">\[
@@ -913,9 +909,8 @@ DV01_i
 \]</span></p>
 <p>となる。</p>
 <p>これがBucketed DV01やPoint Sensitivityの基本になる。</p>
-</section>
-<section id="iii-6.10-curve-nodeをtensorとして持つ" class="level2">
-<h2 class="anchored" data-anchor-id="iii-6.10-curve-nodeをtensorとして持つ">III-6.10 Curve NodeをTensorとして持つ</h2>
+<section id="iii-6.6.1-イールドカーブのテンソル化" class="level3">
+<h3 class="anchored" data-anchor-id="iii-6.6.1-イールドカーブのテンソル化">III-6.6.1 イールドカーブのテンソル化</h3>
 <p>単純化したZero Curveを考える。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>tbl_curve <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
@@ -1021,6 +1016,7 @@ DV01_i
 <span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4   3   0.0225   -1402092.   -140.21 </span></span>
 <span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5   5   0.025  -452279648  -45228.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
 </section>
 <section id="iii-6.11-gpsとしてのpoint-sensitivity" class="level2">
 <h2 class="anchored" data-anchor-id="iii-6.11-gpsとしてのpoint-sensitivity">III-6.11 GPSとしてのPoint Sensitivity</h2>
@@ -1771,13 +1767,13 @@ Vega_{FX}
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="pagination-link" aria-label="第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></span>
+      <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="pagination-link" aria-label="第III-5章 解析解とモンテカルロ自動微分による検証">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="pagination-link" aria-label="第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分">
-        <span class="nav-page-text"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="pagination-link" aria-label="第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測">
+        <span class="nav-page-text"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

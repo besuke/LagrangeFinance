@@ -120,7 +120,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -260,7 +260,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -283,22 +283,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
       </ul>
@@ -314,8 +314,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#iii-2.1-分散計算の基本構造" id="toc-iii-2.1-分散計算の基本構造" class="nav-link active" data-scroll-target="#iii-2.1-分散計算の基本構造">III-2.1 分散計算の基本構造</a></li>
-  <li><a href="#iii-2.2-remote-functionとworker実行" id="toc-iii-2.2-remote-functionとworker実行" class="nav-link" data-scroll-target="#iii-2.2-remote-functionとworker実行">III-2.2 Remote FunctionとWorker実行</a></li>
-  <li><a href="#iii-2.3-job-queueとscheduler" id="toc-iii-2.3-job-queueとscheduler" class="nav-link" data-scroll-target="#iii-2.3-job-queueとscheduler">III-2.3 Job QueueとScheduler</a></li>
+  <li><a href="#iii-2.2-リモート関数とワーカー実行" id="toc-iii-2.2-リモート関数とワーカー実行" class="nav-link" data-scroll-target="#iii-2.2-リモート関数とワーカー実行">III-2.2 リモート関数とワーカー実行</a></li>
+  <li><a href="#iii-2.3-ジョブキューとスケジューラ" id="toc-iii-2.3-ジョブキューとスケジューラ" class="nav-link" data-scroll-target="#iii-2.3-ジョブキューとスケジューラ">III-2.3 ジョブ・キューとスケジューラ</a></li>
   <li><a href="#iii-2.4-分散システムのデータ設計" id="toc-iii-2.4-分散システムのデータ設計" class="nav-link" data-scroll-target="#iii-2.4-分散システムのデータ設計">III-2.4 分散システムのデータ設計</a></li>
   <li><a href="#iii-2.5-まとめ" id="toc-iii-2.5-まとめ" class="nav-link" data-scroll-target="#iii-2.5-まとめ">III-2.5 まとめ</a></li>
   </ul>
@@ -324,7 +324,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></h1>
 </div>
@@ -399,8 +399,8 @@ Result Aggregation</code></pre>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-2.2-remote-functionとworker実行" class="level2">
-<h2 class="anchored" data-anchor-id="iii-2.2-remote-functionとworker実行">III-2.2 Remote FunctionとWorker実行</h2>
+<section id="iii-2.2-リモート関数とワーカー実行" class="level2">
+<h2 class="anchored" data-anchor-id="iii-2.2-リモート関数とワーカー実行">III-2.2 リモート関数とワーカー実行</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tbl_remote_request <span class="ot">&lt;-</span> tbl_task <span class="sc">|&gt;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
@@ -467,8 +467,8 @@ Result Aggregation</code></pre>
 <span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 REQ-006      6 C                60    7.7460</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-2.3-job-queueとscheduler" class="level2">
-<h2 class="anchored" data-anchor-id="iii-2.3-job-queueとscheduler">III-2.3 Job QueueとScheduler</h2>
+<section id="iii-2.3-ジョブキューとスケジューラ" class="level2">
+<h2 class="anchored" data-anchor-id="iii-2.3-ジョブキューとスケジューラ">III-2.3 ジョブ・キューとスケジューラ</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tbl_job <span class="ot">&lt;-</span> tbl_task <span class="sc">|&gt;</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>

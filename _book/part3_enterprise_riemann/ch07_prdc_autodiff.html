@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分 – エンタープライズ金融モデル構築</title>
+<title>第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測 – エンタープライズ金融モデル構築</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -148,7 +148,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -288,7 +288,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -311,22 +311,22 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
       </ul>
@@ -341,41 +341,47 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#iii-7.1-金利為替系デリバティブと複数のリスクファクター" id="toc-iii-7.1-金利為替系デリバティブと複数のリスクファクター" class="nav-link active" data-scroll-target="#iii-7.1-金利為替系デリバティブと複数のリスクファクター">III-7.1 金利為替系デリバティブと複数のリスクファクター</a></li>
-  <li><a href="#iii-7.2-本章で用いる簡略金利為替系デリバティブ" id="toc-iii-7.2-本章で用いる簡略金利為替系デリバティブ" class="nav-link" data-scroll-target="#iii-7.2-本章で用いる簡略金利為替系デリバティブ">III-7.2 本章で用いる簡略金利為替系デリバティブ</a></li>
-  <li><a href="#iii-7.3-fxのrisk-neutral-dynamics" id="toc-iii-7.3-fxのrisk-neutral-dynamics" class="nav-link" data-scroll-target="#iii-7.3-fxのrisk-neutral-dynamics">III-7.3 FXのRisk-Neutral Dynamics</a></li>
-  <li><a href="#iii-7.4-モンテカルロ-pricing" id="toc-iii-7.4-モンテカルロ-pricing" class="nav-link" data-scroll-target="#iii-7.4-モンテカルロ-pricing">III-7.4 モンテカルロ Pricing</a></li>
-  <li><a href="#iii-7.5-計算条件" id="toc-iii-7.5-計算条件" class="nav-link" data-scroll-target="#iii-7.5-計算条件">III-7.5 計算条件</a></li>
-  <li><a href="#iii-7.6-torchによるモンテカルロ-path生成" id="toc-iii-7.6-torchによるモンテカルロ-path生成" class="nav-link" data-scroll-target="#iii-7.6-torchによるモンテカルロ-path生成">III-7.6 torchによるモンテカルロ Path生成</a></li>
-  <li><a href="#iii-7.7-微分可能な金利為替系デリバティブ-pricing-function" id="toc-iii-7.7-微分可能な金利為替系デリバティブ-pricing-function" class="nav-link" data-scroll-target="#iii-7.7-微分可能な金利為替系デリバティブ-pricing-function">III-7.7 微分可能な金利為替系デリバティブ Pricing Function</a></li>
-  <li><a href="#iii-7.8-金利為替系デリバティブ-npv" id="toc-iii-7.8-金利為替系デリバティブ-npv" class="nav-link" data-scroll-target="#iii-7.8-金利為替系デリバティブ-npv">III-7.8 金利為替系デリバティブ NPV</a></li>
-  <li><a href="#iii-7.9-一度のreverse-modeで複数リスクを取得する" id="toc-iii-7.9-一度のreverse-modeで複数リスクを取得する" class="nav-link" data-scroll-target="#iii-7.9-一度のreverse-modeで複数リスクを取得する">III-7.9 一度のReverse Modeで複数リスクを取得する</a></li>
-  <li><a href="#iii-7.10-fx-delta" id="toc-iii-7.10-fx-delta" class="nav-link" data-scroll-target="#iii-7.10-fx-delta">III-7.10 FX Delta</a></li>
-  <li><a href="#iii-7.11-jpy-curve-risk" id="toc-iii-7.11-jpy-curve-risk" class="nav-link" data-scroll-target="#iii-7.11-jpy-curve-risk">III-7.11 JPY Curve Risk</a></li>
-  <li><a href="#iii-7.12-foreign-curve-risk" id="toc-iii-7.12-foreign-curve-risk" class="nav-link" data-scroll-target="#iii-7.12-foreign-curve-risk">III-7.12 Foreign Curve Risk</a></li>
-  <li><a href="#iii-7.13-fx-vega" id="toc-iii-7.13-fx-vega" class="nav-link" data-scroll-target="#iii-7.13-fx-vega">III-7.13 FX Vega</a></li>
-  <li><a href="#iii-7.14-金利為替系デリバティブ-risk-summary" id="toc-iii-7.14-金利為替系デリバティブ-risk-summary" class="nav-link" data-scroll-target="#iii-7.14-金利為替系デリバティブ-risk-summary">III-7.14 金利為替系デリバティブ Risk Summary</a></li>
-  <li><a href="#iii-7.15-有限差分との検算" id="toc-iii-7.15-有限差分との検算" class="nav-link" data-scroll-target="#iii-7.15-有限差分との検算">III-7.15 有限差分との検算</a></li>
-  <li><a href="#iii-7.16-floorキャップと微分可能性" id="toc-iii-7.16-floorキャップと微分可能性" class="nav-link" data-scroll-target="#iii-7.16-floorキャップと微分可能性">III-7.16 Floor・キャップと微分可能性</a></li>
-  <li><a href="#iii-7.17-モンテカルロと自動微分" id="toc-iii-7.17-モンテカルロと自動微分" class="nav-link" data-scroll-target="#iii-7.17-モンテカルロと自動微分">III-7.17 モンテカルロと自動微分</a></li>
-  <li><a href="#iii-7.18-gpuへの拡張" id="toc-iii-7.18-gpuへの拡張" class="nav-link" data-scroll-target="#iii-7.18-gpuへの拡張">III-7.18 GPUへの拡張</a></li>
-  <li><a href="#iii-7.19-aadとして見る金利為替系デリバティブ-risk" id="toc-iii-7.19-aadとして見る金利為替系デリバティブ-risk" class="nav-link" data-scroll-target="#iii-7.19-aadとして見る金利為替系デリバティブ-risk">III-7.19 AADとして見る金利為替系デリバティブ Risk</a></li>
-  <li><a href="#iii-7.20-第iii部を通したリスク計測の拡張" id="toc-iii-7.20-第iii部を通したリスク計測の拡張" class="nav-link" data-scroll-target="#iii-7.20-第iii部を通したリスク計測の拡張">III-7.20 第III部を通したリスク計測の拡張</a>
+  <li><a href="#iii-7.1-多因子市場モデル" id="toc-iii-7.1-多因子市場モデル" class="nav-link active" data-scroll-target="#iii-7.1-多因子市場モデル">III-7.1 多因子市場モデル</a>
   <ul class="collapse">
-  <li><a href="#iii-7.20.1-option" id="toc-iii-7.20.1-option" class="nav-link" data-scroll-target="#iii-7.20.1-option">III-7.20.1 Option</a></li>
-  <li><a href="#iii-7.20.2-interest-rate" id="toc-iii-7.20.2-interest-rate" class="nav-link" data-scroll-target="#iii-7.20.2-interest-rate">III-7.20.2 Interest Rate</a></li>
-  <li><a href="#iii-7.20.3-金利為替系デリバティブ" id="toc-iii-7.20.3-金利為替系デリバティブ" class="nav-link" data-scroll-target="#iii-7.20.3-金利為替系デリバティブ">III-7.20.3 金利為替系デリバティブ</a></li>
+  <li><a href="#iii-7.1.1-市場リスクファクター" id="toc-iii-7.1.1-市場リスクファクター" class="nav-link" data-scroll-target="#iii-7.1.1-市場リスクファクター">III-7.1.1 市場リスクファクター</a></li>
+  <li><a href="#iii-7.1.2-為替連動クーポン" id="toc-iii-7.1.2-為替連動クーポン" class="nav-link" data-scroll-target="#iii-7.1.2-為替連動クーポン">III-7.1.2 為替連動クーポン</a></li>
+  <li><a href="#iii-7.1.3-為替のリスク中立過程" id="toc-iii-7.1.3-為替のリスク中立過程" class="nav-link" data-scroll-target="#iii-7.1.3-為替のリスク中立過程">III-7.1.3 為替のリスク中立過程</a></li>
   </ul></li>
-  <li><a href="#iii-7.21-まとめ" id="toc-iii-7.21-まとめ" class="nav-link" data-scroll-target="#iii-7.21-まとめ">III-7.21 まとめ</a></li>
+  <li><a href="#iii-7.2-多因子モンテカルロによる価格評価" id="toc-iii-7.2-多因子モンテカルロによる価格評価" class="nav-link" data-scroll-target="#iii-7.2-多因子モンテカルロによる価格評価">III-7.2 多因子モンテカルロによる価格評価</a>
+  <ul class="collapse">
+  <li><a href="#iii-7.2.1-計算条件" id="toc-iii-7.2.1-計算条件" class="nav-link" data-scroll-target="#iii-7.2.1-計算条件">III-7.2.1 計算条件</a></li>
+  <li><a href="#iii-7.2.2-深層学習ライブラリによる為替パス生成" id="toc-iii-7.2.2-深層学習ライブラリによる為替パス生成" class="nav-link" data-scroll-target="#iii-7.2.2-深層学習ライブラリによる為替パス生成">III-7.2.2 深層学習ライブラリによる為替パス生成</a></li>
+  <li><a href="#iii-7.2.3-微分可能なプライシング" id="toc-iii-7.2.3-微分可能なプライシング" class="nav-link" data-scroll-target="#iii-7.2.3-微分可能なプライシング">III-7.2.3 微分可能なプライシング</a></li>
+  <li><a href="#iii-7.2.4-モンテカルロによる現在価値" id="toc-iii-7.2.4-モンテカルロによる現在価値" class="nav-link" data-scroll-target="#iii-7.2.4-モンテカルロによる現在価値">III-7.2.4 モンテカルロによる現在価値</a></li>
+  </ul></li>
+  <li><a href="#iii-7.3-自動微分による多因子感応度" id="toc-iii-7.3-自動微分による多因子感応度" class="nav-link" data-scroll-target="#iii-7.3-自動微分による多因子感応度">III-7.3 自動微分による多因子感応度</a>
+  <ul class="collapse">
+  <li><a href="#iii-7.3.1-fxデルタ" id="toc-iii-7.3.1-fxデルタ" class="nav-link" data-scroll-target="#iii-7.3.1-fxデルタ">III-7.3.1 FXデルタ</a></li>
+  <li><a href="#iii-7.3.2-円金利リスク" id="toc-iii-7.3.2-円金利リスク" class="nav-link" data-scroll-target="#iii-7.3.2-円金利リスク">III-7.3.2 円金利リスク</a></li>
+  <li><a href="#iii-7.3.3-外貨金利リスク" id="toc-iii-7.3.3-外貨金利リスク" class="nav-link" data-scroll-target="#iii-7.3.3-外貨金利リスク">III-7.3.3 外貨金利リスク</a></li>
+  <li><a href="#iii-7.3.4-fxベガ" id="toc-iii-7.3.4-fxベガ" class="nav-link" data-scroll-target="#iii-7.3.4-fxベガ">III-7.3.4 FXベガ</a></li>
+  <li><a href="#iii-7.3.5-リスク集計" id="toc-iii-7.3.5-リスク集計" class="nav-link" data-scroll-target="#iii-7.3.5-リスク集計">III-7.3.5 リスク集計</a></li>
+  </ul></li>
+  <li><a href="#iii-7.4-有限差分法による検証" id="toc-iii-7.4-有限差分法による検証" class="nav-link" data-scroll-target="#iii-7.4-有限差分法による検証">III-7.4 有限差分法による検証</a></li>
+  <li><a href="#iii-7.5-微分不可なペイオフのケース" id="toc-iii-7.5-微分不可なペイオフのケース" class="nav-link" data-scroll-target="#iii-7.5-微分不可なペイオフのケース">III-7.5 微分不可なペイオフのケース</a>
+  <ul class="collapse">
+  <li><a href="#iii-7.5.2-微分不可なペイオフの感応度" id="toc-iii-7.5.2-微分不可なペイオフの感応度" class="nav-link" data-scroll-target="#iii-7.5.2-微分不可なペイオフの感応度">III-7.5.2 微分不可なペイオフの感応度</a></li>
+  </ul></li>
+  <li><a href="#iii-7.6-大規模市場リスク計測への展開" id="toc-iii-7.6-大規模市場リスク計測への展開" class="nav-link" data-scroll-target="#iii-7.6-大規模市場リスク計測への展開">III-7.6 大規模市場リスク計測への展開</a>
+  <ul class="collapse">
+  <li><a href="#iii-7.6.2-自動微分による多因子感応度の一括計算" id="toc-iii-7.6.2-自動微分による多因子感応度の一括計算" class="nav-link" data-scroll-target="#iii-7.6.2-自動微分による多因子感応度の一括計算">III-7.6.2 自動微分による多因子感応度の一括計算</a></li>
+  <li><a href="#iii-7.6.3-エンタープライズリスク計算への展開" id="toc-iii-7.6.3-エンタープライズリスク計算への展開" class="nav-link" data-scroll-target="#iii-7.6.3-エンタープライズリスク計算への展開">III-7.6.3 エンタープライズ・リスク計算への展開</a></li>
+  </ul></li>
+  <li><a href="#iii-7.7-まとめ" id="toc-iii-7.7-まとめ" class="nav-link" data-scroll-target="#iii-7.7-まとめ">III-7.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></h1>
+<h1 class="title"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></h1>
 </div>
 
 
@@ -420,8 +426,10 @@ Vega_{FX}
 \]</span></p>
 <p>を一度のReverse-mode Automatic Differentiationから取得する。</p>
 <p>本章の目的は、単にPRDCのGreeksを計算することではない。<strong>Monte Carlo PricingとRisk Calculationを別々の処理として繰り返すのではなく、PricingそのものからRiskを生成する</strong>というDifferentiable Risk Engineの設計を示すことである。</p>
-<section id="iii-7.1-金利為替系デリバティブと複数のリスクファクター" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.1-金利為替系デリバティブと複数のリスクファクター">III-7.1 金利為替系デリバティブと複数のリスクファクター</h2>
+<section id="iii-7.1-多因子市場モデル" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.1-多因子市場モデル">III-7.1 多因子市場モデル</h2>
+<section id="iii-7.1.1-市場リスクファクター" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.1.1-市場リスクファクター">III-7.1.1 市場リスクファクター</h3>
 <p>PRDCは、為替と複数通貨の金利を同時に扱うハイブリッド商品である。</p>
 <p>単純なOptionでは、</p>
 <p><span class="math display">\[
@@ -465,8 +473,8 @@ Discounting       FX Drift / Forward
 <p>へ影響する。</p>
 <p>このような商品では、連鎖律をプログラム全体へ適用する Automatic Differentiationの考え方が特に重要になる。</p>
 </section>
-<section id="iii-7.2-本章で用いる簡略金利為替系デリバティブ" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.2-本章で用いる簡略金利為替系デリバティブ">III-7.2 本章で用いる簡略金利為替系デリバティブ</h2>
+<section id="iii-7.1.2-為替連動クーポン" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.1.2-為替連動クーポン">III-7.1.2 為替連動クーポン</h3>
 <p>PRDCには多様なCoupon構造、Callable条件、Notional Exchange、 Target Redemption、Barrierなどが存在する。</p>
 <p>本章では自動微分の構造を明確にするため、 第II部・第III部で扱ったPRDCの考え方を簡略化し、 為替連動Couponを、</p>
 <p><span class="math display">\[
@@ -523,8 +531,8 @@ N\alpha_i c_i
 \]</span></p>
 <p>という計算グラフを微分可能な演算として構成することである。</p>
 </section>
-<section id="iii-7.3-fxのrisk-neutral-dynamics" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.3-fxのrisk-neutral-dynamics">III-7.3 FXのRisk-Neutral Dynamics</h2>
+<section id="iii-7.1.3-為替のリスク中立過程" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.1.3-為替のリスク中立過程">III-7.1.3 為替のリスク中立過程</h3>
 <p>JPYをDomestic Currency、 Foreign Currencyを外貨とする。</p>
 <p>簡略化したLognormal FX Processとして、</p>
 <p><span class="math display">\[
@@ -579,8 +587,9 @@ Z
 <p>という関数になっていることが分かる。</p>
 <p>したがってPRDC価格を微分すると、 CouponだけではなくFX Path生成まで連鎖律が伝播する。</p>
 </section>
-<section id="iii-7.4-モンテカルロ-pricing" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.4-モンテカルロ-pricing">III-7.4 モンテカルロ Pricing</h2>
+</section>
+<section id="iii-7.2-多因子モンテカルロによる価格評価" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.2-多因子モンテカルロによる価格評価">III-7.2 多因子モンテカルロによる価格評価</h2>
 <p>PRDCのMonte Carlo価格を、</p>
 <p><span class="math display">\[
 \hat V
@@ -627,9 +636,8 @@ JPY Curve ------------&gt; Discount Factors
                             v
                          PRDC NPV</code></pre>
 <p>となる。</p>
-</section>
-<section id="iii-7.5-計算条件" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.5-計算条件">III-7.5 計算条件</h2>
+<section id="iii-7.2.1-計算条件" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.2.1-計算条件">III-7.2.1 計算条件</h3>
 <p>本章では5年間、年1回Couponを支払う簡略PRDCを考える。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tbl_prdc_input <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
@@ -679,8 +687,8 @@ JPY Curve ------------&gt; Discount Factors
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5     5    0.018        0.032</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-7.6-torchによるモンテカルロ-path生成" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.6-torchによるモンテカルロ-path生成">III-7.6 torchによるモンテカルロ Path生成</h2>
+<section id="iii-7.2.2-深層学習ライブラリによる為替パス生成" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.2.2-深層学習ライブラリによる為替パス生成">III-7.2.2 深層学習ライブラリによる為替パス生成</h3>
 <p>Monte Carloで使用する乱数を固定する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">torch_manual_seed</span>(<span class="dv">1234</span>)</span>
@@ -745,8 +753,8 @@ JPY Curve ------------&gt; Discount Factors
 <span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-7.7-微分可能な金利為替系デリバティブ-pricing-function" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.7-微分可能な金利為替系デリバティブ-pricing-function">III-7.7 微分可能な金利為替系デリバティブ Pricing Function</h2>
+<section id="iii-7.2.3-微分可能なプライシング" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.2.3-微分可能なプライシング">III-7.2.3 微分可能なプライシング</h3>
 <p>PRDCのMonte Carlo Pricingを、 Tensor演算だけで構成する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prdc_price_torch <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -835,8 +843,8 @@ JPY Curve ------------&gt; Discount Factors
 <p>のすべてがTensor演算として接続されている。</p>
 <p>したがって、最終的な<code>prdc_npv</code>から、 入力された市場リスクファクターまで計算グラフが維持される。</p>
 </section>
-<section id="iii-7.8-金利為替系デリバティブ-npv" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.8-金利為替系デリバティブ-npv">III-7.8 金利為替系デリバティブ NPV</h2>
+<section id="iii-7.2.4-モンテカルロによる現在価値" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.2.4-モンテカルロによる現在価値">III-7.2.4 モンテカルロによる現在価値</h3>
 <p>価格を計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>prdc_npv <span class="ot">&lt;-</span> <span class="fu">prdc_price_torch</span>(</span>
@@ -872,8 +880,9 @@ S_{FX},
 \]</span></p>
 <p>という多変数関数になっている。</p>
 </section>
-<section id="iii-7.9-一度のreverse-modeで複数リスクを取得する" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.9-一度のreverse-modeで複数リスクを取得する">III-7.9 一度のReverse Modeで複数リスクを取得する</h2>
+</section>
+<section id="iii-7.3-自動微分による多因子感応度" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.3-自動微分による多因子感応度">III-7.3 自動微分による多因子感応度</h2>
 <p>Forward計算で得られたScalar NPVを出発点として、複数の市場入力へGradientを逆伝播させる。PRDCのように「多数入力・少数出力」となるPricingでは、Reverse Modeの利点が最も現れやすい。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>prdc_grad <span class="ot">&lt;-</span> <span class="fu">autograd_grad</span>(</span>
@@ -913,9 +922,8 @@ fx\_vega
 \frac{\partial V}{\partial\sigma_{FX}}
 \]</span></p>
 <p>である。</p>
-</section>
-<section id="iii-7.10-fx-delta" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.10-fx-delta">III-7.10 FX Delta</h2>
+<section id="iii-7.3.1-fxデルタ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.3.1-fxデルタ">III-7.3.1 FXデルタ</h3>
 <p>FX Deltaは、</p>
 <p><span class="math display">\[
 \boxed{
@@ -934,8 +942,8 @@ fx\_vega
 <p>PRDCのCoupon構造によって、 FX Deltaの符号や大きさは大きく変化する。</p>
 <p>本章の簡略PayoffではFX上昇によってCouponが増加する形を用いているが、 実際のPRDCではCurrency Pairの定義やCoupon Formulaによって 感応度の符号は異なる。</p>
 </section>
-<section id="iii-7.11-jpy-curve-risk" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.11-jpy-curve-risk">III-7.11 JPY Curve Risk</h2>
+<section id="iii-7.3.2-円金利リスク" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.3.2-円金利リスク">III-7.3.2 円金利リスク</h3>
 <p>JPY Curveの各Nodeに対する感応度は、</p>
 <p><span class="math display">\[
 \boxed{
@@ -995,8 +1003,8 @@ DV01_{JPY,i}
 \]</span></p>
 <p>が連鎖律を通じて含まれる。</p>
 </section>
-<section id="iii-7.12-foreign-curve-risk" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.12-foreign-curve-risk">III-7.12 Foreign Curve Risk</h2>
+<section id="iii-7.3.3-外貨金利リスク" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.3.3-外貨金利リスク">III-7.3.3 外貨金利リスク</h3>
 <p>Foreign Curveについても同様に、</p>
 <p><span class="math display">\[
 \boxed{
@@ -1048,8 +1056,8 @@ PRDC\ NPV
 \]</span></p>
 <p>という経路が存在する。</p>
 </section>
-<section id="iii-7.13-fx-vega" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.13-fx-vega">III-7.13 FX Vega</h2>
+<section id="iii-7.3.4-fxベガ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.3.4-fxベガ">III-7.3.4 FXベガ</h3>
 <p>FX Volatilityに対する感応度は、</p>
 <p><span class="math display">\[
 \boxed{
@@ -1085,8 +1093,8 @@ Vega01_{FX}
 <p>Monte Carlo Pathの分布が変化し、 FloorやCapへ到達するPathの割合も変化する。</p>
 <p>自動微分では、このPath生成からPayoffまでの連鎖を 同じ計算グラフの中で扱う。</p>
 </section>
-<section id="iii-7.14-金利為替系デリバティブ-risk-summary" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.14-金利為替系デリバティブ-risk-summary">III-7.14 金利為替系デリバティブ Risk Summary</h2>
+<section id="iii-7.3.5-リスク集計" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.3.5-リスク集計">III-7.3.5 リスク集計</h3>
 <p>主要なScalar Riskをまとめる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tbl_prdc_risk_summary <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
@@ -1164,8 +1172,9 @@ Vega_{FX}
 \]</span></p>
 <p>を取得したことになる。</p>
 </section>
-<section id="iii-7.15-有限差分との検算" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.15-有限差分との検算">III-7.15 有限差分との検算</h2>
+</section>
+<section id="iii-7.4-有限差分法による検証" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.4-有限差分法による検証">III-7.4 有限差分法による検証</h2>
 <p>自動微分の結果を確認するため、 FX DeltaをFinite Differenceで検算する。</p>
 <p>Monte Carloで有限差分を比較する場合には、 乱数の違いによるNoiseを避けるため、 同じ乱数を使うCommon Random Numbersが重要である。</p>
 <p>本章では同じ<code>z</code>を使用して、 FX SpotだけをBumpする。</p>
@@ -1242,8 +1251,8 @@ Vega_{FX}
 </div>
 <p>同じ乱数を用いることで、 差分結果にMonte Carlo Noiseが混入することを抑えている。</p>
 </section>
-<section id="iii-7.16-floorキャップと微分可能性" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.16-floorキャップと微分可能性">III-7.16 Floor・キャップと微分可能性</h2>
+<section id="iii-7.5-微分不可なペイオフのケース" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.5-微分不可なペイオフのケース">III-7.5 微分不可なペイオフのケース</h2>
 <p>本章のCouponでは、</p>
 <p><span class="math display">\[
 \max(0,x)
@@ -1267,9 +1276,8 @@ Vega_{FX}
 </ul>
 <p>などを検討する必要がある。</p>
 <p>これは、Automatic Differentiationが 「あらゆる金融商品をそのまま微分すればよい」 という意味ではないことを示している。</p>
-</section>
-<section id="iii-7.17-モンテカルロと自動微分" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.17-モンテカルロと自動微分">III-7.17 モンテカルロと自動微分</h2>
+<section id="iii-7.5.2-微分不可なペイオフの感応度" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.5.2-微分不可なペイオフの感応度">III-7.5.2 微分不可なペイオフの感応度</h3>
 <p>PRDCのような商品では、</p>
 <p><span class="math display">\[
 \hat V
@@ -1305,8 +1313,9 @@ Automatic\ Differentiation
 \]</span></p>
 <p>を結び付ける。</p>
 </section>
-<section id="iii-7.18-gpuへの拡張" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.18-gpuへの拡張">III-7.18 GPUへの拡張</h2>
+</section>
+<section id="iii-7.6-大規模市場リスク計測への展開" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.6-大規模市場リスク計測への展開">III-7.6 大規模市場リスク計測への展開</h2>
 <p>第III-1章で確認したように、 Monte CarloはGPUと相性が良い。</p>
 <p>本章の実装でも、</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>z</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1327,9 +1336,8 @@ Automatic\ Differentiation
 \]</span></p>
 <p>という組み合わせが可能になる。</p>
 <p>ここで重要なのは、 GPUによるHardware Accelerationと、 Automatic DifferentiationによるAlgorithmic Accelerationが 同じTensor計算基盤の上で共存できることである。</p>
-</section>
-<section id="iii-7.19-aadとして見る金利為替系デリバティブ-risk" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.19-aadとして見る金利為替系デリバティブ-risk">III-7.19 AADとして見る金利為替系デリバティブ Risk</h2>
+<section id="iii-7.6.2-自動微分による多因子感応度の一括計算" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.6.2-自動微分による多因子感応度の一括計算">III-7.6.2 自動微分による多因子感応度の一括計算</h3>
 <p>PRDCのPricing Graphをもう一度整理する。</p>
 <pre class="text"><code>FX Spot -----------+
 JPY Curve ---------+----&gt; FX Paths ----&gt; Coupons ----+
@@ -1360,11 +1368,11 @@ JPY Curve --------------------&gt; Discount Factors -&gt; PRDC NPV
 <p>へ勾配を伝播する。</p>
 <p>このForwardとReverseの組み合わせが、 PRDCをDifferentiable Pricing Modelとして扱うという意味である。</p>
 </section>
-<section id="iii-7.20-第iii部を通したリスク計測の拡張" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.20-第iii部を通したリスク計測の拡張">III-7.20 第III部を通したリスク計測の拡張</h2>
+<section id="iii-7.6.3-エンタープライズリスク計算への展開" class="level3">
+<h3 class="anchored" data-anchor-id="iii-7.6.3-エンタープライズリスク計算への展開">III-7.6.3 エンタープライズ・リスク計算への展開</h3>
 <p>第III部で扱った商品を並べると、 自動微分の役割が明確になる。</p>
-<section id="iii-7.20.1-option" class="level3">
-<h3 class="anchored" data-anchor-id="iii-7.20.1-option">III-7.20.1 Option</h3>
+<section id="オプション" class="level4">
+<h4 class="anchored" data-anchor-id="オプション">オプション</h4>
 <p><span class="math display">\[
 V
 =
@@ -1380,8 +1388,8 @@ Vega,\quad
 Theta
 \]</span></p>
 </section>
-<section id="iii-7.20.2-interest-rate" class="level3">
-<h3 class="anchored" data-anchor-id="iii-7.20.2-interest-rate">III-7.20.2 Interest Rate</h3>
+<section id="金利商品" class="level4">
+<h4 class="anchored" data-anchor-id="金利商品">金利商品</h4>
 <p><span class="math display">\[
 V
 =
@@ -1396,8 +1404,8 @@ Bucketed\ DV01,\quad
 GPS
 \]</span></p>
 </section>
-<section id="iii-7.20.3-金利為替系デリバティブ" class="level3">
-<h3 class="anchored" data-anchor-id="iii-7.20.3-金利為替系デリバティブ">III-7.20.3 金利為替系デリバティブ</h3>
+<section id="金利為替系デリバティブ" class="level4">
+<h4 class="anchored" data-anchor-id="金利為替系デリバティブ">金利為替系デリバティブ</h4>
 <p><span class="math display">\[
 V
 =
@@ -1435,8 +1443,9 @@ Vega_{FX}
 <p>変わるのは、価格関数を構成するComputational Graphの規模である。</p>
 </section>
 </section>
-<section id="iii-7.21-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="iii-7.21-まとめ">III-7.21 まとめ</h2>
+</section>
+<section id="iii-7.7-まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="iii-7.7-まとめ">III-7.7 まとめ</h2>
 <p>本章では、PRDCを題材として、FX Spot、JPY Curve、Foreign Curve、FX Volatilityを同時に持つ多因子Monte Carlo PricingをRの<code>torch</code>で構成した。Pricing FunctionをTensor演算だけで接続することで、Monte Carlo Path生成、Coupon計算、Discounting、NPVまでを一つのDifferentiable Computational Graphとして扱うことができた。</p>
 <p>その結果、一度のForward PricingとReverse Passから、</p>
 <p><span class="math display">\[
@@ -1871,8 +1880,8 @@ Vega_{FX}
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="pagination-link" aria-label="第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></span>
+      <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="pagination-link" aria-label="第III-6章 自動微分による多変数金利感応度の計測">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

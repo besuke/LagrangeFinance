@@ -4,7 +4,7 @@ project:
 
 book:
   title: "エンタープライズ金融モデル構築"
-  subtitle: "Rによる金融データモデリング・金融工学・並列分散コンピューティング"
+  subtitle: "Rによるデータモデリング・金融工学・並列分散コンピュータ自動微分"
   author: "Eiichi Horigome"
   cover-image: images/cover.png
   output-file: "lagrangeFinance"
@@ -35,7 +35,7 @@ book:
         - part2_quantive_riemann/ch08_credit_risk_cds.qmd
         - part2_quantive_riemann/ch09_exotic_derivatives_prdc.qmd
 
-    - part: "第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ"
+    - part: "第III部 並列・分散処理から自動微分へ"
       chapters:
         - part3_enterprise_riemann/ch01_computational_evolution_parallel.qmd
         - part3_enterprise_riemann/ch02_distributed_computing_jobtask.qmd

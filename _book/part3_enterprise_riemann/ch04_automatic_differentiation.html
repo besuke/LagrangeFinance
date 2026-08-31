@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>第III-4章 自動微分と微分可能なプライシング – エンタープライズ金融モデル構築</title>
+<title>第III-4章 自動微分による市場リスク感応度計測 – エンタープライズ金融モデル構築</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -149,7 +149,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -289,7 +289,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -312,22 +312,22 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 金利リスク：金利感応度からカーブ・グラディエントへ</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 金利為替系デリバティブ：多因子モンテカルロと自動微分</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
   </div>
 </li>
       </ul>
@@ -342,27 +342,35 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#iii-4.1-金融リスク感応度と偏微分" id="toc-iii-4.1-金融リスク感応度と偏微分" class="nav-link active" data-scroll-target="#iii-4.1-金融リスク感応度と偏微分">III-4.1 金融リスク感応度と偏微分</a></li>
-  <li><a href="#iii-4.2-有限差分とバンプアンドリバリュー" id="toc-iii-4.2-有限差分とバンプアンドリバリュー" class="nav-link" data-scroll-target="#iii-4.2-有限差分とバンプアンドリバリュー">III-4.2 有限差分とバンプ・アンド・リバリュー</a></li>
-  <li><a href="#iii-4.3-自動微分は数値微分でも記号微分でもない" id="toc-iii-4.3-自動微分は数値微分でも記号微分でもない" class="nav-link" data-scroll-target="#iii-4.3-自動微分は数値微分でも記号微分でもない">III-4.3 自動微分は数値微分でも記号微分でもない</a></li>
-  <li><a href="#iii-4.4-連鎖律" id="toc-iii-4.4-連鎖律" class="nav-link" data-scroll-target="#iii-4.4-連鎖律">III-4.4 連鎖律</a></li>
-  <li><a href="#iii-4.5-computational-graph" id="toc-iii-4.5-computational-graph" class="nav-link" data-scroll-target="#iii-4.5-computational-graph">III-4.5 Computational Graph</a></li>
-  <li><a href="#iii-4.6-フォワード-mode-自動微分" id="toc-iii-4.6-フォワード-mode-自動微分" class="nav-link" data-scroll-target="#iii-4.6-フォワード-mode-自動微分">III-4.6 フォワード Mode 自動微分</a></li>
-  <li><a href="#iii-4.7-reverse-mode-自動微分" id="toc-iii-4.7-reverse-mode-自動微分" class="nav-link" data-scroll-target="#iii-4.7-reverse-mode-自動微分">III-4.7 Reverse Mode 自動微分</a></li>
-  <li><a href="#iii-4.8-aadと金融工学" id="toc-iii-4.8-aadと金融工学" class="nav-link" data-scroll-target="#iii-4.8-aadと金融工学">III-4.8 AADと金融工学</a></li>
-  <li><a href="#iii-4.9-r-torchによる最小の自動微分" id="toc-iii-4.9-r-torchによる最小の自動微分" class="nav-link" data-scroll-target="#iii-4.9-r-torchによる最小の自動微分">III-4.9 R torchによる最小の自動微分</a></li>
-  <li><a href="#iii-4.10-二変数関数のgradient" id="toc-iii-4.10-二変数関数のgradient" class="nav-link" data-scroll-target="#iii-4.10-二変数関数のgradient">III-4.10 二変数関数のGradient</a></li>
-  <li><a href="#iii-4.11-金融リスク計測への接続" id="toc-iii-4.11-金融リスク計測への接続" class="nav-link" data-scroll-target="#iii-4.11-金融リスク計測への接続">III-4.11 金融リスク計測への接続</a></li>
-  <li><a href="#iii-4.12-まとめ" id="toc-iii-4.12-まとめ" class="nav-link" data-scroll-target="#iii-4.12-まとめ">III-4.12 まとめ</a></li>
+  <li><a href="#iii-4.1-市場リスク感応度と偏微分" id="toc-iii-4.1-市場リスク感応度と偏微分" class="nav-link active" data-scroll-target="#iii-4.1-市場リスク感応度と偏微分">III-4.1 市場リスク感応度と偏微分</a></li>
+  <li><a href="#iii-4.2-変化幅による再評価と有限差分" id="toc-iii-4.2-変化幅による再評価と有限差分" class="nav-link" data-scroll-target="#iii-4.2-変化幅による再評価と有限差分">III-4.2 変化幅による再評価と有限差分</a></li>
+  <li><a href="#iii-4.3-自動微分の基本原理" id="toc-iii-4.3-自動微分の基本原理" class="nav-link" data-scroll-target="#iii-4.3-自動微分の基本原理">III-4.3 自動微分の基本原理</a>
+  <ul class="collapse">
+  <li><a href="#iii-4.3.1-連鎖律" id="toc-iii-4.3.1-連鎖律" class="nav-link" data-scroll-target="#iii-4.3.1-連鎖律">III-4.3.1 連鎖律</a></li>
+  <li><a href="#iii-4.3.2-コンピュテーショングラフ" id="toc-iii-4.3.2-コンピュテーショングラフ" class="nav-link" data-scroll-target="#iii-4.3.2-コンピュテーショングラフ">III-4.3.2 コンピュテーション・グラフ</a></li>
+  </ul></li>
+  <li><a href="#iii-4.4-自動微分の計算モード" id="toc-iii-4.4-自動微分の計算モード" class="nav-link" data-scroll-target="#iii-4.4-自動微分の計算モード">III-4.4 自動微分の計算モード</a>
+  <ul class="collapse">
+  <li><a href="#iii-4.4.1-フォワードモード" id="toc-iii-4.4.1-フォワードモード" class="nav-link" data-scroll-target="#iii-4.4.1-フォワードモード">III-4.4.1 フォワードモード</a></li>
+  <li><a href="#iii-4.4.2-リバースモード" id="toc-iii-4.4.2-リバースモード" class="nav-link" data-scroll-target="#iii-4.4.2-リバースモード">III-4.4.2 リバースモード</a></li>
+  </ul></li>
+  <li><a href="#iii-4.5-自動微分と金融工学" id="toc-iii-4.5-自動微分と金融工学" class="nav-link" data-scroll-target="#iii-4.5-自動微分と金融工学">III-4.5 自動微分と金融工学</a></li>
+  <li><a href="#iii-4.6-深層学習ライブラリによる自動微分" id="toc-iii-4.6-深層学習ライブラリによる自動微分" class="nav-link" data-scroll-target="#iii-4.6-深層学習ライブラリによる自動微分">III-4.6 深層学習ライブラリによる自動微分</a>
+  <ul class="collapse">
+  <li><a href="#iii-4.6.1-一変数関数の自動微分" id="toc-iii-4.6.1-一変数関数の自動微分" class="nav-link" data-scroll-target="#iii-4.6.1-一変数関数の自動微分">III-4.6.1 一変数関数の自動微分</a></li>
+  <li><a href="#iii-4.6.2-多変数関数の偏微分" id="toc-iii-4.6.2-多変数関数の偏微分" class="nav-link" data-scroll-target="#iii-4.6.2-多変数関数の偏微分">III-4.6.2 多変数関数の偏微分</a></li>
+  </ul></li>
+  <li><a href="#iii-4.7-自動微分による市場リスク感応度" id="toc-iii-4.7-自動微分による市場リスク感応度" class="nav-link" data-scroll-target="#iii-4.7-自動微分による市場リスク感応度">III-4.7 自動微分による市場リスク感応度</a></li>
+  <li><a href="#iii-4.8-まとめ" id="toc-iii-4.8-まとめ" class="nav-link" data-scroll-target="#iii-4.8-まとめ">III-4.8 まとめ</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 エンタープライズ金融計算 ― 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html">第III部 並列・分散処理から自動微分へ</a></li><li class="breadcrumb-item"><a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">第III-4章 自動微分と微分可能なプライシング</span></h1>
+<h1 class="title"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></h1>
 </div>
 
 
@@ -384,8 +392,8 @@ window.Quarto = {
 <p>そこで本章から、計算資源の拡張ではなく<strong>計算方法そのものを変える</strong>方向へ進む。</p>
 <p>Automatic Differentiation（自動微分）は、この問題に対して、 価格計算そのものを微分可能な計算グラフとして扱う。</p>
 <p>本章では、金融リスク感応度を偏微分として整理したうえで、 有限差分、連鎖律、Computational Graph、Forward Mode、Reverse Modeを順に確認する。 最後にRの<code>torch</code>を用いて、自動微分の最小例を実装する。</p>
-<section id="iii-4.1-金融リスク感応度と偏微分" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.1-金融リスク感応度と偏微分">III-4.1 金融リスク感応度と偏微分</h2>
+<section id="iii-4.1-市場リスク感応度と偏微分" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.1-市場リスク感応度と偏微分">III-4.1 市場リスク感応度と偏微分</h2>
 <p>金融商品の価格を、複数の市場変数に依存する関数として</p>
 <p><span class="math display">\[
 V = V(x_1,x_2,\ldots,x_n)
@@ -427,8 +435,8 @@ V = V(x_1,x_2,\ldots,x_n)
 <p>として表される。</p>
 <p>このように、金融リスク計測の多くは、 価格関数の一次または二次の微分を求める問題として整理できる。</p>
 </section>
-<section id="iii-4.2-有限差分とバンプアンドリバリュー" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.2-有限差分とバンプアンドリバリュー">III-4.2 有限差分とバンプ・アンド・リバリュー</h2>
+<section id="iii-4.2-変化幅による再評価と有限差分" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.2-変化幅による再評価と有限差分">III-4.2 変化幅による再評価と有限差分</h2>
 <p>最も直接的な感応度計算の一つが有限差分である。</p>
 <p>リスクファクター<span class="math inline">\(x\)</span>を微小量<span class="math inline">\(h\)</span>だけ変化させるForward Differenceでは、</p>
 <p><span class="math display">\[
@@ -469,8 +477,8 @@ V = V(x_1,x_2,\ldots,x_n)
 \]</span></p>
 <p>という性質を持つ。</p>
 </section>
-<section id="iii-4.3-自動微分は数値微分でも記号微分でもない" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.3-自動微分は数値微分でも記号微分でもない">III-4.3 自動微分は数値微分でも記号微分でもない</h2>
+<section id="iii-4.3-自動微分の基本原理" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.3-自動微分の基本原理">III-4.3 自動微分の基本原理</h2>
 <p>自動微分は有限差分による数値微分とは異なる。</p>
 <p>また、数式全体を記号的に変形して導関数を求めるSymbolic Differentiationとも異なる。</p>
 <p>例えば、</p>
@@ -506,9 +514,8 @@ y
 }
 \]</span></p>
 <p>である。</p>
-</section>
-<section id="iii-4.4-連鎖律" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.4-連鎖律">III-4.4 連鎖律</h2>
+<section id="iii-4.3.1-連鎖律" class="level3">
+<h3 class="anchored" data-anchor-id="iii-4.3.1-連鎖律">III-4.3.1 連鎖律</h3>
 <p>自動微分を理解するうえで最も重要な数学が連鎖律である。</p>
 <p>例えば、</p>
 <p><span class="math display">\[
@@ -566,8 +573,8 @@ V
 <p>となる。</p>
 <p>この連鎖律をプログラムの計算過程全体に適用することが、 Automatic Differentiationの基本的な考え方である。</p>
 </section>
-<section id="iii-4.5-computational-graph" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.5-computational-graph">III-4.5 Computational Graph</h2>
+<section id="iii-4.3.2-コンピュテーショングラフ" class="level3">
+<h3 class="anchored" data-anchor-id="iii-4.3.2-コンピュテーショングラフ">III-4.3.2 コンピュテーション・グラフ</h3>
 <p>プログラムによる計算を、変数と演算の関係として表したものを Computational Graphと呼ぶ。</p>
 <p>簡単な例として、</p>
 <p><span class="math display">\[
@@ -607,8 +614,11 @@ V</code></pre>
 <p>を求めることができる。</p>
 <p>この「計算を行った経路を逆向きにたどる」という考え方が、 Reverse Modeの直感的な理解につながる。</p>
 </section>
-<section id="iii-4.6-フォワード-mode-自動微分" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.6-フォワード-mode-自動微分">III-4.6 フォワード Mode 自動微分</h2>
+</section>
+<section id="iii-4.4-自動微分の計算モード" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.4-自動微分の計算モード">III-4.4 自動微分の計算モード</h2>
+<section id="iii-4.4.1-フォワードモード" class="level3">
+<h3 class="anchored" data-anchor-id="iii-4.4.1-フォワードモード">III-4.4.1 フォワードモード</h3>
 <p>Forward Modeでは、入力側から出力側へ向かって、 値と同時に微分値を伝播させる。</p>
 <p>例えば、</p>
 <p><span class="math display">\[
@@ -642,8 +652,8 @@ V=h(b)
 <p>と、値と微分値を同時に運ぶ。</p>
 <p>Forward Modeは、入力変数が少なく出力変数が多い問題に適している。</p>
 </section>
-<section id="iii-4.7-reverse-mode-自動微分" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.7-reverse-mode-自動微分">III-4.7 Reverse Mode 自動微分</h2>
+<section id="iii-4.4.2-リバースモード" class="level3">
+<h3 class="anchored" data-anchor-id="iii-4.4.2-リバースモード">III-4.4.2 リバースモード</h3>
 <p>Reverse Modeでは、まず通常どおりForward計算を行い、 最終出力を求める。</p>
 <p>その後、出力側から入力側へ向かって微分値を逆伝播する。</p>
 <p>金融商品の価格を、</p>
@@ -681,8 +691,9 @@ V
 \]</span></p>
 <p>という構造を持つ金融計算では、Reverse Modeが特に重要となる。</p>
 </section>
-<section id="iii-4.8-aadと金融工学" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.8-aadと金融工学">III-4.8 AADと金融工学</h2>
+</section>
+<section id="iii-4.5-自動微分と金融工学" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.5-自動微分と金融工学">III-4.5 自動微分と金融工学</h2>
 <p>金融分野では、Reverse Mode Automatic Differentiationを Adjoint Algorithmic Differentiation（AAD）という名称で扱うことが多い。</p>
 <p>従来のBump &amp; Revalueでは、</p>
 <p><span class="math display">\[
@@ -712,8 +723,10 @@ dV/dx1 dV/dx2 ... dV/dxn</code></pre>
 <p>となる。</p>
 <p>重要なのは、AADがより高速なCPUを用いるという話ではなく、 リスク計算のアルゴリズムそのものを変更するという点である。</p>
 </section>
-<section id="iii-4.9-r-torchによる最小の自動微分" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.9-r-torchによる最小の自動微分">III-4.9 R torchによる最小の自動微分</h2>
+<section id="iii-4.6-深層学習ライブラリによる自動微分" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.6-深層学習ライブラリによる自動微分">III-4.6 深層学習ライブラリによる自動微分</h2>
+<section id="iii-4.6.1-一変数関数の自動微分" class="level3">
+<h3 class="anchored" data-anchor-id="iii-4.6.1-一変数関数の自動微分">III-4.6.1 一変数関数の自動微分</h3>
 <p>ここから、Rの<code>torch</code>を使って実際に自動微分を確認する。</p>
 <p>次の関数を考える。</p>
 <p><span class="math display">\[
@@ -774,8 +787,8 @@ y=x^2+3x+1
 <p>という数式を記号微分したのではないことである。</p>
 <p>実際に実行されたTensor演算からComputational Graphを構築し、 そのグラフに対して連鎖律を逆方向に適用している。</p>
 </section>
-<section id="iii-4.10-二変数関数のgradient" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.10-二変数関数のgradient">III-4.10 二変数関数のGradient</h2>
+<section id="iii-4.6.2-多変数関数の偏微分" class="level3">
+<h3 class="anchored" data-anchor-id="iii-4.6.2-多変数関数の偏微分">III-4.6.2 多変数関数の偏微分</h3>
 <p>次に、</p>
 <p><span class="math display">\[
 V(x,y)
@@ -849,8 +862,9 @@ Vega,
 \]</span></p>
 <p>を求める構造と同じである。</p>
 </section>
-<section id="iii-4.11-金融リスク計測への接続" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.11-金融リスク計測への接続">III-4.11 金融リスク計測への接続</h2>
+</section>
+<section id="iii-4.7-自動微分による市場リスク感応度" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.7-自動微分による市場リスク感応度">III-4.7 自動微分による市場リスク感応度</h2>
 <p>ここまでの内容を金融工学へ置き換えると、</p>
 <pre class="text"><code>Market Data
     |
@@ -904,8 +918,8 @@ Foreign\ Rates
 \]</span></p>
 <p>という複数のリスクファクターを持つ商品へ適用する。</p>
 </section>
-<section id="iii-4.12-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="iii-4.12-まとめ">III-4.12 まとめ</h2>
+<section id="iii-4.8-まとめ" class="level2">
+<h2 class="anchored" data-anchor-id="iii-4.8-まとめ">III-4.8 まとめ</h2>
 <p>本章では、自動微分の数学的な基礎を整理した。</p>
 <p>有限差分は、</p>
 <p><span class="math display">\[
@@ -1359,8 +1373,8 @@ Theta
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="pagination-link" aria-label="第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較">
-        <span class="nav-page-text"><span class="chapter-title">第III-5章 オプション・グリークス：GaussQuantとモンテカルロ・torchの比較</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="pagination-link" aria-label="第III-5章 解析解とモンテカルロ自動微分による検証">
+        <span class="nav-page-text"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
