@@ -243,10 +243,10 @@ flat_probability_tbl <- tibble::tibble(
 ) |>
   dplyr::mutate(
     survival_probability = exp(
-      -hazard_rate_approximation * .data$time
+      -hazard_rate_approximation * time
     ),
     cumulative_default_probability = 1 -
-      .data$survival_probability
+      survival_probability
   )
 
 flat_probability_plot_tbl <- flat_probability_tbl |>
@@ -262,9 +262,9 @@ flat_probability_plot_tbl <- flat_probability_tbl |>
 flat_probability_plot <- ggplot2::ggplot(
   flat_probability_plot_tbl,
   ggplot2::aes(
-    x = .data$time,
-    y = .data$probability,
-    linetype = .data$probability_type
+    x = time,
+    y = probability,
+    linetype = probability_type
   )
 ) +
   ggplot2::geom_line(
@@ -575,8 +575,8 @@ flat_hand_check_tbl <- tibble::tribble(
                                                      )
 ) |>
   dplyr::mutate(
-    difference = .data$hand_value -
-      .data$quantlib_value
+    difference = hand_value -
+      quantlib_value
   )
 
 flat_hand_summary_tbl <- tibble::tribble(
@@ -709,17 +709,17 @@ credit_sensitivity_input_tbl <- tidyr::crossing(
 
 credit_sensitivity_tbl <- credit_sensitivity_input_tbl |>
   dplyr::mutate(
-    market_spread = .data$market_spread_bp /
+    market_spread = market_spread_bp /
       10000,
     loss_given_default = 1 -
-      .data$recovery_rate,
-    hazard_rate_approx = .data$market_spread /
-      .data$loss_given_default,
+      recovery_rate,
+    hazard_rate_approx = market_spread /
+      loss_given_default,
     survival_probability_5y = exp(
-      -5 * .data$hazard_rate_approx
+      -5 * hazard_rate_approx
     ),
     cumulative_default_probability_5y = 1 -
-      .data$survival_probability_5y
+      survival_probability_5y
   )
 
 GaussQuant::show_tbl_GQH(
@@ -1171,8 +1171,8 @@ isda_hand_check_tbl <- tibble::tribble(
   "fair_spread",         fair_spread_hand_isda,        fair_spread_isda
 ) |>
   dplyr::mutate(
-    difference = .data$hand_value -
-      .data$isda_value
+    difference = hand_value -
+      isda_value
   )
 
 GaussQuant::show_tbl_GQH(
@@ -1224,15 +1224,15 @@ engine_comparison_tbl <- dplyr::bind_rows(
   isda_standard_summary_tbl
 ) |>
   dplyr::relocate(
-    .data$engine
+    engine
   ) |>
   tidyr::pivot_wider(
     names_from = engine,
     values_from = value
   ) |>
   dplyr::mutate(
-    difference_isda_minus_midpoint = .data$ISDA -
-      .data$MidPoint
+    difference_isda_minus_midpoint = ISDA -
+      MidPoint
   )
 
 GaussQuant::show_tbl_GQH(

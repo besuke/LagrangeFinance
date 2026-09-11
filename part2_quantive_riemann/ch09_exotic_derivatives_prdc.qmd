@@ -409,11 +409,11 @@ fx_payoff_grid_tbl <- tibble::tibble(
 ) |>
   dplyr::mutate(
     uncapped_coupon = coupon_leverage_prdc *
-      .data$fx_rate /
+      fx_rate /
       coupon_fx_base_prdc -
       coupon_subtraction_prdc,
     coupon_rate = GaussQuant::prdc_coupon_GQL(
-      fx_rate = .data$fx_rate,
+      fx_rate = fx_rate,
       fx_base = coupon_fx_base_prdc,
       leverage = coupon_leverage_prdc,
       subtraction = coupon_subtraction_prdc,
@@ -432,8 +432,8 @@ coupon_threshold_tbl <- tibble::tribble(
 prdc_payoff_plot <- ggplot2::ggplot(
   fx_payoff_grid_tbl,
   ggplot2::aes(
-    x = .data$fx_rate,
-    y = .data$coupon_rate
+    x = fx_rate,
+    y = coupon_rate
   )
 ) +
   ggplot2::geom_line(
@@ -573,9 +573,9 @@ sample_fx_path_tbl <- purrr::map_dfr(
 sample_fx_path_plot <- ggplot2::ggplot(
   sample_fx_path_tbl,
   ggplot2::aes(
-    x = .data$time,
-    y = .data$fx_rate,
-    group = .data$path_id
+    x = time,
+    y = fx_rate,
+    group = path_id
   )
 ) +
   ggplot2::geom_line(
@@ -658,7 +658,7 @@ prdc_cashflow_tbl <- prdc_result$cashflows
 
 coupon_leg_present_value_prdc <- prdc_result$summary |>
   dplyr::filter(
-    .data$metric == "coupon_leg_npv"
+    metric == "coupon_leg_npv"
   ) |>
   dplyr::pull(
     value
@@ -666,7 +666,7 @@ coupon_leg_present_value_prdc <- prdc_result$summary |>
 
 redemption_present_value_prdc <- prdc_result$summary |>
   dplyr::filter(
-    .data$metric == "redemption_leg_npv"
+    metric == "redemption_leg_npv"
   ) |>
   dplyr::pull(
     value
@@ -747,8 +747,8 @@ GaussQuant::show_tbl_GQH(
 expected_coupon_plot <- ggplot2::ggplot(
   expected_coupon_tbl,
   ggplot2::aes(
-    x = .data$time,
-    y = .data$final_coupon_rate
+    x = time,
+    y = final_coupon_rate
   )
 ) +
   ggplot2::geom_line(
@@ -861,7 +861,7 @@ coupon_distribution_tbl <- purrr::map_dfr(
 coupon_distribution_plot <- ggplot2::ggplot(
   coupon_distribution_tbl,
   ggplot2::aes(
-    x = .data$coupon_rate
+    x = coupon_rate
   )
 ) +
   ggplot2::geom_histogram(
@@ -932,8 +932,8 @@ spot_sensitivity_tbl <- GaussQuant::prdc_spot_sensitivity_GQL(
 spot_sensitivity_plot <- ggplot2::ggplot(
   spot_sensitivity_tbl,
   ggplot2::aes(
-    x = .data$fx_spot,
-    y = .data$prdc_npv
+    x = fx_spot,
+    y = prdc_npv
   )
 ) +
   ggplot2::geom_line(
@@ -999,8 +999,8 @@ volatility_sensitivity_tbl <- GaussQuant::prdc_volatility_sensitivity_GQL(
 volatility_sensitivity_plot <- ggplot2::ggplot(
   volatility_sensitivity_tbl,
   ggplot2::aes(
-    x = .data$fx_volatility,
-    y = .data$prdc_npv
+    x = fx_volatility,
+    y = prdc_npv
   )
 ) +
   ggplot2::geom_line(

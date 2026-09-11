@@ -624,10 +624,10 @@ short_rate_curve_tbl <- dplyr::bind_rows(
 short_rate_curve_plot <- ggplot2::ggplot(
   short_rate_curve_tbl,
   ggplot2::aes(
-    x = .data$maturity,
-    y = .data$zero_rate,
-    group = .data$scenario,
-    linetype = .data$scenario
+    x = maturity,
+    y = zero_rate,
+    group = scenario,
+    linetype = scenario
   )
 ) +
   ggplot2::geom_line(
@@ -925,9 +925,9 @@ engine_comparison_tbl <- tibble::tribble(
   "Bachelier",               npv_bachelier
 ) |>
   dplyr::mutate(
-    difference_vs_bachelier = .data$npv -
+    difference_vs_bachelier = npv -
       npv_bachelier,
-    difference_vs_jamshidian = .data$npv -
+    difference_vs_jamshidian = npv -
       npv_jamshidian
   )
 
@@ -987,8 +987,8 @@ tree_convergence_tbl <- purrr::map_dfr(
 tree_convergence_plot <- ggplot2::ggplot(
   tree_convergence_tbl,
   ggplot2::aes(
-    x = .data$tree_steps,
-    y = .data$npv
+    x = tree_steps,
+    y = npv
   )
 ) +
   ggplot2::geom_line(

@@ -224,8 +224,8 @@ analytic_european_tbl <- GaussQuant::option_metric_table_GQL(
 )
 
 analytic_npv <- analytic_european_tbl |>
-  dplyr::filter(.data$metric == "npv") |>
-  dplyr::pull(.data$value)
+  dplyr::filter(metric == "npv") |>
+  dplyr::pull(value)
 
 GaussQuant::show_tbl_GQH(
   analytic_european_tbl,
@@ -343,12 +343,12 @@ european_comparison_tbl <- purrr::imap_dfr(
 )
 
 analytic_put_npv <- european_comparison_tbl |>
-  dplyr::filter(.data$method == "analytic") |>
-  dplyr::pull(.data$npv)
+  dplyr::filter(method == "analytic") |>
+  dplyr::pull(npv)
 
 european_comparison_tbl <- european_comparison_tbl |>
   dplyr::mutate(
-    difference_from_analytic = .data$npv - analytic_put_npv
+    difference_from_analytic = npv - analytic_put_npv
   )
 
 GaussQuant::show_tbl_GQH(
@@ -408,7 +408,7 @@ mc_comparison_tbl <- tibble::tribble(
   "Pseudo-random Monte Carlo", mc_result$summary$npv[[1]], mc_result$summary$standard_error[[1]]
 ) |>
   dplyr::mutate(
-    difference_from_analytic = .data$npv - analytic_npv
+    difference_from_analytic = npv - analytic_npv
   )
 
 GaussQuant::show_tbl_GQH(
@@ -445,9 +445,9 @@ path_plot_tbl <- GaussQuant::generate_path_table_GQL(
 path_plot <- ggplot2::ggplot(
   path_plot_tbl,
   ggplot2::aes(
-    x = .data$time,
-    y = .data$price,
-    group = .data$path_id
+    x = time,
+    y = price,
+    group = path_id
   )
 ) +
   ggplot2::geom_line(
@@ -461,9 +461,9 @@ path_plot <- ggplot2::ggplot(
   )
 
 terminal_plot_tbl <- path_plot_tbl |>
-  dplyr::group_by(.data$path_id) |>
+  dplyr::group_by(path_id) |>
   dplyr::slice_max(
-    order_by = .data$step,
+    order_by = step,
     n = 1L,
     with_ties = FALSE
   ) |>
@@ -471,7 +471,7 @@ terminal_plot_tbl <- path_plot_tbl |>
 
 terminal_plot <- ggplot2::ggplot(
   terminal_plot_tbl,
-  ggplot2::aes(x = .data$price)
+  ggplot2::aes(x = price)
 ) +
   ggplot2::geom_histogram(
     bins = 24
@@ -529,8 +529,8 @@ gaussian_increment <- gaussian_rng_check$nextSequence()$value() |>
   as.numeric()
 
 time_grid_check <- generated_path_tbl |>
-  dplyr::arrange(.data$step) |>
-  dplyr::pull(.data$time)
+  dplyr::arrange(step) |>
+  dplyr::pull(time)
 
 dt_check <- diff(time_grid_check)
 
@@ -545,13 +545,13 @@ hand_price <- forward_price * c(
 )
 
 one_path_check_tbl <- generated_path_tbl |>
-  dplyr::arrange(.data$step) |>
+  dplyr::arrange(step) |>
   dplyr::transmute(
-    step = .data$step,
-    time = .data$time,
-    generated_price = .data$price,
+    step = step,
+    time = time,
+    generated_price = price,
     hand_price = hand_price,
-    difference = .data$price - hand_price
+    difference = price - hand_price
   )
 
 GaussQuant::show_tbl_GQH(
@@ -629,12 +629,12 @@ american_comparison_tbl <- purrr::imap_dfr(
 )
 
 crr_500_american_npv <- american_comparison_tbl |>
-  dplyr::filter(.data$method == "crr_500") |>
-  dplyr::pull(.data$npv)
+  dplyr::filter(method == "crr_500") |>
+  dplyr::pull(npv)
 
 american_comparison_tbl <- american_comparison_tbl |>
   dplyr::mutate(
-    difference_from_crr_500 = .data$npv - crr_500_american_npv
+    difference_from_crr_500 = npv - crr_500_american_npv
   )
 
 GaussQuant::show_tbl_GQH(
@@ -672,9 +672,9 @@ sobol_display_tbl <- GaussQuant::generate_path_table_GQL(
 sobol_plot <- ggplot2::ggplot(
   sobol_display_tbl,
   ggplot2::aes(
-    x = .data$time,
-    y = .data$price,
-    group = .data$path_id
+    x = time,
+    y = price,
+    group = path_id
   )
 ) +
   ggplot2::geom_line(
@@ -740,8 +740,8 @@ lsm_result <- GaussQuant::lsm_american_put_GQL(
 )
 
 lsm_npv <- lsm_result$summary |>
-  dplyr::filter(.data$metric == "lsm_npv") |>
-  dplyr::pull(.data$value)
+  dplyr::filter(metric == "lsm_npv") |>
+  dplyr::pull(value)
 
 lsm_comparison_tbl <- tibble::tribble(
   ~method,                    ~npv,
@@ -749,16 +749,16 @@ lsm_comparison_tbl <- tibble::tribble(
   "CRR Tree 500 steps",       crr_500_american_npv
 ) |>
   dplyr::mutate(
-    difference_from_crr_500 = .data$npv - crr_500_american_npv
+    difference_from_crr_500 = npv - crr_500_american_npv
   )
 
 exercise_summary_tbl <- lsm_result$exercise |>
   dplyr::count(
-    .data$exercise_step,
-    .data$exercise_time,
+    exercise_step,
+    exercise_time,
     name = "paths"
   ) |>
-  dplyr::arrange(.data$exercise_step)
+  dplyr::arrange(exercise_step)
 
 GaussQuant::show_tbl_GQH(
   lsm_result$summary,

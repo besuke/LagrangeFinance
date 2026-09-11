@@ -269,8 +269,8 @@ normal_greeks_tbl <- GaussQuant::normal_option_greeks_GQL(
 )
 
 normal_npv <- normal_greeks_tbl |>
-  dplyr::filter(.data$metric == "npv") |>
-  dplyr::pull(.data$value)
+  dplyr::filter(metric == "npv") |>
+  dplyr::pull(value)
 
 contract_value_multiplier <- 100 * 2500
 
@@ -288,7 +288,7 @@ normal_summary_tbl <- dplyr::bind_rows(
     )
   ),
   normal_greeks_tbl |>
-    dplyr::filter(.data$metric != "npv")
+    dplyr::filter(metric != "npv")
 )
 
 GaussQuant::show_tbl_GQH(
@@ -321,12 +321,12 @@ negative_rate_example_tbl <- tibble::tribble(
     discount_factor = exp(-0.01),
     npv = purrr::pmap_dbl(
       list(
-        .data$option_sign,
-        .data$forward,
-        .data$strike,
-        .data$normal_volatility,
-        .data$maturity,
-        .data$discount_factor
+        option_sign,
+        forward,
+        strike,
+        normal_volatility,
+        maturity,
+        discount_factor
       ),
       function(
         option_sign,
@@ -466,8 +466,8 @@ closure_scenario_tbl <- tibble::tribble(
   )
 ) |>
   dplyr::mutate(
-    difference_from_base = .data$npv -
-      .data$npv[.data$scenario == "base"]
+    difference_from_base = npv -
+      npv[scenario == "base"]
   )
 
 class_style_tbl <- tibble::tribble(
@@ -553,16 +553,16 @@ caplet_input_tbl <- tibble::tribble(
   4L,       1.00,         1.25,          0.25,              0.0485,        86
 ) |>
   dplyr::mutate(
-    normal_volatility = .data$normal_vol_bp / 10000,
+    normal_volatility = normal_vol_bp / 10000,
     discount_factor = exp(
-      -flat_discount_rate * .data$payment_time
+      -flat_discount_rate * payment_time
     ),
     option_value_per_rate_unit = purrr::pmap_dbl(
       list(
-        .data$forward_rate,
-        .data$normal_volatility,
-        .data$fixing_time,
-        .data$discount_factor
+        forward_rate,
+        normal_volatility,
+        fixing_time,
+        discount_factor
       ),
       function(
         forward_rate,
@@ -581,8 +581,8 @@ caplet_input_tbl <- tibble::tribble(
       }
     ),
     caplet_npv = cap_notional *
-      .data$accrual_fraction *
-      .data$option_value_per_rate_unit
+      accrual_fraction *
+      option_value_per_rate_unit
   )
 
 cap_summary_tbl <- tibble::tribble(
@@ -773,12 +773,12 @@ swaption_tbl <- tibble::tribble(
     normal_volatility = swaption_normal_volatility
   ) |>
   dplyr::relocate(
-    .data$option_type,
-    .data$forward_swap_rate,
-    .data$strike,
-    .data$annuity,
-    .data$normal_volatility,
-    .data$npv
+    option_type,
+    forward_swap_rate,
+    strike,
+    annuity,
+    normal_volatility,
+    npv
   )
 
 GaussQuant::show_tbl_GQH(
@@ -831,10 +831,10 @@ black_normal_comparison_tbl <- tibble::tribble(
 ) |>
   dplyr::mutate(
     approximate_normal_volatility =
-      .data$forward_rate *
-      .data$black_volatility,
+      forward_rate *
+      black_volatility,
     approximate_normal_volatility_bp =
-      .data$approximate_normal_volatility *
+      approximate_normal_volatility *
       10000
   )
 

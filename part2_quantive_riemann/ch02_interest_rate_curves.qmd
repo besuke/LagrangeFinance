@@ -125,15 +125,15 @@ zero_curve_grid <- GaussQuant::curve_grid_tbl_GQL(
   extrapolate = TRUE
 ) |>
   dplyr::mutate(
-    next_time = dplyr::lead(.data$time),
-    next_discount = dplyr::lead(.data$discount_factor),
+    next_time = dplyr::lead(time),
+    next_discount = dplyr::lead(discount_factor),
     forward_rate = dplyr::if_else(
-      !is.na(.data$next_time) &
-        .data$next_time > .data$time &
-        .data$discount_factor > 0 &
-        .data$next_discount > 0,
-      -log(.data$next_discount / .data$discount_factor) /
-        (.data$next_time - .data$time),
+      !is.na(next_time) &
+        next_time > time &
+        discount_factor > 0 &
+        next_discount > 0,
+      -log(next_discount / discount_factor) /
+        (next_time - time),
       NA_real_
     )
   )
@@ -152,11 +152,11 @@ GaussQuant::show_tbl_GQH(
   zero_curve_grid |>
     dplyr::slice(grid_show_index) |>
     dplyr::select(
-      .data$curve_date,
-      .data$time,
-      .data$discount_factor,
-      .data$zero_rate,
-      .data$forward_rate
+      curve_date,
+      time,
+      discount_factor,
+      zero_rate,
+      forward_rate
     ),
   "Zero-curve grid",
   n = 20
@@ -167,8 +167,8 @@ GaussQuant::show_tbl_GQH(
 discount_factor_plot <- zero_curve_grid |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$curve_date,
-      y = .data$discount_factor
+      x = curve_date,
+      y = discount_factor
     )
   ) +
   ggplot2::geom_line() +
@@ -181,8 +181,8 @@ discount_factor_plot <- zero_curve_grid |>
 zero_rate_plot <- zero_curve_grid |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$curve_date,
-      y = 100 * .data$zero_rate
+      x = curve_date,
+      y = 100 * zero_rate
     )
   ) +
   ggplot2::geom_line() +
@@ -193,11 +193,11 @@ zero_rate_plot <- zero_curve_grid |>
   )
 
 forward_rate_plot <- zero_curve_grid |>
-  dplyr::filter(!is.na(.data$forward_rate)) |>
+  dplyr::filter(!is.na(forward_rate)) |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$curve_date,
-      y = 100 * .data$forward_rate
+      x = curve_date,
+      y = 100 * forward_rate
     )
   ) +
   ggplot2::geom_line() +
@@ -228,8 +228,8 @@ show_plot_LFL(forward_rate_plot)
 discount_curve <- GaussQuant::build_discount_curve_GQL(
   nodes = zero_nodes |>
     dplyr::select(
-      .data$date,
-      .data$zero_rate
+      date,
+      zero_rate
     ),
   day_counter = "Actual365Fixed"
 )
@@ -261,18 +261,18 @@ interpolation_tbl <- tibble::tibble(
 ) |>
   dplyr::mutate(
     ql_date = purrr::map(
-      as.character(.data$date),
+      as.character(date),
       GaussQuant::date_GQL
     ),
     zero_curve_discount = purrr::map_dbl(
-      .data$ql_date,
+      ql_date,
       ~ GaussQuant::curve_discount_safe_GQL(
         zero_curve,
         .x
       )
     ),
     discount_curve_discount = purrr::map_dbl(
-      .data$ql_date,
+      ql_date,
       ~ GaussQuant::curve_discount_safe_GQL(
         discount_curve,
         .x
@@ -280,7 +280,7 @@ interpolation_tbl <- tibble::tibble(
     )
   ) |>
   dplyr::select(
-    -.data$ql_date
+    -ql_date
   ) |>
   tidyr::pivot_longer(
     cols = c(
@@ -292,43 +292,43 @@ interpolation_tbl <- tibble::tibble(
   ) |>
   dplyr::mutate(
     interpolation = dplyr::recode(
-      .data$interpolation,
+      interpolation,
       zero_curve_discount = "ZeroCurve",
       discount_curve_discount = "DiscountCurve"
     )
   ) |>
   dplyr::group_by(
-    .data$interpolation
+    interpolation
   ) |>
   dplyr::arrange(
-    .data$interpolation,
-    .data$time
+    interpolation,
+    time
   ) |>
   dplyr::mutate(
     zero_rate = dplyr::if_else(
-      .data$time > 0 &
-        .data$discount_factor > 0,
-      -log(.data$discount_factor) /
-        .data$time,
+      time > 0 &
+        discount_factor > 0,
+      -log(discount_factor) /
+        time,
       zero_nodes$zero_rate[[1]]
     ),
     next_time = dplyr::lead(
-      .data$time
+      time
     ),
     next_discount = dplyr::lead(
-      .data$discount_factor
+      discount_factor
     ),
     forward_rate = dplyr::if_else(
-      !is.na(.data$next_time) &
-        .data$next_time > .data$time &
-        .data$discount_factor > 0 &
-        .data$next_discount > 0,
+      !is.na(next_time) &
+        next_time > time &
+        discount_factor > 0 &
+        next_discount > 0,
       -log(
-        .data$next_discount /
-          .data$discount_factor
+        next_discount /
+          discount_factor
       ) / (
-        .data$next_time -
-          .data$time
+        next_time -
+          time
       ),
       NA_real_
     )
@@ -341,9 +341,9 @@ interpolation_tbl <- tibble::tibble(
 interpolation_zero_plot <- interpolation_tbl |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$time,
-      y = 100 * .data$zero_rate,
-      linetype = .data$interpolation
+      x = time,
+      y = 100 * zero_rate,
+      linetype = interpolation
     )
   ) +
   ggplot2::geom_line() +
@@ -355,12 +355,12 @@ interpolation_zero_plot <- interpolation_tbl |>
   )
 
 interpolation_forward_plot <- interpolation_tbl |>
-  dplyr::filter(!is.na(.data$forward_rate)) |>
+  dplyr::filter(!is.na(forward_rate)) |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$time,
-      y = 100 * .data$forward_rate,
-      linetype = .data$interpolation
+      x = time,
+      y = 100 * forward_rate,
+      linetype = interpolation
     )
   ) +
   ggplot2::geom_line() +
@@ -463,8 +463,8 @@ bond_curve_grid <- GaussQuant::curve_grid_tbl_GQL(
 bond_curve_plot <- bond_curve_grid |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$curve_date,
-      y = 100 * .data$zero_rate
+      x = curve_date,
+      y = 100 * zero_rate
     )
   ) +
   ggplot2::geom_line() +
@@ -543,9 +543,9 @@ GaussQuant::show_tbl_GQH(
 bootstrap_zero_plot <- bootstrap_comparison_tbl |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$date,
-      y = 100 * .data$zero_rate,
-      linetype = .data$curve
+      x = date,
+      y = 100 * zero_rate,
+      linetype = curve
     )
   ) +
   ggplot2::geom_line() +
@@ -662,11 +662,11 @@ parallel_shift_tbl <- dplyr::bind_rows(
 
 parallel_shift_wide_tbl <- parallel_shift_tbl |>
   dplyr::select(
-    .data$tenor,
-    .data$date,
-    .data$curve,
-    .data$discount,
-    .data$zero_rate
+    tenor,
+    date,
+    curve,
+    discount,
+    zero_rate
   ) |>
   tidyr::pivot_wider(
     names_from = curve,
@@ -694,9 +694,9 @@ GaussQuant::show_tbl_GQH(
 parallel_shift_plot <- parallel_shift_tbl |>
   ggplot2::ggplot(
     ggplot2::aes(
-      x = .data$date,
-      y = 100 * .data$zero_rate,
-      linetype = .data$curve
+      x = date,
+      y = 100 * zero_rate,
+      linetype = curve
     )
   ) +
   ggplot2::geom_line() +
@@ -730,54 +730,54 @@ show_plot_LFL(parallel_shift_plot)
 node_recovery_tbl <- zero_nodes |>
   dplyr::mutate(
     ql_date = purrr::map(
-      as.character(.data$date),
+      as.character(date),
       GaussQuant::date_GQL
     ),
     time = as.numeric(
-      .data$date -
+      date -
         as.Date(evaluation_date_chr)
     ) / 365,
     zero_curve_discount = purrr::map_dbl(
-      .data$ql_date,
+      ql_date,
       ~ GaussQuant::curve_discount_safe_GQL(
         zero_curve,
         .x
       )
     ),
     discount_curve_discount = purrr::map_dbl(
-      .data$ql_date,
+      ql_date,
       ~ GaussQuant::curve_discount_safe_GQL(
         discount_curve,
         .x
       )
     ),
     zero_curve_implied_rate = dplyr::if_else(
-      .data$time > 0,
-      -log(.data$zero_curve_discount) /
-        .data$time,
-      .data$zero_rate
+      time > 0,
+      -log(zero_curve_discount) /
+        time,
+      zero_rate
     ),
     discount_curve_implied_rate = dplyr::if_else(
-      .data$time > 0,
-      -log(.data$discount_curve_discount) /
-        .data$time,
-      .data$zero_rate
+      time > 0,
+      -log(discount_curve_discount) /
+        time,
+      zero_rate
     ),
     zero_curve_error =
-      .data$zero_curve_implied_rate -
-        .data$zero_rate,
+      zero_curve_implied_rate -
+        zero_rate,
     discount_curve_error =
-      .data$discount_curve_implied_rate -
-        .data$zero_rate
+      discount_curve_implied_rate -
+        zero_rate
   ) |>
   dplyr::select(
-    .data$tenor,
-    .data$date,
-    .data$zero_rate,
-    .data$zero_curve_implied_rate,
-    .data$discount_curve_implied_rate,
-    .data$zero_curve_error,
-    .data$discount_curve_error
+    tenor,
+    date,
+    zero_rate,
+    zero_curve_implied_rate,
+    discount_curve_implied_rate,
+    zero_curve_error,
+    discount_curve_error
   )
 
 GaussQuant::show_tbl_GQH(
@@ -832,33 +832,33 @@ curve_validation_tbl <- dplyr::bind_rows(
       curve = "Deposit + swap + 50bp"
     )
 ) |>
-  dplyr::group_by(.data$curve) |>
+  dplyr::group_by(curve) |>
   dplyr::summarise(
     first_date = min(
-      .data$curve_date,
+      curve_date,
       na.rm = TRUE
     ),
     last_date = max(
-      .data$curve_date,
+      curve_date,
       na.rm = TRUE
     ),
     min_discount = min(
-      .data$discount_factor,
+      discount_factor,
       na.rm = TRUE
     ),
     max_discount = max(
-      .data$discount_factor,
+      discount_factor,
       na.rm = TRUE
     ),
     nonpositive_discount_count = sum(
-      .data$discount_factor <= 0,
+      discount_factor <= 0,
       na.rm = TRUE
     ),
     missing_discount_count = sum(
-      is.na(.data$discount_factor)
+      is.na(discount_factor)
     ),
     missing_zero_rate_count = sum(
-      is.na(.data$zero_rate)
+      is.na(zero_rate)
     ),
     .groups = "drop"
   )
@@ -1064,9 +1064,9 @@ settle_date_r <- as.Date(settle_date_chr)
 
 bond_cf_tbl <- GaussQuant::bond_cashflow_table_GQL(bond_obj) |>
   dplyr::mutate(
-    pay_date = as.Date(.data$date),
+    pay_date = as.Date(date),
     discount_factor = purrr::map_dbl(
-      as.character(.data$pay_date),
+      as.character(pay_date),
       function(x) {
         if (as.Date(x) < settle_date_r) {
           return(NA_real_)
@@ -1081,13 +1081,13 @@ bond_cf_tbl <- GaussQuant::bond_cashflow_table_GQL(bond_obj) |>
         )
       }
     ),
-    pv = .data$amount * .data$discount_factor
+    pv = amount * discount_factor
   ) |>
   dplyr::select(
-    .data$pay_date,
-    .data$amount,
-    .data$discount_factor,
-    .data$pv
+    pay_date,
+    amount,
+    discount_factor,
+    pv
   )
 
 cashflow_pv <- sum(bond_cf_tbl$pv, na.rm = TRUE)
@@ -1261,31 +1261,31 @@ basket_tbl <- ctd_result$basket
 
 gross_basis_tbl <- basket_tbl |>
   dplyr::select(
-    .data$issue_date,
-    .data$maturity,
-    .data$coupon,
-    .data$yield_pct,
-    .data$bpv,
-    .data$clean_price,
-    .data$dirty_price,
-    .data$conversion_factor,
-    .data$gross_basis
+    issue_date,
+    maturity,
+    coupon,
+    yield_pct,
+    bpv,
+    clean_price,
+    dirty_price,
+    conversion_factor,
+    gross_basis
   )
 
 net_basis_tbl <- basket_tbl |>
   dplyr::select(
-    .data$maturity,
-    .data$conversion_factor,
-    .data$gross_basis,
-    .data$accrued_start,
-    .data$accrued_end,
-    .data$coupon_income,
-    .data$repo_cost,
-    .data$carry,
-    .data$net_basis,
-    .data$forward_price,
-    .data$implied_repo,
-    .data$ctd
+    maturity,
+    conversion_factor,
+    gross_basis,
+    accrued_start,
+    accrued_end,
+    coupon_income,
+    repo_cost,
+    carry,
+    net_basis,
+    forward_price,
+    implied_repo,
+    ctd
   )
 
 basket_display_tbl <- basket_tbl |>
