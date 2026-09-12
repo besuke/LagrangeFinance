@@ -1,4 +1,4 @@
- project:
+project:
   output-dir: _pdf_exclude_build
 
 book:
