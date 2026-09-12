@@ -24,6 +24,7 @@ format:
         \usepackage[haranoaji]{luatexja-preset}
         \usepackage{graphicx}
         \usepackage{eso-pic}
+        \usepackage{fvextra}
         \usepackage{xcolor}
 
         % Cover
@@ -37,6 +38,14 @@ format:
           \null
           \clearpage
         }
+        % Code blocks
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+          commandchars=\\\{\},
+          fontsize=\footnotesize,
+          breaklines=true,
+          breakanywhere=true
+        }
+
 
         % Training exclusion watermark
         \newcommand{\ExcludeWatermark}{%
@@ -61,7 +70,7 @@ format:
         }
 
     geometry:
-      - top=25mm
-      - bottom=25mm
-      - left=25mm
-      - right=25mm
+      - top=14mm
+      - bottom=14mm
+      - left=14mm
+      - right=14mm

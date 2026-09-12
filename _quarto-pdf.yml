@@ -37,13 +37,13 @@ format:
         % Code blocks
         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
           commandchars=\\\{\},
-          fontsize=\scriptsize,
+          fontsize=\footnotesize,
           breaklines=true,
           breakanywhere=true
         }
 
     geometry:
-      - top=18mm
-      - bottom=18mm
-      - left=18mm
-      - right=18mm
+      - top=14mm
+      - bottom=14mm
+      - left=14mm
+      - right=14mm
