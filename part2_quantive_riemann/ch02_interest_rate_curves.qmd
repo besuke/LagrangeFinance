@@ -1,5 +1,5 @@
 ---
-title: "第II-2章 金利カーブ構築と債券先物の最割安銘柄・BPV"
+title: "第II-2章 金利カーブ構築と日本国債先物 ― Basis・IRR・CTD"
 execute:
   eval: true
   echo: true
@@ -873,523 +873,489 @@ GaussQuant::show_tbl_GQH(
 割引係数が正であることは、裁定のない期間構造を確認するための基本条件である。ただし、正の割引係数だけでは十分ではない。入力商品の再評価、補間区間のフォワード金利、外挿方法、日数計算規則および参照日の設定も確認する必要がある。
 
 
-## II-2.5 国債先物の基礎
+## II-2.5 日本国債先物とCTD
 
-株価指数先物では、指数そのものを受け渡すことができないため、満期時には差金決済が行われる。これに対し、国債先物では、満期まで保有された建玉について、受渡適格銘柄に指定された国債を用いた現物受渡しが行われる。現物受渡しを通じて、先物市場と現物国債市場の価格連関が保たれている。
+日本の長期国債先物は、実在する特定銘柄ではなく、クーポン6%、償還期限10年の標準物を取引対象とする。満期時には、取引所が定めた受渡適格銘柄の中から売方が実際に受け渡す銘柄を選択する。各銘柄ではクーポンと残存期間が異なるため、標準物との価値の差をConversion Factor（CF）で調整する。
 
-国債先物の取引対象は、実際に発行された特定の国債ではなく、クーポンや償還期限を標準化した標準物である。この標準物は実在しないため、最終決済では、取引所が定めた複数の受渡適格銘柄のいずれかを用いて受渡しを行う。銘柄ごとにクーポン、残存期間および価格が異なるため、その価値の差は変換係数（Conversion Factor: CF）によって調整される。
+受渡価格の基本部分は次式で表される。
 
-受渡銘柄を選択する権利は、国債を受け取る買方ではなく、国債を引き渡す売方にある。したがって売方は、受渡適格銘柄の中から、現物価格だけでなく、変換係数、経過利子、クーポン収入および受渡日までの資金調達費用を考慮し、最も低い経済的費用で受け渡すことのできる銘柄を選択する。この銘柄を最割安銘柄（Cheapest-to-Deliver: CTD）という。
+$$
+\text{Invoice Price}
+=
+F\times CF
+$$
 
-CTDは、単純に現物単価が最も低い債券ではない。先物価格に変換係数を乗じて求める受渡価値と、現物債を調達して受渡日まで保有する費用とを比較して決定される。
+ここで $F$ は国債先物価格、$CF$ はConversion Factorである。実際の受渡金額では、さらに受渡日の経過利子が加わる。
 
-本章では、受渡適格銘柄ごとに現物価格、グロスベーシス、キャリー、ネットベーシスおよびインプライド・レポを計算する。これらの比較を通じて、どのような経済計算によってCTDが選定されるのかを確認し、最後にCTDを基礎とする国債先物のBPVを求める。
+CTD（Cheapest-to-Deliver）は、単に現物価格が最も安い銘柄ではない。現物価格、Conversion Factor、保有期間中のクーポン、経過利子、資金調達費用を合わせて比較する必要がある。本節では、2026年9月10日を評価日、2026年12月20日を受渡日として、長期国債先物2026年12月限の受渡適格銘柄を比較する。
 
-```{r setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
+### II-2.5.1 受渡適格銘柄
+
+以下では373回債から383回債までを比較する。BB価格は本章の計算確認用に置いた2026年9月10日時点の値であり、最終稿では日本相互証券の確認値へ差し替える。
+
+```{r jgb-deliverable-basket}
+valuation_date_chr <- "2026-09-10"
+delivery_date_chr <- "2026-12-20"
+futures_price <- 125.71
+funding_rate <- 0.0123
+
+GaussQuant::set_eval_date_GQL(valuation_date_chr)
+
+dc_jgb <- QuantLib::Actual365Fixed()
+calendar_jp <- QuantLib::Japan()
+
+cmpd_compounded <- "Compounded"
+freq_semiannual <- "Semiannual"
+
+
+tbl_jgb_deliverable <- tibble::tribble(
+  ~issue, ~issue_date, ~coupon_pct, ~maturity_date, ~conversion_factor, ~bb_price,
+  373L, "2023-12-20", 0.6, "2033-12-20", 0.695006, 87.620,
+  374L, "2024-03-20", 0.8, "2034-03-20", 0.697881, 88.333,
+  375L, "2024-06-20", 1.1, "2034-06-20", 0.707520, 89.828,
+  376L, "2024-09-20", 0.9, "2034-09-20", 0.687561, 87.828,
+  377L, "2024-12-20", 1.2, "2034-12-20", 0.698533, 89.484,
+  378L, "2025-03-20", 1.4, "2035-03-20", 0.704059, 90.486,
+  379L, "2025-06-20", 1.5, "2035-06-20", 0.703762, 90.774,
+  380L, "2025-09-20", 1.7, "2035-09-20", 0.710535, 91.904,
+  381L, "2025-12-20", 2.1, "2035-12-20", 0.731806, 94.703,
+  382L, "2026-03-20", 2.4, "2036-03-20", 0.747221, 96.808,
+  383L, "2026-06-20", 2.7, "2036-06-20", 0.763657, 98.966
 )
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(QuantLib)
-  library(GaussQuant)
-})
-```
-
-
-### II-2.5.1 計算条件と市場慣行
-
-本章では、米国国債先物を例として計算する。現物国債には米国政府債カレンダーとActual/Actual（Bond）を使用し、レポ期間にはActual/360を使用する。現物債の受渡日は取引日の1営業日後とする。
-
-米国国債先物の価格は、通常、額面100に対するポイントと32分の1で表示される。たとえば、コード中の `109 + 10 / 32` は、相場表示では109-10に相当する。
-
-```{r treasury-futures-setup}
-cal_us_gov <- QuantLib::UnitedStates("GovernmentBond")
-
-dc_act_act_bond <- GaussQuant::day_counter_GQL("ActualActual_Bond")
-dc_act_360 <- GaussQuant::day_counter_GQL("Actual360")
-
-cmpd_compounded <- QuantLib::Compounding_Compounded_get()
-freq_semiannual <- QuantLib::Frequency_Semiannual_get()
-
-settlement_days_t1 <- 1L
-trade_date_chr <- "2023-04-20"
-repo_end_date_chr <- "2023-07-06"
-
-trade_date <- GaussQuant::date_GQL(trade_date_chr)
-repo_end_date_ql <- GaussQuant::date_GQL(repo_end_date_chr)
-
-GaussQuant::set_eval_date_GQL(trade_date)
-
-settle_date <- GaussQuant::advance_days_GQL(
-  calendar_obj = cal_us_gov,
-  date_obj = trade_date,
-  n_days = settlement_days_t1
-)
-
-settle_date_chr <- as.character(settle_date)
-settle_date_ql <- GaussQuant::date_GQL(settle_date_chr)
-
-setup_tbl <- tibble::tribble(
-  ~item, ~value,
-  "trade_date", trade_date_chr,
-  "spot_settlement_date", settle_date_chr,
-  "repo_end_date", repo_end_date_chr,
-  "settlement_days", as.character(settlement_days_t1),
-  "calendar", "UnitedStates(GovernmentBond)",
-  "bond_day_counter", "ActualActual(Bond)",
-  "repo_day_counter", "Actual360",
-  "compounding", "Compounded",
-  "frequency", "Semiannual"
-)
-
-GaussQuant::show_tbl_GQH(setup_tbl, "Treasury futures setup")
-```
-
-### II-2.5.2 受渡適格国債
-
-最初に、受渡適格銘柄の例となる米国国債を作成する。発行日、償還日、クーポンおよび利払スケジュールは、現物価格、経過利子、キャリーおよびBPVを計算する基礎となる。
-
-次のコードでは、年率4.125%、年2回払いの米国国債を作成し、利払スケジュールを確認する。あわせて、利回り6%を仮定した場合のクリーン価格を計算する。
-
-```{r us-treasury-bond}
-bond_bundle <- GaussQuant::us_treasury_bond_GQL(
-  effective_date = "2022-09-30",
-  maturity_date = "2027-09-30",
-  coupon_rate_pct = 4.125,
-  face_amount = 100,
-  settlement_days = settlement_days_t1,
-  calendar = cal_us_gov,
-  day_counter = dc_act_act_bond
-)
-
-bond_obj <- bond_bundle$bond
 
 GaussQuant::show_tbl_GQH(
-  GaussQuant::schedule_dates_GQL(bond_bundle$schedule),
-  "US Treasury bond schedule",
+  tbl_jgb_deliverable,
+  "JGB futures deliverable basket",
   n = 20
 )
-
-clean_price_at_six_percent <- GaussQuant::bond_clean_price_from_yield_safe_GQL(
-  bond = bond_obj,
-  yield_rate = 6 / 100,
-  day_counter = dc_act_act_bond,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual,
-  settlement_date = GaussQuant::date_GQL("2023-07-06")
-)
-
-cat(
-  "Yield 6%, settle 2023-07-06 clean price:",
-  GaussQuant::fmt_num_GQH(clean_price_at_six_percent, 4),
-  "\n"
-)
 ```
 
-### II-2.5.3 現物債評価
+### II-2.5.2 GaussQuantによる複利利回りとDuration
 
-CTD分析では、現物債を取得するために必要な資金を把握する必要がある。市場利回りからクリーン価格を求め、受渡日までの経過利子を加えると、実際の決済金額に対応するダーティ価格が得られる。
+各受渡適格銘柄をGaussQuantの`fixed_rate_bond_GQL()`で構築する。BB価格から半年複利利回りを逆算し、その利回りを用いてModified Durationを計算する。本章では以後、単にDurationと記す場合もModified Durationを意味する。
 
-$$
-\text{ダーティ価格}
-=
-\text{クリーン価格}
-+
-\text{経過利子}
-$$
-
-先物価格には109-10、現物債の市場利回りには3.70%を用いる。
-
-```{r bond-price-from-yield}
-bond_yield <- 3.70 / 100
-futures_price <- 109 + 10 / 32
-
-accrued_amount <- bond_obj$accruedAmount(settle_date_ql)
-clean_price <- GaussQuant::bond_clean_price_from_yield_safe_GQL(
-  bond = bond_obj,
-  yield_rate = bond_yield,
-  day_counter = dc_act_act_bond,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual,
-  settlement_date = settle_date_ql
-)
-
-dirty_price <- clean_price + accrued_amount
-
-price_tbl <- tibble::tibble(
-  trade_date = as.Date(trade_date_chr),
-  settlement_date = as.Date(settle_date_chr),
-  yield = bond_yield,
-  accrued_amount = accrued_amount,
-  clean_price = clean_price,
-  dirty_price = dirty_price,
-  futures_price = futures_price
-)
-
-GaussQuant::show_tbl_GQH(price_tbl, "Bond price from yield")
-
-cat(
-  "Yield:",
-  sprintf("%.8f", bond_yield),
-  "\nClean price:",
-  sprintf("%.8f", clean_price),
-  "\nDirty price:",
-  sprintf("%.8f", dirty_price),
-  "\nAccrued amount:",
-  sprintf("%.8f", accrued_amount),
-  "\n"
-)
-```
-
-### II-2.5.4 キャッシュフロー検証
-
-次の計算では、各キャッシュフローへ一般的な割引係数を適用し、現在価値の合計と債券価格を比較する。
-
-ただし、Actual/Actual（Bond）は利払参照期間を用いるため、ここで作成する一般的な割引係数は、QuantLibによる債券利回り計算を完全には再現しない。この表は、債券価格が将来キャッシュフローの現在価値から構成されることを確認するためのものであり、差額がゼロになることを目的とした検算ではない。
-
-```{r bond-cashflow-pv}
-interest_rate_obj <- QuantLib::InterestRate(
-  bond_yield,
-  dc_act_act_bond,
-  cmpd_compounded,
-  freq_semiannual
-)
-
-settle_date_r <- as.Date(settle_date_chr)
-
-bond_cf_tbl <- GaussQuant::bond_cashflow_table_GQL(bond_obj) |>
+```{r jgb-bond-objects}
+tbl_jgb_market <- tbl_jgb_deliverable |>
   dplyr::mutate(
-    pay_date = as.Date(date),
-    discount_factor = purrr::map_dbl(
-      as.character(pay_date),
-      function(x) {
-        if (as.Date(x) < settle_date_r) {
-          return(NA_real_)
-        }
-
-        tryCatch(
-          interest_rate_obj$discountFactor(
-            settle_date_ql,
-            GaussQuant::date_GQL(x)
-          ),
-          error = function(e) NA_real_
+    bond = purrr::pmap(
+      list(issue_date, maturity_date, coupon_pct),
+      \(issue_date, maturity_date, coupon_pct) {
+        GaussQuant::fixed_rate_bond_GQL(
+          issue_date = issue_date,
+          maturity_date = maturity_date,
+          coupon_rate = coupon_pct / 100,
+          face_amount = 100,
+          settlement_days = 0L,
+          frequency = GaussQuant::period_months_GQL(6),
+          calendar = calendar_jp,
+          accrual_day_counter = dc_jgb,
+          payment_convention = "Following",
+          schedule_convention = "Unadjusted",
+          maturity_convention = "Unadjusted"
         )
       }
     ),
-    pv = amount * discount_factor
-  ) |>
-  dplyr::select(
-    pay_date,
-    amount,
-    discount_factor,
-    pv
+    compound_yield = purrr::map2_dbl(
+      bond,
+      bb_price,
+      \(bond, clean_price) {
+        GaussQuant::bond_yield_from_clean_price_GQL(
+          bond = bond,
+          clean_price = clean_price,
+          day_counter = dc_jgb,
+          compounding = cmpd_compounded,
+          frequency = freq_semiannual,
+          settlement_date = valuation_date_chr
+        )
+      }
+    ),
+    duration = purrr::map2_dbl(
+      bond,
+      compound_yield,
+      \(bond, ytm) {
+        GaussQuant::bond_duration_GQL(
+          bond = bond,
+          ytm = ytm,
+          day_counter = dc_jgb,
+          compounding = cmpd_compounded,
+          frequency = freq_semiannual
+        )
+      }
+    )
   )
 
-cashflow_pv <- sum(bond_cf_tbl$pv, na.rm = TRUE)
 
-cashflow_check_tbl <- tibble::tribble(
-  ~metric, ~value,
-  "cashflow_present_value", cashflow_pv,
-  "dirty_price_from_yield", dirty_price,
-  "illustrative_difference", cashflow_pv - dirty_price
-)
+tbl_jgb_market_display <- tbl_jgb_market |>
+  dplyr::transmute(
+    issue,
+    coupon_pct,
+    maturity_date,
+    bb_price,
+    compound_yield_pct = 100 * compound_yield,
+    duration,
+    conversion_factor
+  )
 
-GaussQuant::show_tbl_GQH(bond_cf_tbl, "Bond cashflow present-value table", n = 20)
 GaussQuant::show_tbl_GQH(
-  GaussQuant::metric_tbl_display_GQH(cashflow_check_tbl),
-  "Cashflow PV illustration"
+  tbl_jgb_market_display,
+  "JGB compound yield and modified duration",
+  n = 20
 )
 ```
 
-### II-2.5.5 経過利子
+クーポンが高いほど、同一償還であればキャッシュフローを早く回収するためDurationは短くなる。一方、償還が遠いほどDurationは長くなる。実際の受渡適格銘柄では、この二つの効果が同時に働く。
 
-経過利子は、直前利払日から受渡日までに発生したクーポンを日割りして求める。Actual/Actual（Bond）では、経過日数を利払期間の実日数で除してクーポンを按分する。
+### II-2.5.3 Gross Basis、Carry、Net Basis
+
+Gross Basisは、現物クリーン価格とCFで調整した先物価格との差である。
 
 $$
-\text{経過利子}
+\text{Gross Basis}_i
 =
-\text{1回分のクーポン}
-\times
-\frac{\text{経過日数}}{\text{利払期間の日数}}
+P_i-F\times CF_i
 $$
 
-手計算結果とQuantLibの結果との差を確認する。
-
-```{r accrued-interest-handcalc}
-previous_coupon_date <- GaussQuant::date_GQL("2023-03-30")
-next_coupon_date <- GaussQuant::date_GQL("2023-09-30")
-
-accrued_days_hand <- dc_act_act_bond$dayCount(
-  previous_coupon_date,
-  settle_date_ql
-)
-
-coupon_period_days <- dc_act_act_bond$dayCount(
-  previous_coupon_date,
-  next_coupon_date
-)
-
-coupon_amount_semiannual <- 4.125 / 2
-
-accrued_interest_hand <- coupon_amount_semiannual *
-  accrued_days_hand /
-  coupon_period_days
-
-accrued_tbl <- tibble::tibble(
-  previous_coupon_date = as.Date(GaussQuant::iso_GQL(previous_coupon_date)),
-  settlement_date = as.Date(settle_date_chr),
-  next_coupon_date = as.Date(GaussQuant::iso_GQL(next_coupon_date)),
-  accrued_days = accrued_days_hand,
-  coupon_period_days = coupon_period_days,
-  coupon_amount = coupon_amount_semiannual,
-  accrued_interest_hand = accrued_interest_hand,
-  accrued_amount_quantlib = accrued_amount,
-  difference = accrued_interest_hand - accrued_amount
-)
-
-GaussQuant::show_tbl_GQH(accrued_tbl, "Accrued interest hand calculation")
-```
-
-## II-2.6 最割安銘柄分析と先物BPV
-
-### II-2.6.1 受渡適格銘柄と変換係数
-
-国債先物では、複数の受渡適格銘柄が存在する。各銘柄はクーポンや残存期間が異なるため、そのままでは同じ先物価格に対して比較できない。そこで、各銘柄へ変換係数を適用し、標準物に対する相対的な受渡価値を調整する。
-
-受渡時に買方が売方へ支払う金額は、概念的には次式で表される。
+現物債を評価日から受渡日まで保有すると、クーポン収入と経過利子の変化を受け取る一方、現物購入資金にはFunding Costが発生する。本章では短期資金調達金利を1.23%とし、単純化したCash-and-Carryで比較する。
 
 $$
-\text{インボイス価格}
+\text{Carry}
 =
-\text{先物価格}
-\times
-\text{変換係数}
+\text{Coupon Income}
 +
-\text{受渡時経過利子}
-$$
-
-ここでいうCFはConversion Factorの略であり、キャッシュフローを意味するCFとは区別する。
-
-次の表では、3銘柄の発行日、償還日、クーポン、変換係数および市場利回りを設定する。
-
-```{r deliverable-basket}
-deliverable_tbl <- tibble::tribble(
-  ~issue_date, ~maturity_date, ~coupon_rate_pct, ~conversion_factor, ~market_yield_pct,
-  "2022-09-30", "2027-09-30", 4.125, 0.9305, 3.70,
-  "2022-08-31", "2027-08-31", 3.125, 0.8953, 3.69,
-  "2023-01-31", "2028-01-31", 3.500, 0.9011, 3.65
-)
-
-GaussQuant::show_tbl_GQH(deliverable_tbl, "Treasury futures deliverable basket")
-```
-
-
-### II-2.6.2 グロスベーシス
-
-グロスベーシスは、現物債のクリーン価格と、変換係数で調整した先物価格との差である。
-
-$$
-\text{グロスベーシス}
-=
-\text{現物クリーン価格}
+(AI_T-AI_0)
 -
-\text{先物価格}
-\times
-\text{変換係数}
+\text{Funding Cost}
 $$
 
-グロスベーシスが小さい銘柄ほど受渡しに有利に見えるが、この段階では受渡日までの資金調達費用、クーポン収入および経過利子の変化を考慮していない。
-
-### II-2.6.3 キャリーとネットベーシス
-
-現物債を購入して受渡日まで保有する場合、レポによる資金調達費用が発生する一方、保有期間中にはクーポン収入や経過利子の増加が得られる。これらをまとめたものがキャリーである。
-
-概念的には、ネットベーシスは次式で表される。
-
 $$
-\text{ネットベーシス}
+\text{Net Basis}
 =
-\text{グロスベーシス}
--
-\text{キャリー}
+\text{Gross Basis}-\text{Carry}
 $$
 
-同一の前提条件で比較した場合、一般にネットベーシスが最も小さい銘柄がCTDとなる。
+```{r jgb-current-basis}
+valuation_date <- as.Date(valuation_date_chr)
+delivery_date <- as.Date(delivery_date_chr)
+carry_days <- as.numeric(delivery_date - valuation_date)
+carry_year_fraction <- carry_days / 365
 
-### II-2.6.4 インプライド・レポ
 
-インプライド・レポは、現物債を購入し、レポで資金調達して受渡日まで保有し、先物契約へ受け渡す取引から得られる収益率である。
-
-ネットベーシスが受渡コストの大きさを表すのに対し、インプライド・レポは同じ取引を収益率として表す。通常、ネットベーシスが最小となる銘柄と、インプライド・レポが最大となる銘柄は一致する。
-
-次のコードでは、各受渡適格銘柄について現物価格、BPV、グロスベーシス、キャリー、ネットベーシスおよびインプライド・レポを計算し、CTDを選定する。
-
-```{r treasury-futures-ctd}
-repo_rate <- 5.10 / 100
-
-repo_days <- dc_act_360$dayCount(
-  settle_date_ql,
-  repo_end_date_ql
-)
-
-repo_year_fraction <- dc_act_360$yearFraction(
-  settle_date_ql,
-  repo_end_date_ql
-)
-
-ctd_result <- GaussQuant::bond_futures_ctd_table_GQL(
-  deliverable_tbl = deliverable_tbl,
-  settlement_date = settle_date_chr,
-  futures_price = futures_price,
-  repo_end_date = repo_end_date_chr,
-  repo_rate = repo_rate,
-  settlement_days = settlement_days_t1,
-  calendar = cal_us_gov,
-  day_counter = dc_act_act_bond,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual,
-  repo_day_counter = dc_act_360,
-  carry_day_counter = dc_act_360
-)
-
-basket_tbl <- ctd_result$basket
-
-gross_basis_tbl <- basket_tbl |>
-  dplyr::select(
-    issue_date,
-    maturity,
-    coupon,
-    yield_pct,
-    bpv,
-    clean_price,
-    dirty_price,
-    conversion_factor,
-    gross_basis
+tbl_jgb_current <- tbl_jgb_market |>
+  dplyr::mutate(
+    accrued_start = purrr::map_dbl(
+      bond,
+      \(x) x$accruedAmount(GaussQuant::date_GQL(valuation_date_chr))
+    ),
+    accrued_end = purrr::map_dbl(
+      bond,
+      \(x) x$accruedAmount(GaussQuant::date_GQL(delivery_date_chr))
+    ),
+    coupon_income = purrr::map_dbl(
+      bond,
+      \(x) {
+        GaussQuant::bond_cashflow_table_GQL(x) |>
+          dplyr::mutate(date = as.Date(date)) |>
+          dplyr::filter(date > valuation_date, date <= delivery_date) |>
+          dplyr::summarise(value = sum(amount, na.rm = TRUE)) |>
+          dplyr::pull(value)
+      }
+    ),
+    dirty_price = bb_price + accrued_start,
+    futures_invoice = futures_price * conversion_factor,
+    gross_basis = bb_price - futures_invoice,
+    funding_cost = dirty_price * funding_rate * carry_year_fraction,
+    carry = coupon_income + accrued_end - accrued_start - funding_cost,
+    net_basis = gross_basis - carry,
+    implied_repo = (
+      futures_invoice + accrued_end + coupon_income - dirty_price
+    ) / dirty_price / carry_year_fraction
+  ) |>
+  dplyr::mutate(
+    ctd = net_basis == min(net_basis, na.rm = TRUE)
   )
 
-net_basis_tbl <- basket_tbl |>
-  dplyr::select(
-    maturity,
+
+tbl_jgb_current_display <- tbl_jgb_current |>
+  dplyr::transmute(
+    issue,
+    coupon_pct,
+    maturity_date,
+    bb_price,
+    compound_yield_pct = 100 * compound_yield,
+    duration,
     conversion_factor,
     gross_basis,
-    accrued_start,
-    accrued_end,
-    coupon_income,
-    repo_cost,
-    carry,
     net_basis,
-    forward_price,
-    implied_repo,
+    implied_repo_pct = 100 * implied_repo,
     ctd
   )
 
-basket_display_tbl <- basket_tbl |>
-  dplyr::select(-dplyr::any_of("bond_obj"))
-
-ctd_tbl <- ctd_result$ctd
-ctd_display_tbl <- ctd_tbl |>
-  dplyr::select(-dplyr::any_of("bond_obj"))
-
-stopifnot(
-  nrow(ctd_tbl) == 1L,
-  isTRUE(ctd_tbl$ctd[[1L]])
+GaussQuant::show_tbl_GQH(
+  tbl_jgb_current_display,
+  "JGB basis, implied repo and CTD",
+  n = 20
 )
-
-cat(
-  "Futures price:",
-  sprintf("%.6f", futures_price),
-  "\nRepo rate:",
-  sprintf("%.6f", repo_rate),
-  "\nRepo days:",
-  repo_days,
-  "\nRepo year fraction:",
-  sprintf("%.8f", repo_year_fraction),
-  "\n"
-)
-
-GaussQuant::show_tbl_GQH(gross_basis_tbl, "Gross basis table", n = 20)
-GaussQuant::show_tbl_GQH(net_basis_tbl, "Net basis and implied repo table", n = 20)
-GaussQuant::show_tbl_GQH(basket_display_tbl, "Deliverable basket summary", n = 20)
-GaussQuant::show_tbl_GQH(ctd_display_tbl, "Cheapest-to-deliver bond", n = 20)
 ```
 
-結果では、現物価格だけでなく、変換係数とキャリーを反映したネットベーシスを比較する。`ctd` がTRUEとなった銘柄が、本章の条件における最割安銘柄である。インプライド・レポもあわせて確認し、CTD選定と整合しているかを見る。
+Net Basisが最小となる銘柄は、同じ前提で比較したときに売方が最も安く受け渡せる銘柄である。Implied Repo Rateで比較すれば、最も高い収益率を与える銘柄が同じCTDとなることを確認できる。
 
-### II-2.6.5 最割安銘柄調整後の先物BPV
+ここで重要なのは、CTDが単純に「価格が低い銘柄」や「Durationが短い銘柄」と定義されているわけではないことである。Conversion Factorは6%標準物を基準にしているため、市場金利の水準とイールドカーブの形状が変わると、受渡適格銘柄間の相対価値も変化する。
 
-国債先物の金利感応度は、CTD債券のBPVを変換係数で調整して概算する。
+## II-2.6 Yield CurveとCTD Switching
+
+### II-2.6.1 6%標準物と金利水準
+
+長期国債先物の標準物は、クーポン6%、償還期限10年である。市場金利が6%を下回り、かつイールドカーブが右上がりである場合、短いDuration側の銘柄が相対的に受渡しやすくなる傾向がある。
+
+一方、標準物の6%を上回る高金利環境で、短期金利が長期金利を上回る逆イールドを作ると、相対価値は反対方向へ動き得る。ここでは、そのCTD Switchingを同じ受渡適格銘柄で確認する。
+
+### II-2.6.2 イールドカーブ反転シナリオ
+
+シナリオでは、長期金利を8%、短期Funding Rateを9%とする。
 
 $$
-\text{先物BPV}
-\approx
-\frac{\text{CTD債券のBPV}}
-{\text{変換係数}}
+9\%_{\text{short}}
+>
+8\%_{\text{long}}
+>
+6\%_{\text{standard coupon}}
 $$
 
-この計算は、金利が小幅に変化しても現在のCTDが変わらないことを前提とする。金利水準やイールドカーブの形状が大きく変化すると、別の受渡適格銘柄がCTDとなる可能性がある。そのため、国債先物のリスクは、現在のCTD債券の感応度だけでなく、CTDが切り替わる可能性にも依存する。
+現在の順イールドから、標準物6%を上回る逆イールドへ変化するイメージを次の図に示す。
 
-```{r ctd-futures-bpv}
-ctd_bond <- ctd_tbl$bond_obj[[1L]]
-ctd_conversion_factor <- ctd_tbl$conversion_factor[[1L]]
-ctd_yield <- ctd_tbl$yield_pct[[1L]] / 100
-
-ctd_futures_bpv <- GaussQuant::bond_futures_bpv_GQL(
-  bond = ctd_bond,
-  conversion_factor = ctd_conversion_factor,
-  contracts = 1,
-  measure = "dv01",
-  ytm = ctd_yield,
-  day_counter = dc_act_act_bond,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual
+```{r jgb-yield-curve-switch}
+tbl_curve_scenario <- tibble::tribble(
+  ~tenor_years, ~scenario, ~yield_pct,
+  0.25, "Current market", 1.23,
+  2.00, "Current market", 1.55,
+  5.00, "Current market", 2.20,
+  7.00, "Current market", 2.55,
+  10.0, "Current market", 2.90,
+  0.25, "Stress: inverted", 9.00,
+  2.00, "Stress: inverted", 8.80,
+  5.00, "Stress: inverted", 8.50,
+  7.00, "Stress: inverted", 8.25,
+  10.0, "Stress: inverted", 8.00
 )
 
-ctd_summary_tbl <- tibble::tibble(
-  metric = c(
-    "ctd_maturity",
-    "ctd_coupon",
-    "ctd_yield_pct",
-    "conversion_factor",
-    "gross_basis",
-    "net_basis",
-    "implied_repo",
-    "ctd_bond_bpv",
-    "ctd_futures_bpv"
-  ),
-  value = list(
-    as.character(ctd_tbl$maturity[[1L]]),
-    ctd_tbl$coupon[[1L]],
-    ctd_tbl$yield_pct[[1L]],
-    ctd_conversion_factor,
-    ctd_tbl$gross_basis[[1L]],
-    ctd_tbl$net_basis[[1L]],
-    ctd_tbl$implied_repo[[1L]],
-    ctd_tbl$bpv[[1L]],
-    ctd_futures_bpv
+curve_switch_plot <- tbl_curve_scenario |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = tenor_years,
+      y = yield_pct,
+      linetype = scenario,
+      shape = scenario
+    )
+  ) +
+  ggplot2::geom_line(linewidth = 1) +
+  ggplot2::geom_point(size = 2.5) +
+  ggplot2::geom_hline(
+    yintercept = 6,
+    linetype = "dotted"
+  ) +
+  ggplot2::annotate(
+    "text",
+    x = 8.5,
+    y = 6.2,
+    label = "Standard bond coupon = 6%"
+  ) +
+  ggplot2::labs(
+    title = "Yield-curve regime change and CTD switching",
+    x = "Maturity (years)",
+    y = "Yield (%)",
+    linetype = NULL,
+    shape = NULL
   )
+
+show_plot_LFL(curve_switch_plot)
+```
+
+### II-2.6.3 6%標準物の先物価格
+
+先物価格を任意の $X$ と置くのではなく、6%クーポン・10年の標準物を8%複利で評価した価格をシナリオの先物価格とする。これにより、現物債と先物を同じ金利環境で比較できる。
+
+```{r jgb-standard-bond-stress-price}
+stress_yield <- 0.08
+stress_funding_rate <- 0.09
+
+standard_bond <- GaussQuant::fixed_rate_bond_GQL(
+  issue_date = valuation_date_chr,
+  maturity_date = "2036-09-10",
+  coupon_rate = 0.06,
+  face_amount = 100,
+  settlement_days = 0L,
+  frequency = GaussQuant::period_months_GQL(6),
+  calendar = calendar_jp,
+  accrual_day_counter = dc_jgb,
+  payment_convention = "Following",
+  schedule_convention = "Unadjusted",
+  maturity_convention = "Unadjusted"
+)
+
+stress_futures_price <- GaussQuant::bond_clean_price_from_yield_safe_GQL(
+  bond = standard_bond,
+  yield_rate = stress_yield,
+  day_counter = dc_jgb,
+  compounding = cmpd_compounded,
+  frequency = freq_semiannual,
+  settlement_date = GaussQuant::date_GQL(valuation_date_chr)
+)
+
+
+tbl_standard_bond <- tibble::tribble(
+  ~item, ~value,
+  "standard_coupon_pct", 6,
+  "standard_maturity_years", 10,
+  "compound_yield_pct", 100 * stress_yield,
+  "futures_price", stress_futures_price,
+  "short_funding_rate_pct", 100 * stress_funding_rate
 )
 
 GaussQuant::show_tbl_GQH(
-  GaussQuant::metric_tbl_display_GQH(ctd_summary_tbl),
-  "CTD and futures BPV summary"
+  tbl_standard_bond,
+  "Stress scenario standard bond",
+  n = 20
 )
 ```
 
+6%クーポンの10年標準物を8%複利で評価すると、価格はおおむね86円台となる。単純な近似 $(6-8)\times10$ でも100円から大きく低下する方向を確認できるが、実際の価格は各クーポンと元本を割り引いて求める。
+
+### II-2.6.4 8%複利で受渡適格銘柄を再評価
+
+同じ373回債から383回債について、複利利回りを一律8%へ変更し、GaussQuantで時価とModified Durationを再計算する。Conversion Factorは変更しない。
+
+```{r jgb-stress-repricing}
+tbl_jgb_stress <- tbl_jgb_market |>
+  dplyr::mutate(
+    stress_price = purrr::map_dbl(
+      bond,
+      \(x) {
+        GaussQuant::bond_clean_price_from_yield_safe_GQL(
+          bond = x,
+          yield_rate = stress_yield,
+          day_counter = dc_jgb,
+          compounding = cmpd_compounded,
+          frequency = freq_semiannual,
+          settlement_date = GaussQuant::date_GQL(valuation_date_chr)
+        )
+      }
+    ),
+    stress_duration = purrr::map_dbl(
+      bond,
+      \(x) {
+        GaussQuant::bond_duration_GQL(
+          bond = x,
+          ytm = stress_yield,
+          day_counter = dc_jgb,
+          compounding = cmpd_compounded,
+          frequency = freq_semiannual
+        )
+      }
+    ),
+    accrued_start = purrr::map_dbl(
+      bond,
+      \(x) x$accruedAmount(GaussQuant::date_GQL(valuation_date_chr))
+    ),
+    accrued_end = purrr::map_dbl(
+      bond,
+      \(x) x$accruedAmount(GaussQuant::date_GQL(delivery_date_chr))
+    ),
+    coupon_income = purrr::map_dbl(
+      bond,
+      \(x) {
+        GaussQuant::bond_cashflow_table_GQL(x) |>
+          dplyr::mutate(date = as.Date(date)) |>
+          dplyr::filter(date > valuation_date, date <= delivery_date) |>
+          dplyr::summarise(value = sum(amount, na.rm = TRUE)) |>
+          dplyr::pull(value)
+      }
+    ),
+    stress_dirty_price = stress_price + accrued_start,
+    futures_invoice = stress_futures_price * conversion_factor,
+    gross_basis = stress_price - futures_invoice,
+    funding_cost = stress_dirty_price * stress_funding_rate * carry_year_fraction,
+    carry = coupon_income + accrued_end - accrued_start - funding_cost,
+    net_basis = gross_basis - carry,
+    implied_repo = (
+      futures_invoice + accrued_end + coupon_income - stress_dirty_price
+    ) / stress_dirty_price / carry_year_fraction
+  ) |>
+  dplyr::mutate(
+    ctd = net_basis == min(net_basis, na.rm = TRUE)
+  )
+
+
+tbl_jgb_stress_display <- tbl_jgb_stress |>
+  dplyr::transmute(
+    issue,
+    coupon_pct,
+    maturity_date,
+    compound_yield_pct = 100 * stress_yield,
+    price = stress_price,
+    duration = stress_duration,
+    conversion_factor,
+    gross_basis,
+    net_basis,
+    implied_repo_pct = 100 * implied_repo,
+    ctd
+  )
+
+GaussQuant::show_tbl_GQH(
+  tbl_jgb_stress_display,
+  "JGB stress scenario: 8% long yield and 9% short funding",
+  n = 20
+)
+```
+
+### II-2.6.5 CTD Switchingの解釈
+
+二つの市場環境を比較する。
+
+```{r jgb-ctd-switch-summary}
+tbl_ctd_switch <- dplyr::bind_rows(
+  tbl_jgb_current |>
+    dplyr::filter(ctd) |>
+    dplyr::transmute(
+      scenario = "Current market",
+      issue,
+      coupon_pct,
+      maturity_date,
+      duration,
+      gross_basis,
+      net_basis,
+      implied_repo_pct = 100 * implied_repo
+    ),
+  tbl_jgb_stress |>
+    dplyr::filter(ctd) |>
+    dplyr::transmute(
+      scenario = "Stress: 9% short / 8% long",
+      issue,
+      coupon_pct,
+      maturity_date,
+      duration = stress_duration,
+      gross_basis,
+      net_basis,
+      implied_repo_pct = 100 * implied_repo
+    )
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_ctd_switch,
+  "CTD switching summary",
+  n = 20
+)
+```
+
+現在のように標準物6%より市場金利が低く、イールドカーブが右上がりである環境では、短いDuration側が相対的に受渡しやすくなる。一方、長期金利8%、短期金利9%という逆イールドでは、標準物6%を上回る金利水準とカーブの傾きが同時に反転し、長いDuration側へCTDが移る可能性がある。
+
+重要なのは、CTDを「Durationが最小の銘柄」または「Durationが最大の銘柄」と機械的に決めるのではないことである。最終判定はNet Basis最小、またはImplied Repo Rate最大で行う。Durationは、金利水準とConversion Factorの関係から相対価値がどちら側へ偏りやすいかを理解するための重要な手掛かりである。
 
 ## II-2.7 まとめ
 
-本章では、金利期間構造を割引係数、ゼロ金利およびフォワード金利の三つの表現から確認した。これらは同じカーブを表すが、補間方式の影響はフォワード金利に強く現れる。
+本章では、割引係数、ゼロ金利およびフォワード金利を通じて金利期間構造を確認し、補間、ブートストラップ、Implied Term Structureおよびカーブシフトを扱った。
 
-また、ゼロ金利ノードから直接構築する方法に加え、預金と債券、ならびに預金とスワップを用いたブートストラップを確認した。市場商品から構築したカーブでは、各商品の価格計算、市場慣行および日数計算規則が期間構造へ組み込まれる。
+後半では、日本の長期国債先物を対象として、6%クーポン・10年の標準物、Conversion Factor、Gross Basis、Carry、Net Basis、Implied Repo RateおよびCTDの関係を確認した。現物債の価格から複利利回りを逆算し、GaussQuantを用いてModified Durationを求めることで、クーポンと償還期限が金利感応度へ与える影響も同時に確認した。
 
-さらに、固定参照日、Implied Term Structureおよび平行シフトを確認した。カーブを評価へ使用する際には、単にカーブオブジェクトを作成するだけでなく、参照日、補間方式、外挿、入力商品の再現性およびフォワード金利の形状を検証する必要がある。
-国債先物では、売方が複数の受渡適格銘柄から実際に引き渡す銘柄を選択する。銘柄間のクーポンや残存期間の差は変換係数によって調整されるが、変換係数だけで経済価値の差が完全に解消されるわけではない。
+さらに、現在の低金利・順イールド環境から、長期8%、短期9%の高金利・逆イールド環境へ市場条件を変化させ、同じ受渡適格銘柄を再評価した。Conversion Factorが固定されていても、市場金利の水準とイールドカーブの形状が変化すれば、Gross Basis、Net BasisおよびImplied Repo Rateの順位が変化し、CTDがスイッチし得る。
 
-そのため、CTDの選定では、現物価格と変換係数から求めるグロスベーシスに加え、レポ費用、クーポン収入および経過利子の変化を反映したキャリーを考慮する。ネットベーシスが最小、またはインプライド・レポが最大となる銘柄が、売方にとって最も有利な受渡銘柄となる。
-
-国債先物のBPVは、CTD債券のBPVと変換係数に依存する。ただし、市場環境の変化によってCTDが切り替わる可能性があるため、国債先物のリスク管理では受渡銘柄選択権も考慮する必要がある。
+この結果は、国債先物のCTDが単なる銘柄属性ではなく、標準物の設計、市場のイールドカーブ、現物価格、資金調達コストおよび受渡条件の相対関係から決まることを示している。

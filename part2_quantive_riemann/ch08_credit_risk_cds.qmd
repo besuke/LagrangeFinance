@@ -40,24 +40,6 @@ CDS評価には、割引カーブだけでなく、将来のデフォルト確�
 
 まず、フラット割引率とフラットHazard Rateを使用して、MidPoint法によるCDS評価と手計算を比較する。次に、標準CDS2015契約をISDA CDS Engineで評価し、Fair spread、Fair upfrontおよびAccrual rebateを確認する。
 
-```{r chapter08-setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
-)
-
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(ggthemes)
-  library(QuantLib)
-  library(GaussQuant)
-  library(tidyverse)
-  library(broom)
-})
-```
 
 ## II-8.1 信用リスクとクレジットデリバティブの基礎
 

@@ -1,9 +1,3 @@
-project:
-  output-dir: _pdf_build
-
-book:
-  output-file: "lagrange-finance"
-
 format:
   pdf:
     pdf-engine: lualatex
@@ -21,7 +15,9 @@ format:
         \usepackage[haranoaji]{luatexja-preset}
         \usepackage{graphicx}
         \usepackage{eso-pic}
+        \usepackage{fvextra}
 
+        % Cover
         \renewcommand{\maketitle}{%
           \thispagestyle{empty}
           \AddToShipoutPictureBG*{%
@@ -33,8 +29,16 @@ format:
           \clearpage
         }
 
+        % Code blocks
+        \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
+          commandchars=\\\{\},
+          fontsize=\scriptsize,
+          breaklines=true,
+          breakanywhere=true
+        }
+
     geometry:
-      - top=25mm
-      - bottom=25mm
-      - left=25mm
-      - right=25mm
+      - top=18mm
+      - bottom=18mm
+      - left=18mm
+      - right=18mm

@@ -1,3 +1,24 @@
+ project:
+  output-dir: _pdf_exclude_build
+
+book:
+  output-file: "lagrange-finance-exclude"
+
+filters:
+  - watermark-exclude.lua
+
+format:
+  pdf:
+    pdf-engine: lualatex
+    documentclass: ltjsbook
+    papersize: a4
+    toc: true
+    number-sections: false
+    keep-tex: true
+
+    classoption:
+      - openany
+
     include-in-header:
       text: |
         \usepackage[haranoaji]{luatexja-preset}
@@ -38,3 +59,9 @@
         \newcommand{\ExcludeWatermarkOff}{%
           \ClearShipoutPictureFG%
         }
+
+    geometry:
+      - top=25mm
+      - bottom=25mm
+      - left=25mm
+      - right=25mm

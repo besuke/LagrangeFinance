@@ -15,36 +15,37 @@ execute:
 source(file.path("R", "utility_LFL.R"))
 ```
 
-
-
 金融では、異なる時点に発生する金額をそのまま比較することはできない。今日受け取る100円と1年後に受け取る100円では、運用可能期間や金利が異なるため、経済的な価値も異なるからである。そこで、時点の異なるキャッシュフローを評価する場合には、将来の金額を現在価値へ割り引くか、現在の金額を将来価値へ換算し、同一時点の価値にそろえる必要がある。金融商品の価格評価では、通常、将来のすべてのキャッシュフローを評価時点の現在価値へ換算する。
 
-
 ## II-1.1 金利期間構造の確認
+
 債券価格は、将来の各キャッシュフローを支払時点に対応する割引係数で現在価値へ換算し、その合計として求める。個別債券の評価に入る前に、金利期間構造をスポットレート、割引係数およびフォワードレートの三つの側面から確認する。
 
-市場で直接観測される金利は、必ずしも各満期に対応するスポットレートではない。市場では、預金金利、OISレート、スワップレート、国債の価格や複利利回りなどが観測される。これらの市場情報と、日数計算規則、利払頻度および受渡日などのマーケットコンベンションを用いて、各満期のゼロクーポン・スポットレートとディスカウントファクター（以下、DF）を順次求める。この手続きをブートストラップという。
+市場で直接観測される金利は、必ずしも各満期に対応するスポットレートではない。市場では、OISレート、スワップレート、国債の価格や複利利回りなどが観測される。これらの市場情報と、日数計算規則、利払頻度および受渡日などのマーケットコンベンションを用いて、各満期のゼロクーポン・スポットレートとディスカウントファクター（以下、DF）を順次求める。この手続きをブートストラップという。
 
 スポットレートは、評価時点から特定の満期までのゼロクーポン金利を表す。DFは、将来の1単位の金額を評価時点の価値へ換算する倍率であり、債券、スワップおよびデリバティブのキャッシュフロー評価に直接用いられる。さらに、異なる満期のDFを比較することで、将来の一定期間に適用されるフォワードレートを求めることができる。このように、市場で観測される複数の金利商品からスポットレート、DFおよびフォワードレートからなる金利期間構造を構築することは、金融工学における価格評価の基礎となる。
 
-以下では、EONIAの市場データから構築した金利曲線を用いて、スポットカーブ、DFカーブおよびフォワードカーブの関係を確認する。さらに、本章では、固定利付債を例として、クリーン価格、ダーティ価格、経過利子、最終利回り、デュレーションおよびコンベクシティを計算する。あわせて、日数計算規則、休日カレンダー、営業日調整、受渡日および利払スケジュールといったマーケットコンベンションを確認する。
+以下では、日本円OIS市場の基準金利であるTONAR（Tokyo Overnight Average Rate）を用いて構築した金利カーブを例に、スポットレート、DFおよびフォワードレートの関係を確認する。本章ではカーブ構築手法そのものではなく、債券評価の基礎となる金利期間構造の見方を確認する。市場データから金利カーブを構築する具体的な方法については、第II-2章で詳しく扱う。
 
+```{r}
+#| label: tonar-spot-discount-forward-curves
+#| fig-width: 9
+#| fig-height: 5.5
 
-```{r eonia-spot-discount-forward-curves, fig.width=9, fig.height=5.5}
-eonia_benchmark <- GaussQuant::eonia_curve_benchmark_GQL()
+tonar_benchmark <- GaussQuant::tonar_curve_benchmark_GQL()
 
-eonia_curve_tbl <- eonia_benchmark$final_validation$quote_repricing |>
+tbl_tonar_curve <- tonar_benchmark$validation$quote_repricing |>
   dplyr::select(
     pillar_date,
     discount_factor,
     zero_rate,
-    one_day_forward_rate
+    inst_fwd_rate
   ) |>
   dplyr::filter(!is.na(pillar_date)) |>
   dplyr::distinct(pillar_date, .keep_all = TRUE) |>
   dplyr::arrange(pillar_date)
 
-spot_curve_plot <- eonia_curve_tbl |>
+spot_curve_plot <- tbl_tonar_curve |>
   dplyr::filter(!is.na(zero_rate)) |>
   ggplot2::ggplot(
     ggplot2::aes(
@@ -59,12 +60,12 @@ spot_curve_plot <- eonia_curve_tbl |>
     date_labels = "%Y"
   ) +
   ggplot2::labs(
-    title = "EONIAスポットカーブ",
+    title = "TONARスポットカーブ",
     x = "満期",
     y = "スポットレート（%）"
   )
 
-discount_curve_plot <- eonia_curve_tbl |>
+discount_curve_plot <- tbl_tonar_curve |>
   dplyr::filter(!is.na(discount_factor)) |>
   ggplot2::ggplot(
     ggplot2::aes(
@@ -79,17 +80,17 @@ discount_curve_plot <- eonia_curve_tbl |>
     date_labels = "%Y"
   ) +
   ggplot2::labs(
-    title = "EONIA割引係数カーブ",
+    title = "TONAR割引係数カーブ",
     x = "満期",
     y = "割引係数"
   )
 
-forward_curve_plot <- eonia_curve_tbl |>
-  dplyr::filter(!is.na(one_day_forward_rate)) |>
+forward_curve_plot <- tbl_tonar_curve |>
+  dplyr::filter(!is.na(inst_fwd_rate)) |>
   ggplot2::ggplot(
     ggplot2::aes(
       x = pillar_date,
-      y = 100 * one_day_forward_rate
+      y = 100 * inst_fwd_rate
     )
   ) +
   ggplot2::geom_line(linewidth = 0.7) +
@@ -99,15 +100,19 @@ forward_curve_plot <- eonia_curve_tbl |>
     date_labels = "%Y"
   ) +
   ggplot2::labs(
-    title = "EONIA 1営業日フォワードカーブ",
+    title = "TONARインスタント・フォワードカーブ",
     x = "開始日",
     y = "フォワードレート（%）"
   )
+
 show_plot_LFL(spot_curve_plot)
 show_plot_LFL(discount_curve_plot)
 show_plot_LFL(forward_curve_plot)
 ```
 
+ここでは、TONARカーブを構築するための市場クォートやブートストラップの詳細には立ち入らない。重要なのは、同じ金利期間構造をスポットレート、DF、フォワードレートという異なる観点から表現できることである。これらの関係を理解することが、以降の債券評価や金利デリバティブ評価の基礎となる。
+
+さらに本章では、固定利付債を例として、クリーン価格、ダーティ価格、経過利子、最終利回り、デュレーションおよびコンベクシティを計算する。あわせて、日数計算規則、休日カレンダー、営業日調整、受渡日および利払スケジュールといったマーケットコンベンションを確認する。
 
 ## II-1.2 マーケットコンベンション
 
@@ -550,6 +555,7 @@ GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(flat_yield_tbl), "Fl
 ```
 
 フラットな利回りを使った割引価格と、最終利回りから直接求めたダーティ価格を比較する。
+
 ### II-1.4.2 Z-spreadによる価格調整
 
 Z-spreadは、基準となる割引カーブの各年限に一律に加えるスプレッドである。ここでは基準カーブに50ベーシスポイントを上乗せし、債券価格への影響を確認する。
@@ -592,6 +598,7 @@ GaussQuant::show_tbl_GQH(
 ```
 
 正のZ-spreadを加えると割引率が上昇するため、債券価格は低下する。Z-spreadには発行体の信用リスクだけでなく、流動性、市場需給および基準カーブとの相違も含まれ得るため、純粋なデフォルト確率を直接表す指標ではない。ここでは全期間への一律なスプレッドだけを扱い、年限別の非平行シフトは金利カーブの章で扱う。
+
 ### II-1.4.3 債券キャッシュフロー
 
 債券に含まれる将来のクーポンと元本償還を一覧で確認する。

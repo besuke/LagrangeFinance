@@ -45,25 +45,6 @@ $$
 
 期限前償還権を評価するためには、将来の金利変動と各行使日における継続価値を扱う必要がある。本章では、初期金利期間構造へ適合できるHull–White 1-factorモデルと金利Treeを使用する。
 
-```{r chapter07-setup}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  warning = FALSE,
-  message = FALSE
-)
-
-
-suppressPackageStartupMessages({
-  library(tidyverse)
-  library(ggthemes)
-  library(QuantLib)
-  library(GaussQuant)
-  library(tidyverse)
-  library(broom)
-})
-```
-
 ## II-7.1 ハル–ホワイトモデルと債券条件
 
 ### II-7.1.1 ハル–ホワイト 1-factorモデル
