@@ -1,5 +1,5 @@
 ---
-title: "第II-2章 金利カーブ構築と日本国債先物 ― Basis・IRR・CTD"
+title: "第II-2章 金利カーブ構築と債券先物の金利感応度"
 execute:
   eval: true
   echo: true
@@ -15,13 +15,405 @@ execute:
 source(file.path("R", "utility_LFL.R"))
 ```
 
-債券、金利スワップおよび金利オプションの評価では、将来キャッシュフローを現在価値へ換算するための金利期間構造が必要となる。金利期間構造は、満期ごとの金利を並べた単なる曲線ではない。市場で観測される預金金利、債券価格、FRAおよびスワップレートなどから、各将来日の割引係数を整合的に推定した結果である。
+債券、金利スワップおよび金利オプションの評価では、将来キャッシュフローを現在価値へ換算するための金利期間構造が必要となる。金利期間構造は、満期ごとの金利を並べた単なる曲線ではない。市場で観測される預金金利、債券価格、FRA、OISレートおよびスワップレートなどから、各将来日の割引係数を整合的に推定した結果である。
 
-同じ期間構造は、割引係数、ゼロ金利またはフォワード金利として表現できる。これらは相互に変換可能であるが、表示方法によって曲線の特徴の見え方が異なる。割引係数は現在価値計算に直接用いられ、ゼロ金利は満期ごとの平均的な金利水準を示し、フォワード金利は将来の区間ごとの限界的な金利を示す。
+同じ期間構造は、割引係数、ゼロ金利またはフォワード金利として表現できる。これらは相互に変換できるが、表現方法によってカーブの特徴の見え方は異なる。割引係数は現在価値計算に直接用いられ、ゼロ金利は評価日から各満期までの平均的な金利水準を示し、フォワード金利は将来の各区間に対応する限界的な金利を示す。
 
-本章では、最初にゼロ金利ノードから単純なカーブを構築し、割引係数、ゼロ金利およびフォワード金利の関係を確認する。次に、補間方式による曲線形状の違いを比較する。その後、預金と債券、ならびに預金とスワップを用いたブートストラップを行い、最後にImplied Term Structureと平行シフトを確認する。
+本章では、まず日本国債の長期時系列を用いて、イールドカーブが年限方向と時間方向の双方に変化することを確認する。次に、ゼロ金利ノードから単純なカーブを構築し、割引係数、ゼロ金利およびフォワード金利の関係を整理する。そのうえで補間方式の違い、預金と債券またはスワップを用いたブートストラップ、Implied Term Structure、金利シフトおよびカーブ検証へ進む。最後に、構築した金利期間構造が日本国債先物の受渡適格銘柄とCTD（Cheapest to Deliver）の選択へどのように影響するかを考察する。
 
-## II-2.1 金利カーブの基礎
+## II-2.1 イールドカーブおよび補間
+
+第II-1章で述べたとおり、パーレート（スワップレート）、スポットレート（ゼロレート）、フォワードレートおよびディスカウントファクターの計算は、将来キャッシュフローを現在価値へ換算するための基礎であり、資本市場取引における最も重要な計算の一つである。
+
+しかし、スポットレートやフォワードレートを市場から直接観測することはできない。実際に観測されるのは、国債価格、国債の複利利回り、預金金利、OISレートおよびスワップレートなど、取引可能な金融商品の価格またはレートである。したがって、これらの市場データから期間構造を構築する際には、異常値を適切に処理するとともに、限られた年限（tenor）の観測値をどのように補間し、安定したイールドカーブを構築するかが重要となる。
+
+補間方法の選択は、単にグラフの見た目を滑らかにするためのものではない。補間されたカーブから割引係数、ゼロ金利およびフォワード金利が導出されるため、補間アルゴリズムの違いは金融商品の価格評価とリスク計測にも影響する。
+
+そこで、まず実際の市場金利が年限方向と時間方向にどのように変化するかを確認する。以下では、[財務省「Interest Rate Historical Data」](https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv)の日本国債複利利回りを用いる。各観測日の離散的な年限データを自然スプラインで補間し、イールドカーブの長期的な変化を可視化する。また、同じデータを年限ごとの時系列へ組み替え、各tenorの金利水準が時間とともにどのように推移したかを確認する。
+
+### II-2.1.1 日本国債利回りデータの取得と整形
+
+財務省のCSVは、観測日を行、年限を列とするwide形式で提供される。ここでは、すべての列をいったん文字列として読み込み、`pivot_longer()`によって観測日、年限および複利利回りからなるlong形式へ変換する。年限を一つの変数へまとめることで、年限方向のイールドカーブと時間方向の金利時系列を同じデータから描画できる。
+
+```{r}
+#| label: jgb-historical-yield-data
+
+jgb_yield_url <- paste0(
+  "https://www.mof.go.jp/english/policy/jgbs/",
+  "reference/interest_rate/historical/jgbcme_all.csv"
+)
+
+tbl_jgb_yield_raw <- readr::read_csv(
+  jgb_yield_url,
+  skip = 1,
+  col_types = readr::cols(
+    .default = readr::col_character()
+  ),
+  na = c("", "-"),
+  show_col_types = FALSE
+)
+
+tbl_jgb_yield <- tbl_jgb_yield_raw |>
+  dplyr::rename(
+    date_text = Date
+  ) |>
+  tidyr::pivot_longer(
+    cols = -date_text,
+    names_to = "tenor",
+    values_to = "yield_text"
+  ) |>
+  dplyr::mutate(
+    date = readr::parse_date(
+      date_text,
+      format = "%Y/%m/%d"
+    ),
+    tenor_years = readr::parse_number(
+      tenor
+    ),
+    compound_yield_pct = readr::parse_double(
+      yield_text,
+      na = c("", "-")
+    )
+  ) |>
+  dplyr::filter(
+    !is.na(date),
+    !is.na(tenor_years),
+    !is.na(compound_yield_pct),
+    date >= as.Date("1984-01-01")
+  ) |>
+  dplyr::select(
+    date,
+    tenor,
+    tenor_years,
+    compound_yield_pct
+  ) |>
+  dplyr::arrange(
+    date,
+    tenor_years
+  )
+
+GaussQuant::show_tbl_GQH(
+  tbl_jgb_yield,
+  "日本国債の年限別複利利回り",
+  n = 20
+)
+```
+
+### II-2.1.2 スプライン補間によるイールドカーブ
+
+市場で観測される国債利回りは、1年、2年、5年、10年などの離散的な年限に限られる。そこで、観測日ごとに年限方向の自然スプライン補間を行い、0.1年刻みの連続的なカーブへ変換する。元の観測値を点、補間値を線として描くことで、観測された情報と補間によって推定された情報を区別する。
+
+```{r}
+#| label: jgb-yield-spline
+
+tbl_jgb_yield_spline <- tbl_jgb_yield |>
+  dplyr::group_by(date) |>
+  tidyr::nest() |>
+  dplyr::mutate(
+    tbl_spline = purrr::map(
+      data,
+      \(tbl_date) {
+        spline_result <- stats::spline(
+          x = tbl_date$tenor_years,
+          y = tbl_date$compound_yield_pct,
+          xout = seq(
+            min(tbl_date$tenor_years),
+            max(tbl_date$tenor_years),
+            by = 0.1
+          ),
+          method = "natural"
+        )
+
+        tibble::tibble(
+          tenor_years = spline_result$x,
+          compound_yield_pct = spline_result$y
+        )
+      }
+    )
+  ) |>
+  dplyr::select(
+    date,
+    tbl_spline
+  ) |>
+  tidyr::unnest(tbl_spline)
+
+latest_jgb_date <- max(
+  tbl_jgb_yield$date,
+  na.rm = TRUE
+)
+
+jgb_yield_curve_plot <- tbl_jgb_yield_spline |>
+  dplyr::filter(date == latest_jgb_date) |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = tenor_years,
+      y = compound_yield_pct
+    )
+  ) +
+  ggplot2::geom_line(
+    linewidth = 0.9,
+    colour = "#005A9C"
+  ) +
+  ggplot2::geom_point(
+    data = tbl_jgb_yield |>
+      dplyr::filter(date == latest_jgb_date),
+    size = 2,
+    colour = "#898989"
+  ) +
+  ggplot2::scale_x_continuous(
+    breaks = c(1, 2, 10, 20, 30, 40)
+  ) +
+  ggplot2::labs(
+    title = "Japanese Government Bond Yield Curve",
+    subtitle = format(latest_jgb_date, "%Y-%m-%d"),
+    x = "Maturity (years)",
+    y = "Compound yield (%)"
+  )
+
+show_plot_LFL(jgb_yield_curve_plot)
+```
+
+### II-2.1.3 年限方向と時間方向の変化
+
+日次データをそのままアニメーション化するとフレーム数が過大になるため、各四半期の最終観測日を抽出する。これにより、市場の長期的な局面変化を保ちながら、再現可能な計算量に抑える。
+
+```{r}
+#| label: jgb-yield-animation-data
+
+tbl_jgb_animation_dates <- tbl_jgb_yield |>
+  dplyr::distinct(date) |>
+  dplyr::mutate(
+    year = as.integer(format(date, "%Y")),
+    quarter = paste0(
+      "Q",
+      (as.integer(format(date, "%m")) - 1) %/% 3 + 1
+    )
+  ) |>
+  dplyr::group_by(
+    year,
+    quarter
+  ) |>
+  dplyr::slice_max(
+    order_by = date,
+    n = 1,
+    with_ties = FALSE
+  ) |>
+  dplyr::ungroup() |>
+  dplyr::select(date)
+
+tbl_jgb_yield_animation <- tbl_jgb_yield |>
+  dplyr::semi_join(
+    tbl_jgb_animation_dates,
+    by = "date"
+  )
+
+tbl_jgb_spline_animation <- tbl_jgb_yield_spline |>
+  dplyr::semi_join(
+    tbl_jgb_animation_dates,
+    by = "date"
+  )
+
+tbl_jgb_time_series <- tbl_jgb_yield_animation |>
+  dplyr::filter(
+    tenor_years %in% c(2, 5, 10, 20, 30, 40)
+  ) |>
+  dplyr::mutate(
+    tenor = factor(
+      tenor,
+      levels = unique(tenor[order(tenor_years)])
+    )
+  )
+```
+
+まず、四半期ごとのイールドカーブを静止画で重ね、全期間の形状の範囲を確認する。図の表示には本書共通の`show_plot_LFL()`を用いる。
+
+```{r}
+#| label: jgb-yield-curve-history
+
+jgb_yield_curve_history_plot <- tbl_jgb_spline_animation |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = tenor_years,
+      y = compound_yield_pct,
+      group = date
+    )
+  ) +
+  ggplot2::geom_line(
+    linewidth = 0.25,
+    alpha = 0.18,
+    colour = "#005A9C"
+  ) +
+  ggplot2::scale_x_continuous(
+    breaks = c(1, 2, 5, 10, 20, 30, 40)
+  ) +
+  ggplot2::labs(
+    title = "Historical JGB Yield Curves",
+    subtitle = "Quarter-end observations since 1984",
+    x = "Maturity (years)",
+    y = "Compound yield (%)"
+  )
+
+show_plot_LFL(jgb_yield_curve_history_plot)
+```
+
+次に、同じデータを年限別の時系列として描く。ある日付を固定して横方向に見たものがイールドカーブであり、ある年限を固定して時間方向に見たものが金利時系列である。
+
+```{r}
+#| label: jgb-yield-time-series
+
+jgb_yield_time_series_plot <- tbl_jgb_time_series |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      x = date,
+      y = compound_yield_pct,
+      colour = tenor,
+      linetype = tenor
+    )
+  ) +
+  ggplot2::geom_line(
+    linewidth = 0.55
+  ) +
+  ggplot2::labs(
+    title = "JGB Yield Time Series",
+    subtitle = "Selected maturities since 1984",
+    x = NULL,
+    y = "Compound yield (%)",
+    colour = "Maturity",
+    linetype = "Maturity"
+  ) +
+  ggplot2::guides(
+    colour = ggplot2::guide_legend(nrow = 1),
+    linetype = ggplot2::guide_legend(nrow = 1)
+  )
+
+show_plot_LFL(jgb_yield_time_series_plot)
+```
+
+HTML出力では、`gganimate`と`gifski`が利用可能な場合に二つのアニメーションを生成する。軸の範囲は全期間で固定し、フレーム間の見かけ上の変化が軸の伸縮によって誇張されないようにする。
+
+```{r}
+#| label: jgb-yield-curve-animation
+#| eval: true
+
+if (
+  knitr::is_html_output() &&
+    requireNamespace("gganimate", quietly = TRUE) &&
+    requireNamespace("gifski", quietly = TRUE)
+) {
+  jgb_yield_curve_animation_plot <- tbl_jgb_spline_animation |>
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = tenor_years,
+        y = compound_yield_pct
+      )
+    ) +
+    ggplot2::geom_line(
+      linewidth = 0.9,
+      colour = "#005A9C"
+    ) +
+    ggplot2::geom_point(
+      data = tbl_jgb_yield_animation,
+      size = 1.8,
+      colour = "#898989"
+    ) +
+    ggplot2::scale_x_continuous(
+      breaks = c(1, 2, 5, 10, 20, 30, 40),
+      limits = range(
+        tbl_jgb_spline_animation$tenor_years,
+        na.rm = TRUE
+      )
+    ) +
+    ggplot2::scale_y_continuous(
+      limits = range(
+        tbl_jgb_spline_animation$compound_yield_pct,
+        na.rm = TRUE
+      )
+    ) +
+    ggplot2::labs(
+      title = "JGB Yield Curve",
+      subtitle = "Date: {closest_state}",
+      x = "Maturity (years)",
+      y = "Compound yield (%)"
+    ) +
+    gganimate::transition_states(
+      date,
+      transition_length = 1,
+      state_length = 0,
+      wrap = FALSE
+    )
+
+  gganimate::animate(
+    jgb_yield_curve_animation_plot,
+    width = 900,
+    height = 560,
+    fps = 8,
+    duration = 24,
+    renderer = gifski::gifski_renderer()
+  )
+}
+```
+
+```{r}
+#| label: jgb-yield-time-series-animation
+#| eval: true
+
+if (
+  knitr::is_html_output() &&
+    requireNamespace("gganimate", quietly = TRUE) &&
+    requireNamespace("gifski", quietly = TRUE)
+) {
+  jgb_yield_time_series_animation_plot <- tbl_jgb_time_series |>
+    ggplot2::ggplot(
+      ggplot2::aes(
+        x = date,
+        y = compound_yield_pct,
+        colour = tenor,
+        linetype = tenor
+      )
+    ) +
+    ggplot2::geom_line(
+      linewidth = 0.6
+    ) +
+    ggplot2::scale_x_date(
+      limits = range(
+        tbl_jgb_time_series$date,
+        na.rm = TRUE
+      )
+    ) +
+    ggplot2::scale_y_continuous(
+      limits = range(
+        tbl_jgb_time_series$compound_yield_pct,
+        na.rm = TRUE
+      )
+    ) +
+    ggplot2::labs(
+      title = "JGB Yield Time Series",
+      subtitle = "Observed through {frame_along}",
+      x = NULL,
+      y = "Compound yield (%)",
+      colour = "Maturity",
+      linetype = "Maturity"
+    ) +
+    ggplot2::guides(
+      colour = ggplot2::guide_legend(nrow = 1),
+      linetype = ggplot2::guide_legend(nrow = 1)
+    ) +
+    gganimate::transition_reveal(date)
+
+  gganimate::animate(
+    jgb_yield_time_series_animation_plot,
+    width = 900,
+    height = 560,
+    fps = 8,
+    duration = 24,
+    renderer = gifski::gifski_renderer()
+  )
+}
+```
+
+二つの図は、同じ市場データを異なる方向から観察したものである。イールドカーブは一時点における年限間の相対関係を示し、金利時系列は各年限の水準が金融政策、景気および市場環境の変化を受けて推移する様子を示す。この二つの視点を区別することが、補間、ブートストラップおよび金利リスクを理解する出発点となる。
+
+## II-2.2 金利カーブの基礎
 
 評価日を0、将来時点を $t$ とし、時点 $t$ に1を受け取るキャッシュフローの現在価値を $D(0,t)$ とする。$D(0,t)$ は割引係数である。連続複利のゼロ金利を $z(0,t)$ とすると、両者の関係は次式で表される。
 
@@ -53,7 +445,7 @@ $$
 
 割引係数、ゼロ金利およびフォワード金利は同じ期間構造を異なる方法で表している。ただし、補間方法の違いは、とくにフォワード金利の形状に強く表れる。
 
-### II-2.1.1 ゼロ金利ノード
+### II-2.2.1 ゼロ金利ノード
 
 最初に、評価日と複数の将来日について連続複利のゼロ金利を設定する。ここで用いる数値は、カーブの構造を確認するための例示値である。
 
@@ -62,34 +454,34 @@ evaluation_date_chr <- "2022-08-19"
 
 GaussQuant::set_eval_date_GQL(evaluation_date_chr)
 
-zero_nodes <- tibble::tribble(
+tbl_zero_nodes <- tibble::tribble(
   ~tenor, ~date, ~zero_rate,
-  "0D",  as.Date("2022-08-19"), 0.0005,
-  "1M",  as.Date("2022-09-19"), 0.0006,
-  "3M",  as.Date("2022-11-21"), 0.0008,
-  "6M",  as.Date("2023-02-20"), 0.0011,
-  "1Y",  as.Date("2023-08-21"), 0.0018,
-  "2Y",  as.Date("2024-08-19"), 0.0032,
-  "3Y",  as.Date("2025-08-19"), 0.0048,
-  "5Y",  as.Date("2027-08-19"), 0.0075,
+  "0D", as.Date("2022-08-19"), 0.0005,
+  "1M", as.Date("2022-09-19"), 0.0006,
+  "3M", as.Date("2022-11-21"), 0.0008,
+  "6M", as.Date("2023-02-20"), 0.0011,
+  "1Y", as.Date("2023-08-21"), 0.0018,
+  "2Y", as.Date("2024-08-19"), 0.0032,
+  "3Y", as.Date("2025-08-19"), 0.0048,
+  "5Y", as.Date("2027-08-19"), 0.0075,
   "10Y", as.Date("2032-08-19"), 0.0115
 )
 
 GaussQuant::show_tbl_GQH(
-  zero_nodes,
+  tbl_zero_nodes,
   "Zero-rate nodes",
   n = 20
 )
 ```
 
-### II-2.1.2 ゼロカーブ
+### II-2.2.2 ゼロカーブ
 
 `build_zero_curve_GQL()`は、日付とゼロ金利の組からQuantLibのZeroCurveを構築する。ここではカーブの時間軸にActual/365 Fixedを用いる。
 
 ```{r build-zero-curve}
 zero_curve <- GaussQuant::build_zero_curve_GQL(
-  date_chr = as.character(zero_nodes$date),
-  zero_rates = zero_nodes$zero_rate,
+  date_chr = as.character(tbl_zero_nodes$date),
+  zero_rates = tbl_zero_nodes$zero_rate,
   day_counter = "Actual365Fixed"
 )
 
@@ -97,7 +489,7 @@ zero_curve_handle <- GaussQuant::yield_curve_handle_GQL(
   zero_curve
 )
 
-zero_curve_tbl <- GaussQuant::curve_tbl_GQH(
+tbl_zero_curve <- GaussQuant::curve_tbl_GQH(
   curve = zero_curve,
   tenors = c(
     "1D", "1W", "1M", "3M", "6M",
@@ -106,7 +498,7 @@ zero_curve_tbl <- GaussQuant::curve_tbl_GQH(
 )
 
 GaussQuant::show_tbl_GQH(
-  zero_curve_tbl,
+  tbl_zero_curve,
   "Zero curve",
   n = 20
 )
@@ -114,12 +506,12 @@ GaussQuant::show_tbl_GQH(
 
 カーブから取得したゼロ金利は連続複利表示である。入力ノードの間ではQuantLibの補間規則に従って金利が補間される。
 
-### II-2.1.3 カーブの表現
+### II-2.2.3 カーブの表現
 
 カーブを細かい時間間隔へ展開し、割引係数、ゼロ金利および隣接区間のフォワード金利を計算する。
 
 ```{r zero-curve-grid}
-zero_curve_grid <- GaussQuant::curve_grid_tbl_GQL(
+tbl_zero_curve_grid <- GaussQuant::curve_grid_tbl_GQL(
   curve = zero_curve,
   n = 240L,
   extrapolate = TRUE
@@ -138,19 +530,19 @@ zero_curve_grid <- GaussQuant::curve_grid_tbl_GQL(
     )
   )
 
-grid_show_index <- unique(
+zero_grid_show_index <- unique(
   round(
     seq(
       from = 1,
-      to = nrow(zero_curve_grid),
+      to = nrow(tbl_zero_curve_grid),
       length.out = 12
     )
   )
 )
 
 GaussQuant::show_tbl_GQH(
-  zero_curve_grid |>
-    dplyr::slice(grid_show_index) |>
+  tbl_zero_curve_grid |>
+    dplyr::slice(zero_grid_show_index) |>
     dplyr::select(
       curve_date,
       time,
@@ -164,7 +556,7 @@ GaussQuant::show_tbl_GQH(
 ```
 
 ```{r zero-curve-plots}
-discount_factor_plot <- zero_curve_grid |>
+discount_factor_plot <- tbl_zero_curve_grid |>
   ggplot2::ggplot(
     ggplot2::aes(
       x = curve_date,
@@ -178,7 +570,7 @@ discount_factor_plot <- zero_curve_grid |>
     y = "Discount factor"
   )
 
-zero_rate_plot <- zero_curve_grid |>
+zero_rate_plot <- tbl_zero_curve_grid |>
   ggplot2::ggplot(
     ggplot2::aes(
       x = curve_date,
@@ -192,7 +584,7 @@ zero_rate_plot <- zero_curve_grid |>
     y = "Zero rate (%)"
   )
 
-forward_rate_plot <- zero_curve_grid |>
+forward_rate_plot <- tbl_zero_curve_grid |>
   dplyr::filter(!is.na(forward_rate)) |>
   ggplot2::ggplot(
     ggplot2::aes(
@@ -213,9 +605,9 @@ show_plot_LFL(forward_rate_plot)
 
 割引係数は将来の1単位を現在価値へ換算する倍率である。正の金利環境では、満期が長くなるほど一般に小さくなる。ゼロ金利は評価日から各満期までの平均的な金利水準を示す。一方、フォワード金利は隣接する二時点間の金利を表すため、補間方法やノード配置の影響を強く受ける。
 
-## II-2.2 補間と参照日
+## II-2.3 補間と参照日
 
-### II-2.2.1 補間方式とフォワード金利
+### II-2.3.1 補間方式とフォワード金利
 
 市場では限られた満期の金利または価格しか観測できないため、ノード間の値を補間する必要がある。補間対象には、ゼロ金利、割引係数、対数割引係数またはフォワード金利などがある。
 
@@ -226,7 +618,7 @@ show_plot_LFL(forward_rate_plot)
 
 ```{r interpolation-curves}
 discount_curve <- GaussQuant::build_discount_curve_GQL(
-  nodes = zero_nodes |>
+  nodes = tbl_zero_nodes |>
     dplyr::select(
       date,
       zero_rate
@@ -254,7 +646,7 @@ comparison_reference_date <- as.Date(
   )
 )
 
-interpolation_tbl <- tibble::tibble(
+tbl_interpolation <- tibble::tibble(
   time = comparison_time_grid,
   date = comparison_reference_date +
     round(comparison_time_grid * 365)
@@ -310,7 +702,7 @@ interpolation_tbl <- tibble::tibble(
         discount_factor > 0,
       -log(discount_factor) /
         time,
-      zero_nodes$zero_rate[[1]]
+      tbl_zero_nodes$zero_rate[[1]]
     ),
     next_time = dplyr::lead(
       time
@@ -334,11 +726,10 @@ interpolation_tbl <- tibble::tibble(
     )
   ) |>
   dplyr::ungroup()
-
 ```
 
 ```{r interpolation-plots}
-interpolation_zero_plot <- interpolation_tbl |>
+interpolation_zero_plot <- tbl_interpolation |>
   ggplot2::ggplot(
     ggplot2::aes(
       x = time,
@@ -354,7 +745,7 @@ interpolation_zero_plot <- interpolation_tbl |>
     linetype = NULL
   )
 
-interpolation_forward_plot <- interpolation_tbl |>
+interpolation_forward_plot <- tbl_interpolation |>
   dplyr::filter(!is.na(forward_rate)) |>
   ggplot2::ggplot(
     ggplot2::aes(
@@ -376,7 +767,7 @@ show_plot_LFL(interpolation_forward_plot)
 
 両カーブは入力ノードでほぼ同じ情報を再現するが、ノード間では異なる形状を示す。ゼロ金利のグラフでは差が小さく見えても、フォワード金利へ変換すると差が拡大することがある。したがって、カーブの妥当性はゼロ金利だけでなく、フォワード金利も確認する必要がある。
 
-### II-2.2.2 参照日と評価日
+### II-2.3.2 参照日と評価日
 
 カーブの参照日は、割引係数が1となる時点であり、時間軸の起点である。日付ノードから構築したカーブでは、通常、最初のノード日が固定参照日となる。
 
@@ -399,7 +790,7 @@ reference_date_after <- as.Date(
   )
 )
 
-reference_date_tbl <- tibble::tribble(
+tbl_reference_date <- tibble::tribble(
   ~item, ~value,
   "curve_reference_date_before", as.character(reference_date_before),
   "evaluation_date_after_change", "2022-09-19",
@@ -407,7 +798,7 @@ reference_date_tbl <- tibble::tribble(
 )
 
 GaussQuant::show_tbl_GQH(
-  reference_date_tbl,
+  tbl_reference_date,
   "Fixed reference date"
 )
 
@@ -418,9 +809,9 @@ GaussQuant::set_eval_date_GQL(
 
 固定参照日のカーブは、評価日を変更しても参照日が変化しない。一方、決済日数と休日カレンダーから参照日を決定するMoving Reference Date型のカーブでは、評価日の変更に応じて参照日も移動する。評価日を進めるシナリオ分析では、既存カーブを固定したまま使うのか、市場データから新しいカーブを再構築するのかを区別する必要がある。
 
-## II-2.3 ブートストラップ
+## II-2.4 ブートストラップ
 
-### II-2.3.1 預金と債券
+### II-2.4.1 預金と債券
 
 市場ではゼロ金利を直接観測できる満期は限られている。そのため、短期預金、国債価格およびスワップレートなどから、割引係数を順次推定するブートストラップを行う。
 
@@ -437,7 +828,7 @@ bond_curve <- GaussQuant::build_bond_discount_curve_GQL(
   settlement_days = 3
 )
 
-bond_curve_tbl <- GaussQuant::curve_tbl_GQH(
+tbl_bond_curve <- GaussQuant::curve_tbl_GQH(
   curve = bond_curve,
   tenors = c(
     "1M", "3M", "6M", "1Y",
@@ -447,20 +838,20 @@ bond_curve_tbl <- GaussQuant::curve_tbl_GQH(
 )
 
 GaussQuant::show_tbl_GQH(
-  bond_curve_tbl,
+  tbl_bond_curve,
   "Deposit and bond bootstrap curve",
   n = 30
 )
 ```
 
 ```{r bond-bootstrap-plot}
-bond_curve_grid <- GaussQuant::curve_grid_tbl_GQL(
+tbl_bond_curve_grid <- GaussQuant::curve_grid_tbl_GQL(
   curve = bond_curve,
   n = 300L,
   extrapolate = TRUE
 )
 
-bond_curve_plot <- bond_curve_grid |>
+bond_curve_plot <- tbl_bond_curve_grid |>
   ggplot2::ggplot(
     ggplot2::aes(
       x = curve_date,
@@ -478,7 +869,7 @@ show_plot_LFL(bond_curve_plot)
 
 債券価格を用いるブートストラップでは、各債券のクーポン日、満期日、経過利子および日数計算規則がカーブ構築に影響する。債券のクーポン計算には商品固有の日数計算規則を用いる一方、期間構造の時間軸には単純で加法的な日数計算規則を用いる必要がある。
 
-### II-2.3.2 預金とスワップ
+### II-2.4.2 預金とスワップ
 
 次に、短期部分を預金金利、中長期部分を固定対変動金利スワップの市場レートから構築する。スワップの市場レートは、固定レグと変動レグの現在価値を等しくするパー・スワップレートである。
 
@@ -494,7 +885,7 @@ swap_curve_handle <- GaussQuant::yield_curve_handle_GQL(
   swap_curve
 )
 
-swap_curve_tbl <- GaussQuant::curve_tbl_GQH(
+tbl_swap_curve <- GaussQuant::curve_tbl_GQH(
   curve = swap_curve,
   tenors = c(
     "1W", "1M", "3M", "6M",
@@ -504,7 +895,7 @@ swap_curve_tbl <- GaussQuant::curve_tbl_GQH(
 )
 
 GaussQuant::show_tbl_GQH(
-  swap_curve_tbl,
+  tbl_swap_curve,
   "Deposit and swap bootstrap curve",
   n = 30
 )
@@ -517,7 +908,7 @@ comparison_tenors <- c(
   "10Y", "15Y"
 )
 
-bootstrap_comparison_tbl <- dplyr::bind_rows(
+tbl_bootstrap_comparison <- dplyr::bind_rows(
   GaussQuant::curve_tbl_GQH(
     curve = bond_curve,
     tenors = comparison_tenors
@@ -535,12 +926,12 @@ bootstrap_comparison_tbl <- dplyr::bind_rows(
 )
 
 GaussQuant::show_tbl_GQH(
-  bootstrap_comparison_tbl,
+  tbl_bootstrap_comparison,
   "Bootstrap curve comparison",
   n = 30
 )
 
-bootstrap_zero_plot <- bootstrap_comparison_tbl |>
+bootstrap_zero_plot <- tbl_bootstrap_comparison |>
   ggplot2::ggplot(
     ggplot2::aes(
       x = date,
@@ -563,9 +954,9 @@ show_plot_LFL(bootstrap_zero_plot)
 
 FRAは、将来の一定期間に適用される金利を直接観測する商品として、預金とスワップの間を接続するために用いられる。本章の実装では預金とスワップを用いるが、FRAを追加する場合も、各市場商品の理論価格が市場価格と一致するように同じブートストラップの枠組みへ組み込む。
 
-## II-2.4 カーブ操作と検証
+## II-2.5 カーブ操作と検証
 
-### II-2.4.1 Implied Term Structure
+### II-2.5.1 Implied Term Structure
 
 Implied Term Structureは、既存カーブが示す将来の割引関係を保ったまま、参照日を将来へ移した期間構造である。元のカーブの参照日を $t_0$、新しい参照日を $t_1$、将来日を $t_2$ とすると、Implied Term Structureの割引係数は概念的に次式で表される。
 
@@ -602,7 +993,7 @@ implied_curve <- if (is.null(implied_constructor)) {
   )
 }
 
-implied_curve_tbl <- if (is.null(implied_curve)) {
+tbl_implied_curve <- if (is.null(implied_curve)) {
   tibble::tibble(
     status = "ImpliedTermStructure is not available in the installed QuantLib binding."
   )
@@ -617,7 +1008,7 @@ implied_curve_tbl <- if (is.null(implied_curve)) {
 }
 
 GaussQuant::show_tbl_GQH(
-  implied_curve_tbl,
+  tbl_implied_curve,
   "Implied term structure",
   n = 20
 )
@@ -625,7 +1016,7 @@ GaussQuant::show_tbl_GQH(
 
 Implied Term Structureは、将来時点から見た割引係数を現在のカーブから機械的に導くものであり、将来の市場カーブを予測したものではない。評価日を将来へ進めたシナリオで市場リスクを評価する場合には、カーブの単純な時間経過と市場金利の変動を区別する必要がある。
 
-### II-2.4.2 カーブの平行シフト
+### II-2.5.2 カーブの平行シフト
 
 金利リスク分析では、基準カーブに一定のスプレッドを加えたカーブを用いる。すべての満期へ同じスプレッドを加える変化を平行シフトという。
 
@@ -643,7 +1034,7 @@ spreaded_curve_bundle <- GaussQuant::make_zero_spreaded_curve_GQL(
 
 spreaded_curve <- spreaded_curve_bundle$curve
 
-parallel_shift_tbl <- dplyr::bind_rows(
+tbl_parallel_shift <- dplyr::bind_rows(
   GaussQuant::curve_tbl_GQH(
     curve = swap_curve,
     tenors = comparison_tenors
@@ -660,7 +1051,7 @@ parallel_shift_tbl <- dplyr::bind_rows(
     )
 )
 
-parallel_shift_wide_tbl <- parallel_shift_tbl |>
+tbl_parallel_shift_wide <- tbl_parallel_shift |>
   dplyr::select(
     tenor,
     date,
@@ -684,14 +1075,14 @@ parallel_shift_wide_tbl <- parallel_shift_tbl |>
   )
 
 GaussQuant::show_tbl_GQH(
-  parallel_shift_wide_tbl,
+  tbl_parallel_shift_wide,
   "Parallel curve shift",
   n = 30
 )
 ```
 
 ```{r parallel-shift-plot}
-parallel_shift_plot <- parallel_shift_tbl |>
+parallel_shift_plot <- tbl_parallel_shift |>
   ggplot2::ggplot(
     ggplot2::aes(
       x = date,
@@ -714,7 +1105,7 @@ show_plot_LFL(parallel_shift_plot)
 
 実際の市場変動は完全な平行移動とは限らない。短期だけが動く変化、長期だけが動く変化、曲線の傾きが変化するスティープニングまたはフラットニングも生じる。年限別のKey Rate Shiftでは、特定年限のノードを動かし、周辺年限へ補間しながら再評価する。これらは平行シフトより細かなリスク分解である。
 
-### II-2.4.3 カーブの検証
+### II-2.5.3 カーブの検証
 
 構築したカーブについて、少なくとも次の点を確認する必要がある。
 
@@ -727,7 +1118,7 @@ show_plot_LFL(parallel_shift_plot)
 まず、例示的なゼロ金利ノードが二つのカーブでどの程度再現されるかを確認する。
 
 ```{r node-recovery-check}
-node_recovery_tbl <- zero_nodes |>
+tbl_node_recovery <- tbl_zero_nodes |>
   dplyr::mutate(
     ql_date = purrr::map(
       as.character(date),
@@ -781,7 +1172,7 @@ node_recovery_tbl <- zero_nodes |>
   )
 
 GaussQuant::show_tbl_GQH(
-  node_recovery_tbl,
+  tbl_node_recovery,
   "Node recovery check",
   n = 20
 )
@@ -790,7 +1181,7 @@ GaussQuant::show_tbl_GQH(
 続いて、各カーブを密なグリッドへ展開し、割引係数の範囲と欠損値を確認する。
 
 ```{r curve-validation-summary}
-curve_validation_tbl <- dplyr::bind_rows(
+tbl_curve_validation <- dplyr::bind_rows(
   GaussQuant::curve_grid_tbl_GQL(
     zero_curve,
     n = 200L,
@@ -864,7 +1255,7 @@ curve_validation_tbl <- dplyr::bind_rows(
   )
 
 GaussQuant::show_tbl_GQH(
-  curve_validation_tbl,
+  tbl_curve_validation,
   "Curve validation summary",
   n = 20
 )
@@ -873,7 +1264,7 @@ GaussQuant::show_tbl_GQH(
 割引係数が正であることは、裁定のない期間構造を確認するための基本条件である。ただし、正の割引係数だけでは十分ではない。入力商品の再評価、補間区間のフォワード金利、外挿方法、日数計算規則および参照日の設定も確認する必要がある。
 
 
-## II-2.5 日本国債先物とCTD
+## II-2.6 日本国債先物とCTD
 
 日本の長期国債先物は、実在する特定銘柄ではなく、クーポン6%、償還期限10年の標準物を取引対象とする。満期時には、取引所が定めた受渡適格銘柄の中から売方が実際に受け渡す銘柄を選択する。各銘柄ではクーポンと残存期間が異なるため、標準物との価値の差をConversion Factor（CF）で調整する。
 
@@ -889,7 +1280,7 @@ $$
 
 CTD（Cheapest-to-Deliver）は、単に現物価格が最も安い銘柄ではない。現物価格、Conversion Factor、保有期間中のクーポン、経過利子、資金調達費用を合わせて比較する必要がある。本節では、2026年9月10日を評価日、2026年12月20日を受渡日として、長期国債先物2026年12月限の受渡適格銘柄を比較する。
 
-### II-2.5.1 受渡適格銘柄
+### II-2.6.1 受渡適格銘柄
 
 以下では373回債から383回債までを比較する。BB価格は本章の計算確認用に置いた2026年9月10日時点の値であり、最終稿では日本相互証券の確認値へ差し替える。
 
@@ -930,7 +1321,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### II-2.5.2 GaussQuantによる複利利回りとDuration
+### II-2.6.2 GaussQuantによる複利利回りとDuration
 
 各受渡適格銘柄をGaussQuantの`fixed_rate_bond_GQL()`で構築する。BB価格から半年複利利回りを逆算し、その利回りを用いてModified Durationを計算する。本章では以後、単にDurationと記す場合もModified Durationを意味する。
 
@@ -1005,7 +1396,7 @@ GaussQuant::show_tbl_GQH(
 
 クーポンが高いほど、同一償還であればキャッシュフローを早く回収するためDurationは短くなる。一方、償還が遠いほどDurationは長くなる。実際の受渡適格銘柄では、この二つの効果が同時に働く。
 
-### II-2.5.3 Gross Basis、Carry、Net Basis
+### II-2.6.3 Gross Basis、Carry、Net Basis
 
 Gross Basisは、現物クリーン価格とCFで調整した先物価格との差である。
 
@@ -1101,15 +1492,15 @@ Net Basisが最小となる銘柄は、同じ前提で比較したときに売�
 
 ここで重要なのは、CTDが単純に「価格が低い銘柄」や「Durationが短い銘柄」と定義されているわけではないことである。Conversion Factorは6%標準物を基準にしているため、市場金利の水準とイールドカーブの形状が変わると、受渡適格銘柄間の相対価値も変化する。
 
-## II-2.6 Yield CurveとCTD Switching
+## II-2.7 Yield CurveとCTD Switching
 
-### II-2.6.1 6%標準物と金利水準
+### II-2.7.1 6%標準物と金利水準
 
 長期国債先物の標準物は、クーポン6%、償還期限10年である。市場金利が6%を下回り、かつイールドカーブが右上がりである場合、短いDuration側の銘柄が相対的に受渡しやすくなる傾向がある。
 
 一方、標準物の6%を上回る高金利環境で、短期金利が長期金利を上回る逆イールドを作ると、相対価値は反対方向へ動き得る。ここでは、そのCTD Switchingを同じ受渡適格銘柄で確認する。
 
-### II-2.6.2 イールドカーブ反転シナリオ
+### II-2.7.2 イールドカーブ反転シナリオ
 
 シナリオでは、長期金利を8%、短期Funding Rateを9%とする。
 
@@ -1170,7 +1561,7 @@ curve_switch_plot <- tbl_curve_scenario |>
 show_plot_LFL(curve_switch_plot)
 ```
 
-### II-2.6.3 6%標準物の先物価格
+### II-2.7.3 6%標準物の先物価格
 
 先物価格を任意の $X$ と置くのではなく、6%クーポン・10年の標準物を8%複利で評価した価格をシナリオの先物価格とする。これにより、現物債と先物を同じ金利環境で比較できる。
 
@@ -1220,7 +1611,7 @@ GaussQuant::show_tbl_GQH(
 
 6%クーポンの10年標準物を8%複利で評価すると、価格はおおむね86円台となる。単純な近似 $(6-8)\times10$ でも100円から大きく低下する方向を確認できるが、実際の価格は各クーポンと元本を割り引いて求める。
 
-### II-2.6.4 8%複利で受渡適格銘柄を再評価
+### II-2.7.4 8%複利で受渡適格銘柄を再評価
 
 同じ373回債から383回債について、複利利回りを一律8%へ変更し、GaussQuantで時価とModified Durationを再計算する。Conversion Factorは変更しない。
 
@@ -1307,7 +1698,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### II-2.6.5 CTD Switchingの解釈
+### II-2.7.5 CTD Switchingの解釈
 
 二つの市場環境を比較する。
 
@@ -1350,9 +1741,11 @@ GaussQuant::show_tbl_GQH(
 
 重要なのは、CTDを「Durationが最小の銘柄」または「Durationが最大の銘柄」と機械的に決めるのではないことである。最終判定はNet Basis最小、またはImplied Repo Rate最大で行う。Durationは、金利水準とConversion Factorの関係から相対価値がどちら側へ偏りやすいかを理解するための重要な手掛かりである。
 
-## II-2.7 まとめ
+## II-2.8 まとめ
 
-本章では、割引係数、ゼロ金利およびフォワード金利を通じて金利期間構造を確認し、補間、ブートストラップ、Implied Term Structureおよびカーブシフトを扱った。
+本章では、財務省の日本国債複利利回りを`pivot_longer()`でlong形式へ変換し、年限方向のイールドカーブと時間方向の金利時系列を可視化した。離散的な観測点へ自然スプライン補間を適用することで、補間値は市場で直接観測された値ではなく、選択したアルゴリズムから推定された値であることを確認した。
+
+続いて、割引係数、ゼロ金利およびフォワード金利を通じて金利期間構造を整理し、補間対象の違い、ブートストラップ、Implied Term Structure、カーブシフトおよび検証を扱った。とくにフォワード金利は、ゼロ金利では目立たない補間差を拡大して示すことがある。このため、カーブの妥当性は単一の表現だけで判断せず、入力商品の再現性と複数のカーブ表現を組み合わせて評価する必要がある。
 
 後半では、日本の長期国債先物を対象として、6%クーポン・10年の標準物、Conversion Factor、Gross Basis、Carry、Net Basis、Implied Repo RateおよびCTDの関係を確認した。現物債の価格から複利利回りを逆算し、GaussQuantを用いてModified Durationを求めることで、クーポンと償還期限が金利感応度へ与える影響も同時に確認した。
 

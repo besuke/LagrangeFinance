@@ -12,6 +12,8 @@ format:
     pdf-engine: lualatex
     documentclass: ltjsbook
     papersize: a4
+    fontsize: 12pt
+    linestretch: 1.08
     toc: true
     number-sections: false
     keep-tex: true
@@ -38,14 +40,14 @@ format:
           \null
           \clearpage
         }
+
         % Code blocks
         \DefineVerbatimEnvironment{Highlighting}{Verbatim}{
           commandchars=\\\{\},
-          fontsize=\footnotesize,
+          fontsize=\small,
           breaklines=true,
           breakanywhere=true
         }
-
 
         % Training exclusion watermark
         \newcommand{\ExcludeWatermark}{%

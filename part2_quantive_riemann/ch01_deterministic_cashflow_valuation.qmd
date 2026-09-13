@@ -1,5 +1,5 @@
 ---
-title: "第II-1章 確定キャッシュフロー債券評価"
+title: "第II-1章 債券評価と金利リスクの基礎"
 execute:
   eval: true
   echo: true
@@ -17,15 +17,69 @@ source(file.path("R", "utility_LFL.R"))
 
 金融では、異なる時点に発生する金額をそのまま比較することはできない。今日受け取る100円と1年後に受け取る100円では、運用可能期間や金利が異なるため、経済的な価値も異なるからである。そこで、時点の異なるキャッシュフローを評価する場合には、将来の金額を現在価値へ割り引くか、現在の金額を将来価値へ換算し、同一時点の価値にそろえる必要がある。金融商品の価格評価では、通常、将来のすべてのキャッシュフローを評価時点の現在価値へ換算する。
 
-## II-1.1 金利期間構造の確認
+金融商品の評価では、理論的な価格式を理解するだけでなく、市場で定められたマーケットコンベンションを正確に理解し、それを計算システムとして実装することが重要である。特に債券は、利払日、日数計算規則、経過利子、受渡日、価格表示、利回り表示、端数処理などが市場慣行として規格化されている。これらを正確に反映しなければ、理論的に正しい価格式を用いても実際の市場で用いられる単価や利回りを再現できない。
 
-債券価格は、将来の各キャッシュフローを支払時点に対応する割引係数で現在価値へ換算し、その合計として求める。個別債券の評価に入る前に、金利期間構造をスポットレート、割引係数およびフォワードレートの三つの側面から確認する。
+日本の債券市場では、長年にわたり価格そのものだけでなく利回りを中心として取引条件を表現する慣行があり、とりわけ単利利回りが広く用いられてきた。単利利回りは、将来の各キャッシュフローを支払時点ごとに割り引く複利評価と比べると簡易な指標であるが、市場慣行として重要な役割を果たしている。このため、本章では市場で用いられる単利利回りから債券単価を求め、その単価を基準として複利利回りを逆算する流れを出発点とする。
 
-市場で直接観測される金利は、必ずしも各満期に対応するスポットレートではない。市場では、OISレート、スワップレート、国債の価格や複利利回りなどが観測される。これらの市場情報と、日数計算規則、利払頻度および受渡日などのマーケットコンベンションを用いて、各満期のゼロクーポン・スポットレートとディスカウントファクター（以下、DF）を順次求める。この手続きをブートストラップという。
+そのうえで、本章ではまず、異なる時点のキャッシュフローを現在価値へ変換する基礎として、**スポットレート、ディスカウントファクター、フォワードレート**からなる金利期間構造を確認する。その後、同一の40年債を一貫して用い、**単利利回り → 債券単価 → 複利利回り → フラットイールド評価 → 連続複利による再評価 → Zスプレッド → アセットスワップ → 金利感応度**へと評価を展開する。最後に、クリーンプライスから複利利回りを逆算する問題を求根問題として捉え、Newton–Raphson法（ニュートン・ラフソン法）、二分法、Brent法、多項式求根法およびGaussQuantによる計算を比較する。これにより、市場慣行として観測される利回り・単価を、金融工学で用いる共通の価格評価体系へ接続する。
 
-スポットレートは、評価時点から特定の満期までのゼロクーポン金利を表す。DFは、将来の1単位の金額を評価時点の価値へ換算する倍率であり、債券、スワップおよびデリバティブのキャッシュフロー評価に直接用いられる。さらに、異なる満期のDFを比較することで、将来の一定期間に適用されるフォワードレートを求めることができる。このように、市場で観測される複数の金利商品からスポットレート、DFおよびフォワードレートからなる金利期間構造を構築することは、金融工学における価格評価の基礎となる。
+## II-1.1 金利期間構造とディスカウントファクター
 
-以下では、日本円OIS市場の基準金利であるTONAR（Tokyo Overnight Average Rate）を用いて構築した金利カーブを例に、スポットレート、DFおよびフォワードレートの関係を確認する。本章ではカーブ構築手法そのものではなく、債券評価の基礎となる金利期間構造の見方を確認する。市場データから金利カーブを構築する具体的な方法については、第II-2章で詳しく扱う。
+異なる時点に発生するキャッシュフローを同じ評価時点で比較するには、それぞれの将来キャッシュフローを現在価値へ変換する必要がある。時点 $t_i$ に発生するキャッシュフローを $CF_i$、その時点までのディスカウントファクターを $DF(t_i)$ とすると、金融商品の現在価値は概念的に
+
+$$
+PV=
+\sum_{i=1}^{n}
+CF_i\,DF(t_i)
+$$
+
+と表される。したがって、債券、スワップ、デリバティブを問わず、**各将来時点に対応するディスカウントファクターをどのように求めるか**が価格評価の基礎となる。
+
+金利期間構造は、同じ市場の金利情報を、スポットレート、ディスカウントファクター、フォワードレートという異なる側面から表したものである。本節では、それぞれの意味と相互の関係を確認する。市場データから実際に金利カーブを構築するブートストラップの方法については、第II-2章で扱う。
+
+### II-1.1.1 スポットレート
+
+スポットレートは、評価時点から特定の将来時点までのゼロクーポン金利を表す。例えば5年スポットレートは、評価時点から5年後に1回だけ支払われるキャッシュフローを現在価値へ割り引くための金利である。
+
+市場では、各年限のスポットレートそのものが直接観測されるとは限らない。OISレート、スワップレート、国債価格や債券利回りなど、複数の市場商品から得られる情報をマーケットコンベンションと組み合わせ、各満期のスポットレートを順次求める。この手続きをブートストラップという。
+
+スポットレートを $z(t)$ とすると、例えば連続複利表示ではディスカウントファクターとの関係は
+
+$$
+DF(t)=\exp\{-z(t)t\}
+$$
+
+となる。複利方式が異なる場合には数式の形は変わるが、スポットレートから各将来時点のディスカウントファクターを求めるという役割は同じである。
+
+### II-1.1.2 ディスカウントファクター
+
+ディスカウントファクターは、将来の1単位の金額を評価時点の価値へ変換する倍率である。例えば $DF(t)=0.95$ であれば、時点 $t$ に受け取る1円の現在価値は0.95円となる。
+
+債券のように複数の将来キャッシュフローを持つ商品では、それぞれの支払時点に対応するディスカウントファクターを適用する。
+
+$$
+P=
+\sum_{i=1}^{n}
+CF_i\,DF(t_i)
+$$
+
+この式は、本章で扱う債券価格だけでなく、後続章で扱う金利スワップや金利デリバティブにも共通する価格評価の基本式である。したがって、時間の異なるキャッシュフローを一つの価格へ集約するうえで、ディスカウントファクターが中心的な役割を持つ。
+
+### II-1.1.3 フォワードレート
+
+フォワードレートは、評価時点から見た将来の一定期間に対応する金利である。スポットレートやディスカウントファクターが評価時点から各満期までの累積的な金利情報を表すのに対し、フォワードレートは将来の特定期間に対応する金利情報を表す。
+
+二つの時点 $t_1<t_2$ のディスカウントファクターが分かれば、その間の割引関係は
+
+$$
+\frac{DF(t_2)}{DF(t_1)}
+$$
+
+から求められる。これを対象期間の日数計算規則と複利方式に応じて金利へ変換したものがフォワードレートである。したがって、スポットレート、ディスカウントファクター、フォワードレートは別々の市場情報ではなく、同じ金利期間構造を異なる形で表現したものである。
+
+### II-1.1.4 TONARによる金利期間構造の確認
+
+以下では、日本円OIS市場の基準金利であるTONAR（Tokyo Overnight Average Rate）を用いて構築した金利カーブを例に、スポットレート、ディスカウントファクターおよびフォワードレートの関係を確認する。本節ではカーブ構築手法そのものには立ち入らず、債券評価に必要となる金利期間構造の見方を確認する。
 
 ```{r}
 #| label: tonar-spot-discount-forward-curves
@@ -60,7 +114,7 @@ spot_curve_plot <- tbl_tonar_curve |>
     date_labels = "%Y"
   ) +
   ggplot2::labs(
-    title = "TONARスポットカーブ",
+    title = "TONARスポットレートカーブ",
     x = "満期",
     y = "スポットレート（%）"
   )
@@ -80,9 +134,9 @@ discount_curve_plot <- tbl_tonar_curve |>
     date_labels = "%Y"
   ) +
   ggplot2::labs(
-    title = "TONAR割引係数カーブ",
+    title = "TONARディスカウントファクターカーブ",
     x = "満期",
-    y = "割引係数"
+    y = "ディスカウントファクター"
   )
 
 forward_curve_plot <- tbl_tonar_curve |>
@@ -100,7 +154,7 @@ forward_curve_plot <- tbl_tonar_curve |>
     date_labels = "%Y"
   ) +
   ggplot2::labs(
-    title = "TONARインスタント・フォワードカーブ",
+    title = "TONARインスタント・フォワードレートカーブ",
     x = "開始日",
     y = "フォワードレート（%）"
   )
@@ -110,87 +164,31 @@ show_plot_LFL(discount_curve_plot)
 show_plot_LFL(forward_curve_plot)
 ```
 
-ここでは、TONARカーブを構築するための市場クォートやブートストラップの詳細には立ち入らない。重要なのは、同じ金利期間構造をスポットレート、DF、フォワードレートという異なる観点から表現できることである。これらの関係を理解することが、以降の債券評価や金利デリバティブ評価の基礎となる。
+三つの図は、同じTONAR金利期間構造を異なる観点から表している。スポットレートは評価時点から各満期までのゼロクーポン金利、ディスカウントファクターは各将来キャッシュフローを現在価値へ換算する倍率、フォワードレートは将来の特定期間に対応する金利を表す。
 
-さらに本章では、固定利付債を例として、クリーン価格、ダーティ価格、経過利子、最終利回り、デュレーションおよびコンベクシティを計算する。あわせて、日数計算規則、休日カレンダー、営業日調整、受渡日および利払スケジュールといったマーケットコンベンションを確認する。
+本章では、このうち特にディスカウントファクターを、時間の異なるキャッシュフローを同じ評価時点へ換算するための基礎として用いる。次節から固定利付債のキャッシュフロー、単価、利回りおよび金利感応度へ進む。なお、TONAR市場のクォートからスポットレート、ディスカウントファクターおよびフォワードレートを実際に構築する方法は、第II-2章で詳しく扱う。
 
-## II-1.2 マーケットコンベンション
+## II-1.2 債券とキャッシュフロー
 
-債券評価では、価格や利回りの計算方法だけでなく、日付、利払頻度、休日および端数処理に関する市場慣行を確認する必要がある。同じ債券であっても、採用する日数計算規則や利回り表示方式が異なれば、経過利子、残存年数および計算価格も異なる。
+### II-1.2.1 固定利付債の基本構造
 
-### II-1.2.1 一般的な市場慣行
+固定利付債は、あらかじめ定められた利払日にクーポンを支払い、満期日に最終クーポンと元本を償還する。したがって、債券評価の出発点は将来キャッシュフローの日付と金額を正確に確定することである。
 
-日数計算規則（Day Count Convention）は、二つの日付の間の期間を年数へ換算する規則である。主な方式は次のとおりである。
+本章では、額面100、年率7.50%、半年払い、受渡日を2022年4月1日、償還日を2062年4月1日とする残存40年の固定利付債を一貫して用いて計算を確認する。
 
-- **Actual/365 Fixed**
-  二つの日付間の実日数を365で除する。
+```{r}
+#| label: bond-basic-setup
 
-- **Actual/360**
-  二つの日付間の実日数を360で除する。短期金融市場や金利商品で広く用いられる。
-
-- **Actual/Actual ICMA**
-  実日数を、利払期間の実日数と年間利払回数に基づいて年換算する。固定利付債で用いられる代表的な方式である。
-
-- **Actual/Actual ISDA**
-  対象期間を平年部分と閏年部分に分け、それぞれ365または366で除する。
-
-- **30/360 Bond Basis**
-  1か月を30日、1年を360日として計算し、月末の日付には所定の調整を行う。
-
-- **30E/360**
-  開始日または終了日が31日の場合に30日へ調整し、1か月を30日、1年を360日として計算する。
-
-30/360方式は手計算を容易にするために考案された方式であり、半年、四半期および1か月をそれぞれ180日、90日および30日として扱える。一方、Actual方式では暦上の実日数を用いるため、同じ利率でも計算期間によって利息額が異なることがある。日数計算規則の違いは、経過利子だけでなく、割引期間や利回りにも影響する。
-詳細は[Day count convention](https://en.wikipedia.org/wiki/Day_count_convention)を参照されたい。
-ただし、日数計算規則はすべての計算に同じものを用いればよいわけではない。Actual/Actual ICMAや30/360 Bond Basisは、規則的な利払期間を基準としてクーポン額や経過利子を求める用途に適している。一方、金利期間構造では、評価日から各将来日までの距離を一貫した時間軸へ変換する必要があるため、Actual/360またはActual/365 Fixedのような単純な規則を用いることが多い。
-
-とくにActual/Actual ICMAは、基準となる利払期間（reference period）を必要とする。不規則な初回または最終利払期間では、同じ二つの日付であっても、基準期間の与え方によって年数が変わり得る。利払スケジュールを持たない金利カーブにこの規則をそのまま使用すると、割引期間や割引係数が不自然になる場合がある。したがって、債券のクーポン計算に用いる日数計算規則と、割引カーブの時間軸に用いる日数計算規則は区別して設定する必要がある。
-
-受渡日や利払日が非営業日に当たる場合には、対象市場の休日カレンダーと営業日調整規則を用いる。代表的な規則には、次営業日へ移すFollowing、翌月へ越える場合には前営業日へ戻すModified Following、前営業日へ戻すPreceding、および日付を調整しないUnadjustedがある。
-
-### II-1.2.2 日本の債券市場における慣行
-
-日本の公社債市場では、単価と複利利回りに加えて、単利利回りが広く用いられてきた。日本証券業協会の公社債店頭売買参考統計値でも、原則として報告された単利利回りから単価を求め、その単価から複利利回りを計算する手順が採用されている。
-
-利付債の経過利子に用いる経過日数は、直前利払期日から受渡日までの実日数を片端入れで数える。一方、最終利回りに用いる残存日数は、受渡日の翌日から償還日までを片端入れで数えるため、経過日数と残存日数を区別する必要がある。
-
-残存日数を $N$、残存年数を $T$ とすると、残存年数は次式で求める。
-
-$$
-T=\frac{N}{365}
-$$
-
-日本市場の実務では、残存期間が1年以上の場合には、原則として期間中の2月29日を残存日数から除外する。残存期間が1年未満の場合には2月29日を含めるが、分母は365のままとする。
-
-さらに、計算された残存年数は小数点以下第8位で切り捨て、小数点以下第7位までの値を以後の計算に用いる。四捨五入ではなく切り捨てである点が重要である。
-
-額面100円、年間クーポン額を $C$、償還価格を $R$、単価を $P$、残存年数を $T$ とすると、単利の最終利回り $Y$ は次式で表される。
-
-$$
-Y=
-\frac{
-C+\dfrac{R-P}{T}
-}{
-P
-}
-\times 100
-$$
-
-この単利利回りは、将来の各キャッシュフローを支払時点ごとに割り引く複利利回りとは異なる。クーポンと償還差損益を残存年数で年換算する日本市場独自の表示方法であり、キャッシュフローごとの時間価値を直接には反映しない。
-
-利回りから単価を逆算する場合には、小数点以下第7位までに切り捨てた残存年数を使用する。算出された単価も、原則として小数点以下第4位を切り捨て、小数点以下第3位までとする。
-
-単価で約定する取引では、計算途中の端数が約定価格を直接変更する場面は限られる。しかし、単利利回りから単価を逆算する場合には、残存年数の切り捨てが償還差損益の年換算額を変化させ、さらに単価の切り捨てによって価格差が生じる。このため、日本の債券計算では、残存日数、残存年数および単価の端数処理を正確に再現する必要がある。
-
-なお、以下のコード例では一般的な債券評価の確認を目的として、30/360 Bond Basis、半年複利およびUnadjustedを採用している。したがって、この設定は日本国内債の単利利回り慣行をそのまま再現するものではない。
-
-以下では、日本の休日カレンダー、取引日から2営業日後の受渡日、30/360 Bond Basis、半年複利および年2回払いを設定する。
-
-```{r enums-calendars-counters}
 jp_calendar <- QuantLib::Japan()
 
-dc_a365 <- QuantLib::Actual365Fixed()
-dc_a360 <- QuantLib::Actual360()
+trade_date_chr <- "2022-03-30"
+issue_date_chr <- "2022-04-01"
+maturity_date_chr <- "2062-04-01"
+
+face_amount <- 100
+coupon_rate <- 0.07500
+settlement_days <- 2L
+
 dc_30 <- GaussQuant::day_counter_GQL(
   "Thirty360",
   convention = "BondBasis"
@@ -198,20 +196,9 @@ dc_30 <- GaussQuant::day_counter_GQL(
 
 cmpd_compounded <- QuantLib::Compounding_Compounded_get()
 cmpd_simple <- QuantLib::Compounding_Simple_get()
-
-freq_annual <- QuantLib::Frequency_Annual_get()
 freq_semiannual <- QuantLib::Frequency_Semiannual_get()
 
-trade_date_chr <- "2022-08-19"
-issue_date_chr <- "2022-07-28"
-maturity_date_chr <- "2025-07-28"
-
 trade_date <- GaussQuant::date_GQL(trade_date_chr)
-issue_date_ql <- GaussQuant::date_GQL(issue_date_chr)
-maturity_date_ql <- GaussQuant::date_GQL(maturity_date_chr)
-
-settlement_days <- 2L
-
 GaussQuant::set_eval_date_GQL(trade_date)
 
 settlement_date <- GaussQuant::advance_days_GQL(
@@ -221,44 +208,6 @@ settlement_date <- GaussQuant::advance_days_GQL(
 )
 
 settlement_date_chr <- as.character(settlement_date)
-settlement_date_ql <- GaussQuant::date_GQL(settlement_date)
-
-setup_tbl <- tibble::tibble(
-  item = c(
-    "trade_date",
-    "settlement_date",
-    "issue_date",
-    "maturity_date",
-    "settlement_days",
-    "day_counter",
-    "compounding",
-    "frequency"
-  ),
-  value = c(
-    trade_date_chr,
-    settlement_date_chr,
-    issue_date_chr,
-    maturity_date_chr,
-    as.character(settlement_days),
-    "Thirty360(BondBasis)",
-    "Compounded",
-    "Semiannual"
-  )
-)
-
-GaussQuant::show_tbl_GQH(setup_tbl, "Bond setup dates and conventions")
-```
-
-表示された表から、取引日、受渡日、発行日、満期日および評価に用いる市場慣行を確認する。受渡日は日本の休日カレンダーを用いて取引日から2営業日後に計算される。
-
-## II-1.3 固定利付債計算
-
-額面100、年率0.37%、半年払い、満期2025年7月28日の固定利付債を作成する。利払スケジュールは満期日から発行日へ向かって6か月ごとに生成し、各利払日はUnadjustedとする。
-
-```{r fixed-rate-bond-setup}
-face_amount <- 100
-coupon_rate <- 0.00370
-clean_price_input <- 97.0
 
 bond_obj <- GaussQuant::fixed_rate_bond_GQL(
   issue_date = issue_date_chr,
@@ -276,252 +225,207 @@ bond_obj <- GaussQuant::fixed_rate_bond_GQL(
   schedule_frequency = GaussQuant::period_months_GQL(6)
 )
 
-bond_schedule <- QuantLib::Schedule(
-  issue_date_ql,
-  maturity_date_ql,
-  GaussQuant::period_months_GQL(6),
-  jp_calendar,
-  "Unadjusted",
-  "Unadjusted",
-  "Backward",
-  FALSE
+tbl_bond_setup <- tibble::tribble(
+  ~item, ~value,
+  "trade_date", trade_date_chr,
+  "settlement_date", settlement_date_chr,
+  "issue_date", issue_date_chr,
+  "maturity_date", maturity_date_chr,
+  "face_amount", as.character(face_amount),
+  "coupon_rate_pct", sprintf("%.4f", 100 * coupon_rate),
+  "frequency", "Semiannual"
 )
 
-schedule_tbl <- GaussQuant::schedule_dates_GQL(bond_schedule)
-
-bond_setup_tbl <- tibble::tibble(
-  metric = c(
-    "bond_class",
-    "face_amount",
-    "coupon_rate",
-    "clean_price_input"
-  ),
-  value = list(
-    paste(class(bond_obj), collapse = ", "),
-    face_amount,
-    coupon_rate,
-    clean_price_input
-  )
+GaussQuant::show_tbl_GQH(
+  tbl_bond_setup,
+  "固定利付債の計算条件"
 )
-
-GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(bond_setup_tbl), "Fixed-rate bond object")
-GaussQuant::show_tbl_GQH(schedule_tbl, "Bond schedule", n = 20)
 ```
 
-債券オブジェクトの条件と、発行日から満期日までの利払日を確認する。
+### II-1.2.2 利払スケジュールとキャッシュフロー
 
-### II-1.3.1 クリーン価格から最終利回り
+```{r}
+#| label: bond-cashflow-schedule
 
-市場で提示されるクリーン価格97から、将来キャッシュフローの現在価値がこの価格と一致する最終利回りを逆算する。
-
-```{r clean-price-to-yield}
-price_to_yield <- GaussQuant::bond_yield_from_clean_safe_GQL(
-  bond = bond_obj,
-  clean_price = clean_price_input,
-  day_counter = dc_30,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual
+tbl_bond_cashflow <- GaussQuant::bond_cashflow_table_GQL(
+  bond = bond_obj
 )
 
-yield_tbl <- tibble::tibble(
-  metric = c(
-    "clean_price_input",
-    "yield_from_clean_price",
-    "yield_percent"
-  ),
-  value = list(
-    clean_price_input,
-    price_to_yield,
-    100 * price_to_yield
-  )
+GaussQuant::show_tbl_GQH(
+  tbl_bond_cashflow,
+  "債券キャッシュフロー",
+  n = 30
 )
-
-GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(yield_tbl), "Clean price -> yield")
 ```
 
-債券価格が額面を下回っているため、算出される最終利回りはクーポンレートを上回る。
+各キャッシュフローを正確な支払日に配置することが、価格、利回り、デュレーションおよびスプレッド計算の共通基盤となる。
 
-### II-1.3.2 最終利回りから価格
+### II-1.2.3 債券市場のマーケットコンベンション
 
-前節で求めた最終利回りを使って、クリーン価格、ダーティ価格および経過利子を計算する。両価格の関係は次式で表される。
+債券計算では、日数計算規則、休日カレンダー、営業日調整、受渡日、利払頻度、価格表示、利回り表示および端数処理を一体として扱う必要がある。計算式だけが一致していても、マーケットコンベンションが異なれば市場で用いられる値とは一致しない。
+
+代表的な日数計算規則にはActual/365 Fixed、Actual/360、Actual/Actual ICMA、Actual/Actual ISDA、30/360 Bond Basisなどがある。債券のクーポン計算と金利カーブの時間軸では、同じ日数計算規則を用いるとは限らない。この区別は、後続章で金利カーブを構築するときにも重要となる。
+
+## II-1.3 債券単価と市場利回り
+
+### II-1.3.1 単利利回りと債券単価
+
+日本の公社債市場では単利利回りが広く用いられてきた。額面100円、年間クーポン額を $C$、償還価格を $R$、単価を $P$、残存年数を $T$ とすると、単利の最終利回り $Y$ は
 
 $$
-\text{Dirty Price}=\text{Clean Price}+\text{Accrued Interest}
+Y=
+\frac{
+C+\dfrac{R-P}{T}
+}{
+P
+}
+\times 100
 $$
 
-```{r yield-to-price}
-price_tbl <- GaussQuant::bond_price_measures_GQL(
-  bond = bond_obj,
-  yield = price_to_yield,
-  day_counter = dc_30,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual,
-  settlement_date = settlement_date_chr
-)
+で表される。
 
-price_tbl <- GaussQuant::complete_accrual_metrics_GQL(
-  price_tbl = price_tbl,
-  bond_schedule = bond_schedule,
-  settlement_date = settlement_date,
-  day_counter = dc_30
-)
-
-price_tbl_display <- GaussQuant::metric_tbl_display_GQH(price_tbl)
-
-GaussQuant::show_tbl_GQH(price_tbl_display, "Yield -> price summary")
-
-dirty_price_from_yield <- GaussQuant::get_metric_num_GQH(price_tbl, "dirty_price")
-clean_price_from_yield <- GaussQuant::get_metric_num_GQH(price_tbl, "clean_price")
-accrued_amount <- GaussQuant::get_metric_num_GQH(price_tbl, "accrued_amount")
-
-cat(
-  "clean price:",
-  sprintf("%.8f", clean_price_from_yield),
-  "\n",
-  "dirty price:",
-  sprintf("%.8f", dirty_price_from_yield),
-  "\n",
-  "accrued:",
-  sprintf("%.8f", accrued_amount),
-  "\n"
-)
-```
-
-再計算されたクリーン価格が入力価格97と一致することを確認する。ダーティ価格との差額は、前回利払日から受渡日までに発生した経過利子である。
-
-### II-1.3.3 金利リスク
-
-修正デュレーションは、利回りの小さな変化に対する債券価格の一次感応度を表す。コンベクシティは価格と利回りの非線形な関係を補正する二次感応度である。
-
-```{r risk-measures}
-risk_tbl <- GaussQuant::bond_risk_measures_GQL(
-  bond = bond_obj,
-  yield = price_to_yield,
-  day_counter = dc_30,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual
-)
-
-risk_tbl_display <- GaussQuant::metric_tbl_display_GQH(risk_tbl)
-
-GaussQuant::show_tbl_GQH(risk_tbl_display, "Bond risk measures")
-
-modified_duration <- GaussQuant::get_metric_num_GQH(risk_tbl, "modified_duration")
-convexity_value <- GaussQuant::get_metric_num_GQH(risk_tbl, "convexity")
-
-cat(
-  "modified duration:",
-  sprintf("%.8f", modified_duration),
-  "\n",
-  "convexity:",
-  sprintf("%.8f", convexity_value),
-  "\n"
-)
-```
-
-修正デュレーションが大きいほど、同じ利回り変化に対する価格変化も大きくなる。コンベクシティは、利回り変化が大きくなるほど重要になる。
-
-### II-1.3.4 デュレーションとコンベクシティによる価格変化の近似
-
-利回り変化を $\Delta y$ とすると、債券価格の相対変化は修正デュレーションとコンベクシティを使って近似できる。
+逆に、単利利回り $y=Y/100$ から単価を求めると、
 
 $$
-\frac{\Delta P}{P}
-\approx
--D_{\mathrm{mod}}\Delta y
-+\frac{1}{2}C(\Delta y)^2
+P=
+\frac{
+C+\dfrac{R}{T}
+}{
+y+\dfrac{1}{T}
+}
 $$
 
-```{r risk-handcalc}
-handcalc_tbl <- GaussQuant::bond_risk_handcalc_GQL(
-  bond = bond_obj,
-  yield = price_to_yield,
-  dirty_price = dirty_price_from_yield,
-  modified_duration = modified_duration,
-  convexity = convexity_value,
-  day_counter = dc_30,
-  compounding = cmpd_compounded,
-  frequency = freq_semiannual
+となる。実務では残存日数、残存年数および単価について所定の端数処理を適用するため、計算システムでは式だけでなく丸め・切り捨て規則まで実装する必要がある。以下では、受渡日を2022年4月1日に統一し、単利利回り6.515%から日本市場の計算規則に従って求めた単価を、本章以降のクリーンプライスとして一貫して使用する。
+
+```{r}
+#| label: yen-bond-simple-price
+
+yen_coupon_rate_pct <- 7.50
+yen_simple_rate_pct <- 6.515
+yen_redemption <- 100
+
+yen_remaining_years <- GaussQuant::bond_year_fraction_YEN_GQL(
+  start_date = settlement_date_chr,
+  end_date = maturity_date_chr
 )
 
-handcalc_tbl_display <- GaussQuant::metric_tbl_display_GQH(handcalc_tbl)
-
-GaussQuant::show_tbl_GQH(handcalc_tbl_display, "Risk hand calculations")
-```
-
-一次近似と二次近似を比較し、コンベクシティを加えることで実際の価格変化に近づくことを確認する。
-
-## II-1.4 キャッシュフローによる検証
-
-各利払日のクーポンと満期時の元本を最終利回りで割り引き、ダーティ価格を手計算する。そこから経過利子を差し引くことでクリーン価格を求める。
-
-```{r manual-cashflow-pv}
-schedule_dates_chr <- schedule_tbl[[1]] |>
-  as.character()
-
-schedule_dates_chr <- schedule_dates_chr[!is.na(schedule_dates_chr)]
-
-future_dates_chr <- schedule_dates_chr[schedule_dates_chr > settlement_date_chr]
-
-coupon_per_period <- face_amount * coupon_rate / 2
-
-manual_cf_tbl <- tibble::tibble(
-  payment_date = future_dates_chr,
-  period_no = seq_along(future_dates_chr),
-  cashflow = coupon_per_period
-) |>
-  dplyr::mutate(
-    cashflow = ifelse(
-      payment_date == maturity_date_chr,
-      cashflow + face_amount,
-      cashflow
-    ),
-    ql_date = purrr::map(payment_date, GaussQuant::date_GQL),
-    time = purrr::map_dbl(
-      ql_date,
-      ~ dc_30$yearFraction(settlement_date_ql, .x)
-    ),
-    discount_factor = 1 / (1 + price_to_yield / 2)^(2 * time),
-    pv = cashflow * discount_factor
-  ) |>
-  dplyr::select(-ql_date)
-
-manual_dirty_price <- sum(manual_cf_tbl$pv, na.rm = TRUE)
-manual_clean_price <- manual_dirty_price - accrued_amount
-
-manual_summary_tbl <- tibble::tibble(
-  metric = c(
-    "manual_dirty_price",
-    "manual_clean_price",
-    "wrapper_dirty_price",
-    "wrapper_clean_price",
-    "dirty_price_difference",
-    "clean_price_difference"
-  ),
-  value = list(
-    manual_dirty_price,
-    manual_clean_price,
-    dirty_price_from_yield,
-    clean_price_from_yield,
-    manual_dirty_price - dirty_price_from_yield,
-    manual_clean_price - clean_price_from_yield
-  )
+yen_simple_price <- GaussQuant::bond_price_from_simple_rate_YEN_GQL(
+  start_date = settlement_date_chr,
+  end_date = maturity_date_chr,
+  coupon_rate = yen_coupon_rate_pct,
+  simple_rate = yen_simple_rate_pct,
+  redemption = yen_redemption
 )
 
-GaussQuant::show_tbl_GQH(manual_cf_tbl, "Manual cashflow PV table")
-GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(manual_summary_tbl), "Manual PV check")
+yen_simple_rate_recalculated <- GaussQuant::bond_simple_rate_from_price_YEN_GQL(
+  start_date = settlement_date_chr,
+  end_date = maturity_date_chr,
+  coupon_rate = yen_coupon_rate_pct,
+  price = yen_simple_price,
+  redemption = yen_redemption
+)
+
+tbl_yen_simple <- tibble::tribble(
+  ~metric, ~value,
+  "remaining_years", yen_remaining_years,
+  "simple_rate_pct", yen_simple_rate_pct,
+  "clean_price_from_simple_rate", yen_simple_price,
+  "simple_rate_from_price_pct", yen_simple_rate_recalculated
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_yen_simple,
+  "単利利回りから求めたクリーンプライス"
+)
 ```
 
-手計算と関数による価格との差が十分に小さいことを確認する。これにより、キャッシュフロー、割引期間および経過利子の関係を検算できる。
+### II-1.3.2 経過利子とクリーンプライス
 
-### II-1.4.1 フラットな利回りによる価格評価
+債券市場で表示される単価は通常クリーンプライスである。受渡時には、直前利払日から受渡日までに発生した経過利子を加える。
 
-次に、最終利回りを一定とするフラットな割引曲線を構築し、割引エンジンから債券価格を計算する。
+$$
+\text{Dirty Price}
+=
+\text{Clean Price}
++
+\text{Accrued Interest}
+$$
 
-```{r flat-yield-pricing}
+### II-1.3.3 ダーティプライスと受渡金額
+
+クリーンプライスは市場での価格比較に適している一方、実際の受渡金額および将来キャッシュフローとの現在価値比較にはダーティプライスを用いる。したがって、利回りやスプレッドを逆算するときには、どの価格を入力としているかを明確にする必要がある。
+
+## II-1.4 利回りによる債券評価
+
+### II-1.4.1 単利利回りによる評価
+
+単利利回りは、クーポン収入と償還差損益を残存期間で年率化し、現在の単価に対する収益率として表す。計算が簡潔である一方、各キャッシュフローの発生時点を個別に割り引くものではない。
+
+### II-1.4.2 複利利回りによる評価
+
+複利利回りでは、各キャッシュフローをその支払時点まで複利で割り引く。市場単価を $P$、キャッシュフローを $CF_i$、支払時点を $t_i$ とすると、複利利回り $y$ は概念的に
+
+$$
+P =
+\sum_{i=1}^{n}
+\frac{CF_i}{(1+y/m)^{m t_i}}
+$$
+
+を満たす利回りである。ここで $m$ は年間複利回数である。
+
+本章では、ここで用いる市場単価を任意に与えるのではなく、前節の単利利回りから求めたクリーンプライスとする。したがって、計算の流れは **単利利回り → クリーンプライス → 複利利回り** となる。
+
+```{r}
+#| label: clean-price-to-compound-yield
+
+clean_price_input <- yen_simple_price
+
+yen_compound_yield_pct <- GaussQuant::bond_compound_yield_from_price_YEN_GQL(
+  start_date = settlement_date_chr,
+  end_date = maturity_date_chr,
+  coupon_rate = yen_coupon_rate_pct,
+  price = clean_price_input,
+  redemption = yen_redemption,
+  coupon_frequency = 2,
+  compound_frequency = 2
+)
+
+yen_compound_price <- GaussQuant::bond_price_from_compound_yield_YEN_GQL(
+  start_date = settlement_date_chr,
+  end_date = maturity_date_chr,
+  coupon_rate = yen_coupon_rate_pct,
+  compound_yield = yen_compound_yield_pct,
+  redemption = yen_redemption,
+  coupon_frequency = 2,
+  compound_frequency = 2
+)
+
+compound_yield <- yen_compound_yield_pct / 100
+
+tbl_compound_yield <- tibble::tribble(
+  ~item, ~value,
+  "simple_yield_pct", sprintf("%.8f", yen_simple_rate_pct),
+  "clean_price_from_simple_rate", sprintf("%.8f", clean_price_input),
+  "compound_yield_pct", sprintf("%.8f", yen_compound_yield_pct),
+  "price_from_compound_yield", sprintf("%.8f", yen_compound_price)
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_compound_yield,
+  "単利利回り → 単価 → 複利利回り"
+)
+```
+
+### II-1.4.3 フラットイールドによる評価
+
+フラットイールド評価では、満期ごとに異なるゼロレートを用いるのではなく、同一の利回りをすべての将来キャッシュフローに適用する。これはYTMによる債券評価を金利カーブの形式で表現したものと考えることができる。
+
+```{r}
+#| label: flat-yield-bond-pricing
+
 flat_yield_handle <- GaussQuant::bond_flat_forward_handle_GQL(
   settlement_date = settlement_date_chr,
-  rate = price_to_yield,
+  rate = compound_yield,
   day_counter = dc_30,
   compounding = cmpd_compounded,
   frequency = freq_semiannual
@@ -536,31 +440,66 @@ QuantLib::Instrument_setPricingEngine(
 
 flat_dirty_price <- QuantLib::Instrument_NPV(bond_obj)
 
-flat_yield_tbl <- tibble::tibble(
-  metric = c(
-    "flat_yield",
-    "dirty_price_from_flat_engine",
-    "dirty_price_from_yield",
-    "difference"
-  ),
-  value = list(
-    price_to_yield,
-    flat_dirty_price,
-    dirty_price_from_yield,
-    flat_dirty_price - dirty_price_from_yield
-  )
+tbl_flat_yield <- tibble::tribble(
+  ~item, ~value,
+  "flat_yield_pct", sprintf("%.8f", 100 * compound_yield),
+  "dirty_price", sprintf("%.8f", flat_dirty_price)
 )
 
-GaussQuant::show_tbl_GQH(GaussQuant::metric_tbl_display_GQH(flat_yield_tbl), "Flat yield pricing")
+GaussQuant::show_tbl_GQH(
+  tbl_flat_yield,
+  "フラットイールドによる債券評価"
+)
 ```
 
-フラットな利回りを使った割引価格と、最終利回りから直接求めたダーティ価格を比較する。
+### II-1.4.4 連続複利による再評価
 
-### II-1.4.2 Z-spreadによる価格調整
+離散複利で表された利回りは、同じ経済価値を保ったまま連続複利へ変換できる。半年複利 $y$ と等価な連続複利 $r_c$ は、
 
-Z-spreadは、基準となる割引カーブの各年限に一律に加えるスプレッドである。ここでは基準カーブに50ベーシスポイントを上乗せし、債券価格への影響を確認する。
+$$
+r_c
+=
+2\log\left(1+\frac{y}{2}\right)
+$$
 
-```{r z-spread-pricing}
+である。
+
+```{r}
+#| label: continuous-compound-revaluation
+
+continuous_yield <- 2 * log1p(compound_yield / 2)
+
+tbl_compounding_compare <- tibble::tribble(
+  ~yield_type, ~yield_pct,
+  "半年複利", 100 * compound_yield,
+  "連続複利", 100 * continuous_yield
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_compounding_compare,
+  "複利方式による利回り表示の比較"
+)
+```
+
+### II-1.4.5 評価方式による債券価格の比較
+
+ここまでの計算は、単利利回り、複利利回り、フラットイールドおよび連続複利が同じ債券を異なる方法で表現していることを示している。特に、単利利回りから市場単価を得た後、その単価を複利評価体系へ変換することが、Zスプレッドやアセットスワップへ進むための接続点となる。
+
+## II-1.5 債券の相対価値評価
+
+### II-1.5.1 金利カーブによる債券評価
+
+単一のYTMは債券全体を一つの利回りで表現する。これに対して金利カーブによる評価では、各キャッシュフローをその支払時点に対応する割引係数で評価する。
+
+この考え方によって、債券固有の利回りを市場の基準金利カーブから分離し、スプレッドとして評価できる。
+
+### II-1.5.2 Zスプレッド
+
+Zスプレッドは、基準となるゼロカーブの各年限へ一律に加算したときに、割引後キャッシュフローの合計が市場価格と一致する一定スプレッドである。
+
+```{r}
+#| label: z-spread-pricing
+
 z_spread <- 50 / 10000
 
 zspread_result <- GaussQuant::bond_npv_with_zspread_GQL(
@@ -572,82 +511,1106 @@ zspread_result <- GaussQuant::bond_npv_with_zspread_GQL(
   day_counter = dc_30
 )
 
-zspread_dirty_price <- zspread_result$npv
-
-zspread_tbl <- tibble::tibble(
-  metric = c(
-    "base_yield",
-    "z_spread_bp",
-    "dirty_price_before_spread",
-    "dirty_price_after_spread",
-    "price_difference"
-  ),
-  value = list(
-    price_to_yield,
-    10000 * z_spread,
-    flat_dirty_price,
-    zspread_dirty_price,
-    zspread_dirty_price - flat_dirty_price
-  )
+tbl_zspread <- tibble::tribble(
+  ~item, ~value,
+  "z_spread_bp", sprintf("%.4f", 10000 * z_spread),
+  "npv_with_zspread", sprintf("%.8f", zspread_result$npv)
 )
 
 GaussQuant::show_tbl_GQH(
-  GaussQuant::metric_tbl_display_GQH(zspread_tbl),
-  "Z-spread pricing"
+  tbl_zspread,
+  "Zスプレッドによる債券評価"
 )
 ```
 
-正のZ-spreadを加えると割引率が上昇するため、債券価格は低下する。Z-spreadには発行体の信用リスクだけでなく、流動性、市場需給および基準カーブとの相違も含まれ得るため、純粋なデフォルト確率を直接表す指標ではない。ここでは全期間への一律なスプレッドだけを扱い、年限別の非平行シフトは金利カーブの章で扱う。
+### II-1.5.3 アセットスワップ
 
-### II-1.4.3 債券キャッシュフロー
+アセットスワップでは、固定利付債のキャッシュフローを金利スワップの変動金利キャッシュフローへ変換し、債券をスワップ市場の基準金利と比較する。したがって、単純な「債券利回り－スワップレート」ではなく、債券価格、経過利子、固定クーポン、スワップの割引係数および変動金利レグの現在価値を同じ評価時点で整合させる必要がある。
 
-債券に含まれる将来のクーポンと元本償還を一覧で確認する。
+本章ではアセットスワップの位置づけと計算構造を確認し、実際のOIS・IRSカーブ構築およびマルチカーブ評価は第II-3章で扱う。第II-3章で構築したスワップカーブを用いることで、本節の債券評価を実際のIRS市場との相対価値評価へ接続できる。
 
-```{r bond-cashflow-table}
-bond_cf_tbl <- GaussQuant::bond_cashflow_table_GQL(
-  bond = bond_obj
-)
+### II-1.5.4 債券利回りとスワップレートの比較
 
-GaussQuant::show_tbl_GQH(bond_cf_tbl, "Bond cashflow table", n = 30)
-```
+債券の複利利回りと同年限のスワップレートとの差は相対価値を見るための直感的な指標となるが、これはアセットスワップ・スプレッドそのものではない。アセットスワップではキャッシュフロー単位の現在価値を一致させる必要がある。
 
-各行は支払日と支払額を表し、満期日のキャッシュフローには最終クーポンと元本償還が含まれる。
+この区別を明確にすることで、単利利回りから始まった債券評価を、金利スワップと共通の割引評価体系へ接続できる。
 
-## II-1.5 計算結果のまとめ
+## II-1.6 債券の金利感応度
 
-これまでに設定した日付、価格、利回りおよび金利リスク指標を一つの表にまとめる。
+### II-1.6.1 デュレーション
 
-```{r bond-analysis-summary}
-summary_tbl <- tibble::tibble(
-  metric = c(
-    "trade_date",
-    "settlement_date",
-    "issue_date",
-    "maturity_date",
-    "clean_price_input",
-    "yield_from_clean_price",
-    "clean_price_from_yield",
-    "dirty_price_from_yield",
-    "accrued_amount",
-    "modified_duration",
-    "convexity"
-  ),
-  value = c(
-    GaussQuant::iso_GQL(trade_date),
-    settlement_date_chr,
-    issue_date_chr,
-    maturity_date_chr,
-    sprintf("%.8f", clean_price_input),
-    sprintf("%.8f", price_to_yield),
-    sprintf("%.8f", clean_price_from_yield),
-    sprintf("%.8f", dirty_price_from_yield),
-    sprintf("%.8f", accrued_amount),
-    sprintf("%.8f", modified_duration),
-    sprintf("%.8f", convexity_value)
+デュレーションは、債券キャッシュフローの回収時点を現在価値で加重平均した指標である。債券の残存期間だけではなく、クーポンと利回りにも依存する。
+
+### II-1.6.2 修正デュレーション
+
+修正デュレーションは、利回り変化に対する価格の一次感応度を表す。
+
+$$
+\frac{\Delta P}{P}
+\approx
+-D_{\mathrm{mod}}\Delta y
+$$
+
+```{r}
+#| label: bond-duration
+
+# VBA定義に合わせ、利回り Y は「%」単位で扱う。
+# 例: 6.71047990% は Y = 6.71047990。
+#
+# P      : 単価（円 / 額面100円）
+# dP/dY  : 利回り1%変化あたりの単価変化（円）
+# BPV    : -dP/dY。数値はそのまま「銭 / bp」と一致する。
+#
+# 一般的な Modified Duration（利回りを小数で扱う定義）は
+#   D_mod = -100 / P * dP/dY
+# となる。
+
+bond_price_vba <- function(yield_pct) {
+  if (yield_pct == 0) {
+    return(
+      face_amount +
+        yen_coupon_rate_pct *
+          yen_remaining_years
+    )
+  }
+
+  alpha <- (1 + yield_pct / 200)^(-1)
+
+  face_amount * (
+    yen_coupon_rate_pct / yield_pct *
+      (1 - alpha^(2 * yen_remaining_years)) +
+      alpha^(2 * yen_remaining_years)
   )
+}
+bond_dP_dY_vba <- function(yield_pct) {
+  C <- yen_coupon_rate_pct
+  T <- yen_remaining_years
+
+  if (yield_pct == 0) {
+    return(
+      -(
+        C * T * (2 * T + 1) / 400 +
+          T
+      )
+    )
+  }
+
+  Y <- yield_pct
+  alpha <- (1 + Y / 200)^(-1)
+
+  -100 * C / Y^2 *
+    (1 - alpha^(2 * T)) -
+    (1 - C / Y) *
+      T *
+      alpha^(2 * T + 1)
+}
+
+bond_d2P_dY2_vba <- function(yield_pct) {
+  C <- yen_coupon_rate_pct
+  T <- yen_remaining_years
+
+  if (yield_pct == 0) {
+    return(
+      T * (2 * T + 1) / 20000 *
+        (
+          C * (T + 1) / 3 +
+            100
+        )
+    )
+  }
+
+  Y <- yield_pct
+  alpha <- (1 + Y / 200)^(-1)
+
+  T * (2 * T + 1) / 200 *
+    (1 - C / Y) *
+    alpha^(2 * T + 2) -
+    2 * C * T / Y^2 *
+      alpha^(2 * T + 1) +
+    200 * C / Y^3 *
+      (1 - alpha^(2 * T))
+}
+
+
+tbl_vba_zero_yield <- tibble::tribble(
+  ~item, ~value,
+  "price_Y0", bond_price_vba(0),
+  "dP_dY_Y0", bond_dP_dY_vba(0),
+  "BPV_sen_per_bp_Y0", -bond_dP_dY_vba(0),
+  "d2P_dY2_Y0", bond_d2P_dY2_vba(0),
+  "modified_duration_Y0",
+    -100 * bond_dP_dY_vba(0) /
+      bond_price_vba(0),
+  "convexity_Y0",
+    10000 * bond_d2P_dY2_vba(0) /
+      bond_price_vba(0)
 )
 
-GaussQuant::show_tbl_GQH(summary_tbl, "Bond analysis summary", n = 20)
+GaussQuant::show_tbl_GQH(
+  tbl_vba_zero_yield,
+  "VBA定義：利回り0%の場合"
+)
 
-cat("\nchapter01 bonds stable rewrite completed successfully.\n")
+vba_price <- bond_price_vba(yen_compound_yield_pct)
+vba_dP_dY <- bond_dP_dY_vba(yen_compound_yield_pct)
+vba_d2P_dY2 <- bond_d2P_dY2_vba(yen_compound_yield_pct)
+
+bpv_sen_per_bp <- -vba_dP_dY
+bpv_yen_per_bp <- bpv_sen_per_bp / 100
+
+modified_duration <- (
+  -100 *
+    vba_dP_dY /
+    vba_price
+)
+
+convexity_value <- (
+  10000 *
+    vba_d2P_dY2 /
+    vba_price
+)
+
+vba_mduration_pct_unit <- (
+  -vba_dP_dY /
+    vba_price
+)
+
+vba_convexity_pct_unit <- (
+  vba_d2P_dY2 /
+    vba_price
+)
+
+tbl_yen_risk <- GaussQuant::bond_risk_from_compound_yield_YEN_GQL(
+  start_date = settlement_date_chr,
+  end_date = maturity_date_chr,
+  coupon_rate = yen_coupon_rate_pct,
+  compound_yield = yen_compound_yield_pct,
+  redemption = yen_redemption,
+  coupon_frequency = 2,
+  compound_frequency = 2,
+  accrued_interest = 0
+)
+
+tbl_risk_compare <- tibble::tribble(
+  ~item, ~vba_formula, ~gaussquant,
+  "price", vba_price, yen_compound_price,
+  "modified_duration", modified_duration,
+    tbl_yen_risk$modified_duration[[1]],
+  "convexity", convexity_value,
+    tbl_yen_risk$convexity[[1]],
+  "bpv_yen_per_bp", bpv_yen_per_bp,
+    tbl_yen_risk$bpv_yen[[1]],
+  "bpv_sen_per_bp", bpv_sen_per_bp,
+    100 * tbl_yen_risk$bpv_yen[[1]]
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_risk_compare,
+  "VBA定義とGaussQuantによる金利リスクの照合"
+)
+
+tbl_vba_derivatives <- tibble::tribble(
+  ~item, ~value,
+  "dP_dY_yen_per_1pct", vba_dP_dY,
+  "d2P_dY2_yen_per_pct2", vba_d2P_dY2,
+  "vba_mDuration_per_pct", vba_mduration_pct_unit,
+  "vba_convexity_per_pct2", vba_convexity_pct_unit,
+  "BPV_sen_per_bp", bpv_sen_per_bp
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_vba_derivatives,
+  "VBAの%単位による微分量"
+)
 ```
+
+### II-1.6.3 コンベクシティ
+
+デュレーションが価格・利回り曲線の一次の傾きを表すのに対し、コンベクシティは二次の曲率を表す。利回り変化が大きくなるほど、一次近似だけでは価格変化を十分に説明できなくなる。
+
+### II-1.6.4 BPVによる価格感応度
+
+本章ではVBAの定義に合わせ、複利利回り $Y$ を **%単位**で扱う。したがって、$Y=6.71047990$ は6.71047990%を意味する。
+
+単価 $P$ を「円／額面100円」で表すと、
+
+$$
+\mathrm{BPV}
+=
+-\frac{\partial P}{\partial Y}
+$$
+
+と定義できる。この $-\partial P/\partial Y$ は「円／1%」であるが、1bp = 0.01%、1円 = 100銭であるため、数値はそのまま **銭／bp** と一致する。
+
+本例では、
+
+$$
+-\frac{\partial P}{\partial Y}
+\approx
+15.1421
+$$
+
+であるため、BPVは約15.1421銭／bp、すなわち0.151421円／bpである。
+
+一般的なModified Durationは利回りを小数で扱う定義なので、
+
+$$
+D_{\mathrm{mod}}
+=
+-\frac{100}{P}
+\frac{\partial P}{\partial Y}
+$$
+
+となる。VBAで%単位の微分値を扱う場合には、この100倍の換算を明示する必要がある。
+
+## II-1.7 数値解法による複利利回りの計算
+
+### II-1.7.1 債券単価と利回りの逆問題
+
+複利利回りから債券価格を求める計算は直接評価である。一方、市場で観測されたクリーンプライスから複利利回りを求めるには、
+
+$$
+f(y)
+=
+P_{\mathrm{model}}(y)
+-
+P_{\mathrm{market}}
+=
+0
+$$
+
+を満たす $y$ を求める必要がある。これは典型的な非線形方程式の求根問題である。
+
+数値解法の違いを明確にするため、ここでも本章の冒頭から使用している**残存40年の固定利付債**をそのまま用いる。年2回払い、額面100、クーポン7.50%、単利利回り6.515%であり、単利利回りから求めたクリーンプライスを共通の市場価格とする。その同じクリーンプライスから複利利回りを逆算し、各数値解法の精度と計算時間を比較する。
+
+40年債では半年ごとのキャッシュフローが80回存在するため、短期債よりも反復計算の差が表れやすい。実務上も、超長期国債や長期社債の評価では、価格計算と利回り計算を大量に繰り返すため、求根アルゴリズムの速度と安定性が重要となる。
+
+```{r}
+#| label: yield-solver-40y-benchmark
+
+benchmark_face <- face_amount
+benchmark_coupon_rate_pct <- 100 * coupon_rate
+benchmark_simple_yield_pct <- yen_simple_rate_pct
+benchmark_years <- 40
+benchmark_frequency <- 2
+benchmark_periods <- benchmark_years * benchmark_frequency
+benchmark_redemption <- yen_redemption
+
+# 第II-1章で一貫して使用している40年債のクリーンプライス
+benchmark_market_price <- clean_price_input
+
+benchmark_coupon <- (
+  benchmark_face *
+  benchmark_coupon_rate_pct / 100 /
+  benchmark_frequency
+)
+
+tbl_solver_benchmark <- tibble::tribble(
+  ~item, ~value,
+  "remaining_years", benchmark_years,
+  "coupon_rate_pct", benchmark_coupon_rate_pct,
+  "simple_yield_pct", benchmark_simple_yield_pct,
+  "coupon_frequency", benchmark_frequency,
+  "cashflow_count", benchmark_periods,
+  "clean_price_from_simple_yield", benchmark_market_price
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_solver_benchmark,
+  "40年債の数値解法ベンチマーク条件"
+)
+```
+
+同じ40年債について、複利利回り $y$ から計算される価格関数を定義する。
+
+```{r}
+#| label: yield-solver-common-functions
+
+# 数値解法でもVBAと同じく、複利利回りは%単位で扱う。
+# 例: 6.71047990% -> yield_pct = 6.71047990
+
+bond_price_from_yield <- function(yield_pct) {
+  bond_price_vba(yield_pct)
+}
+
+yield_objective <- function(yield_pct) {
+  bond_price_from_yield(yield_pct) -
+    benchmark_market_price
+}
+
+yield_derivative <- function(yield_pct) {
+  bond_dP_dY_vba(yield_pct)
+}
+```
+
+### II-1.7.2 ニュートン・ラフソン法
+
+ニュートン・ラフソン法は、現在の推定値における関数値と微分値から次の推定値を求める。
+
+$$
+y_{k+1}
+=
+y_k
+-
+\frac{f(y_k)}{f'(y_k)}
+$$
+
+ここではVBAと同じく $Y$ を **%単位**で扱う。つまり、6.71047990% は $Y=6.71047990$ とする。小数表記の $0.067104799$ ではない点が重要である。
+
+半年複利の割引係数を
+
+$$
+\alpha=
+\left(
+1+\frac{Y}{200}
+\right)^{-1}
+$$
+
+とおく。
+
+残存年数を $T$、年2回払いのクーポン率を $C$（%）、額面を100とすると、$Y\neq0$ の場合の債券単価は
+
+$$
+P
+=
+100
+\left\{
+\frac{C}{Y}
+\left(
+1-\alpha^{2T}
+\right)
++
+\alpha^{2T}
+\right\}.
+$$
+
+また、$Y=0$ の場合は
+
+$$
+P=100+CT
+$$
+
+となる。
+
+この価格関数を、%単位の利回り $Y$ で微分する。VBAではBPVを
+
+$$
+\boxed{
+\mathrm{BPV}
+=
+-\frac{\partial P}{\partial Y}
+}
+$$
+
+と定義している。
+
+ここで $\partial P/\partial Y$ の単位は「円／1 percentage point」である。すなわち、利回りが1.00%変化したときの、額面100円あたりの単価変化を表す。
+
+一方、
+
+$$
+1\mathrm{bp}=0.01\%
+$$
+
+であり、
+
+$$
+1\text{円}=100\text{銭}
+$$
+
+である。
+
+したがって、利回り変化をbp、単価変化を銭で表すと、
+
+$$
+\Delta p(\text{銭})
+=
+\Delta P(\text{円})
+\times 100
+$$
+
+である。
+
+また、
+
+$$
+\Delta Y(\%)
+=
+\frac{\Delta y(\mathrm{bp})}{100}
+$$
+
+なので、
+
+$$
+\Delta p(\text{銭})
+\approx
+\frac{\partial P}{\partial Y}
+\Delta Y(\%)
+\times 100
+$$
+
+に代入すると、
+
+$$
+\Delta p(\text{銭})
+\approx
+\frac{\partial P}{\partial Y}
+\frac{\Delta y(\mathrm{bp})}{100}
+\times 100
+$$
+
+となる。したがって、
+
+$$
+\boxed{
+\Delta p(\text{銭})
+\approx
+\frac{\partial P}{\partial Y}
+\Delta y(\mathrm{bp})
+}
+$$
+
+であり、1bpの変化に対しては、
+
+$$
+\boxed{
+\mathrm{BPV}(\text{銭}/\mathrm{bp})
+=
+-\frac{\partial P}{\partial Y}
+}
+$$
+
+となる。
+
+つまり、%単位で計算した $-\partial P/\partial Y$ の**数値そのもの**が、銭／bpで表したBPVになる。
+
+例えば本章の40年債では、
+
+$$
+-\frac{\partial P}{\partial Y}
+\approx
+15.1421
+$$
+
+なので、
+
+$$
+\mathrm{BPV}
+\approx
+15.1421\ \text{銭}/\mathrm{bp}
+$$
+
+である。円単位では、
+
+$$
+15.1421\text{銭}
+=
+0.151421\text{円}
+$$
+
+なので、
+
+$$
+\mathrm{BPV}
+\approx
+0.151421\ \text{円}/\mathrm{bp}
+$$
+
+となる。
+
+同様に、Convexityでは価格関数の2階微分を用いる。VBAの定義では $Y$ を%単位で扱うため、
+
+$$
+\mathrm{Convexity}_{\%}
+=
+\frac{1}{P+\mathrm{Acc}}
+\frac{\partial^2 P}{\partial Y^2}
+$$
+
+である。
+
+ただし、一般的なConvexityは利回りを小数単位で扱う。そのため、%単位の2階微分から通常のConvexityへ換算する場合には、
+
+$$
+\boxed{
+\mathrm{Convexity}
+=
+\frac{10000}{P+\mathrm{Acc}}
+\frac{\partial^2 P}{\partial Y^2}
+}
+$$
+
+となる。1階微分では100倍、2階微分では $100^2=10000$ 倍になる点が重要である。
+
+また、利回り変化をbp、単価変化を銭で表した2次近似では、
+
+$$
+\Delta p(\text{銭})
+\approx
+\frac{\partial P}{\partial Y}
+\Delta y(\mathrm{bp})
++
+\frac{1}{2}
+\frac{1}{100}
+\frac{\partial^2 P}{\partial Y^2}
+\left\{
+\Delta y(\mathrm{bp})
+\right\}^2.
+$$
+
+したがって、bp・銭単位で2次項を使う場合には、2階微分を
+
+$$
+\boxed{
+\frac{\partial^2 p}
+{\partial y(\mathrm{bp})^2}
+=
+\frac{1}{100}
+\frac{\partial^2 P}{\partial Y^2}
+}
+$$
+
+として扱う。
+
+### $Y=0$ の場合
+
+VBAでは $Y=0$ を別ケースとして明示的に扱う。半年複利の割引係数は
+
+$$
+\alpha=
+\left(
+1+\frac{Y}{200}
+\right)^{-1}
+$$
+
+であり、$Y=0$ では $\alpha=1$ となる。
+
+債券単価は、
+
+$$
+\boxed{
+P=100+CT
+}
+$$
+
+となる。
+
+1階微分は、
+
+$$
+\boxed{
+\left.
+\frac{\partial P}{\partial Y}
+\right|_{Y=0}
+=
+-
+\left\{
+\frac{CT(2T+1)}{400}
++
+T
+\right\}
+}
+$$
+
+である。
+
+したがって、
+
+$$
+\boxed{
+\mathrm{BPV}_{Y=0}
+=
+-
+\left.
+\frac{\partial P}{\partial Y}
+\right|_{Y=0}
+=
+\frac{CT(2T+1)}{400}
++
+T
+}
+$$
+
+となり、この数値はVBAの単位規約ではそのまま銭／bpである。
+
+2階微分は、
+
+$$
+\boxed{
+\left.
+\frac{\partial^2 P}{\partial Y^2}
+\right|_{Y=0}
+=
+\frac{T(2T+1)}{20000}
+\left\{
+\frac{C(T+1)}{3}
++
+100
+\right\}
+}
+$$
+
+である。
+
+したがって、$Y=0$ のModified Durationは、
+
+$$
+\boxed{
+D_{\mathrm{mod},Y=0}
+=
+-\frac{100}{P+\mathrm{Acc}}
+\left.
+\frac{\partial P}{\partial Y}
+\right|_{Y=0}
+}
+$$
+
+Convexityは、
+
+$$
+\boxed{
+\mathrm{Convexity}_{Y=0}
+=
+\frac{10000}{P+\mathrm{Acc}}
+\left.
+\frac{\partial^2 P}{\partial Y^2}
+\right|_{Y=0}
+}
+$$
+
+となる。
+
+なお、受渡日が利払日で経過利子 $\mathrm{Acc}=0$ の場合は、上式の $P+\mathrm{Acc}$ は単に $P$ となる。
+
+### $Y\neq0$ の解析微分
+
+$Y\neq0$ では、
+
+$$
+P
+=
+100
+\left\{
+\frac{C}{Y}
+(1-\alpha^{2T})
++
+\alpha^{2T}
+\right\},
+\qquad
+\alpha=
+\left(1+\frac{Y}{200}\right)^{-1}
+$$
+
+を直接微分する。
+
+VBAで使用する1階微分は、
+
+$$
+\boxed{
+\frac{\partial P}{\partial Y}
+=
+-100\frac{C}{Y^2}
+(1-\alpha^{2T})
+-
+\left(
+1-\frac{C}{Y}
+\right)
+T\alpha^{2T+1}
+}
+$$
+
+である。
+
+2階微分は、
+
+$$
+\boxed{
+\frac{\partial^2P}{\partial Y^2}
+=
+\frac{T(2T+1)}{200}
+\left(
+1-\frac{C}{Y}
+\right)
+\alpha^{2T+2}
+-
+2\frac{CT}{Y^2}
+\alpha^{2T+1}
++
+200\frac{C}{Y^3}
+(1-\alpha^{2T})
+}
+$$
+
+となる。
+
+これにより、価格 $P$、BPV、Modified Duration、Convexityをすべて同一の価格関数と同一の%単位規約から計算できる。
+
+さらに、一般的なModified Durationは利回りを小数単位で定義するため、VBAの%単位微分との関係は
+
+$$
+D_{\mathrm{mod}}
+=
+-\frac{100}{P+\mathrm{Acc}}
+\frac{\partial P}{\partial Y}
+$$
+
+である。受渡日が利払日で経過利子が0なら、
+
+$$
+D_{\mathrm{mod}}
+=
+-\frac{100}{P}
+\frac{\partial P}{\partial Y}
+$$
+
+となる。
+
+ニュートン・ラフソン法では、この解析微分 $\partial P/\partial Y$ をそのまま傾きとして使用する。価格方程式
+
+$$
+f(Y)=P(Y)-P_{\mathrm{market}}=0
+$$
+
+に対して、
+
+$$
+Y_{n+1}
+=
+Y_n
+-
+\frac{
+P(Y_n)-P_{\mathrm{market}}
+}{
+\partial P/\partial Y
+}
+$$
+
+と更新する。この式では $Y$ 自体が%単位なので、途中で $10^{-4}$ や100を追加で掛ける必要はない。
+
+```{r}
+#| label: yield-newton-method
+
+# ニュートン・ラフソン法は、VBAと同じ解析微分 dP/dY をそのまま使用する。
+# Yの単位は%なので、更新式にも追加の1e-4換算は不要。
+
+yield_newton <- function(
+  initial_yield_pct = benchmark_simple_yield_pct,
+  tolerance = 1e-12,
+  max_iter = 100L
+) {
+  purrr::reduce(
+    seq_len(max_iter),
+    .init = list(
+      yield_pct = initial_yield_pct,
+      converged = FALSE
+    ),
+    .f = function(state, iteration) {
+      if (state$converged) {
+        return(state)
+      }
+
+      f_value <- yield_objective(state$yield_pct)
+      derivative <- yield_derivative(state$yield_pct)
+
+      next_yield_pct <- (
+        state$yield_pct -
+          f_value / derivative
+      )
+
+      list(
+        yield_pct = next_yield_pct,
+        converged = abs(f_value) < tolerance
+      )
+    }
+  )$yield_pct
+}
+
+yield_newton_result <- yield_newton()
+
+tbl_newton_check <- tibble::tribble(
+  ~item, ~value,
+  "initial_yield_pct", benchmark_simple_yield_pct,
+  "compound_yield_pct", yield_newton_result,
+  "price", bond_price_from_yield(yield_newton_result),
+  "dP_dY", yield_derivative(yield_newton_result),
+  "BPV_sen_per_bp", -yield_derivative(yield_newton_result),
+  "modified_duration",
+    -100 *
+      yield_derivative(yield_newton_result) /
+      bond_price_from_yield(yield_newton_result)
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_newton_check,
+  "ニュートン・ラフソン法：VBA解析微分による複利利回り計算"
+)
+```
+
+### II-1.7.3 二分法
+
+二分法は、根を挟む区間を半分ずつ狭めていく方法である。収束速度はニュートン・ラフソン法より遅いが、適切に根を挟む区間を設定すれば安定して解を求められる。
+
+```{r}
+#| label: yield-bisection-method
+
+yield_bisection <- function(
+  lower = -1,
+  upper = 20,
+  tolerance = 1e-12,
+  max_iter = 200L
+) {
+  result <- purrr::reduce(
+    seq_len(max_iter),
+    .init = list(
+      lower = lower,
+      upper = upper,
+      root = NA_real_,
+      converged = FALSE
+    ),
+    .f = function(state, iteration) {
+      if (state$converged) {
+        return(state)
+      }
+
+      midpoint <- (
+        state$lower + state$upper
+      ) / 2
+
+      f_lower <- yield_objective(state$lower)
+      f_mid <- yield_objective(midpoint)
+
+      next_state <- if (
+        sign(f_lower) == sign(f_mid)
+      ) {
+        list(
+          lower = midpoint,
+          upper = state$upper
+        )
+      } else {
+        list(
+          lower = state$lower,
+          upper = midpoint
+        )
+      }
+
+      list(
+        lower = next_state$lower,
+        upper = next_state$upper,
+        root = midpoint,
+        converged = abs(f_mid) < tolerance ||
+          abs(state$upper - state$lower) < tolerance
+      )
+    }
+  )
+
+  result$root
+}
+
+yield_bisection_result <- yield_bisection()
+```
+
+### II-1.7.4 Brent法
+
+Rの `uniroot()` はBrent法系の区間求根アルゴリズムを用いる。二分法の堅牢性と補間による高速な収束を組み合わせた実用的な方法である。
+
+```{r}
+#| label: yield-brent-method
+
+yield_brent <- function() {
+  stats::uniroot(
+    yield_objective,
+    interval = c(-1, 20),
+    tol = 1e-12
+  )$root
+}
+
+yield_brent_result <- yield_brent()
+```
+
+### II-1.7.5 多項式求根法
+
+規則的な固定利付債では、
+
+$$
+x=
+\frac{1}{1+Y/200}
+$$
+
+と置くことで、価格方程式を $x$ の多項式として表現できる。この場合、Rの `polyroot()` を利用してすべての複素根を求め、経済的に意味のある実根を選択できる。
+
+40年・半年払いでは80次多項式となるため、短期債の場合よりも多項式求根法の計算負荷が明確になる。
+
+```{r}
+#| label: yield-polyroot-method
+
+yield_polyroot <- function() {
+  poly_coefficients <- c(
+    -benchmark_market_price,
+    rep(
+      benchmark_coupon,
+      benchmark_periods - 1L
+    ),
+    benchmark_coupon + benchmark_face
+  )
+
+  poly_roots <- polyroot(poly_coefficients)
+
+  valid_poly_roots <- poly_roots[
+    abs(Im(poly_roots)) < 1e-10 &
+      Re(poly_roots) > 0
+  ]
+
+  yield_candidates <- (
+    1 / Re(valid_poly_roots) - 1
+  ) * 200
+
+  yield_candidates[
+    which.min(
+      abs(
+        purrr::map_dbl(
+          yield_candidates,
+          yield_objective
+        )
+      )
+    )
+  ]
+}
+
+yield_polyroot_result <- yield_polyroot()
+```
+
+### II-1.7.6 GaussQuantによる利回り計算
+
+GaussQuantについても同じ40年債、同じクリーンプライスを用いる。比較対象をそろえるため、評価日を発行日とし、半年払い・30/360 Bond Basisで規則的な40年債を構築する。
+
+```{r}
+#| label: yield-gaussquant-40y-method
+
+# 第II-1章で使用している同一の40年債オブジェクトをそのまま利用する
+GaussQuant::set_eval_date_GQL(trade_date)
+
+yield_gaussquant <- function() {
+  100 * GaussQuant::bond_yield_from_clean_safe_GQL(
+    bond = bond_obj,
+    clean_price = benchmark_market_price,
+    day_counter = dc_30,
+    compounding = cmpd_compounded,
+    frequency = freq_semiannual
+  )
+}
+
+yield_gaussquant_result <- yield_gaussquant()
+```
+
+### II-1.7.7 数値解法の精度と計算速度
+
+最後に、**計算結果だけでなく計算時間も同時に比較する**。一回だけの実行時間はOSや他プロセスの影響を受けやすいため、各解法を同じ回数だけ繰り返し、総経過時間と1回当たり平均時間を計測する。
+
+ここでは各解法を500回実行する。比較の目的は絶対的な速度ランキングではなく、同一PC・同一Rセッション・同一40年債という条件で、アルゴリズムごとの相対的な計算コストを確認することである。
+
+```{r}
+#| label: yield-simple-compound-reference
+
+tbl_yield_reference <- tibble::tribble(
+  ~yield_type, ~yield_pct,
+  "市場慣行の単利利回り", benchmark_simple_yield_pct,
+  "単価から逆算した複利利回り", yen_compound_yield_pct
+)
+
+GaussQuant::show_tbl_GQH(
+  tbl_yield_reference,
+  "単利利回りと複利利回りの基準値"
+)
+
+#| label: yield-solver-timing
+
+benchmark_repetitions <- 500L
+
+benchmark_solver <- function(
+  method,
+  solver,
+  result,
+  price_function = NULL
+) {
+  timing <- system.time(
+    purrr::map_dbl(
+      seq_len(benchmark_repetitions),
+      ~ solver()
+    )
+  )
+
+  price_error <- if (is.null(price_function)) {
+    NA_real_
+  } else {
+    price_function(result) -
+      benchmark_market_price
+  }
+
+  tibble::tibble(
+    method = method,
+    yield = result,
+    price_error = price_error,
+    repetitions = benchmark_repetitions,
+    elapsed_ms = unname(timing[["elapsed"]]) * 1000,
+    average_us = (
+      unname(timing[["elapsed"]]) *
+        1e6 /
+        benchmark_repetitions
+    )
+  )
+}
+
+tbl_solver_timing <- dplyr::bind_rows(
+  benchmark_solver(
+    "ニュートン・ラフソン法",
+    yield_newton,
+    yield_newton_result,
+    bond_price_from_yield
+  ),
+  benchmark_solver(
+    "二分法",
+    yield_bisection,
+    yield_bisection_result,
+    bond_price_from_yield
+  ),
+  benchmark_solver(
+    "Brent法（uniroot）",
+    yield_brent,
+    yield_brent_result,
+    bond_price_from_yield
+  ),
+  benchmark_solver(
+    "多項式求根法（polyroot）",
+    yield_polyroot,
+    yield_polyroot_result,
+    bond_price_from_yield
+  ),
+  benchmark_solver(
+    "GaussQuant",
+    yield_gaussquant,
+    yield_gaussquant_result,
+    NULL
+  )
+) |>
+  dplyr::arrange(.data$average_us)
+
+tbl_solver_timing_display <- tbl_solver_timing |>
+  dplyr::transmute(
+    method,
+    compound_yield_pct = sprintf("%.6f", yield),
+    calculation_time_ms = sprintf(
+      "%.2f",
+      elapsed_ms / benchmark_repetitions
+    )
+  )
+GaussQuant::show_tbl_GQH(
+  tbl_solver_timing_display,
+  "40年債：同一複利利回りを求める数値解法の比較"
+)
+```
+
+以上の結果から、本例では Brent法 → ニュートン・ラフソン法 → 二分法 → polyroot の順に高速な結果となった。Brent法は二分法の安定性と補間法の高速性を組み合わせた手法であり、本例のように価格関数が利回りに対して滑らかで単調な問題では特に有効である。一方、ニュートン・ラフソン法は解析微分を必要とするものの高い収束性能を持ち、二分法は計算速度では劣るものの安定性に優れる。polyrootは規則的なキャッシュフローでは利用できるが、本例の40年債では80次多項式となるため計算負荷が大きくなる。
+
+GaussQuantも同じ40年債、同じクリーンプライスを入力としている。ただし、単純な価格式だけを解く自作アルゴリズムとは異なり、債券オブジェクト、利払スケジュール、日数計算規則、価格種別などのマーケットコンベンションを含めて処理する。そのため、速度差には求根法そのものの差だけでなく、実務的な債券評価処理のオーバーヘッドも含まれる。
+
+したがって、数値解法の選択では単純な計算速度だけでなく、収束速度、安定性、微分計算の可否、マーケットコンベンションへの対応を含めて評価することが重要である。この考え方は、後続章で扱う金利カーブのブートストラップ、インプライド・ボラティリティ、モデル・キャリブレーションにも共通する。
