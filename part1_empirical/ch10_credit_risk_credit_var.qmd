@@ -1,0 +1,800 @@
+---
+title: "第I-10章 信用リスクとCredit VaR"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+第9章では、市場価格の変動からポートフォリオ損失分布を構築し、VaRとExpected Shortfall（ES）によってテールリスクを計測した。本章では同じ考え方を信用リスクへ拡張する。
+
+市場リスクでは株価や金利などの市場変数が損益を生み出す。信用リスクでは、企業のデフォルトと回収率が損失を生み出す。さらに重要なのは、企業のデフォルトが互いに独立ではないことである。景気悪化のような共通要因によって、多数の企業の信用状態が同時に悪化する可能性がある。
+
+本章ではOne-Factor Gaussianモデルを使ってこの依存関係を表現する。
+
+```text
+企業別 PD・EAD・LGD
+        ↓
+One-Factor Gaussian
+        ↓
+相関したデフォルト
+        ↓
+ポートフォリオ損失
+        ↓
+損失分布
+   ├─ Expected Loss
+   ├─ Credit VaR
+   └─ Expected Shortfall
+```
+
+この損失分布は、第11章でそのままCLOのトランシェ損失へ変換する。
+
+## I-10.1 信用リスクとポートフォリオ損失
+
+企業 \(i\) の信用損失は、基本的にExposure at Default（EAD）、Loss Given Default（LGD）、デフォルト指標の積として表せる。
+
+\[
+L_i
+=
+EAD_i
+LGD_i
+\mathbf{1}_{\{Default_i\}}
+\]
+
+ポートフォリオ全体の損失は
+
+\[
+L
+=
+\sum_{i=1}^{N}
+EAD_i
+LGD_i
+\mathbf{1}_{\{Default_i\}}
+\]
+
+となる。
+
+企業 \(i\) のデフォルト確率を \(PD_i\) とすると、期待損失は
+
+\[
+EL_i
+=
+PD_i EAD_i LGD_i
+\]
+
+であり、ポートフォリオでは
+
+\[
+EL
+=
+\sum_{i=1}^{N}
+PD_i EAD_i LGD_i
+\]
+
+となる。
+
+しかし、リスク管理で問題となるのは平均的な損失だけではない。多数の企業が同時にデフォルトした場合に、損失分布の裾がどこまで広がるかを把握する必要がある。
+
+## I-10.2 デフォルト相関
+
+仮にすべての企業のデフォルトが独立なら、十分に分散されたポートフォリオでは個別企業のデフォルトリスクの多くを分散できる。
+
+実際には、企業は共通のマクロ経済環境にさらされている。
+
+景気後退、金利上昇、資金調達環境の悪化などは、複数企業の信用状態へ同時に影響する。そのため、信用ポートフォリオではデフォルト間の依存関係をモデル化する必要がある。
+
+本章では、各企業の信用状態を一つの共通因子と企業固有因子に分解する。
+
+## I-10.3 One-Factor Gaussianモデル
+
+企業 \(i\) の潜在的な資産状態を
+
+\[
+X_i
+=
+\sqrt{\rho_i}Z
++
+\sqrt{1-\rho_i}\epsilon_i
+\]
+
+とする。
+
+ここで、
+
+\[
+Z\sim N(0,1)
+\]
+
+はすべての企業に共通するシステマティック・ファクター、
+
+\[
+\epsilon_i\sim N(0,1)
+\]
+
+は企業固有のファクターである。
+
+\(Z\) とすべての \(\epsilon_i\) は互いに独立とする。
+
+\(\rho_i\) は企業 \(i\) の潜在変数が共通因子から受ける影響の強さを表す。共通の \(\rho\) を仮定した場合、異なる企業 \(i,j\) の潜在変数の相関は
+
+\[
+Corr(X_i,X_j)=\rho
+\]
+
+となる。
+
+企業 \(i\) は
+
+\[
+X_i
+<
+\Phi^{-1}(PD_i)
+\]
+
+となったときデフォルトすると定義する。
+
+この構造により、各企業の無条件デフォルト確率を \(PD_i\) に保ちながら、共通因子を通じたデフォルト依存を表現できる。
+
+## I-10.4 条件付きデフォルト確率
+
+共通因子 \(Z=z\) が与えられたとき、企業 \(i\) の条件付きデフォルト確率は
+
+\[
+PD_i(z)
+=
+\Phi
+\left(
+\frac{
+\Phi^{-1}(PD_i)
+-
+\sqrt{\rho_i}z
+}{
+\sqrt{1-\rho_i}
+}
+\right)
+\]
+
+となる。
+
+\(z\) が大きく低下すると、条件付きPDは上昇する。つまり、共通因子が悪化したシナリオでは多数企業のデフォルト確率が同時に上昇する。
+
+これがOne-Factor Gaussianモデルにおけるデフォルト依存の中心である。
+
+## I-10.5 信用ポートフォリオの作成
+
+まず、モデルの動きを明確にするため、100社からなる仮想的な信用ポートフォリオを作成する。
+
+```{r}
+#| label: create-credit-portfolio
+
+set_random_seed_LFL(20260918)
+
+n_obligors <- 100L
+
+tbl_credit_portfolio <- tibble(
+  obligor_ID = seq_len(n_obligors),
+  PD = seq(
+    0.005,
+    0.05,
+    length.out = n_obligors
+  ),
+  EAD = 100,
+  LGD = 0.60,
+  rho = 0.20
+) |>
+  mutate(
+    expected_loss = PD * EAD * LGD
+  )
+
+show_table_LFL(tbl_credit_portfolio)
+```
+
+ポートフォリオの総EADと期待損失を確認する。
+
+```{r}
+#| label: summarize-credit-portfolio
+
+tbl_credit_portfolio_summary <- tbl_credit_portfolio |>
+  summarise(
+    obligors = n(),
+    total_EAD = sum(EAD),
+    expected_loss = sum(expected_loss),
+    expected_loss_rate =
+      expected_loss / total_EAD
+  )
+
+show_table_LFL(
+  tbl_credit_portfolio_summary
+)
+```
+
+## I-10.6 共通因子と条件付きPD
+
+代表的な企業について、共通因子 \(Z\) の変化が条件付きPDへどのように影響するかを確認する。
+
+```{r}
+#| label: conditional-default-probability
+
+representative_PD <- 0.02
+representative_rho <- 0.20
+
+tbl_conditional_PD <- tibble(
+  systematic_factor = seq(
+    -4,
+    4,
+    length.out = 200
+  )
+) |>
+  mutate(
+    conditional_PD = pnorm(
+      (
+        qnorm(representative_PD) -
+          sqrt(representative_rho) *
+            systematic_factor
+      ) /
+        sqrt(1 - representative_rho)
+    )
+  )
+
+plot_conditional_PD <- tbl_conditional_PD |>
+  ggplot(
+    aes(
+      x = systematic_factor,
+      y = conditional_PD
+    )
+  ) +
+  geom_line() +
+  labs(
+    x = "Systematic factor Z",
+    y = "Conditional PD"
+  )
+
+show_plot_LFL(plot_conditional_PD)
+```
+
+共通因子が悪化するほど条件付きPDが急速に上昇する。信用ポートフォリオのテール損失は、この共通因子の極端な悪化によって生じる。
+
+## I-10.7 モンテカルロ法による相関デフォルト
+
+One-Factor Gaussianモデルをモンテカルロ法で実装する。
+
+各シナリオで一つの共通因子 \(Z\) を生成し、各企業について独立な固有因子 \(\epsilon_i\) を生成する。
+
+```{r}
+#| label: configure-credit-future-plan
+
+future::plan(
+  future::multisession,
+  workers = max(
+    1,
+    future::availableCores() - 1
+  )
+)
+```
+
+シミュレーションはバッチ単位で並列化する。乱数は `furrr_options(seed = TRUE)` により再現可能とする。
+
+```{r}
+#| label: simulate-credit-losses
+
+set_random_seed_LFL(20260918)
+
+n_scenarios <- 100000L
+n_batches <- 20L
+n_per_batch <- n_scenarios / n_batches
+
+vec_PD <- tbl_credit_portfolio$PD
+vec_EAD <- tbl_credit_portfolio$EAD
+vec_LGD <- tbl_credit_portfolio$LGD
+vec_rho <- tbl_credit_portfolio$rho
+
+lst_credit_losses <- furrr::future_map(
+  seq_len(n_batches),
+  \(batch_id) {
+    purrr::map_dbl(
+      seq_len(n_per_batch),
+      \(scenario_id) {
+        systematic_factor <- rnorm(1)
+
+        vec_idiosyncratic <- rnorm(
+          n_obligors
+        )
+
+        vec_latent_variable <-
+          sqrt(vec_rho) *
+            systematic_factor +
+          sqrt(1 - vec_rho) *
+            vec_idiosyncratic
+
+        vec_default <-
+          vec_latent_variable <
+            qnorm(vec_PD)
+
+        sum(
+          vec_EAD *
+            vec_LGD *
+            vec_default
+        )
+      }
+    )
+  },
+  .options = furrr::furrr_options(
+    seed = TRUE
+  )
+)
+
+tbl_credit_losses <- tibble(
+  loss = unlist(
+    lst_credit_losses,
+    use.names = FALSE
+  )
+)
+```
+
+```{r}
+#| label: reset-credit-future-plan
+#| include: false
+
+future::plan(future::sequential)
+```
+
+## I-10.8 信用損失分布
+
+シミュレーションされた信用損失分布を確認する。
+
+```{r}
+#| label: summarize-credit-loss-distribution
+
+tbl_credit_loss_summary <- tbl_credit_losses |>
+  summarise(
+    scenarios = n(),
+    mean_loss = mean(loss),
+    standard_deviation = sd(loss),
+    minimum_loss = min(loss),
+    maximum_loss = max(loss)
+  )
+
+show_table_LFL(
+  tbl_credit_loss_summary
+)
+```
+
+理論上の期待損失とモンテカルロ平均を比較する。
+
+```{r}
+#| label: compare-expected-credit-loss
+
+theoretical_expected_loss <-
+  sum(
+    tbl_credit_portfolio$PD *
+      tbl_credit_portfolio$EAD *
+      tbl_credit_portfolio$LGD
+  )
+
+monte_carlo_expected_loss <-
+  mean(tbl_credit_losses$loss)
+
+tbl_expected_loss_comparison <- tibble(
+  method = c(
+    "Analytical",
+    "Monte Carlo"
+  ),
+  expected_loss = c(
+    theoretical_expected_loss,
+    monte_carlo_expected_loss
+  )
+)
+
+show_table_LFL(
+  tbl_expected_loss_comparison
+)
+```
+
+両者が十分に近ければ、各企業の無条件PDがシミュレーション上でも再現されていることを確認できる。
+
+```{r}
+#| label: plot-credit-loss-distribution
+#| fig-cap: "One-Factor Gaussianモデルによる信用損失分布"
+
+plot_credit_loss_distribution <- tbl_credit_losses |>
+  ggplot(
+    aes(x = loss)
+  ) +
+  geom_histogram(
+    bins = 40
+  ) +
+  labs(
+    x = "Portfolio loss",
+    y = "Frequency"
+  )
+
+show_plot_LFL(
+  plot_credit_loss_distribution
+)
+```
+
+信用損失分布は一般に左右対称ではない。通常時にはデフォルト件数が少ない一方、共通因子が大きく悪化すると多数企業が同時にデフォルトし、右側に長いテールを持つ損失分布が形成される。
+
+## I-10.9 Credit VaR
+
+第9章と同様に、信用損失分布の分位点からCredit VaRを計算する。
+
+\[
+CreditVaR_\alpha
+=
+Q_\alpha(L)
+\]
+
+ここでは95%、99%、99.9%の3つの信頼水準を比較する。
+
+```{r}
+#| label: calculate-credit-var
+
+vec_confidence_levels <- c(
+  0.95,
+  0.99,
+  0.999
+)
+
+tbl_credit_var <- tibble(
+  confidence_level =
+    vec_confidence_levels
+) |>
+  mutate(
+    Credit_VaR = purrr::map_dbl(
+      confidence_level,
+      \(confidence_level) {
+        quantile(
+          tbl_credit_losses$loss,
+          probs = confidence_level,
+          names = FALSE,
+          type = 7
+        )
+      }
+    )
+  )
+
+show_table_LFL(tbl_credit_var)
+```
+
+信用リスクでは市場リスクより長い保有期間と高い信頼水準が用いられることが多く、99.9%という極端な分位点を見ることで、共通因子が大きく悪化した場合のポートフォリオ損失を確認できる。
+
+## I-10.10 Expected LossとUnexpected Loss
+
+信用リスクではExpected Loss（EL）とUnexpected Loss（UL）を区別することが重要である。
+
+Expected Lossは平均的に予想される信用損失であり、
+
+\[
+EL=E[L]
+\]
+
+である。
+
+一方、ある信頼水準におけるCredit VaRとELとの差を、テール側の予期せぬ損失を表す一つの尺度として
+
+\[
+UL_\alpha
+=
+CreditVaR_\alpha-EL
+\]
+
+と置くことができる。
+
+```{r}
+#| label: calculate-unexpected-loss
+
+tbl_credit_risk_measures <- tbl_credit_var |>
+  mutate(
+    expected_loss =
+      theoretical_expected_loss,
+    unexpected_loss =
+      Credit_VaR -
+        expected_loss
+  )
+
+show_table_LFL(
+  tbl_credit_risk_measures
+)
+```
+
+ここでの \(CreditVaR_\alpha-EL\) は本章で損失分布のテールを比較するための定義である。標準偏差として定義されるUnexpected Lossとは区別する必要がある。
+
+## I-10.11 Credit Expected Shortfall
+
+市場リスクと同様に、信用損失についてもVaRを超えた領域をESで評価できる。
+
+```{r}
+#| label: calculate-credit-es
+
+tbl_credit_es <- tbl_credit_var |>
+  mutate(
+    Credit_ES = purrr::map2_dbl(
+      confidence_level,
+      Credit_VaR,
+      \(confidence_level, credit_var) {
+        tbl_credit_losses |>
+          filter(loss >= credit_var) |>
+          summarise(
+            ES = mean(loss)
+          ) |>
+          pull(ES)
+      }
+    )
+  )
+
+show_table_LFL(tbl_credit_es)
+```
+
+信用損失分布では同じ損失額に確率質量が集中する離散性があるため、実証的な `loss >= VaR` によるテール平均は、連続分布におけるESの定義と完全には一致しない場合がある。本章ではシミュレーション損失分布のテールの大きさを直感的に確認する尺度として用いる。
+
+## I-10.12 相関がテールリスクへ与える影響
+
+One-Factor Gaussianモデルの重要なパラメータが \(\rho\) である。
+
+個々の企業のPD、EAD、LGDを変えなくても、共通因子への依存度が高くなれば同時デフォルトが増え、損失分布のテールは厚くなる。
+
+この関係を確認するため、
+
+\[
+\rho
+=
+0,\ 0.10,\ 0.20,\ 0.40
+\]
+
+を比較する。
+
+```{r}
+#| label: define-credit-loss-simulator
+
+simulate_credit_loss_LFL <- function(
+    rho_value,
+    n_scenarios = 20000L
+) {
+  purrr::map_dbl(
+    seq_len(n_scenarios),
+    \(scenario_id) {
+      systematic_factor <- rnorm(1)
+
+      vec_idiosyncratic <- rnorm(
+        n_obligors
+      )
+
+      vec_latent_variable <-
+        sqrt(rho_value) *
+          systematic_factor +
+        sqrt(1 - rho_value) *
+          vec_idiosyncratic
+
+      vec_default <-
+        vec_latent_variable <
+          qnorm(vec_PD)
+
+      sum(
+        vec_EAD *
+          vec_LGD *
+          vec_default
+      )
+    }
+  )
+}
+```
+
+```{r}
+#| label: simulate-correlation-sensitivity
+
+set_random_seed_LFL(20260918)
+
+vec_rho_scenarios <- c(
+  0,
+  0.10,
+  0.20,
+  0.40
+)
+
+tbl_correlation_sensitivity <- tibble(
+  rho = vec_rho_scenarios
+) |>
+  mutate(
+    losses = purrr::map(
+      rho,
+      \(rho_value) {
+        simulate_credit_loss_LFL(
+          rho_value = rho_value
+        )
+      }
+    ),
+    expected_loss = purrr::map_dbl(
+      losses,
+      mean
+    ),
+    VaR_99 = purrr::map_dbl(
+      losses,
+      \(losses) {
+        quantile(
+          losses,
+          probs = 0.99,
+          names = FALSE
+        )
+      }
+    ),
+    VaR_999 = purrr::map_dbl(
+      losses,
+      \(losses) {
+        quantile(
+          losses,
+          probs = 0.999,
+          names = FALSE
+        )
+      }
+    )
+  )
+
+show_table_LFL(
+  tbl_correlation_sensitivity |>
+    select(
+      -losses
+    )
+)
+```
+
+```{r}
+#| label: plot-correlation-sensitivity
+#| fig-cap: "資産相関とCredit VaR"
+
+plot_correlation_sensitivity <-
+  tbl_correlation_sensitivity |>
+  select(
+    rho,
+    VaR_99,
+    VaR_999
+  ) |>
+  pivot_longer(
+    cols = starts_with("VaR"),
+    names_to = "confidence_level",
+    values_to = "Credit_VaR"
+  ) |>
+  ggplot(
+    aes(
+      x = rho,
+      y = Credit_VaR,
+      linetype = confidence_level
+    )
+  ) +
+  geom_line() +
+  geom_point() +
+  labs(
+    x = "Asset correlation",
+    y = "Credit VaR",
+    linetype = NULL
+  )
+
+show_plot_LFL(
+  plot_correlation_sensitivity
+)
+```
+
+相関の上昇は必ずしも期待損失を大きく変化させない。一方で、同時デフォルトが発生しやすくなるため、高い信頼水準のCredit VaRは大きく上昇する。
+
+これは信用ポートフォリオにおいて、個別企業のPDだけでなくデフォルト依存が重要であることを示している。
+
+## I-10.13 BaselのASRFモデルとの関係
+
+One-Factor Gaussianモデルは単なるシミュレーション手法ではない。バーゼルの信用リスク内部格付手法（IRB）の理論的背景には、単一のシステマティック・ファクターによって債務者間の依存を表現するAsymptotic Single Risk Factor（ASRF）の考え方がある。
+
+十分に細分化された大規模ポートフォリオでは、企業固有リスクが分散され、ポートフォリオ損失は主として共通因子によって決まる。この極限的な考え方により、信用ポートフォリオのテール損失を解析的な資本関数へ結びつけることができる。
+
+本章のモンテカルロ・シミュレーションは、この構造を有限の100社ポートフォリオとして直接観察している。
+
+```text
+One-Factor Gaussian
+        ↓
+条件付きPD
+        ↓
+多数企業への共通ショック
+        ↓
+信用損失分布
+        ↓
+Credit VaR / Unexpected Loss
+        ↓
+ASRF・信用リスク資本
+```
+
+## I-10.14 市場VaRとCredit VaR
+
+第9章と本章を比較すると、市場リスクと信用リスクでは損失を生み出すメカニズムが異なる。
+
+市場リスクでは、
+
+```text
+市場価格
+   ↓
+リターン
+   ↓
+PnL
+   ↓
+市場損失分布
+```
+
+であった。
+
+信用リスクでは、
+
+```text
+共通因子 + 企業固有因子
+          ↓
+       デフォルト
+          ↓
+     EAD × LGD
+          ↓
+     信用損失分布
+```
+
+となる。
+
+しかし最終的な計算構造は共通している。
+
+\[
+\boxed{
+\text{リスク要因}
+\rightarrow
+\text{シナリオ}
+\rightarrow
+\text{損失}
+\rightarrow
+\text{損失分布}
+\rightarrow
+\text{テールリスク}
+}
+\]
+
+この統一的な見方が、異なるリスクを一つの計算基盤で扱うための出発点となる。
+
+## I-10.15 第11章への接続―CLOのトランシェ
+
+本章ではOne-Factor Gaussianモデルからポートフォリオ全体の信用損失 \(L\) を生成した。
+
+第11章では、この損失をポートフォリオ全体で負担するのではなく、Attachment Point \(A\) とDetachment Point \(D\) によって複数のトランシェへ分割する。
+
+トランシェ損失は
+
+\[
+L_{A,D}
+=
+\min
+\left\{
+\max(L-A,0),
+D-A
+\right\}
+\]
+
+で表すことができる。
+
+したがって、第11章で必要となる信用モデルを新しく作り直す必要はない。
+
+```text
+第10章
+One-Factor Gaussian
+        ↓
+Portfolio Loss L
+        ↓
+第11章
+Attachment / Detachment
+        ↓
+Tranche Loss
+        ↓
+Premium Leg / Loss Leg
+        ↓
+CLO Tranche Pricing
+```
+
+本章で構築した損失分布が、そのままCLOのエクイティ、メザニン、シニア・トランシェの評価へつながる。

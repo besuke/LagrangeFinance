@@ -228,6 +228,21 @@ window.Quarto = {
   <a href="../part1_empirical/ch08_constrained_portfolio_optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-8章 制約付きポートフォリオ最適化とバックテスト</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch11_clo_tranche_valuation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-11章 CLOと信用ポートフォリオのトランシェ評価</span></a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -748,8 +763,8 @@ V
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method            ela_secon rel_seque</span></span>
 <span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 purrr::map          1.33      1      </span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 furrr::future_map   0.98000   0.73684</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 purrr::map           1.35     1      </span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 furrr::future_map    1.0300   0.76296</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>この例の目的は特定の高速化率を保証することではない。 重要なのは、同じPricing Functionを多数の独立Taskへ適用する場合、 Taskを複数Workerへ配分することで実行時間を短縮できるという構造である。</p>
 </section>

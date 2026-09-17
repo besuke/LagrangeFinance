@@ -1,0 +1,584 @@
+---
+title: "第I-11章 CLOと信用ポートフォリオのトランシェ評価"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+第10章では、One-Factor Gaussianモデルを用いて企業間のデフォルト依存を表現し、信用ポートフォリオの損失分布を構築した。本章では、そのポートフォリオ損失を複数の投資家へ異なる優先順位で配分する「トランチ（tranche）」という仕組みを考える。
+
+トランチは単なる格付け区分ではない。証券化商品のキャッシュフローや損失を、異なる優先順位を持つ複数のクラスへ分割する仕組みである。
+
+```text
+Underlying Asset Pool
+        ↓
+   Securitization
+        ↓
+      Tranches
+   ┌────┼────┐
+ Senior  Mezzanine  Equity
+```
+
+ただし、何を分割するかは商品によって異なる。CLOでは主として信用損失と支払順位が重要となる。一方、住宅ローンを原資産とするMBS/CMOでは、期限前償還によって生じる元本キャッシュフローのタイミングもトランチ構造によって再配分される。
+
+この違いを理解することが、CLO評価を理解する第一歩である。
+
+## I-11.1 トランチとは何か
+
+フランス語の *tranche* は「切り分けられた部分」を意味する。金融商品では、一つの資産プールから生じるキャッシュフローや損失を、優先順位の異なる複数の証券へ分割する。
+
+単純化すると、
+
+```text
+Asset Pool
+   │
+   ├── Senior
+   │
+   ├── Mezzanine
+   │
+   └── Equity
+```
+
+という構造になる。
+
+Seniorは支払いの優先順位が高く、損失を負担する順位は遅い。Equityは支払い順位が最も低い一方、信用損失を最初に吸収する。Mezzanineはその中間に位置する。
+
+したがって、同じ資産プールから発行された証券であっても、各トランチのリスクと期待収益は大きく異なる。
+
+## I-11.2 CLOの信用トランチ
+
+Collateralized Loan Obligation（CLO）は、主として企業向けローンのポートフォリオを裏付けとして、複数のDebt TrancheとEquity Trancheを発行する証券化商品である。
+
+典型的な構造を単純化すると、
+
+```text
+Leveraged Loan Portfolio
+          │
+          ▼
+     CLO Vehicle
+          │
+   ┌──────┼────────┐
+   ▼      ▼        ▼
+ Senior  Mezzanine Equity
+ AAA...             Unrated
+```
+
+となる。
+
+Debt Trancheには格付けが付与され、SeniorからJuniorへ信用リスクが段階的に高くなる。Equity Trancheは通常、最も劣後し、最初に損失を吸収する。
+
+したがって、
+
+```text
+損失の吸収順位
+
+Equity
+  ↓
+Junior / Mezzanine
+  ↓
+Senior
+```
+
+となる。
+
+一方、利息や元本などのキャッシュフローは原則として上位のDebt Trancheから優先的に支払われ、最後に残ったキャッシュフローがEquityへ配分される。この優先順位をPayment Waterfallという。
+
+```text
+Collateral Cash Flow
+        ↓
+Fees / Expenses
+        ↓
+Senior Debt
+        ↓
+Mezzanine / Junior Debt
+        ↓
+Equity
+```
+
+CLOを理解するには「格付けの異なる債券が並んでいる」と考えるだけでは不十分である。格付けの差を生み出している経済的な構造は、**同じ信用ポートフォリオの損失をどの順位で負担するか**にある。
+
+## I-11.3 MBSでは何をトランチングするのか
+
+Mortgage-Backed Securities（MBS）も証券化商品であるが、住宅ローンには企業向けローンとは異なる重要な特徴がある。
+
+借り手が住宅ローンを期限前に返済できることである。
+
+特に金利が低下すると、借り手はより低い金利の住宅ローンへ借り換えるインセンティブを持つ。その結果、MBS投資家には予定より早く元本が返済される可能性がある。
+
+これがPrepayment Risk（期限前償還リスク）である。
+
+単純なPass-Through MBSでは、住宅ローン・プールから発生した元本と利息を投資家へ比例配分する。
+
+より複雑なCollateralized Mortgage Obligation（CMO）では、この元本キャッシュフローを複数のトランチへ異なる順位で配分する。
+
+```text
+Mortgage Pool
+      ↓
+Principal + Interest
+      ↓
+     CMO
+      ↓
+ ┌────┼────┬────┐
+ A    B    PAC   Z
+```
+
+したがって、CLOの信用トランチとMBS/CMOのキャッシュフロー・トランチは、同じ「トランチ」という言葉を使っていても中心となるリスクが異なる。
+
+| 項目 | CLO | MBS / CMO |
+|---|---|---|
+| 主な原資産 | 企業向けローン | 住宅ローン |
+| 主要なリスク | デフォルト・回収率・相関 | 金利・期限前償還 |
+| トランチングの中心 | 信用損失と支払順位 | 元本・利息の配分時期 |
+| 代表的な構造 | Senior / Mezzanine / Equity | Sequential / PAC / Support / Z |
+| 投資家が注目するもの | Loss Waterfall | Prepayment / Cash-flow Waterfall |
+
+## I-11.4 MBSのSequential Pay
+
+CMOの最も基本的な考え方の一つがSequential Payである。
+
+複数のトランチA、B、Cがある場合、住宅ローンから返済された元本をまずAへ集中して配分する。Aが全額償還された後にBへ、その後Cへ配分する。
+
+```text
+Mortgage Principal
+        ↓
+     Tranche A
+        ↓
+   A fully paid
+        ↓
+     Tranche B
+        ↓
+   B fully paid
+        ↓
+     Tranche C
+```
+
+これにより、同じ住宅ローン・プールから、平均残存期間や期限前償還感応度の異なる証券を作ることができる。
+
+## I-11.5 PACとSupport Tranche
+
+Planned Amortization Class（PAC）は、一定の期限前償還速度の範囲内で、比較的安定した元本償還スケジュールを目指すトランチである。
+
+その安定性を支えるのがSupport Trancheである。
+
+実際の期限前償還が想定より速い、あるいは遅い場合、その変動をSupport Trancheが優先的に吸収する。
+
+```text
+Prepayment Variability
+          ↓
+    Support Tranche
+          ↓
+  PAC Cash Flowを安定化
+```
+
+つまりトランチングとは、信用損失だけを分割する技術ではない。キャッシュフローのタイミングに関するリスクそのものを投資家間で再配分する技術でもある。
+
+## I-11.6 Z-Tranche―早期に元本償還されないトランチ
+
+CMOには、さらに特徴的なZ-Tranche（Accrual Tranche）が存在する。
+
+Z-Trancheは初期期間に現金利息を受け取らず、その利息相当額を元本へ加算する。上位トランチが償還されている間、Z-Trancheへの元本支払いは後順位となる。
+
+単純化すると、
+
+```text
+初期期間
+
+Mortgage Cash Flow
+      ↓
+A → B → C の償還
+      ↓
+Z-Tranche
+現金利息を受け取らず
+利息を元本へ加算
+```
+
+その後、
+
+```text
+A / B / C 償還後
+       ↓
+Z-Tranche
+利息・元本の支払い
+```
+
+へ移る。
+
+したがって、Z-Trancheは「期限前償還が存在しない」という意味ではない。原資産の住宅ローンでは期限前償還が発生しているが、ウォーターフォールによってその元本キャッシュフローが先に他のトランチへ配分されるため、Z-Trancheは初期には直接の元本償還を受けにくい構造になっている。
+
+この区別は重要である。
+
+**原資産で期限前償還が起きること**と、**あるトランチがその期限前償還による元本を直ちに受け取ること**は同じではない。
+
+トランチングによって、原資産に存在するリスクを消すことはできない。しかし、そのリスクをどの投資家が、どの時点で、どの程度負担するかを組み替えることはできる。
+
+## I-11.7 CLOとMBSに共通する考え方
+
+ここまでを見ると、CLOとMBS/CMOは異なる商品に見える。
+
+しかし数学的な発想には共通点がある。
+
+```text
+原資産プール
+      ↓
+リスクのあるキャッシュフロー
+      ↓
+優先順位を設定
+      ↓
+複数のトランチへ配分
+```
+
+CLOでは主として、
+
+\[
+\text{Portfolio Credit Loss}
+\rightarrow
+\text{Tranche Loss}
+\]
+
+を考える。
+
+MBS/CMOでは主として、
+
+\[
+\text{Mortgage Cash Flow}
+\rightarrow
+\text{Tranche Cash Flow}
+\]
+
+を考える。
+
+つまり、証券化の本質は**原資産のリスクを消去することではなく、異なる性質を持つ証券へ再配分すること**にある。
+
+## I-11.8 Attachment PointとDetachment Point
+
+ここからCLOの信用トランチを数理的に表現する。
+
+ポートフォリオ損失率を \(L\) とする。
+
+あるトランチがポートフォリオ損失率 \(A\) から損失を負担し始め、\(D\) で全額毀損するとする。
+
+\(A\) をAttachment Point、\(D\) をDetachment Pointという。
+
+たとえば、
+
+```text
+Portfolio Loss
+0%                                      100%
+│──────│────────│──────────│────────────│
+       3%       7%        10%
+
+Equity      0% - 3%
+Mezzanine   3% - 7%
+Junior      7% - 10%
+Senior     10% - 100%
+```
+
+とする。
+
+3%-7%トランチでは、ポートフォリオ損失が3%に達するまでは損失を負担しない。
+
+損失が3%を超えるとトランチ損失が発生し、7%に達するとトランチ元本はすべて失われる。
+
+## I-11.9 トランチ損失
+
+Attachment Point \(A\)、Detachment Point \(D\) のトランチ損失は、
+
+\[
+L_{A,D}
+=
+\min
+\left\{
+\max(L-A,0),
+D-A
+\right\}
+\]
+
+で表される。
+
+トランチ元本 \(D-A\) に対する損失率として表すなら、
+
+\[
+TL_{A,D}
+=
+\frac{
+\min\{\max(L-A,0),D-A\}
+}{
+D-A
+}
+\]
+
+となる。
+
+```{r}
+#| label: define-tranche-loss
+
+tranche_loss_LFL <- function(
+    portfolio_loss,
+    attachment,
+    detachment
+) {
+  pmin(
+    pmax(
+      portfolio_loss - attachment,
+      0
+    ),
+    detachment - attachment
+  )
+}
+```
+
+単純な損失率を使ってトランチ構造を確認する。
+
+```{r}
+#| label: create-tranche-example
+
+tbl_tranche_example <- tibble(
+  portfolio_loss = seq(
+    0,
+    0.15,
+    by = 0.001
+  )
+) |>
+  mutate(
+    Equity = tranche_loss_LFL(
+      portfolio_loss,
+      0.00,
+      0.03
+    ),
+    Mezzanine = tranche_loss_LFL(
+      portfolio_loss,
+      0.03,
+      0.07
+    ),
+    Junior = tranche_loss_LFL(
+      portfolio_loss,
+      0.07,
+      0.10
+    ),
+    Senior = tranche_loss_LFL(
+      portfolio_loss,
+      0.10,
+      1.00
+    )
+  )
+
+show_table_LFL(
+  tbl_tranche_example
+)
+```
+
+```{r}
+#| label: plot-tranche-loss
+#| fig-cap: "ポートフォリオ損失と各トランチの損失"
+
+plot_tranche_loss <- tbl_tranche_example |>
+  pivot_longer(
+    cols = -portfolio_loss,
+    names_to = "tranche",
+    values_to = "tranche_loss"
+  ) |>
+  ggplot(
+    aes(
+      x = portfolio_loss,
+      y = tranche_loss,
+      linetype = tranche
+    )
+  ) +
+  geom_line() +
+  labs(
+    x = "Portfolio Loss",
+    y = "Tranche Loss",
+    linetype = NULL
+  )
+
+show_plot_LFL(plot_tranche_loss)
+```
+
+この図から、同じポートフォリオ損失でもトランチによって損失発生のタイミングが大きく異なることが分かる。
+
+## I-11.10 第10章の信用損失分布をトランチへ配分する
+
+第10章ではOne-Factor Gaussianモデルによって
+
+\[
+L
+=
+\sum_i
+EAD_i LGD_i
+\mathbf{1}_{\{Default_i\}}
+\]
+
+をシミュレーションした。
+
+総EADを \(EAD_{\mathrm{total}}\) とすれば、
+
+\[
+l
+=
+\frac{L}{EAD_{\mathrm{total}}}
+\]
+
+によってポートフォリオ損失率へ変換できる。
+
+この \(l\) をAttachment / Detachment構造へ通せば、各トランチの損失分布が得られる。
+
+```text
+One-Factor Gaussian
+        ↓
+Correlated Defaults
+        ↓
+Portfolio Loss
+        ↓
+Portfolio Loss Rate
+        ↓
+Attachment / Detachment
+        ↓
+Tranche Loss Distribution
+```
+
+つまり、第10章のCredit VaRモデルと第11章のCLOモデルは別々のモデルではない。
+
+**同じ信用損失エンジンの出力を、異なる優先順位へ配分しているだけである。**
+
+## I-11.11 Expected Tranche Loss
+
+シナリオ \(s\) におけるトランチ損失を
+
+\[
+L_{A,D}^{(s)}
+\]
+
+とすれば、Expected Tranche Lossは
+
+\[
+ETL_{A,D}
+=
+E[L_{A,D}]
+\]
+
+である。
+
+Equityは小さなポートフォリオ損失から損失を受けるためETLが大きい。
+
+SeniorはAttachment Pointが高いため、通常の信用環境では損失を受けない。しかし極端な同時デフォルトが発生すると損失が生じる。
+
+したがってSenior Trancheの評価では、第10章で確認した**デフォルト相関と損失分布のテール**が特に重要となる。
+
+## I-11.12 Premium LegとLoss Leg
+
+信用トランチの価格評価では、大きく二つのキャッシュフローを考える。
+
+Protection Buyerが支払うプレミアムをPremium Leg、
+
+信用損失発生時にProtection Sellerが負担する損失をLoss Legとする。
+
+概念的には、
+
+\[
+PV_{\mathrm{Premium}}
+=
+s
+\sum_t
+DF(t)
+E[
+OutstandingTranche_t
+]
+\Delta t
+\]
+
+であり、
+
+\[
+PV_{\mathrm{Loss}}
+=
+\sum_t
+DF(t)
+E[
+\Delta L_{A,D}(t)
+]
+\]
+
+となる。
+
+Fair Spread \(s^\ast\) は、
+
+\[
+PV_{\mathrm{Premium}}
+=
+PV_{\mathrm{Loss}}
+\]
+
+を満たすスプレッドである。
+
+したがって、
+
+\[
+s^\ast
+=
+\frac{
+PV_{\mathrm{Loss}}
+}{
+\sum_t
+DF(t)
+E[
+OutstandingTranche_t
+]
+\Delta t
+}
+\]
+
+となる。
+
+ここで初めて、信用損失分布が「価格」へ変換される。
+
+## I-11.13 CLO評価の計算構造
+
+第10章と本章をまとめると、CLOトランチ評価の計算構造は次のようになる。
+
+```text
+PD / EAD / LGD / rho
+          ↓
+One-Factor Gaussian
+          ↓
+Conditional Default
+          ↓
+Portfolio Loss Distribution
+          ↓
+Attachment / Detachment
+          ↓
+Tranche Loss Distribution
+          ↓
+Expected Tranche Loss
+          ↓
+Premium Leg / Loss Leg
+          ↓
+Fair Spread / Tranche Value
+```
+
+この構造は、信用ポートフォリオのリスク計測と証券化商品の価格評価が、同じ損失分布を基礎としていることを示している。
+
+第10章では損失分布の分位点を取ることでCredit VaRを求めた。
+
+本章では同じ損失分布をAttachment / Detachmentによって切り分け、各トランチのキャッシュフローへ変換する。
+
+\[
+\boxed{
+\text{同じLoss Distribution}
+\begin{cases}
+\rightarrow Credit\ VaR \\
+\rightarrow CLO\ Tranche\ Pricing
+\end{cases}
+}
+\]
+
+これが、第I部におけるポートフォリオ・リスクモデルから証券化商品評価までの接続である。

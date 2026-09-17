@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第I-11章 CLOと信用ポートフォリオのトランシェ評価 – エンタープライズ金融モデル構築</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html" rel="next">
+<link href="../part1_empirical/ch10_credit_risk_credit_var.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-9e3e5b9121e68b3f077afb32f2c64d95.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1_empirical/ch01_r_basics_tidyverse.html">第I部 金融工学　均衡モデル</a></li><li class="breadcrumb-item"><a href="../part1_empirical/ch11_clo_tranche_valuation.html"><span class="chapter-title">第I-11章 CLOと信用ポートフォリオのトランシェ評価</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">エンタープライズ金融モデル構築</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第I部 金融工学　均衡モデル</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch01_r_basics_tidyverse.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-1章 Rによるデータ分析の基礎</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch02_financial_data.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-2章 財務データの整理と分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch03_stock_data_time_series.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-3章 株式データと時系列分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch04_factor_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-4章 ファクターモデル分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch05_asset_pricing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-5章 資産価格モデルとポートフォリオ最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch06_event_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-6章 イベント・スタディ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch07_machine_learning_factor_selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-7章 機械学習によるファクター選定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch08_constrained_portfolio_optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-8章 制約付きポートフォリオ最適化とバックテスト</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch11_clo_tranche_valuation.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第I-11章 CLOと信用ポートフォリオのトランシェ評価</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第II部 金融工学　無裁定モデル</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-1章 債券評価と金利リスクの基礎</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物の金利感応度</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch03_ois_swaps_multicurve.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-3章 OISスワップとマルチカーブ評価</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch04_black_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-4章 株価・為替と幾何ブラウン運動モデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch05_normal_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 金利モデル（期間構造なし）ノーマルモデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch06_sabr_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 SABRモデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch07_callable_hull_white.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 金利期間構造モデルと期限前償還債評価</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch08_credit_risk_cds.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-8章 信用リスクとクレジットデリバティブ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch09_exotic_derivatives_prdc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-9章 金利為替系デリバティブ</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融工学における計算技術の発展と並列コンピューティング</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 エンタープライズ金融計算システムの構築</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#i-11.1-トランチとは何か" id="toc-i-11.1-トランチとは何か" class="nav-link active" data-scroll-target="#i-11.1-トランチとは何か">I-11.1 トランチとは何か</a></li>
+  <li><a href="#i-11.2-cloの信用トランチ" id="toc-i-11.2-cloの信用トランチ" class="nav-link" data-scroll-target="#i-11.2-cloの信用トランチ">I-11.2 CLOの信用トランチ</a></li>
+  <li><a href="#i-11.3-mbsでは何をトランチングするのか" id="toc-i-11.3-mbsでは何をトランチングするのか" class="nav-link" data-scroll-target="#i-11.3-mbsでは何をトランチングするのか">I-11.3 MBSでは何をトランチングするのか</a></li>
+  <li><a href="#i-11.4-mbsのsequential-pay" id="toc-i-11.4-mbsのsequential-pay" class="nav-link" data-scroll-target="#i-11.4-mbsのsequential-pay">I-11.4 MBSのSequential Pay</a></li>
+  <li><a href="#i-11.5-pacとsupport-tranche" id="toc-i-11.5-pacとsupport-tranche" class="nav-link" data-scroll-target="#i-11.5-pacとsupport-tranche">I-11.5 PACとSupport Tranche</a></li>
+  <li><a href="#i-11.6-z-tranche早期に元本償還されないトランチ" id="toc-i-11.6-z-tranche早期に元本償還されないトランチ" class="nav-link" data-scroll-target="#i-11.6-z-tranche早期に元本償還されないトランチ">I-11.6 Z-Tranche―早期に元本償還されないトランチ</a></li>
+  <li><a href="#i-11.7-cloとmbsに共通する考え方" id="toc-i-11.7-cloとmbsに共通する考え方" class="nav-link" data-scroll-target="#i-11.7-cloとmbsに共通する考え方">I-11.7 CLOとMBSに共通する考え方</a></li>
+  <li><a href="#i-11.8-attachment-pointとdetachment-point" id="toc-i-11.8-attachment-pointとdetachment-point" class="nav-link" data-scroll-target="#i-11.8-attachment-pointとdetachment-point">I-11.8 Attachment PointとDetachment Point</a></li>
+  <li><a href="#i-11.9-トランチ損失" id="toc-i-11.9-トランチ損失" class="nav-link" data-scroll-target="#i-11.9-トランチ損失">I-11.9 トランチ損失</a></li>
+  <li><a href="#i-11.10-第10章の信用損失分布をトランチへ配分する" id="toc-i-11.10-第10章の信用損失分布をトランチへ配分する" class="nav-link" data-scroll-target="#i-11.10-第10章の信用損失分布をトランチへ配分する">I-11.10 第10章の信用損失分布をトランチへ配分する</a></li>
+  <li><a href="#i-11.11-expected-tranche-loss" id="toc-i-11.11-expected-tranche-loss" class="nav-link" data-scroll-target="#i-11.11-expected-tranche-loss">I-11.11 Expected Tranche Loss</a></li>
+  <li><a href="#i-11.12-premium-legとloss-leg" id="toc-i-11.12-premium-legとloss-leg" class="nav-link" data-scroll-target="#i-11.12-premium-legとloss-leg">I-11.12 Premium LegとLoss Leg</a></li>
+  <li><a href="#i-11.13-clo評価の計算構造" id="toc-i-11.13-clo評価の計算構造" class="nav-link" data-scroll-target="#i-11.13-clo評価の計算構造">I-11.13 CLO評価の計算構造</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1_empirical/ch01_r_basics_tidyverse.html">第I部 金融工学　均衡モデル</a></li><li class="breadcrumb-item"><a href="../part1_empirical/ch11_clo_tranche_valuation.html"><span class="chapter-title">第I-11章 CLOと信用ポートフォリオのトランシェ評価</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">第I-11章 CLOと信用ポートフォリオのトランシェ評価</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>第10章では、One-Factor Gaussianモデルを用いて企業間のデフォルト依存を表現し、信用ポートフォリオの損失分布を構築した。本章では、そのポートフォリオ損失を複数の投資家へ異なる優先順位で配分する「トランチ（tranche）」という仕組みを考える。</p>
+<p>トランチは単なる格付け区分ではない。証券化商品のキャッシュフローや損失を、異なる優先順位を持つ複数のクラスへ分割する仕組みである。</p>
+<pre class="text"><code>Underlying Asset Pool
+        ↓
+   Securitization
+        ↓
+      Tranches
+   ┌────┼────┐
+ Senior  Mezzanine  Equity</code></pre>
+<p>ただし、何を分割するかは商品によって異なる。CLOでは主として信用損失と支払順位が重要となる。一方、住宅ローンを原資産とするMBS/CMOでは、期限前償還によって生じる元本キャッシュフローのタイミングもトランチ構造によって再配分される。</p>
+<p>この違いを理解することが、CLO評価を理解する第一歩である。</p>
+<section id="i-11.1-トランチとは何か" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.1-トランチとは何か">I-11.1 トランチとは何か</h2>
+<p>フランス語の <em>tranche</em> は「切り分けられた部分」を意味する。金融商品では、一つの資産プールから生じるキャッシュフローや損失を、優先順位の異なる複数の証券へ分割する。</p>
+<p>単純化すると、</p>
+<pre class="text"><code>Asset Pool
+   │
+   ├── Senior
+   │
+   ├── Mezzanine
+   │
+   └── Equity</code></pre>
+<p>という構造になる。</p>
+<p>Seniorは支払いの優先順位が高く、損失を負担する順位は遅い。Equityは支払い順位が最も低い一方、信用損失を最初に吸収する。Mezzanineはその中間に位置する。</p>
+<p>したがって、同じ資産プールから発行された証券であっても、各トランチのリスクと期待収益は大きく異なる。</p>
+</section>
+<section id="i-11.2-cloの信用トランチ" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.2-cloの信用トランチ">I-11.2 CLOの信用トランチ</h2>
+<p>Collateralized Loan Obligation（CLO）は、主として企業向けローンのポートフォリオを裏付けとして、複数のDebt TrancheとEquity Trancheを発行する証券化商品である。</p>
+<p>典型的な構造を単純化すると、</p>
+<pre class="text"><code>Leveraged Loan Portfolio
+          │
+          ▼
+     CLO Vehicle
+          │
+   ┌──────┼────────┐
+   ▼      ▼        ▼
+ Senior  Mezzanine Equity
+ AAA...             Unrated</code></pre>
+<p>となる。</p>
+<p>Debt Trancheには格付けが付与され、SeniorからJuniorへ信用リスクが段階的に高くなる。Equity Trancheは通常、最も劣後し、最初に損失を吸収する。</p>
+<p>したがって、</p>
+<pre class="text"><code>損失の吸収順位
+
+Equity
+  ↓
+Junior / Mezzanine
+  ↓
+Senior</code></pre>
+<p>となる。</p>
+<p>一方、利息や元本などのキャッシュフローは原則として上位のDebt Trancheから優先的に支払われ、最後に残ったキャッシュフローがEquityへ配分される。この優先順位をPayment Waterfallという。</p>
+<pre class="text"><code>Collateral Cash Flow
+        ↓
+Fees / Expenses
+        ↓
+Senior Debt
+        ↓
+Mezzanine / Junior Debt
+        ↓
+Equity</code></pre>
+<p>CLOを理解するには「格付けの異なる債券が並んでいる」と考えるだけでは不十分である。格付けの差を生み出している経済的な構造は、<strong>同じ信用ポートフォリオの損失をどの順位で負担するか</strong>にある。</p>
+</section>
+<section id="i-11.3-mbsでは何をトランチングするのか" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.3-mbsでは何をトランチングするのか">I-11.3 MBSでは何をトランチングするのか</h2>
+<p>Mortgage-Backed Securities（MBS）も証券化商品であるが、住宅ローンには企業向けローンとは異なる重要な特徴がある。</p>
+<p>借り手が住宅ローンを期限前に返済できることである。</p>
+<p>特に金利が低下すると、借り手はより低い金利の住宅ローンへ借り換えるインセンティブを持つ。その結果、MBS投資家には予定より早く元本が返済される可能性がある。</p>
+<p>これがPrepayment Risk（期限前償還リスク）である。</p>
+<p>単純なPass-Through MBSでは、住宅ローン・プールから発生した元本と利息を投資家へ比例配分する。</p>
+<p>より複雑なCollateralized Mortgage Obligation（CMO）では、この元本キャッシュフローを複数のトランチへ異なる順位で配分する。</p>
+<pre class="text"><code>Mortgage Pool
+      ↓
+Principal + Interest
+      ↓
+     CMO
+      ↓
+ ┌────┼────┬────┐
+ A    B    PAC   Z</code></pre>
+<p>したがって、CLOの信用トランチとMBS/CMOのキャッシュフロー・トランチは、同じ「トランチ」という言葉を使っていても中心となるリスクが異なる。</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>CLO</th>
+<th>MBS / CMO</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>主な原資産</td>
+<td>企業向けローン</td>
+<td>住宅ローン</td>
+</tr>
+<tr class="even">
+<td>主要なリスク</td>
+<td>デフォルト・回収率・相関</td>
+<td>金利・期限前償還</td>
+</tr>
+<tr class="odd">
+<td>トランチングの中心</td>
+<td>信用損失と支払順位</td>
+<td>元本・利息の配分時期</td>
+</tr>
+<tr class="even">
+<td>代表的な構造</td>
+<td>Senior / Mezzanine / Equity</td>
+<td>Sequential / PAC / Support / Z</td>
+</tr>
+<tr class="odd">
+<td>投資家が注目するもの</td>
+<td>Loss Waterfall</td>
+<td>Prepayment / Cash-flow Waterfall</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="i-11.4-mbsのsequential-pay" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.4-mbsのsequential-pay">I-11.4 MBSのSequential Pay</h2>
+<p>CMOの最も基本的な考え方の一つがSequential Payである。</p>
+<p>複数のトランチA、B、Cがある場合、住宅ローンから返済された元本をまずAへ集中して配分する。Aが全額償還された後にBへ、その後Cへ配分する。</p>
+<pre class="text"><code>Mortgage Principal
+        ↓
+     Tranche A
+        ↓
+   A fully paid
+        ↓
+     Tranche B
+        ↓
+   B fully paid
+        ↓
+     Tranche C</code></pre>
+<p>これにより、同じ住宅ローン・プールから、平均残存期間や期限前償還感応度の異なる証券を作ることができる。</p>
+</section>
+<section id="i-11.5-pacとsupport-tranche" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.5-pacとsupport-tranche">I-11.5 PACとSupport Tranche</h2>
+<p>Planned Amortization Class（PAC）は、一定の期限前償還速度の範囲内で、比較的安定した元本償還スケジュールを目指すトランチである。</p>
+<p>その安定性を支えるのがSupport Trancheである。</p>
+<p>実際の期限前償還が想定より速い、あるいは遅い場合、その変動をSupport Trancheが優先的に吸収する。</p>
+<pre class="text"><code>Prepayment Variability
+          ↓
+    Support Tranche
+          ↓
+  PAC Cash Flowを安定化</code></pre>
+<p>つまりトランチングとは、信用損失だけを分割する技術ではない。キャッシュフローのタイミングに関するリスクそのものを投資家間で再配分する技術でもある。</p>
+</section>
+<section id="i-11.6-z-tranche早期に元本償還されないトランチ" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.6-z-tranche早期に元本償還されないトランチ">I-11.6 Z-Tranche―早期に元本償還されないトランチ</h2>
+<p>CMOには、さらに特徴的なZ-Tranche（Accrual Tranche）が存在する。</p>
+<p>Z-Trancheは初期期間に現金利息を受け取らず、その利息相当額を元本へ加算する。上位トランチが償還されている間、Z-Trancheへの元本支払いは後順位となる。</p>
+<p>単純化すると、</p>
+<pre class="text"><code>初期期間
+
+Mortgage Cash Flow
+      ↓
+A → B → C の償還
+      ↓
+Z-Tranche
+現金利息を受け取らず
+利息を元本へ加算</code></pre>
+<p>その後、</p>
+<pre class="text"><code>A / B / C 償還後
+       ↓
+Z-Tranche
+利息・元本の支払い</code></pre>
+<p>へ移る。</p>
+<p>したがって、Z-Trancheは「期限前償還が存在しない」という意味ではない。原資産の住宅ローンでは期限前償還が発生しているが、ウォーターフォールによってその元本キャッシュフローが先に他のトランチへ配分されるため、Z-Trancheは初期には直接の元本償還を受けにくい構造になっている。</p>
+<p>この区別は重要である。</p>
+<p><strong>原資産で期限前償還が起きること</strong>と、<strong>あるトランチがその期限前償還による元本を直ちに受け取ること</strong>は同じではない。</p>
+<p>トランチングによって、原資産に存在するリスクを消すことはできない。しかし、そのリスクをどの投資家が、どの時点で、どの程度負担するかを組み替えることはできる。</p>
+</section>
+<section id="i-11.7-cloとmbsに共通する考え方" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.7-cloとmbsに共通する考え方">I-11.7 CLOとMBSに共通する考え方</h2>
+<p>ここまでを見ると、CLOとMBS/CMOは異なる商品に見える。</p>
+<p>しかし数学的な発想には共通点がある。</p>
+<pre class="text"><code>原資産プール
+      ↓
+リスクのあるキャッシュフロー
+      ↓
+優先順位を設定
+      ↓
+複数のトランチへ配分</code></pre>
+<p>CLOでは主として、</p>
+<p>[ ]</p>
+<p>を考える。</p>
+<p>MBS/CMOでは主として、</p>
+<p>[ ]</p>
+<p>を考える。</p>
+<p>つまり、証券化の本質は<strong>原資産のリスクを消去することではなく、異なる性質を持つ証券へ再配分すること</strong>にある。</p>
+</section>
+<section id="i-11.8-attachment-pointとdetachment-point" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.8-attachment-pointとdetachment-point">I-11.8 Attachment PointとDetachment Point</h2>
+<p>ここからCLOの信用トランチを数理的に表現する。</p>
+<p>ポートフォリオ損失率を (L) とする。</p>
+<p>あるトランチがポートフォリオ損失率 (A) から損失を負担し始め、(D) で全額毀損するとする。</p>
+<p>(A) をAttachment Point、(D) をDetachment Pointという。</p>
+<p>たとえば、</p>
+<pre class="text"><code>Portfolio Loss
+0%                                      100%
+│──────│────────│──────────│────────────│
+       3%       7%        10%
+
+Equity      0% - 3%
+Mezzanine   3% - 7%
+Junior      7% - 10%
+Senior     10% - 100%</code></pre>
+<p>とする。</p>
+<p>3%-7%トランチでは、ポートフォリオ損失が3%に達するまでは損失を負担しない。</p>
+<p>損失が3%を超えるとトランチ損失が発生し、7%に達するとトランチ元本はすべて失われる。</p>
+</section>
+<section id="i-11.9-トランチ損失" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.9-トランチ損失">I-11.9 トランチ損失</h2>
+<p>Attachment Point (A)、Detachment Point (D) のトランチ損失は、</p>
+<p>[ L_{A,D} = { (L-A,0), D-A } ]</p>
+<p>で表される。</p>
+<p>トランチ元本 (D-A) に対する損失率として表すなら、</p>
+<p>[ TL_{A,D} = ]</p>
+<p>となる。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tranche_loss_LFL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    portfolio_loss,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    attachment,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    detachment</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pmin</span>(</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pmax</span>(</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>      portfolio_loss <span class="sc">-</span> attachment,</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>      <span class="dv">0</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    detachment <span class="sc">-</span> attachment</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>単純な損失率を使ってトランチ構造を確認する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>tbl_tranche_example <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">portfolio_loss =</span> <span class="fu">seq</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="dv">0</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fl">0.15</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fl">0.001</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">Equity =</span> <span class="fu">tranche_loss_LFL</span>(</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>      portfolio_loss,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.00</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.03</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">Mezzanine =</span> <span class="fu">tranche_loss_LFL</span>(</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>      portfolio_loss,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.03</span>,</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.07</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">Junior =</span> <span class="fu">tranche_loss_LFL</span>(</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>      portfolio_loss,</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.07</span>,</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.10</span></span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">Senior =</span> <span class="fu">tranche_loss_LFL</span>(</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>      portfolio_loss,</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>      <span class="fl">0.10</span>,</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>      <span class="fl">1.00</span></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table_LFL</span>(</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>  tbl_tranche_example</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 151 × 5</span></span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    por_loss Equity Mezzanine Junior Senior</span></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       &lt;dbl&gt;  &lt;dbl&gt;     &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;</span></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1    0      0             0      0      0</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2    0.001  0.001         0      0      0</span></span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3    0.002  0.002         0      0      0</span></span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4    0.003  0.003         0      0      0</span></span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5    0.004  0.004         0      0      0</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6    0.005  0.005         0      0      0</span></span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7    0.006  0.006         0      0      0</span></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8    0.007  0.007         0      0      0</span></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9    0.008  0.008         0      0      0</span></span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10    0.009  0.009         0      0      0</span></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 141 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>plot_tranche_loss <span class="ot">&lt;-</span> tbl_tranche_example <span class="sc">|&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="sc">-</span>portfolio_loss,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"tranche"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"tranche_loss"</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> portfolio_loss,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> tranche_loss,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">linetype =</span> tranche</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Portfolio Loss"</span>,</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Tranche Loss"</span>,</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="cn">NULL</span></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="fu">show_plot_LFL</span>(plot_tranche_loss)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="ch11_clo_tranche_valuation_files/figure-html/plot-tranche-loss-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption>ポートフォリオ損失と各トランチの損失</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>この図から、同じポートフォリオ損失でもトランチによって損失発生のタイミングが大きく異なることが分かる。</p>
+</section>
+<section id="i-11.10-第10章の信用損失分布をトランチへ配分する" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.10-第10章の信用損失分布をトランチへ配分する">I-11.10 第10章の信用損失分布をトランチへ配分する</h2>
+<p>第10章ではOne-Factor Gaussianモデルによって</p>
+<p>[ L = <em>i EAD_i LGD_i </em>{{Default_i}} ]</p>
+<p>をシミュレーションした。</p>
+<p>総EADを (EAD_{}) とすれば、</p>
+<p>[ l = ]</p>
+<p>によってポートフォリオ損失率へ変換できる。</p>
+<p>この (l) をAttachment / Detachment構造へ通せば、各トランチの損失分布が得られる。</p>
+<pre class="text"><code>One-Factor Gaussian
+        ↓
+Correlated Defaults
+        ↓
+Portfolio Loss
+        ↓
+Portfolio Loss Rate
+        ↓
+Attachment / Detachment
+        ↓
+Tranche Loss Distribution</code></pre>
+<p>つまり、第10章のCredit VaRモデルと第11章のCLOモデルは別々のモデルではない。</p>
+<p><strong>同じ信用損失エンジンの出力を、異なる優先順位へ配分しているだけである。</strong></p>
+</section>
+<section id="i-11.11-expected-tranche-loss" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.11-expected-tranche-loss">I-11.11 Expected Tranche Loss</h2>
+<p>シナリオ (s) におけるトランチ損失を</p>
+<p>[ L_{A,D}^{(s)} ]</p>
+<p>とすれば、Expected Tranche Lossは</p>
+<p>[ ETL_{A,D} = E[L_{A,D}] ]</p>
+<p>である。</p>
+<p>Equityは小さなポートフォリオ損失から損失を受けるためETLが大きい。</p>
+<p>SeniorはAttachment Pointが高いため、通常の信用環境では損失を受けない。しかし極端な同時デフォルトが発生すると損失が生じる。</p>
+<p>したがってSenior Trancheの評価では、第10章で確認した<strong>デフォルト相関と損失分布のテール</strong>が特に重要となる。</p>
+</section>
+<section id="i-11.12-premium-legとloss-leg" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.12-premium-legとloss-leg">I-11.12 Premium LegとLoss Leg</h2>
+<p>信用トランチの価格評価では、大きく二つのキャッシュフローを考える。</p>
+<p>Protection Buyerが支払うプレミアムをPremium Leg、</p>
+<p>信用損失発生時にProtection Sellerが負担する損失をLoss Legとする。</p>
+<p>概念的には、</p>
+<p>[ PV_{} = s _t DF(t) E[ OutstandingTranche_t] t ]</p>
+<p>であり、</p>
+<p>[ PV_{} = _t DF(t) E[ L_{A,D}(t)] ]</p>
+<p>となる。</p>
+<p>Fair Spread (s^) は、</p>
+<p>[ PV_{} = PV_{} ]</p>
+<p>を満たすスプレッドである。</p>
+<p>したがって、</p>
+<p>[ s^ = ]</p>
+<p>となる。</p>
+<p>ここで初めて、信用損失分布が「価格」へ変換される。</p>
+</section>
+<section id="i-11.13-clo評価の計算構造" class="level2">
+<h2 class="anchored" data-anchor-id="i-11.13-clo評価の計算構造">I-11.13 CLO評価の計算構造</h2>
+<p>第10章と本章をまとめると、CLOトランチ評価の計算構造は次のようになる。</p>
+<pre class="text"><code>PD / EAD / LGD / rho
+          ↓
+One-Factor Gaussian
+          ↓
+Conditional Default
+          ↓
+Portfolio Loss Distribution
+          ↓
+Attachment / Detachment
+          ↓
+Tranche Loss Distribution
+          ↓
+Expected Tranche Loss
+          ↓
+Premium Leg / Loss Leg
+          ↓
+Fair Spread / Tranche Value</code></pre>
+<p>この構造は、信用ポートフォリオのリスク計測と証券化商品の価格評価が、同じ損失分布を基礎としていることを示している。</p>
+<p>第10章では損失分布の分位点を取ることでCredit VaRを求めた。</p>
+<p>本章では同じ損失分布をAttachment / Detachmentによって切り分け、各トランチのキャッシュフローへ変換する。</p>
+<p>[ ]</p>
+<p>これが、第I部におけるポートフォリオ・リスクモデルから証券化商品評価までの接続である。</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="pagination-link" aria-label="第I-10章 信用リスクとCredit VaR">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html" class="pagination-link" aria-label="第II-1章 債券評価と金利リスクの基礎">
+        <span class="nav-page-text"><span class="chapter-title">第II-1章 債券評価と金利リスクの基礎</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

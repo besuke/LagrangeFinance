@@ -22,6 +22,9 @@ book:
         - part1_empirical/ch06_event_study.qmd
         - part1_empirical/ch07_machine_learning_factor_selection.qmd
         - part1_empirical/ch08_constrained_portfolio_optimization.qmd
+        - part1_empirical/ch09_market_risk_var.qmd
+        - part1_empirical/ch10_credit_risk_credit_var.qmd
+        - part1_empirical/ch11_clo_tranche_valuation.qmd
 
     - part: "第II部 金融工学　無裁定モデル"
       chapters:

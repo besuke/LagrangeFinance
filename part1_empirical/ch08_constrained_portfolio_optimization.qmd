@@ -13,112 +13,80 @@ execute:
 #| include: false
 
 source(file.path("R", "utility_LFL.R"))
+library(GaussQuant)
+library(tidyverse)
 ```
 
-本章では、第7章で推定した銘柄別期待リターンと、これまでに作成した株式リターン履歴を利用し、実務的な制約条件を満たすポートフォリオを構築する。
+本章では、これまでに作成した株式リターン履歴を用いて、制約付きポートフォリオ最適化を実装する。第5章で確認した平均分散法を出発点とし、最小分散、平均分散、最大リターン、最大シャープレシオ、最小Expected Shortfall、リスク・バジェッティング、目標リターン、目標リスクへと拡張する。
 
-第5章では平均分散最適化の基本を確認した。本章では、その考え方にロングオンリー、銘柄別ウェイト上限、VaR上限および売買回転率を加え、アウト・オブ・サンプルのバックテストへ発展させる。
-
-本章では、次の順序で処理を進める。
+計算にはGaussQuantのポートフォリオAPIを用いる。これにより、最適化問題そのものを本章内で再実装するのではなく、投資ユニバース、リターンデータ、制約条件、最適化手法を分離して記述できる。
 
 ```text
-第7章の期待リターン
+株式リターン履歴
         ↓
-投資ユニバースと共分散行列
+投資ユニバース
+        ↓
+portfolio_spec_GQL()
         ↓
 制約条件
         ↓
+portfolio_optimize_GQL()
+        ↓
 最適ウェイト
         ↓
-ローリング・リバランス
+Efficient Frontier
         ↓
-バックテストと評価
+バックテスト
 ```
 
-## I-8.1 ポートフォリオ構築の全体像
+## I-8.1 ポートフォリオ最適化の基本
 
-銘柄数を$N$、ウェイトを$\boldsymbol{w}$、期待リターンを$\boldsymbol{\mu}$、分散共分散行列を$\boldsymbol{\Sigma}$とする。
-
-ポートフォリオ期待リターンは、
+銘柄数を $N$、ポートフォリオ・ウェイトを $\boldsymbol{w}$、期待リターンを $\boldsymbol{\mu}$、分散共分散行列を $\boldsymbol{\Sigma}$ とする。
 
 $$
-\mu_p
-=
-\boldsymbol{w}^{\top}
-\boldsymbol{\mu}
+\mu_p=\boldsymbol{w}^{\top}\boldsymbol{\mu},
+\qquad
+\sigma_p^2=\boldsymbol{w}^{\top}\boldsymbol{\Sigma}\boldsymbol{w}
 $$
 
-ポートフォリオ分散は、
+完全投資かつロングオンリー、銘柄別上限を $w_{\max}$ とすると、
 
 $$
-\sigma_p^2
-=
-\boldsymbol{w}^{\top}
-\boldsymbol{\Sigma}
-\boldsymbol{w}
+\sum_{i=1}^{N}w_i=1,
+\qquad
+0\leq w_i\leq w_{\max}
 $$
 
-である。
+である。GaussQuantでは、これらを目的関数の内部に直接書き込まず、ポートフォリオ仕様と制約条件として登録する。
 
-本章では、期待リターンを高めながらリスクを抑える目的関数を用いる。
+## I-8.2 投資ユニバースとリターンデータ
 
-$$
-\max_{\boldsymbol{w}}
-\left[
-\boldsymbol{w}^{\top}\boldsymbol{\mu}
--
-\frac{\gamma}{2}
-\boldsymbol{w}^{\top}
-\boldsymbol{\Sigma}
-\boldsymbol{w}
-\right]
-$$
-
-ここで$\gamma$はリスク回避度である。
-
-## I-8.2 投資ユニバースとリスク推定
-
-### I-8.2.1 第7章の出力
+### I-8.2.1 データの読み込み
 
 ```{r}
 #| label: read-chapter-08-data
 
 tbl_expected_returns <- read_derived_parquet_file_LFL(
-  file.path(
-    "portfolios",
-    "expected_returns.parquet"
-  )
+  file.path("portfolios", "expected_returns.parquet")
 )
 
 tbl_return_history <- read_derived_parquet_file_LFL(
-  file.path(
-    "portfolios",
-    "asset_return_history.parquet"
-  )
+  file.path("portfolios", "asset_return_history.parquet")
 )
 
 tbl_investment_universe <- read_derived_parquet_file_LFL(
-  file.path(
-    "portfolios",
-    "investment_universe.parquet"
-  )
+  file.path("portfolios", "investment_universe.parquet")
 )
 ```
 
 ```{r}
 #| label: chapter-08-input-overview
 
-tbl_input_overview <- tribble(
+tbl_input_overview <- tibble::tribble(
   ~data, ~observations, ~variables,
-  "expected_returns",
-  nrow(tbl_expected_returns),
-  ncol(tbl_expected_returns),
-  "asset_return_history",
-  nrow(tbl_return_history),
-  ncol(tbl_return_history),
-  "investment_universe",
-  nrow(tbl_investment_universe),
-  ncol(tbl_investment_universe)
+  "expected_returns", nrow(tbl_expected_returns), ncol(tbl_expected_returns),
+  "asset_return_history", nrow(tbl_return_history), ncol(tbl_return_history),
+  "investment_universe", nrow(tbl_investment_universe), ncol(tbl_investment_universe)
 )
 
 show_table_LFL(tbl_input_overview)
@@ -126,503 +94,497 @@ show_table_LFL(tbl_input_overview)
 
 ### I-8.2.2 最初のリバランス年度
 
-本ドラフトでは、まず1年度分のポートフォリオを構築し、最適化が実行できることを確認する。
-
 ```{r}
 #| label: select-first-rebalance-year
 
 rebalance_year <- tbl_investment_universe |>
-  summarise(
-    rebalance_year =
-      min(rebalance_year, na.rm = TRUE)
-  ) |>
+  summarise(rebalance_year = min(rebalance_year, na.rm = TRUE)) |>
   pull(rebalance_year)
 
 tbl_universe_one_year <- tbl_investment_universe |>
   filter(rebalance_year == !!rebalance_year) |>
   arrange(desc(market_equity)) |>
   slice_head(n = 20)
+
+vec_assets <- tbl_universe_one_year |>
+  pull(firm_ID) |>
+  as.character()
 ```
 
-対象銘柄を20銘柄に限定することで、最初のドラフトではデータ確認と最適化の流れを見やすくする。
+### I-8.2.3 GaussQuant形式への変換
 
-### I-8.2.3 リターン行列
+`portfolio_optimize_GQL()` はlong形式のリターンデータを受け取る。本章では `firm_ID` を資産名、`month_ID` を時点として利用する。
 
 ```{r}
-#| label: create-return-matrix
+#| label: create-gaussquant-return-data
 
-vec_firm_ids <- tbl_universe_one_year |>
-  pull(firm_ID)
-
-tbl_return_wide <- tbl_return_history |>
-  filter(firm_ID %in% vec_firm_ids) |>
-  select(
-    month_ID,
-    firm_ID,
-    return
+tbl_returns_GQL <- tbl_return_history |>
+  filter(firm_ID %in% as.integer(vec_assets)) |>
+  transmute(
+    date = month_ID,
+    asset = as.character(firm_ID),
+    return = as.numeric(return)
   ) |>
-  pivot_wider(
-    names_from = firm_ID,
-    values_from = return
-  ) |>
-  arrange(month_ID)
-
-mat_return <- tbl_return_wide |>
-  select(-month_ID) |>
-  drop_na() |>
-  as.matrix()
-
-mat_covariance <- cov(mat_return)
-
-vec_expected_return <- tbl_universe_one_year |>
-  arrange(firm_ID) |>
-  pull(expected_return)
+  arrange(date, asset)
 ```
 
-列順を一致させる。
+第7章で推定した期待リターンは投資ユニバースの形成や結果比較に利用できる。一方、現行の `portfolio_optimize_GQL()` は入力されたリターン履歴から標本平均と分散共分散行列を推定する。本章では、このGaussQuantの計算仕様に合わせてリターン履歴を直接入力する。
+
+## I-8.3 ポートフォリオ仕様と制約条件
 
 ```{r}
-#| label: align-portfolio-data
+#| label: create-portfolio-specification
 
-vec_covariance_firm_ids <- colnames(mat_return) |>
-  as.integer()
-
-tbl_universe_one_year <- tbl_universe_one_year |>
-  filter(firm_ID %in% vec_covariance_firm_ids) |>
-  arrange(match(firm_ID, vec_covariance_firm_ids))
-
-vec_expected_return <- tbl_universe_one_year |>
-  pull(expected_return)
-
-mat_covariance <- mat_covariance[
-  as.character(tbl_universe_one_year$firm_ID),
-  as.character(tbl_universe_one_year$firm_ID),
-  drop = FALSE
-]
-```
-
-## I-8.3 制約条件
-
-### I-8.3.1 完全投資
-
-$$
-\sum_{i=1}^{N}w_i=1
-$$
-
-### I-8.3.2 ロングオンリー
-
-$$
-w_i\geq 0
-$$
-
-### I-8.3.3 銘柄別ウェイト上限
-
-$$
-w_i\leq w_{\max}
-$$
-
-本ドラフトでは、1銘柄の上限を20%とする。
-
-### I-8.3.4 VaR上限
-
-正規分布近似によるVaRを、
-
-$$
-VaR_c
-=
-z_c\sigma_p-\mu_p
-$$
-
-とする。
-
-$$
-z_c
-\sqrt{
-\boldsymbol{w}^{\top}
-\boldsymbol{\Sigma}
-\boldsymbol{w}
-}
--
-\boldsymbol{w}^{\top}
-\boldsymbol{\mu}
-\leq
-VaR_{\max}
-$$
-
-### I-8.3.5 売買回転率
-
-前回ウェイトを$\boldsymbol{w}_{t-1}$とすると、
-
-$$
-Turnover_t
-=
-\frac{1}{2}
-\sum_{i=1}^{N}
-|w_{i,t}-w_{i,t-1}|
-$$
-
-である。
-
-最初のドラフトでは、ロングオンリー、完全投資、ウェイト上限、VaR上限までを実装し、売買回転率はバックテスト部分で計算する。
-
-## I-8.4 制約付きポートフォリオ最適化
-
-### I-8.4.1 計算関数
-
-```{r}
-#| label: define-portfolio-functions
-
-portfolio_return_LFL <- function(
-    weight,
-    expected_return
-) {
-  sum(weight * expected_return)
-}
-
-portfolio_variance_LFL <- function(
-    weight,
-    covariance_matrix
-) {
-  as.numeric(
-    t(weight) %*%
-      covariance_matrix %*%
-      weight
-  )
-}
-
-portfolio_volatility_LFL <- function(
-    weight,
-    covariance_matrix
-) {
-  sqrt(
-    portfolio_variance_LFL(
-      weight,
-      covariance_matrix
-    )
-  )
-}
-
-portfolio_var_LFL <- function(
-    weight,
-    expected_return,
-    covariance_matrix,
-    confidence_level = 0.95
-) {
-  qnorm(confidence_level) *
-    portfolio_volatility_LFL(
-      weight,
-      covariance_matrix
-    ) -
-    portfolio_return_LFL(
-      weight,
-      expected_return
-    )
-}
-```
-
-### I-8.4.2 最適化条件
-
-```{r}
-#| label: define-optimization-parameters
+portfolio_spec <- GaussQuant::portfolio_spec_GQL(
+  assets = vec_assets
+)
 
 maximum_weight <- 0.20
-maximum_var <- 0.10
-confidence_level <- 0.95
-risk_aversion <- 5
-```
 
-### I-8.4.3 `nloptr`による最適化
-
-```{r}
-#| label: optimize-one-portfolio
-
-assets <- length(vec_expected_return)
-
-objective_function <- function(weight) {
-  -portfolio_return_LFL(
-    weight,
-    vec_expected_return
-  ) +
-    risk_aversion / 2 *
-    portfolio_variance_LFL(
-      weight,
-      mat_covariance
-    )
-}
-
-objective_function <- function(weight) {
-  objective_value <-
-    -portfolio_return_LFL(
-      weight,
-      vec_expected_return
-    ) +
-    risk_aversion / 2 *
-    portfolio_variance_LFL(
-      weight,
-      mat_covariance
-    )
-
-  objective_gradient <-
-    -vec_expected_return +
-    risk_aversion *
-    as.numeric(
-      mat_covariance %*% weight
-    )
-
-  list(
-    objective = objective_value,
-    gradient = objective_gradient
+portfolio_spec <- portfolio_spec |>
+  GaussQuant::portfolio_constraint_GQL(
+    type = "weight_sum",
+    min_sum = 1,
+    max_sum = 1
+  ) |>
+  GaussQuant::portfolio_constraint_GQL(
+    type = "box",
+    min = 0,
+    max = maximum_weight
   )
-}
-
-equality_constraint <- function(weight) {
-  list(
-    constraints = sum(weight) - 1,
-    jacobian = matrix(
-      rep(1, length(weight)),
-      nrow = 1
-    )
-  )
-}
-
-inequality_constraint <- function(weight) {
-  portfolio_volatility <-
-    portfolio_volatility_LFL(
-      weight,
-      mat_covariance
-    )
-
-  constraint_value <-
-    qnorm(confidence_level) *
-    portfolio_volatility -
-    portfolio_return_LFL(
-      weight,
-      vec_expected_return
-    ) -
-    maximum_var
-
-  volatility_gradient <- if (
-    portfolio_volatility > 1e-12
-  ) {
-    as.numeric(
-      mat_covariance %*% weight
-    ) /
-      portfolio_volatility
-  } else {
-    rep(0, length(weight))
-  }
-
-  constraint_gradient <-
-    qnorm(confidence_level) *
-    volatility_gradient -
-    vec_expected_return
-
-  list(
-    constraints = constraint_value,
-    jacobian = matrix(
-      constraint_gradient,
-      nrow = 1
-    )
-  )
-}
-
-equality_constraint <- function(weight) {
-  sum(weight) - 1
-}
-
-inequality_constraint <- function(weight) {
-  portfolio_var_LFL(
-    weight,
-    vec_expected_return,
-    mat_covariance,
-    confidence_level
-  ) - maximum_var
-}
-objective_function <- function(weight) {
-  objective_value <-
-    -portfolio_return_LFL(
-      weight,
-      vec_expected_return
-    ) +
-    risk_aversion / 2 *
-    portfolio_variance_LFL(
-      weight,
-      mat_covariance
-    )
-
-  objective_gradient <-
-    -vec_expected_return +
-    risk_aversion *
-    as.numeric(
-      mat_covariance %*% weight
-    )
-
-  list(
-    objective = objective_value,
-    gradient = objective_gradient
-  )
-}
-
-equality_constraint <- function(weight) {
-  list(
-    constraints = sum(weight) - 1,
-    jacobian = rep(1, length(weight))
-  )
-}
-
-inequality_constraint <- function(weight) {
-  portfolio_volatility <-
-    portfolio_volatility_LFL(
-      weight,
-      mat_covariance
-    )
-
-  constraint_value <-
-    qnorm(confidence_level) *
-    portfolio_volatility -
-    portfolio_return_LFL(
-      weight,
-      vec_expected_return
-    ) -
-    maximum_var
-
-  volatility_gradient <- if (
-    portfolio_volatility > 1e-12
-  ) {
-    as.numeric(
-      mat_covariance %*% weight
-    ) /
-      portfolio_volatility
-  } else {
-    rep(0, length(weight))
-  }
-
-  constraint_gradient <-
-    qnorm(confidence_level) *
-    volatility_gradient -
-    vec_expected_return
-
-  list(
-    constraints = constraint_value,
-    jacobian = constraint_gradient
-  )
-}
-
-assets <- length(vec_expected_return)
-
-if (assets * maximum_weight < 1) {
-  stop(
-    "銘柄数とmaximum_weightの組合せでは完全投資制約を満たせません。",
-    call. = FALSE
-  )
-}
-
-
 ```
 
 ```{r}
-#| label: show-optimized-weights
+#| label: show-portfolio-constraints
 
-optimization_result <- nloptr::nloptr(
-  x0 = rep(1 / assets, assets),
-  eval_f = objective_function,
-  lb = rep(0, assets),
-  ub = rep(maximum_weight, assets),
-  eval_g_eq = equality_constraint,
-  eval_g_ineq = inequality_constraint,
-  opts = list(
-    algorithm = "NLOPT_LD_SLSQP",
-    xtol_rel = 1e-8,
-    maxeval = 1000,
-    print_level = 0
-  )
+tbl_portfolio_constraints <- portfolio_spec$constraints |>
+  select(constraint_id, type, enabled)
+
+show_table_LFL(tbl_portfolio_constraints)
+```
+
+## I-8.4 基本的なポートフォリオ最適化
+
+### I-8.4.1 最小分散ポートフォリオ
+
+$$
+\min_{\boldsymbol{w}}
+\boldsymbol{w}^{\top}\boldsymbol{\Sigma}\boldsymbol{w}
+$$
+
+```{r}
+#| label: optimize-minimum-variance
+
+result_minimum_variance <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "minimum_variance"
 )
 
-tbl_optimized_weights <- tbl_universe_one_year |>
-  select(
-    rebalance_year,
-    firm_ID,
-    expected_return
-  ) |>
-  mutate(
-    weight = optimization_result$solution
-  ) |>
+tbl_minimum_variance_weights <- result_minimum_variance$weights |>
   arrange(desc(weight))
 
-show_table_LFL(tbl_optimized_weights)
+show_table_LFL(tbl_minimum_variance_weights)
 ```
 
-制約条件を確認する。
+### I-8.4.2 平均分散ポートフォリオ
+
+$$
+\max_{\boldsymbol{w}}
+\left[
+\boldsymbol{w}^{\top}\boldsymbol{\mu}
+-
+\frac{\gamma}{2}
+\boldsymbol{w}^{\top}\boldsymbol{\Sigma}\boldsymbol{w}
+\right]
+$$
 
 ```{r}
-#| label: validate-optimized-portfolio
+#| label: optimize-mean-variance
 
-tbl_constraint_check <- tribble(
-  ~constraint, ~value, ~limit,
-  "weight_sum",
-  sum(tbl_optimized_weights$weight),
-  1,
-  "minimum_weight",
-  min(tbl_optimized_weights$weight),
-  0,
-  "maximum_weight",
-  max(tbl_optimized_weights$weight),
-  maximum_weight,
-  "portfolio_var",
-  portfolio_var_LFL(
-    tbl_optimized_weights$weight,
-    vec_expected_return,
-    mat_covariance,
-    confidence_level
-  ),
-  maximum_var
+result_mean_variance <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "mean_variance",
+  risk_aversion = 5
+)
+```
+
+### I-8.4.3 最大リターン・ポートフォリオ
+
+```{r}
+#| label: optimize-maximum-return
+
+result_maximum_return <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "maximum_return"
+)
+```
+
+### I-8.4.4 最大シャープレシオ・ポートフォリオ
+
+$$
+SR=\frac{\mu_p-r_f}{\sigma_p}
+$$
+
+```{r}
+#| label: optimize-maximum-sharpe
+
+risk_free_rate <- 0
+
+result_maximum_sharpe <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "maximum_sharpe",
+  risk_free_rate = risk_free_rate
+)
+```
+
+## I-8.5 Expected Shortfallとリスク・バジェッティング
+
+### I-8.5.1 Expected Shortfall
+
+損失を $L$、信頼水準を $\alpha$ とする。Expected Shortfallは、VaRを超えるテール損失の平均として扱う。
+
+```{r}
+#| label: optimize-minimum-es
+
+confidence_level <- 0.95
+
+result_minimum_ES <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "minimum_ES",
+  confidence_level = confidence_level
+)
+```
+
+Expected Shortfallは次章の市場リスク計測で詳しく扱う。本章では、分散だけでなく損失分布のテールを目的関数にできることを確認する。
+
+### I-8.5.2 リスク・バジェッティング
+
+ポートフォリオ分散への資産 $i$ の寄与は、
+
+$$
+RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
+$$
+
+で表される。ここでは各資産の目標リスク寄与を等しく設定する。
+
+```{r}
+#| label: optimize-risk-budget
+
+risk_budget <- rep(
+  1 / length(vec_assets),
+  length(vec_assets)
 )
 
-show_table_LFL(tbl_constraint_check)
+result_risk_budget <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "risk_budget",
+  risk_budget = risk_budget
+)
 ```
 
-## I-8.5 バックテスト
-
-最適化したウェイトを、その後の実現リターンへ適用する。
-
-本ドラフトでは、最初のリバランス年度の翌12か月を対象とする。
+## I-8.6 目標リターンと目標リスク
 
 ```{r}
-#| label: define-backtest-period
+#| label: derive-target-return
 
-rebalance_month_ID <- tbl_return_history |>
-  mutate(
-    year = lubridate::year(month_date)
-  ) |>
-  filter(year == rebalance_year) |>
-  summarise(
-    first_month_ID =
-      min(month_ID, na.rm = TRUE)
-  ) |>
-  pull(first_month_ID)
+minimum_return <- result_minimum_variance$statistics |>
+  filter(metric == "expected_return") |>
+  pull(value)
+
+maximum_return <- result_maximum_return$statistics |>
+  filter(metric == "expected_return") |>
+  pull(value)
+
+target_return <- mean(c(minimum_return, maximum_return))
 ```
 
 ```{r}
-#| label: calculate-portfolio-returns
+#| label: optimize-target-return
 
-tbl_backtest_returns <- tbl_return_history |>
+result_target_return <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "target_return",
+  target_return = target_return
+)
+```
+
+```{r}
+#| label: derive-target-volatility
+
+minimum_volatility <- result_minimum_variance$statistics |>
+  filter(metric == "volatility") |>
+  pull(value)
+
+maximum_return_volatility <- result_maximum_return$statistics |>
+  filter(metric == "volatility") |>
+  pull(value)
+
+target_volatility <- mean(
+  c(minimum_volatility, maximum_return_volatility)
+)
+```
+
+```{r}
+#| label: optimize-target-risk
+
+result_target_risk <- GaussQuant::portfolio_optimize_GQL(
+  tbl_returns = tbl_returns_GQL,
+  portfolio = portfolio_spec,
+  method = "target_risk",
+  target_volatility = target_volatility
+)
+```
+
+## I-8.7 最適化手法の比較
+
+```{r}
+#| label: compare-optimization-methods
+
+lst_optimization_results <- list(
+  minimum_variance = result_minimum_variance,
+  mean_variance = result_mean_variance,
+  maximum_return = result_maximum_return,
+  maximum_sharpe = result_maximum_sharpe,
+  minimum_ES = result_minimum_ES,
+  risk_budget = result_risk_budget,
+  target_return = result_target_return,
+  target_risk = result_target_risk
+)
+
+tbl_optimization_comparison <- purrr::imap_dfr(
+  lst_optimization_results,
+  \(result, method_name) {
+    result$statistics |>
+      mutate(method = method_name) |>
+      select(method, metric, value)
+  }
+) |>
+  pivot_wider(
+    names_from = metric,
+    values_from = value
+  )
+
+show_table_LFL(tbl_optimization_comparison)
+```
+
+各手法は同じ「最適ポートフォリオ」を求めているのではない。最小分散は分散、最大リターンは期待リターン、最大シャープレシオはリスク当たり超過リターン、最小ESはテール損失、リスク・バジェッティングはリスク寄与の配分をそれぞれ最適化している。
+
+## I-8.8 Efficient Frontier
+
+目標期待リターンを変化させながら最小分散ポートフォリオを求めることでEfficient Frontierを構成できる。本節では、GaussQuantの `target_return` 最適化を繰り返し、専用の `portfolio_frontier_GQL()` を導入する前段階として最適化APIとEfficient Frontierの関係を確認する。
+
+```{r}
+#| label: create-frontier-targets
+
+frontier_epsilon <- max(
+  abs(maximum_return - minimum_return) * 1e-6,
+  .Machine$double.eps^0.5
+)
+
+vec_target_returns <- seq(
+  minimum_return,
+  maximum_return - frontier_epsilon,
+  length.out = 30
+)
+```
+
+```{r}
+#| label: calculate-efficient-frontier
+
+lst_frontier_results <- purrr::map(
+  vec_target_returns,
+  \(target_value) {
+    GaussQuant::portfolio_optimize_GQL(
+      tbl_returns = tbl_returns_GQL,
+      portfolio = portfolio_spec,
+      method = "target_return",
+      target_return = target_value
+    )
+  }
+)
+
+tbl_efficient_frontier <- purrr::map2_dfr(
+  lst_frontier_results,
+  vec_target_returns,
+  \(result, target_value) {
+    result$statistics |>
+      filter(
+        metric %in% c(
+          "expected_return",
+          "volatility",
+          "sharpe_ratio"
+        )
+      ) |>
+      select(metric, value) |>
+      pivot_wider(
+        names_from = metric,
+        values_from = value
+      ) |>
+      mutate(
+        target_return = target_value,
+        .before = 1
+      )
+  }
+)
+```
+
+```{r}
+#| label: plot-efficient-frontier
+#| fig-cap: "制約付きポートフォリオのEfficient Frontier"
+
+ggplot(
+  tbl_efficient_frontier,
+  aes(
+    x = volatility,
+    y = expected_return
+  )
+) +
+  geom_line() +
+  geom_point() +
+  labs(
+    x = "Volatility",
+    y = "Expected Return"
+  ) +
+  theme_minimal()
+```
+
+最小分散点と最大シャープレシオ点を重ねる。
+
+```{r}
+#| label: create-key-portfolios
+
+tbl_key_portfolios <- bind_rows(
+  result_minimum_variance$statistics |>
+    pivot_wider(
+      names_from = metric,
+      values_from = value
+    ) |>
+    mutate(portfolio = "Minimum Variance"),
+  result_maximum_sharpe$statistics |>
+    pivot_wider(
+      names_from = metric,
+      values_from = value
+    ) |>
+    mutate(portfolio = "Maximum Sharpe"),
+  result_maximum_return$statistics |>
+    pivot_wider(
+      names_from = metric,
+      values_from = value
+    ) |>
+    mutate(portfolio = "Maximum Return")
+)
+```
+
+```{r}
+#| label: plot-efficient-frontier-key-points
+#| fig-cap: "Efficient Frontierと代表的ポートフォリオ"
+
+ggplot(
+  tbl_efficient_frontier,
+  aes(
+    x = volatility,
+    y = expected_return
+  )
+) +
+  geom_line() +
+  geom_point() +
+  geom_point(
+    data = tbl_key_portfolios,
+    aes(x = volatility, y = expected_return),
+    size = 3
+  ) +
+  geom_text(
+    data = tbl_key_portfolios,
+    aes(
+      x = volatility,
+      y = expected_return,
+      label = portfolio
+    ),
+    nudge_y = 0.00005,
+    check_overlap = TRUE
+  ) +
+  labs(
+    x = "Volatility",
+    y = "Expected Return"
+  ) +
+  theme_minimal()
+```
+
+## I-8.9 最適ウェイトの比較
+
+```{r}
+#| label: compare-portfolio-weights
+
+tbl_weight_comparison <- purrr::imap_dfr(
+  lst_optimization_results,
+  \(result, method_name) {
+    result$weights |>
+      mutate(method = method_name)
+  }
+)
+
+ggplot(
+  tbl_weight_comparison,
+  aes(
+    x = asset,
+    y = weight
+  )
+) +
+  geom_col() +
+  facet_wrap(
+    vars(method),
+    scales = "free_y"
+  ) +
+  labs(
+    x = "Asset",
+    y = "Weight"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,
+      hjust = 1
+    )
+  )
+```
+
+## I-8.10 アウト・オブ・サンプル評価
+
+最適化の結果は推定期間内の目的関数だけで評価すべきではない。推定期間で求めたウェイトをその後のリターンへ適用し、アウト・オブ・サンプルで評価する。
+
+```{r}
+#| label: create-out-of-sample-returns
+
+tbl_next_year_returns <- tbl_return_history |>
   filter(
-    firm_ID %in% tbl_optimized_weights$firm_ID,
-    month_ID >= rebalance_month_ID,
-    month_ID < rebalance_month_ID + 12L
+    firm_ID %in% as.integer(vec_assets),
+    lubridate::year(month_date) == rebalance_year + 1
   ) |>
-  left_join(
-    tbl_optimized_weights |>
-      select(
-        firm_ID,
-        weight
-      ),
-    by = "firm_ID"
+  transmute(
+    month_date,
+    asset = as.character(firm_ID),
+    return = as.numeric(return)
+  )
+```
+
+最大シャープレシオ・ポートフォリオを例として評価する。
+
+```{r}
+#| label: calculate-out-of-sample-portfolio
+
+tbl_backtest <- tbl_next_year_returns |>
+  inner_join(
+    result_maximum_sharpe$weights,
+    by = "asset"
   ) |>
-  group_by(
-    month_ID,
-    month_date
-  ) |>
+  group_by(month_date) |>
   summarise(
     portfolio_return = sum(
       weight * return,
@@ -630,210 +592,56 @@ tbl_backtest_returns <- tbl_return_history |>
     ),
     .groups = "drop"
   ) |>
-  arrange(month_ID)
-```
-
-比較対象として等ウェイト・ポートフォリオを作成する。
-
-```{r}
-#| label: calculate-equal-weight-returns
-
-tbl_equal_weight_returns <- tbl_return_history |>
-  filter(
-    firm_ID %in% tbl_optimized_weights$firm_ID,
-    month_ID >= rebalance_month_ID,
-    month_ID < rebalance_month_ID + 12L
-  ) |>
-  group_by(
-    month_ID,
-    month_date
-  ) |>
-  summarise(
-    equal_weight_return =
-      mean(return, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-tbl_backtest_returns <- tbl_backtest_returns |>
-  left_join(
-    tbl_equal_weight_returns,
-    by = c(
-      "month_ID",
-      "month_date"
-    )
-  )
-```
-
-```{r}
-#| label: plot-backtest-results
-
-tbl_backtest_plot <- tbl_backtest_returns |>
+  arrange(month_date) |>
   mutate(
-    optimized = cumprod(
+    wealth_index = cumprod(
       1 + portfolio_return
-    ) - 1,
-    equal_weight = cumprod(
-      1 + equal_weight_return
-    ) - 1
-  ) |>
-  select(
-    month_date,
-    optimized,
-    equal_weight
-  ) |>
-  pivot_longer(
-    cols = c(
-      optimized,
-      equal_weight
-    ),
-    names_to = "portfolio",
-    values_to = "cumulative_return"
-  )
-
-plot_backtest <- tbl_backtest_plot |>
-  ggplot(
-    aes(
-      x = month_date,
-      y = cumulative_return,
-      colour = portfolio
     )
-  ) +
-  geom_line(linewidth = 0.8) +
-  scale_y_continuous(
-    labels = scales::label_percent()
-  ) +
+  )
+```
+
+```{r}
+#| label: plot-out-of-sample-portfolio
+#| fig-cap: "最大シャープレシオ・ポートフォリオのアウト・オブ・サンプル推移"
+
+plot_backtest <- ggplot(
+  tbl_backtest,
+  aes(
+    x = month_date,
+    y = wealth_index
+  )
+) +
+  geom_line() +
   labs(
     x = NULL,
-    y = "Cumulative Return",
-    colour = "Portfolio",
-    title = "Optimized and Equal-Weight Portfolios"
+    y = "Wealth Index"
   )
 
-show_plot_LFL(
-  add_lagrange_theme_LFL(
-    plot_backtest
-  )
-)
-```
-
-## I-8.6 パフォーマンス評価
-
-```{r}
-#| label: define-performance-functions
-
-annualized_return_LFL <- function(
-    x,
-    periods = 12
-) {
-  prod(1 + x)^(periods / length(x)) - 1
-}
-
-annualized_volatility_LFL <- function(
-    x,
-    periods = 12
-) {
-  sd(x) * sqrt(periods)
-}
-
-maximum_drawdown_LFL <- function(x) {
-  wealth <- cumprod(1 + x)
-  drawdown <- wealth / cummax(wealth) - 1
-  min(drawdown)
-}
+show_plot_LFL(plot_backtest)
 ```
 
 ```{r}
-#| label: calculate-performance-summary
+#| label: summarize-out-of-sample-performance
 
-tbl_performance_summary <- tribble(
-  ~portfolio, ~annualized_return,
-  ~annualized_volatility, ~sharpe_ratio,
-  ~maximum_drawdown,
-  "optimized",
-  annualized_return_LFL(
-    tbl_backtest_returns$portfolio_return
-  ),
-  annualized_volatility_LFL(
-    tbl_backtest_returns$portfolio_return
-  ),
-  annualized_return_LFL(
-    tbl_backtest_returns$portfolio_return
-  ) /
-    annualized_volatility_LFL(
-      tbl_backtest_returns$portfolio_return
-    ),
-  maximum_drawdown_LFL(
-    tbl_backtest_returns$portfolio_return
-  ),
-  "equal_weight",
-  annualized_return_LFL(
-    tbl_backtest_returns$equal_weight_return
-  ),
-  annualized_volatility_LFL(
-    tbl_backtest_returns$equal_weight_return
-  ),
-  annualized_return_LFL(
-    tbl_backtest_returns$equal_weight_return
-  ) /
-    annualized_volatility_LFL(
-      tbl_backtest_returns$equal_weight_return
-    ),
-  maximum_drawdown_LFL(
-    tbl_backtest_returns$equal_weight_return
+tbl_backtest_summary <- tbl_backtest |>
+  summarise(
+    observations = n(),
+    cumulative_return = prod(1 + portfolio_return) - 1,
+    mean_return = mean(portfolio_return),
+    volatility = sd(portfolio_return),
+    minimum_return = min(portfolio_return),
+    maximum_return = max(portfolio_return)
   )
-)
 
-show_table_LFL(tbl_performance_summary)
+show_table_LFL(tbl_backtest_summary)
 ```
 
-取引コストと売買回転率は、複数回のリバランスを実装した段階で追加する。本ドラフトでは、最適化、制約確認、実現リターンへの適用、等ウェイトとの比較までを一つの流れとして確認する。
+## I-8.11 本章のまとめ
 
-## I-8.7 結果の保存
+本章では、ポートフォリオ最適化をGaussQuantの統一APIで実装した。最適化ロジックを章内に直接記述する方法から、ポートフォリオ仕様、制約条件、最適化手法を分離する構成へ変更した。
 
-```{r}
-#| label: save-chapter-08-data
+最小分散、平均分散、最大リターン、最大シャープレシオに加えて、Expected Shortfall、リスク・バジェッティング、目標リターン、目標リスクを同じAPIで扱うことで、ポートフォリオ最適化を一般的なリスク配分問題として捉えることができる。
 
-tbl_chapter_08_outputs <- list(
-  optimized_weights =
-    tbl_optimized_weights,
-  backtest_returns =
-    tbl_backtest_returns,
-  performance_summary =
-    tbl_performance_summary
-)
+また、目標リターンを連続的に変化させることでEfficient Frontierを構成し、最小分散点と最大シャープレシオ点を同一平面上で確認した。
 
-vec_chapter_08_files <- c(
-  optimized_weights = file.path(
-    "portfolios",
-    "optimized_weights.parquet"
-  ),
-  backtest_returns = file.path(
-    "portfolios",
-    "backtest_returns.parquet"
-  ),
-  performance_summary = file.path(
-    "portfolios",
-    "performance_summary.parquet"
-  )
-)
-
-vec_chapter_08_paths <- tbl_chapter_08_outputs |>
-  imap_chr(
-    \(data, name) {
-      write_derived_parquet_file_LFL(
-        data,
-        vec_chapter_08_files[[name]]
-      )
-    }
-  )
-
-tibble::tibble(
-  output = base::names(vec_chapter_08_paths),
-  path = relative_path_LFL(base::unname(vec_chapter_08_paths))
-) |>
-  show_table_LFL()
-```
-
-本章では、第7章の期待リターンを使い、ロングオンリー、完全投資、銘柄別ウェイト上限およびVaR上限を満たすポートフォリオを構築した。
-
-さらに、最適ウェイトを実現リターンへ適用し、等ウェイト・ポートフォリオとの比較を行った。次の段階では、複数年度のローリング・リバランス、売買回転率、取引コストを追加し、バックテストを拡張する。
+次章では、ポートフォリオの損失分布そのものに焦点を移し、VaRとExpected Shortfallを中心に市場リスク計測を扱う。

@@ -341,14 +341,21 @@ if (
       state_length = 0,
       wrap = FALSE
     )
-
   gganimate::animate(
     jgb_yield_curve_animation_plot,
     width = 900,
     height = 560,
     fps = 8,
     duration = 24,
-    renderer = gifski::gifski_renderer()
+    renderer = gganimate::gifski_renderer()
+  )
+
+  gganimate::anim_save(
+    filename = file.path(
+      "images",
+      "jgb_yield_curve_animation.gif"
+    ),
+    animation = jgb_yield_animation
   )
 }
 ```
@@ -399,14 +406,21 @@ if (
       linetype = ggplot2::guide_legend(nrow = 1)
     ) +
     gganimate::transition_reveal(date)
-
-  gganimate::animate(
+  jgb_yield_animation <- gganimate::animate(
     jgb_yield_time_series_animation_plot,
     width = 900,
     height = 560,
     fps = 8,
     duration = 24,
-    renderer = gifski::gifski_renderer()
+    renderer = gganimate::gifski_renderer()
+  )
+
+  gganimate::anim_save(
+    filename = file.path(
+      "images",
+      "jgb_yield_curve_animation.gif"
+    ),
+    animation = jgb_yield_animation
   )
 }
 ```
