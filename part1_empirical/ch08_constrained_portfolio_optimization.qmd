@@ -17,7 +17,7 @@ library(GaussQuant)
 library(tidyverse)
 ```
 
-本章では、これまでに作成した株式リターン履歴を用いて、制約付きポートフォリオ最適化を実装する。第5章で確認した平均分散法を出発点とし、最小分散、平均分散、最大リターン、最大シャープレシオ、最小Expected Shortfall、リスク・バジェッティング、目標リターン、目標リスクへと拡張する。
+本章では、これまでに作成した株式リターン履歴を用いて、制約付きポートフォリオ最適化を実装する。第5章で確認した平均分散法を出発点とし、最小分散、平均分散、最大リターン、最大シャープレシオ、最小期待ショートフォール、リスク・バジェッティング、目標リターン、目標リスクへと拡張する。
 
 計算にはGaussQuantのポートフォリオAPIを用いる。これにより、最適化問題そのものを本章内で再実装するのではなく、投資ユニバース、リターンデータ、制約条件、最適化手法を分離して記述できる。
 
@@ -241,11 +241,11 @@ result_maximum_sharpe <- GaussQuant::portfolio_optimize_GQL(
 )
 ```
 
-## I-8.5 Expected Shortfallとリスク・バジェッティング
+## I-8.5 期待ショートフォールとリスク・バジェッティング
 
-### I-8.5.1 Expected Shortfall
+### I-8.5.1 期待ショートフォール
 
-損失を $L$、信頼水準を $\alpha$ とする。Expected Shortfallは、VaRを超えるテール損失の平均として扱う。
+損失を $L$、信頼水準を $\alpha$ とする。期待ショートフォールは、市場VaRを超えるテール損失の平均として扱う。
 
 ```{r}
 #| label: optimize-minimum-es
@@ -260,7 +260,7 @@ result_minimum_ES <- GaussQuant::portfolio_optimize_GQL(
 )
 ```
 
-Expected Shortfallは次章の市場リスク計測で詳しく扱う。本章では、分散だけでなく損失分布のテールを目的関数にできることを確認する。
+期待ショートフォールは次章の市場リスク計測で詳しく扱う。本章では、分散だけでなく損失分布のテールを目的関数にできることを確認する。
 
 ### I-8.5.2 リスク・バジェッティング
 
@@ -383,17 +383,14 @@ show_table_LFL(tbl_optimization_comparison)
 ```{r}
 #| label: create-frontier-targets
 
-frontier_epsilon <- max(
-  abs(maximum_return - minimum_return) * 1e-6,
-  .Machine$double.eps^0.5
-)
-
 vec_target_returns <- seq(
   minimum_return,
-  maximum_return - frontier_epsilon,
-  length.out = 30
-)
+  maximum_return,
+  length.out = 31
+)[1:30]
 ```
+
+最大リターン点そのものは `result_maximum_return` で別途計算済みである。したがって、`target_return` によるフロンティア計算では最大リターン境界を1点だけ除外し、境界上での数値的な退化を避ける。
 
 ```{r}
 #| label: calculate-efficient-frontier
@@ -439,7 +436,7 @@ tbl_efficient_frontier <- purrr::map2_dfr(
 #| label: plot-efficient-frontier
 #| fig-cap: "制約付きポートフォリオのEfficient Frontier"
 
-ggplot(
+plot_efficient_frontier <- ggplot(
   tbl_efficient_frontier,
   aes(
     x = volatility,
@@ -451,8 +448,9 @@ ggplot(
   labs(
     x = "Volatility",
     y = "Expected Return"
-  ) +
-  theme_minimal()
+  )
+
+show_plot_LFL(plot_efficient_frontier)
 ```
 
 最小分散点と最大シャープレシオ点を重ねる。
@@ -462,22 +460,13 @@ ggplot(
 
 tbl_key_portfolios <- bind_rows(
   result_minimum_variance$statistics |>
-    pivot_wider(
-      names_from = metric,
-      values_from = value
-    ) |>
+    pivot_wider(names_from = metric, values_from = value) |>
     mutate(portfolio = "Minimum Variance"),
   result_maximum_sharpe$statistics |>
-    pivot_wider(
-      names_from = metric,
-      values_from = value
-    ) |>
+    pivot_wider(names_from = metric, values_from = value) |>
     mutate(portfolio = "Maximum Sharpe"),
   result_maximum_return$statistics |>
-    pivot_wider(
-      names_from = metric,
-      values_from = value
-    ) |>
+    pivot_wider(names_from = metric, values_from = value) |>
     mutate(portfolio = "Maximum Return")
 )
 ```
@@ -486,7 +475,7 @@ tbl_key_portfolios <- bind_rows(
 #| label: plot-efficient-frontier-key-points
 #| fig-cap: "Efficient Frontierと代表的ポートフォリオ"
 
-ggplot(
+plot_efficient_frontier_key_points <- ggplot(
   tbl_efficient_frontier,
   aes(
     x = volatility,
@@ -513,8 +502,9 @@ ggplot(
   labs(
     x = "Volatility",
     y = "Expected Return"
-  ) +
-  theme_minimal()
+  )
+
+show_plot_LFL(plot_efficient_frontier_key_points)
 ```
 
 ## I-8.9 最適ウェイトの比較
@@ -530,7 +520,7 @@ tbl_weight_comparison <- purrr::imap_dfr(
   }
 )
 
-ggplot(
+plot_weight_comparison <- ggplot(
   tbl_weight_comparison,
   aes(
     x = asset,
@@ -546,13 +536,14 @@ ggplot(
     x = "Asset",
     y = "Weight"
   ) +
-  theme_minimal() +
   theme(
     axis.text.x = element_text(
       angle = 90,
       hjust = 1
     )
   )
+
+show_plot_LFL(plot_weight_comparison)
 ```
 
 ## I-8.10 アウト・オブ・サンプル評価
@@ -640,8 +631,8 @@ show_table_LFL(tbl_backtest_summary)
 
 本章では、ポートフォリオ最適化をGaussQuantの統一APIで実装した。最適化ロジックを章内に直接記述する方法から、ポートフォリオ仕様、制約条件、最適化手法を分離する構成へ変更した。
 
-最小分散、平均分散、最大リターン、最大シャープレシオに加えて、Expected Shortfall、リスク・バジェッティング、目標リターン、目標リスクを同じAPIで扱うことで、ポートフォリオ最適化を一般的なリスク配分問題として捉えることができる。
+最小分散、平均分散、最大リターン、最大シャープレシオに加えて、期待ショートフォール、リスク・バジェッティング、目標リターン、目標リスクを同じAPIで扱うことで、ポートフォリオ最適化を一般的なリスク配分問題として捉えることができる。
 
 また、目標リターンを連続的に変化させることでEfficient Frontierを構成し、最小分散点と最大シャープレシオ点を同一平面上で確認した。
 
-次章では、ポートフォリオの損失分布そのものに焦点を移し、VaRとExpected Shortfallを中心に市場リスク計測を扱う。
+次章では、ポートフォリオの損失分布そのものに焦点を移し、市場VaRと期待ショートフォールを中心に市場リスク計測を扱う。

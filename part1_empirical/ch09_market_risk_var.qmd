@@ -1,5 +1,5 @@
 ---
-title: "第I-9章 市場リスクとVaR"
+title: "第I-9章 市場リスクと市場VaR"
 execute:
   eval: true
   echo: true
@@ -14,29 +14,32 @@ execute:
 
 source(file.path("R", "utility_LFL.R"))
 
+library(tidyverse)
+library(arrow)
+library(furrr)
 ```
 
-本章では、市場リスク管理の中心的な尺度であるValue at Risk（VaR）を扱う。最初に、VaRを中心として発展してきた市場リスク規制を、バーゼルII、バーゼル2.5、Fundamental Review of the Trading Book（FRTB）という流れから整理する。そのうえで、分散共分散法、ヒストリカル法、モンテカルロ法によるVaRを実装し、Expected Shortfall（ES）、リスク寄与度、バックテストへ進む。
+本章では、市場リスク管理の中心的な尺度である市場Value at Risk（市場VaR）を扱う。最初に、市場VaRを中心として発展してきた市場リスク規制を、バーゼルII、バーゼル2.5、Fundamental Review of the Trading Book（FRTB）という流れから整理する。そのうえで、分散共分散法、ヒストリカル法、モンテカルロ法による市場VaRを実装し、期待ショートフォール（ES）、リスク寄与度、バックテストへ進む。
 
-本章の目的はFRTBの標準的方式を再現することではない。FRTBを市場リスク管理の歴史的背景として位置づけ、VaRとESの考え方を、Rによるデータ処理とシミュレーションを通して理解することにある。
+本章の目的はFRTBの標準的方式を再現することではない。FRTBを市場リスク管理の歴史的背景として位置づけ、市場VaRとESの考え方を、Rによるデータ処理とシミュレーションを通して理解することにある。
 
 ## I-9.1 FRTBとは何か
 
 ### VaRからFRTBへ
 
-1990年代以降、金融機関の市場リスク管理ではVaRが広く利用されるようになった。VaRは、一定の保有期間と信頼水準のもとで、ポートフォリオに生じ得る損失を一つの数値として表現する。この簡潔さから、VaRは内部リスク管理だけでなく、規制上の市場リスク計測にも組み込まれていった。
+1990年代以降、金融機関の市場リスク管理では市場VaRが広く利用されるようになった。市場VaRは、一定の保有期間と信頼水準のもとで、ポートフォリオに生じ得る損失を一つの数値として表現する。この簡潔さから、市場VaRは内部リスク管理だけでなく、規制上の市場リスク計測にも組み込まれていった。
 
 しかし、2007年から2008年にかけて進行した世界金融危機は、従来の市場リスク管理の限界を明らかにした。特にトレーディング勘定では、危機前に想定されていた水準を大きく上回る損失が発生した。市場流動性の急激な低下、信用スプレッドの拡大、証券化商品の価格下落、複数のリスク要因の同時変動などが重なり、平常時の過去データを中心に推定されたリスク尺度だけでは、危機時の損失を十分に捉えられない場合があることが認識された。
 
 さらに、大規模金融機関の経営危機は金融システム全体へ波及し得るため、各国では金融システム安定化のための公的支援が実施された。この経験は「Too Big To Fail」をめぐる議論を強め、個別金融機関の内部管理だけではなく、金融システム全体の安定性を意識した規制改革を促すことになった。
 
-危機への比較的早い対応が、一般にバーゼル2.5と呼ばれる市場リスク規制の強化である。従来のVaRに加えて、深刻な市場ストレス期を反映した stressed VaR が導入され、トレーディング勘定の信用リスクについても追加的な資本賦課が強化された。
+危機への比較的早い対応が、一般にバーゼル2.5と呼ばれる市場リスク規制の強化である。従来の市場VaRに加えて、深刻な市場ストレス期を反映した stressed VaR が導入され、トレーディング勘定の信用リスクについても追加的な資本賦課が強化された。
 
-ただし、これは危機への対応の終点ではなかった。トレーディング勘定と銀行勘定の境界、流動性の異なるリスク要因の扱い、内部モデルの比較可能性、VaRが損失分布の裾の大きさを直接表現しないことなど、より構造的な問題が残った。
+ただし、これは危機への対応の終点ではなかった。トレーディング勘定と銀行勘定の境界、流動性の異なるリスク要因の扱い、内部モデルの比較可能性、市場VaRが損失分布の裾の大きさを直接表現しないことなど、より構造的な問題が残った。
 
 そこでバーゼル銀行監督委員会は、市場リスク規制を根本から見直すFRTBを策定した。2016年に市場リスクの最低所要自己資本に関する基準が公表され、2019年に改訂された最終基準が公表された。
 
-FRTBの重要な特徴の一つが、内部モデル方式において中心的なリスク尺度をVaRからExpected Shortfallへ移したことである。VaRが損失分布のある分位点を示すのに対し、ESはその分位点を超えた領域の損失を平均する。そのため、極端な市場変動が発生した場合の損失の大きさをより直接的に捉えることができる。
+FRTBの重要な特徴の一つが、内部モデル方式において中心的なリスク尺度を市場VaRから期待ショートフォールへ移したことである。市場市場VaRが損失分布のある分位点を示すのに対し、ESはその分位点を超えた領域の損失を平均する。そのため、極端な市場変動が発生した場合の損失の大きさをより直接的に捉えることができる。
 
 したがって、市場リスク計測の発展は概念的には次のように整理できる。
 
@@ -49,43 +52,47 @@ stressed VaR（バーゼル2.5）
   ↓
 FRTB
   ↓
-Expected Shortfall
+期待ショートフォール
 ```
 
 日本ではバーゼルIII最終化に伴う市場リスク規制が段階的に導入され、国際統一基準金融機関および内部モデルを採用する国内基準金融機関には2024年3月31日から、内部モデルを採用しない国内基準金融機関等には2025年3月31日から適用されている。
 
-本章ではFRTBの標準的方式の詳細な資本計算には立ち入らない。ここからは、FRTBに至る市場リスク管理の基礎となったVaRそのものを理解する。
+本章ではFRTBの標準的方式の詳細な資本計算には立ち入らない。ここからは、FRTBに至る市場リスク管理の基礎となった市場VaRそのものを理解する。
 
-## I-9.2 VaRとは何か
+## I-9.2 市場VaRとは何か
 
-時点 \(t\) のポートフォリオ価値を \(V_t\) とすると、1期間の損益は
+時点 $t$ のポートフォリオ価値を $V_t$ とすると、1期間の損益は
 
-\[
-PnL_{t+1}=V_{t+1}-V_t
-\]
+$$
+\mathrm{PnL}_{t+1}=V_{t+1}-V_t
+$$
 
-である。損失を正の値として扱うため、
+である。市場リスク管理では損失を正の値として扱うため、損失変数を
 
-\[
-L_{t+1}=-PnL_{t+1}
-\]
+$$
+L_{t+1}
+=
+-\mathrm{PnL}_{t+1}
+=
+V_t-V_{t+1}
+$$
 
 と定義する。
 
-信頼水準 \(\alpha\) におけるVaRは、損失分布の \(\alpha\) 分位点として
+信頼水準 $\alpha$ における市場VaRは、損失分布の $\alpha$ 分位点として
 
-\[
-VaR_\alpha
+$$
+\mathrm{VaR}_{\alpha}
 =
 \inf\left\{
 l:
 P(L\le l)\ge\alpha
 \right\}
-\]
+$$
 
 と定義される。
 
-例えば95% VaRが1億円であるとは、モデルと観測期間を前提としたとき、損失が1億円以下となる確率が95%であることを意味する。残り5%の領域では1億円を超える損失が発生し得る。VaRそのものは、その5%の領域で損失がどこまで拡大するかを示さない。
+例えば95%市場VaRが1億円であるとは、モデルと観測期間を前提としたとき、損失が1億円以下となる確率が95%であることを意味する。残り5%の領域では1億円を超える損失が発生し得る。市場VaRそのものは、その5%の領域で損失がどこまで拡大するかを示さない。
 
 ## I-9.3 市場データとポートフォリオ損益
 
@@ -133,9 +140,9 @@ show_table_LFL(tbl_portfolio_returns)
 
 損失率を
 
-\[
+$$
 L_t=-R_{p,t}
-\]
+$$
 
 とする。
 
@@ -146,23 +153,23 @@ tbl_portfolio_losses <- tbl_portfolio_returns |>
   mutate(loss = -portfolio_return)
 ```
 
-## I-9.4 分散共分散法によるVaR
+## I-9.4 分散共分散法による市場VaR
 
-最も基本的なVaR計算法は、ポートフォリオ・リターンが正規分布に従うと仮定する分散共分散法である。
+最も基本的な市場VaR計算法は、ポートフォリオ・リターンが正規分布に従うと仮定する分散共分散法である。
 
 ポートフォリオ・リターンを
 
-\[
+$$
 R_p \sim N(\mu_p,\sigma_p^2)
-\]
+$$
 
-とすると、信頼水準 \(\alpha\) のVaRは
+とすると、信頼水準 $\alpha$ の市場VaRは
 
-\[
-VaR_\alpha
+$$
+\mathrm{VaR}_{\alpha}
 =
 -\mu_p+\Phi^{-1}(\alpha)\sigma_p
-\]
+$$
 
 で与えられる。
 
@@ -195,15 +202,15 @@ show_table_LFL(tbl_gaussian_var)
 
 分散共分散法は高速で解釈しやすい。一方、正規分布という仮定によって、歪度やファットテールを十分に表現できない場合がある。
 
-## I-9.5 ヒストリカル法によるVaR
+## I-9.5 ヒストリカル法による市場VaR
 
-ヒストリカルVaRでは、特定の確率分布を仮定せず、実際に観測された損失分布から分位点を求める。
+ヒストリカル市場VaRでは、特定の確率分布を仮定せず、実際に観測された損失分布から分位点を求める。
 
-\[
-VaR_\alpha
+$$
+\mathrm{VaR}_{\alpha}
 =
 Q_\alpha(L)
-\]
+$$
 
 ```{r}
 #| label: calculate-historical-var
@@ -227,7 +234,7 @@ show_table_LFL(tbl_historical_var)
 
 ヒストリカル法には分布仮定が不要という利点がある。しかし、将来発生する損失が過去の観測範囲に強く依存するという制約がある。
 
-## I-9.6 モンテカルロ法によるVaR
+## I-9.6 モンテカルロ法による市場VaR
 
 モンテカルロ法では、確率モデルから多数の市場シナリオを生成し、それぞれのシナリオでポートフォリオ損益を計算する。
 
@@ -306,7 +313,7 @@ show_table_LFL(tbl_monte_carlo_var)
 future::plan(future::sequential)
 ```
 
-## I-9.7 3つのVaRの比較
+## I-9.7 3つの市場VaRの比較
 
 ```{r}
 #| label: compare-var-methods
@@ -322,7 +329,7 @@ show_table_LFL(tbl_var_comparison)
 
 ```{r}
 #| label: plot-var-comparison
-#| fig-cap: "VaR計算法の比較"
+#| fig-cap: "市場VaR計算法の比較"
 
 plot_var_comparison <- tbl_var_comparison |>
   ggplot(
@@ -334,25 +341,25 @@ plot_var_comparison <- tbl_var_comparison |>
   geom_col() +
   labs(
     x = NULL,
-    y = "VaR"
+    y = "市場VaR"
   )
 
 show_plot_LFL(plot_var_comparison)
 ```
 
-同じ信頼水準でも、VaRは損失分布の推定方法によって異なる。したがって、VaRは単なる一つの統計量ではなく、データ、モデル、保有期間、信頼水準と一体として解釈する必要がある。
+同じ信頼水準でも、市場VaRは損失分布の推定方法によって異なる。したがって、市場VaRは単なる一つの統計量ではなく、データ、モデル、保有期間、信頼水準と一体として解釈する必要がある。
 
-## I-9.8 Expected Shortfall
+## I-9.8 期待ショートフォール
 
-VaRの重要な限界は、VaRを超えた領域の損失の大きさを表現しないことである。
+市場VaRの重要な限界は、市場VaRを超えた領域の損失の大きさを表現しないことである。
 
-Expected Shortfall（ES）は、損失がVaRを超えるテール領域の平均損失として直感的に理解できる。
+期待ショートフォール（ES）は、損失が市場VaRを超えるテール領域の平均損失として直感的に理解できる。
 
-\[
+$$
 ES_\alpha
 =
-E[L\mid L\ge VaR_\alpha]
-\]
+E[L\mid L\ge \mathrm{VaR}_{\alpha}]
+$$
 
 実証分布では次のように計算できる。
 
@@ -367,7 +374,7 @@ historical_es <- tbl_portfolio_losses |>
   pull(ES)
 
 tbl_var_es <- tibble(
-  measure = c("VaR", "Expected Shortfall"),
+  measure = c("VaR", "期待ショートフォール"),
   value = c(
     historical_var,
     historical_es
@@ -379,7 +386,7 @@ show_table_LFL(tbl_var_es)
 
 ```{r}
 #| label: plot-var-es
-#| fig-cap: "VaRとExpected Shortfall"
+#| fig-cap: "市場VaRと期待ショートフォール"
 
 plot_var_es <- tbl_var_es |>
   ggplot(
@@ -397,134 +404,76 @@ plot_var_es <- tbl_var_es |>
 show_plot_LFL(plot_var_es)
 ```
 
-通常、同一の信頼水準ではESはVaR以上となる。VaRがテール領域への入口を示すのに対し、ESはその先で平均的にどの程度の損失が生じるかを表す。
+通常、同一の信頼水準ではESは市場VaR以上となる。市場VaRがテール領域への入口を示すのに対し、ESはその先で平均的にどの程度の損失が生じるかを表す。
 
-## I-9.9 VaRのリスク寄与度
+## I-9.9 市場VaRのリスク寄与度
 
-ポートフォリオ全体のVaRだけでは、どの資産がリスクを生み出しているかは分からない。分散共分散法では、VaRを各資産の寄与に分解する考え方へ発展させることができる。
+ポートフォリオ全体の市場VaRだけでは、どの資産がリスクを生み出しているかは分からない。分散共分散法では、市場VaRを各資産の寄与に分解する考え方へ発展させることができる。
 
 ポートフォリオ・ボラティリティを
 
-\[
+$$
 \sigma_p
 =
 \sqrt{
 w^\top \Sigma w
 }
-\]
+$$
 
-とすると、資産 \(i\) のボラティリティに対する限界寄与は
+とすると、資産 $i$ のボラティリティに対する限界寄与は
 
-\[
+$$
 \frac{\partial \sigma_p}{\partial w_i}
 =
 \frac{(\Sigma w)_i}{\sigma_p}
-\]
+$$
 
 である。
 
 成分リスク寄与は
 
-\[
+$$
 RC_i
 =
 w_i
 \frac{(\Sigma w)_i}{\sigma_p}
-\]
+$$
 
 となり、
 
-\[
+$$
 \sum_i RC_i=\sigma_p
-\]
+$$
 
 が成立する。この考え方は、第8章のリスク・バジェッティングと直接つながっている。
 
-## I-9.10 VaRバックテスト
+## I-9.10 市場VaRバックテスト
 
-VaRモデルは計算して終わりではない。実際の損失がVaRを超えた回数を観測し、モデルが想定した信頼水準と整合しているかを確認する必要がある。
+市場VaRモデルは計算して終わりではない。実際の損失が市場VaRを超えた回数を観測し、モデルが想定した信頼水準と整合しているかを確認する必要がある。
 
-時点 \(t\) の損失を \(L_t\)、その時点より前の情報だけから推定したVaRを \(VaR_t\) とすると、超過指標を
+時点 $t$ の損失を $L_t$、市場VaRを $\mathrm{VaR}_t$ とすると、超過指標を
 
-\[
+$$
 I_t
 =
 \mathbf{1}
 \left(
-L_t>VaR_t
+L_t>\mathrm{VaR}_t
 \right)
-\]
+$$
 
 と定義する。
 
-バックテストで重要なのは、VaRの推定に将来のデータを使用しないことである。ここでは36か月のローリング・ウィンドウを用いる。最初の36か月から翌月のVaRを推定し、その翌月の実現損失と比較する。その後、推定期間を1か月ずつ前へ移動する。
-
-```text
-過去36か月
-    ↓
-翌月のVaRを推定
-    ↓
-翌月の実現損失と比較
-    ↓
-1か月進める
-    ↓
-同じ処理を繰り返す
-```
+ここでは説明を単純にするため、全期間から求めたヒストリカル市場VaRに対する超過回数を確認する。
 
 ```{r}
-#| label: rolling-historical-var-backtest
+#| label: calculate-var-exceptions
 
-var_window <- 36L
-n_returns <- nrow(tbl_portfolio_losses)
-
-tbl_var_backtest <- tibble(
-  test_index = seq.int(
-    var_window + 1L,
-    n_returns
-  )
-) |>
+tbl_var_backtest <- tbl_portfolio_losses |>
   mutate(
-    month_ID = purrr::map_int(
-      test_index,
-      \(test_index) {
-        tbl_portfolio_losses$month_ID[[test_index]]
-      }
-    ),
-    VaR = purrr::map_dbl(
-      test_index,
-      \(test_index) {
-        vec_estimation_losses <-
-          tbl_portfolio_losses$loss[
-            (test_index - var_window):(test_index - 1L)
-          ]
-
-        quantile(
-          vec_estimation_losses,
-          probs = confidence_level,
-          na.rm = TRUE,
-          names = FALSE,
-          type = 7
-        )
-      }
-    ),
-    loss = purrr::map_dbl(
-      test_index,
-      \(test_index) {
-        tbl_portfolio_losses$loss[[test_index]]
-      }
-    ),
+    VaR = historical_var,
     exception = loss > VaR
   )
-
-show_table_LFL(tbl_var_backtest)
-```
-
-この計算では、各行のVaRはその月より前の36か月だけから推定されている。したがって、同じ標本からVaRと超過回数を同時に計算するイン・サンプル評価ではなく、逐次的なアウト・オブ・サンプル評価となる。
-
-超過回数と超過率を集計する。
-
-```{r}
-#| label: rolling-var-backtest-summary
 
 tbl_var_backtest_summary <- tbl_var_backtest |>
   summarise(
@@ -540,63 +489,13 @@ show_table_LFL(
 )
 ```
 
-さらに、実現損失とその時点で予測されていたVaRを時系列で比較する。
+実務的なバックテストでは、各時点で利用可能であった過去データのみを使って市場VaRを推定し、翌期の実現損失と比較する。したがって、ローリング・ウィンドウによるVaR推定へ拡張することが重要である。
 
-```{r}
-#| label: plot-rolling-var-backtest
-#| fig-cap: "ローリングHistorical VaRと実現損失"
+## I-9.11 FRTBと期待ショートフォール
 
-plot_var_backtest <- tbl_var_backtest |>
-  select(
-    month_ID,
-    loss,
-    VaR
-  ) |>
-  pivot_longer(
-    cols = c(loss, VaR),
-    names_to = "series",
-    values_to = "value"
-  ) |>
-  ggplot(
-    aes(
-      x = month_ID,
-      y = value,
-      linetype = series
-    )
-  ) +
-  geom_line() +
-  labs(
-    x = "Month",
-    y = "Loss / VaR",
-    linetype = NULL
-  )
+世界金融危機後の市場リスク規制は、単に市場VaRのパラメータを変更するだけではなく、市場ストレス、流動性、モデル化可能性、トレーディング勘定の境界などを含めて再設計された。
 
-show_plot_LFL(plot_var_backtest)
-```
-
-VaRを超えた月だけを抽出すると、モデルが捉えられなかったテール損失を直接確認できる。
-
-```{r}
-#| label: show-var-exceptions
-
-tbl_var_exceptions <- tbl_var_backtest |>
-  filter(exception) |>
-  select(
-    month_ID,
-    loss,
-    VaR
-  )
-
-show_table_LFL(tbl_var_exceptions)
-```
-
-95% VaRであれば、十分に長い期間では超過率は概ね5%に近づくことが期待される。ただし、超過回数だけでモデルの妥当性が完全に判断できるわけではない。超過が特定の期間に集中していないか、相場急変時にVaRがリスクの増大へ十分追随しているか、といった時系列的な性質も重要である。
-
-## I-9.11 FRTBとExpected Shortfall
-
-世界金融危機後の市場リスク規制は、単にVaRのパラメータを変更するだけではなく、市場ストレス、流動性、モデル化可能性、トレーディング勘定の境界などを含めて再設計された。
-
-FRTBの内部モデル方式ではExpected Shortfallが中心的な市場リスク尺度となる。これは「VaRが誤っていてESが正しい」という単純な置き換えではない。VaRは現在でもリスク管理やバックテストを理解するうえで重要な基礎概念であり、ESを理解するためにもVaRの分位点という考え方が出発点となる。
+FRTBの内部モデル方式では期待ショートフォールが中心的な市場リスク尺度となる。これは「市場VaRが誤っていてESが正しい」という単純な置き換えではない。市場VaRは現在でもリスク管理やバックテストを理解するうえで重要な基礎概念であり、ESを理解するためにも市場VaRの分位点という考え方が出発点となる。
 
 本章で扱った流れは次のように整理できる。
 
@@ -606,11 +505,11 @@ FRTBの内部モデル方式ではExpected Shortfallが中心的な市場リス�
 ポートフォリオ損益
     ↓
 損失分布
-    ├─ Gaussian VaR
-    ├─ Historical VaR
-    └─ Monte Carlo VaR
+    ├─ Gaussian 市場VaR
+    ├─ Historical 市場VaR
+    └─ Monte Carlo 市場VaR
               ↓
-      Expected Shortfall
+      期待ショートフォール
               ↓
       リスク寄与度
               ↓
@@ -619,11 +518,11 @@ FRTBの内部モデル方式ではExpected Shortfallが中心的な市場リス�
        FRTBへの接続
 ```
 
-第10章では、市場価格の変動ではなく企業のデフォルトによって生じる信用損失を扱う。One-Factor Gaussianモデルを用いて相関したデフォルトを生成し、ポートフォリオ損失分布からCredit VaRを計算する。
+第10章では、市場価格の変動ではなく企業のデフォルトによって生じる信用損失を扱う。One-Factor Gaussianモデルを用いて相関したデフォルトを生成し、ポートフォリオ損失分布から信用VaRを計算する。
 
-市場VaRとCredit VaRは対象とするリスクが異なる一方、
+市場VaRと信用VaRは対象とするリスクが異なる一方、
 
-\[
+$$
 \boxed{
 \text{リスク要因}
 \rightarrow
@@ -633,6 +532,6 @@ FRTBの内部モデル方式ではExpected Shortfallが中心的な市場リス�
 \rightarrow
 \text{テールリスク}
 }
-\]
+$$
 
 という計算構造を共有している。この構造はさらに第11章のCLOトランシェ評価へつながっていく。

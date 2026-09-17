@@ -239,21 +239,21 @@ Z-Tranche
 
 CLOでは主として、
 
-\[
+$$
 \text{Portfolio Credit Loss}
 \rightarrow
 \text{Tranche Loss}
-\]
+$$
 
 を考える。
 
 MBS/CMOでは主として、
 
-\[
+$$
 \text{Mortgage Cash Flow}
 \rightarrow
 \text{Tranche Cash Flow}
-\]
+$$
 
 を考える。
 
@@ -263,11 +263,11 @@ MBS/CMOでは主として、
 
 ここからCLOの信用トランチを数理的に表現する。
 
-ポートフォリオ損失率を \(L\) とする。
+ポートフォリオ損失率を $L$ とする。
 
-あるトランチがポートフォリオ損失率 \(A\) から損失を負担し始め、\(D\) で全額毀損するとする。
+あるトランチがポートフォリオ損失率 $A$ から損失を負担し始め、$D$ で全額毀損するとする。
 
-\(A\) をAttachment Point、\(D\) をDetachment Pointという。
+$A$ をAttachment Point、$D$ をDetachment Pointという。
 
 たとえば、
 
@@ -291,9 +291,9 @@ Senior     10% - 100%
 
 ## I-11.9 トランチ損失
 
-Attachment Point \(A\)、Detachment Point \(D\) のトランチ損失は、
+Attachment Point $A$、Detachment Point $D$ のトランチ損失は、
 
-\[
+$$
 L_{A,D}
 =
 \min
@@ -301,13 +301,13 @@ L_{A,D}
 \max(L-A,0),
 D-A
 \right\}
-\]
+$$
 
 で表される。
 
-トランチ元本 \(D-A\) に対する損失率として表すなら、
+トランチ元本 $D-A$ に対する損失率として表すなら、
 
-\[
+$$
 TL_{A,D}
 =
 \frac{
@@ -315,7 +315,7 @@ TL_{A,D}
 }{
 D-A
 }
-\]
+$$
 
 となる。
 
@@ -410,27 +410,27 @@ show_plot_LFL(plot_tranche_loss)
 
 第10章ではOne-Factor Gaussianモデルによって
 
-\[
+$$
 L
 =
 \sum_i
 EAD_i LGD_i
 \mathbf{1}_{\{Default_i\}}
-\]
+$$
 
 をシミュレーションした。
 
-総EADを \(EAD_{\mathrm{total}}\) とすれば、
+総EADを $EAD_{\mathrm{total}}$ とすれば、
 
-\[
+$$
 l
 =
 \frac{L}{EAD_{\mathrm{total}}}
-\]
+$$
 
 によってポートフォリオ損失率へ変換できる。
 
-この \(l\) をAttachment / Detachment構造へ通せば、各トランチの損失分布が得られる。
+この $l$ をAttachment / Detachment構造へ通せば、各トランチの損失分布が得られる。
 
 ```text
 One-Factor Gaussian
@@ -446,25 +446,25 @@ Attachment / Detachment
 Tranche Loss Distribution
 ```
 
-つまり、第10章のCredit VaRモデルと第11章のCLOモデルは別々のモデルではない。
+つまり、第10章の信用VaRモデルと第11章のCLOモデルは別々のモデルではない。
 
 **同じ信用損失エンジンの出力を、異なる優先順位へ配分しているだけである。**
 
 ## I-11.11 Expected Tranche Loss
 
-シナリオ \(s\) におけるトランチ損失を
+シナリオ $s$ におけるトランチ損失を
 
-\[
+$$
 L_{A,D}^{(s)}
-\]
+$$
 
 とすれば、Expected Tranche Lossは
 
-\[
+$$
 ETL_{A,D}
 =
 E[L_{A,D}]
-\]
+$$
 
 である。
 
@@ -484,7 +484,7 @@ Protection Buyerが支払うプレミアムをPremium Leg、
 
 概念的には、
 
-\[
+$$
 PV_{\mathrm{Premium}}
 =
 s
@@ -494,11 +494,11 @@ E[
 OutstandingTranche_t
 ]
 \Delta t
-\]
+$$
 
 であり、
 
-\[
+$$
 PV_{\mathrm{Loss}}
 =
 \sum_t
@@ -506,23 +506,23 @@ DF(t)
 E[
 \Delta L_{A,D}(t)
 ]
-\]
+$$
 
 となる。
 
-Fair Spread \(s^\ast\) は、
+Fair Spread $s^\ast$ は、
 
-\[
+$$
 PV_{\mathrm{Premium}}
 =
 PV_{\mathrm{Loss}}
-\]
+$$
 
 を満たすスプレッドである。
 
 したがって、
 
-\[
+$$
 s^\ast
 =
 \frac{
@@ -535,7 +535,7 @@ OutstandingTranche_t
 ]
 \Delta t
 }
-\]
+$$
 
 となる。
 
@@ -567,18 +567,18 @@ Fair Spread / Tranche Value
 
 この構造は、信用ポートフォリオのリスク計測と証券化商品の価格評価が、同じ損失分布を基礎としていることを示している。
 
-第10章では損失分布の分位点を取ることでCredit VaRを求めた。
+第10章では損失分布の分位点を取ることで信用VaRを求めた。
 
 本章では同じ損失分布をAttachment / Detachmentによって切り分け、各トランチのキャッシュフローへ変換する。
 
-\[
+$$
 \boxed{
 \text{同じLoss Distribution}
 \begin{cases}
-\rightarrow Credit\ VaR \\
+\rightarrow \text{信用VaR} \\
 \rightarrow CLO\ Tranche\ Pricing
 \end{cases}
 }
-\]
+$$
 
 これが、第I部におけるポートフォリオ・リスクモデルから証券化商品評価までの接続である。

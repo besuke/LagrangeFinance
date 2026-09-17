@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>第I-9章 市場リスクとVaR – エンタープライズ金融モデル構築</title>
+<title>第I-9章 市場リスクと市場VaR – エンタープライズ金融モデル構築</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -108,6 +108,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -120,7 +149,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1_empirical/ch01_r_basics_tidyverse.html">第I部 金融工学　均衡モデル</a></li><li class="breadcrumb-item"><a href="../part1_empirical/ch09_market_risk_var.html"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1_empirical/ch01_r_basics_tidyverse.html">第I部 金融工学　均衡モデル</a></li><li class="breadcrumb-item"><a href="../part1_empirical/ch09_market_risk_var.html"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -201,12 +230,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a>
+  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></a>
+  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクと信用VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -332,25 +361,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#varからfrtbへ" id="toc-varからfrtbへ" class="nav-link" data-scroll-target="#varからfrtbへ">VaRからFRTBへ</a></li>
   </ul></li>
-  <li><a href="#i-9.2-varとは何か" id="toc-i-9.2-varとは何か" class="nav-link" data-scroll-target="#i-9.2-varとは何か">I-9.2 VaRとは何か</a></li>
+  <li><a href="#i-9.2-市場varとは何か" id="toc-i-9.2-市場varとは何か" class="nav-link" data-scroll-target="#i-9.2-市場varとは何か">I-9.2 市場VaRとは何か</a></li>
   <li><a href="#i-9.3-市場データとポートフォリオ損益" id="toc-i-9.3-市場データとポートフォリオ損益" class="nav-link" data-scroll-target="#i-9.3-市場データとポートフォリオ損益">I-9.3 市場データとポートフォリオ損益</a></li>
-  <li><a href="#i-9.4-分散共分散法によるvar" id="toc-i-9.4-分散共分散法によるvar" class="nav-link" data-scroll-target="#i-9.4-分散共分散法によるvar">I-9.4 分散共分散法によるVaR</a></li>
-  <li><a href="#i-9.5-ヒストリカル法によるvar" id="toc-i-9.5-ヒストリカル法によるvar" class="nav-link" data-scroll-target="#i-9.5-ヒストリカル法によるvar">I-9.5 ヒストリカル法によるVaR</a></li>
-  <li><a href="#i-9.6-モンテカルロ法によるvar" id="toc-i-9.6-モンテカルロ法によるvar" class="nav-link" data-scroll-target="#i-9.6-モンテカルロ法によるvar">I-9.6 モンテカルロ法によるVaR</a></li>
-  <li><a href="#i-9.7-3つのvarの比較" id="toc-i-9.7-3つのvarの比較" class="nav-link" data-scroll-target="#i-9.7-3つのvarの比較">I-9.7 3つのVaRの比較</a></li>
-  <li><a href="#i-9.8-expected-shortfall" id="toc-i-9.8-expected-shortfall" class="nav-link" data-scroll-target="#i-9.8-expected-shortfall">I-9.8 Expected Shortfall</a></li>
-  <li><a href="#i-9.9-varのリスク寄与度" id="toc-i-9.9-varのリスク寄与度" class="nav-link" data-scroll-target="#i-9.9-varのリスク寄与度">I-9.9 VaRのリスク寄与度</a></li>
-  <li><a href="#i-9.10-varバックテスト" id="toc-i-9.10-varバックテスト" class="nav-link" data-scroll-target="#i-9.10-varバックテスト">I-9.10 VaRバックテスト</a></li>
-  <li><a href="#i-9.11-frtbとexpected-shortfall" id="toc-i-9.11-frtbとexpected-shortfall" class="nav-link" data-scroll-target="#i-9.11-frtbとexpected-shortfall">I-9.11 FRTBとExpected Shortfall</a></li>
+  <li><a href="#i-9.4-分散共分散法による市場var" id="toc-i-9.4-分散共分散法による市場var" class="nav-link" data-scroll-target="#i-9.4-分散共分散法による市場var">I-9.4 分散共分散法による市場VaR</a></li>
+  <li><a href="#i-9.5-ヒストリカル法による市場var" id="toc-i-9.5-ヒストリカル法による市場var" class="nav-link" data-scroll-target="#i-9.5-ヒストリカル法による市場var">I-9.5 ヒストリカル法による市場VaR</a></li>
+  <li><a href="#i-9.6-モンテカルロ法による市場var" id="toc-i-9.6-モンテカルロ法による市場var" class="nav-link" data-scroll-target="#i-9.6-モンテカルロ法による市場var">I-9.6 モンテカルロ法による市場VaR</a></li>
+  <li><a href="#i-9.7-3つの市場varの比較" id="toc-i-9.7-3つの市場varの比較" class="nav-link" data-scroll-target="#i-9.7-3つの市場varの比較">I-9.7 3つの市場VaRの比較</a></li>
+  <li><a href="#i-9.8-期待ショートフォール" id="toc-i-9.8-期待ショートフォール" class="nav-link" data-scroll-target="#i-9.8-期待ショートフォール">I-9.8 期待ショートフォール</a></li>
+  <li><a href="#i-9.9-市場varのリスク寄与度" id="toc-i-9.9-市場varのリスク寄与度" class="nav-link" data-scroll-target="#i-9.9-市場varのリスク寄与度">I-9.9 市場VaRのリスク寄与度</a></li>
+  <li><a href="#i-9.10-市場varバックテスト" id="toc-i-9.10-市場varバックテスト" class="nav-link" data-scroll-target="#i-9.10-市場varバックテスト">I-9.10 市場VaRバックテスト</a></li>
+  <li><a href="#i-9.11-frtbと期待ショートフォール" id="toc-i-9.11-frtbと期待ショートフォール" class="nav-link" data-scroll-target="#i-9.11-frtbと期待ショートフォール">I-9.11 FRTBと期待ショートフォール</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1_empirical/ch01_r_basics_tidyverse.html">第I部 金融工学　均衡モデル</a></li><li class="breadcrumb-item"><a href="../part1_empirical/ch09_market_risk_var.html"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part1_empirical/ch01_r_basics_tidyverse.html">第I部 金融工学　均衡モデル</a></li><li class="breadcrumb-item"><a href="../part1_empirical/ch09_market_risk_var.html"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-title">第I-9章 市場リスクとVaR</span></h1>
+<h1 class="title"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></h1>
 </div>
 
 
@@ -367,19 +396,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>本章では、市場リスク管理の中心的な尺度であるValue at Risk（VaR）を扱う。最初に、VaRを中心として発展してきた市場リスク規制を、バーゼルII、バーゼル2.5、Fundamental Review of the Trading Book（FRTB）という流れから整理する。そのうえで、分散共分散法、ヒストリカル法、モンテカルロ法によるVaRを実装し、Expected Shortfall（ES）、リスク寄与度、バックテストへ進む。</p>
-<p>本章の目的はFRTBの標準的方式を再現することではない。FRTBを市場リスク管理の歴史的背景として位置づけ、VaRとESの考え方を、Rによるデータ処理とシミュレーションを通して理解することにある。</p>
+<p>本章では、市場リスク管理の中心的な尺度である市場Value at Risk（市場VaR）を扱う。最初に、市場VaRを中心として発展してきた市場リスク規制を、バーゼルII、バーゼル2.5、Fundamental Review of the Trading Book（FRTB）という流れから整理する。そのうえで、分散共分散法、ヒストリカル法、モンテカルロ法による市場VaRを実装し、期待ショートフォール（ES）、リスク寄与度、バックテストへ進む。</p>
+<p>本章の目的はFRTBの標準的方式を再現することではない。FRTBを市場リスク管理の歴史的背景として位置づけ、市場VaRとESの考え方を、Rによるデータ処理とシミュレーションを通して理解することにある。</p>
 <section id="i-9.1-frtbとは何か" class="level2">
 <h2 class="anchored" data-anchor-id="i-9.1-frtbとは何か">I-9.1 FRTBとは何か</h2>
 <section id="varからfrtbへ" class="level3">
 <h3 class="anchored" data-anchor-id="varからfrtbへ">VaRからFRTBへ</h3>
-<p>1990年代以降、金融機関の市場リスク管理ではVaRが広く利用されるようになった。VaRは、一定の保有期間と信頼水準のもとで、ポートフォリオに生じ得る損失を一つの数値として表現する。この簡潔さから、VaRは内部リスク管理だけでなく、規制上の市場リスク計測にも組み込まれていった。</p>
+<p>1990年代以降、金融機関の市場リスク管理では市場VaRが広く利用されるようになった。市場VaRは、一定の保有期間と信頼水準のもとで、ポートフォリオに生じ得る損失を一つの数値として表現する。この簡潔さから、市場VaRは内部リスク管理だけでなく、規制上の市場リスク計測にも組み込まれていった。</p>
 <p>しかし、2007年から2008年にかけて進行した世界金融危機は、従来の市場リスク管理の限界を明らかにした。特にトレーディング勘定では、危機前に想定されていた水準を大きく上回る損失が発生した。市場流動性の急激な低下、信用スプレッドの拡大、証券化商品の価格下落、複数のリスク要因の同時変動などが重なり、平常時の過去データを中心に推定されたリスク尺度だけでは、危機時の損失を十分に捉えられない場合があることが認識された。</p>
 <p>さらに、大規模金融機関の経営危機は金融システム全体へ波及し得るため、各国では金融システム安定化のための公的支援が実施された。この経験は「Too Big To Fail」をめぐる議論を強め、個別金融機関の内部管理だけではなく、金融システム全体の安定性を意識した規制改革を促すことになった。</p>
-<p>危機への比較的早い対応が、一般にバーゼル2.5と呼ばれる市場リスク規制の強化である。従来のVaRに加えて、深刻な市場ストレス期を反映した stressed VaR が導入され、トレーディング勘定の信用リスクについても追加的な資本賦課が強化された。</p>
-<p>ただし、これは危機への対応の終点ではなかった。トレーディング勘定と銀行勘定の境界、流動性の異なるリスク要因の扱い、内部モデルの比較可能性、VaRが損失分布の裾の大きさを直接表現しないことなど、より構造的な問題が残った。</p>
+<p>危機への比較的早い対応が、一般にバーゼル2.5と呼ばれる市場リスク規制の強化である。従来の市場VaRに加えて、深刻な市場ストレス期を反映した stressed VaR が導入され、トレーディング勘定の信用リスクについても追加的な資本賦課が強化された。</p>
+<p>ただし、これは危機への対応の終点ではなかった。トレーディング勘定と銀行勘定の境界、流動性の異なるリスク要因の扱い、内部モデルの比較可能性、市場VaRが損失分布の裾の大きさを直接表現しないことなど、より構造的な問題が残った。</p>
 <p>そこでバーゼル銀行監督委員会は、市場リスク規制を根本から見直すFRTBを策定した。2016年に市場リスクの最低所要自己資本に関する基準が公表され、2019年に改訂された最終基準が公表された。</p>
-<p>FRTBの重要な特徴の一つが、内部モデル方式において中心的なリスク尺度をVaRからExpected Shortfallへ移したことである。VaRが損失分布のある分位点を示すのに対し、ESはその分位点を超えた領域の損失を平均する。そのため、極端な市場変動が発生した場合の損失の大きさをより直接的に捉えることができる。</p>
+<p>FRTBの重要な特徴の一つが、内部モデル方式において中心的なリスク尺度を市場VaRから期待ショートフォールへ移したことである。市場市場VaRが損失分布のある分位点を示すのに対し、ESはその分位点を超えた領域の損失を平均する。そのため、極端な市場変動が発生した場合の損失の大きさをより直接的に捉えることができる。</p>
 <p>したがって、市場リスク計測の発展は概念的には次のように整理できる。</p>
 <pre class="text"><code>VaR
   ↓
@@ -389,22 +418,37 @@ stressed VaR（バーゼル2.5）
   ↓
 FRTB
   ↓
-Expected Shortfall</code></pre>
+期待ショートフォール</code></pre>
 <p>日本ではバーゼルIII最終化に伴う市場リスク規制が段階的に導入され、国際統一基準金融機関および内部モデルを採用する国内基準金融機関には2024年3月31日から、内部モデルを採用しない国内基準金融機関等には2025年3月31日から適用されている。</p>
-<p>本章ではFRTBの標準的方式の詳細な資本計算には立ち入らない。ここからは、FRTBに至る市場リスク管理の基礎となったVaRそのものを理解する。</p>
+<p>本章ではFRTBの標準的方式の詳細な資本計算には立ち入らない。ここからは、FRTBに至る市場リスク管理の基礎となった市場VaRそのものを理解する。</p>
 </section>
 </section>
-<section id="i-9.2-varとは何か" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.2-varとは何か">I-9.2 VaRとは何か</h2>
-<p>時点 (t) のポートフォリオ価値を (V_t) とすると、1期間の損益は</p>
-<p>[ PnL_{t+1}=V_{t+1}-V_t ]</p>
-<p>である。損失を正の値として扱うため、</p>
-<p>[ L_{t+1}=-PnL_{t+1} ]</p>
+<section id="i-9.2-市場varとは何か" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.2-市場varとは何か">I-9.2 市場VaRとは何か</h2>
+<p>時点 <span class="math inline">\(t\)</span> のポートフォリオ価値を <span class="math inline">\(V_t\)</span> とすると、1期間の損益は</p>
+<p><span class="math display">\[
+\mathrm{PnL}_{t+1}=V_{t+1}-V_t
+\]</span></p>
+<p>である。市場リスク管理では損失を正の値として扱うため、損失変数を</p>
+<p><span class="math display">\[
+L_{t+1}
+=
+-\mathrm{PnL}_{t+1}
+=
+V_t-V_{t+1}
+\]</span></p>
 <p>と定義する。</p>
-<p>信頼水準 () におけるVaRは、損失分布の () 分位点として</p>
-<p>[ VaR_ = { l: P(Ll) } ]</p>
+<p>信頼水準 <span class="math inline">\(\alpha\)</span> における市場VaRは、損失分布の <span class="math inline">\(\alpha\)</span> 分位点として</p>
+<p><span class="math display">\[
+\mathrm{VaR}_{\alpha}
+=
+\inf\left\{
+l:
+P(L\le l)\ge\alpha
+\right\}
+\]</span></p>
 <p>と定義される。</p>
-<p>例えば95% VaRが1億円であるとは、モデルと観測期間を前提としたとき、損失が1億円以下となる確率が95%であることを意味する。残り5%の領域では1億円を超える損失が発生し得る。VaRそのものは、その5%の領域で損失がどこまで拡大するかを示さない。</p>
+<p>例えば95%市場VaRが1億円であるとは、モデルと観測期間を前提としたとき、損失が1億円以下となる確率が95%であることを意味する。残り5%の領域では1億円を超える損失が発生し得る。市場VaRそのものは、その5%の領域で損失がどこまで拡大するかを示さない。</p>
 </section>
 <section id="i-9.3-市場データとポートフォリオ損益" class="level2">
 <h2 class="anchored" data-anchor-id="i-9.3-市場データとポートフォリオ損益">I-9.3 市場データとポートフォリオ損益</h2>
@@ -457,20 +501,28 @@ Expected Shortfall</code></pre>
 <span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 61 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>損失率を</p>
-<p>[ L_t=-R_{p,t} ]</p>
+<p><span class="math display">\[
+L_t=-R_{p,t}
+\]</span></p>
 <p>とする。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tbl_portfolio_losses <span class="ot">&lt;-</span> tbl_portfolio_returns <span class="sc">|&gt;</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">loss =</span> <span class="sc">-</span>portfolio_return)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="i-9.4-分散共分散法によるvar" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.4-分散共分散法によるvar">I-9.4 分散共分散法によるVaR</h2>
-<p>最も基本的なVaR計算法は、ポートフォリオ・リターンが正規分布に従うと仮定する分散共分散法である。</p>
+<section id="i-9.4-分散共分散法による市場var" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.4-分散共分散法による市場var">I-9.4 分散共分散法による市場VaR</h2>
+<p>最も基本的な市場VaR計算法は、ポートフォリオ・リターンが正規分布に従うと仮定する分散共分散法である。</p>
 <p>ポートフォリオ・リターンを</p>
-<p>[ R_p N(_p,_p^2) ]</p>
-<p>とすると、信頼水準 () のVaRは</p>
-<p>[ VaR_ = -_p+^{-1}()_p ]</p>
+<p><span class="math display">\[
+R_p \sim N(\mu_p,\sigma_p^2)
+\]</span></p>
+<p>とすると、信頼水準 <span class="math inline">\(\alpha\)</span> の市場VaRは</p>
+<p><span class="math display">\[
+\mathrm{VaR}_{\alpha}
+=
+-\mu_p+\Phi^{-1}(\alpha)\sigma_p
+\]</span></p>
 <p>で与えられる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>confidence_level <span class="ot">&lt;-</span> <span class="fl">0.95</span></span>
@@ -502,10 +554,14 @@ Expected Shortfall</code></pre>
 </div>
 <p>分散共分散法は高速で解釈しやすい。一方、正規分布という仮定によって、歪度やファットテールを十分に表現できない場合がある。</p>
 </section>
-<section id="i-9.5-ヒストリカル法によるvar" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.5-ヒストリカル法によるvar">I-9.5 ヒストリカル法によるVaR</h2>
-<p>ヒストリカルVaRでは、特定の確率分布を仮定せず、実際に観測された損失分布から分位点を求める。</p>
-<p>[ VaR_ = Q_(L) ]</p>
+<section id="i-9.5-ヒストリカル法による市場var" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.5-ヒストリカル法による市場var">I-9.5 ヒストリカル法による市場VaR</h2>
+<p>ヒストリカル市場VaRでは、特定の確率分布を仮定せず、実際に観測された損失分布から分位点を求める。</p>
+<p><span class="math display">\[
+\mathrm{VaR}_{\alpha}
+=
+Q_\alpha(L)
+\]</span></p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>historical_var <span class="ot">&lt;-</span> <span class="fu">quantile</span>(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  tbl_portfolio_losses<span class="sc">$</span>loss,</span>
@@ -529,8 +585,8 @@ Expected Shortfall</code></pre>
 </div>
 <p>ヒストリカル法には分布仮定が不要という利点がある。しかし、将来発生する損失が過去の観測範囲に強く依存するという制約がある。</p>
 </section>
-<section id="i-9.6-モンテカルロ法によるvar" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.6-モンテカルロ法によるvar">I-9.6 モンテカルロ法によるVaR</h2>
+<section id="i-9.6-モンテカルロ法による市場var" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.6-モンテカルロ法による市場var">I-9.6 モンテカルロ法による市場VaR</h2>
 <p>モンテカルロ法では、確率モデルから多数の市場シナリオを生成し、それぞれのシナリオでポートフォリオ損益を計算する。</p>
 <p>ここでは正規分布モデルを用いる。シミュレーション規模が大きくなることを想定し、<code>furrr</code> により並列化できる構造とする。</p>
 <div class="cell">
@@ -594,8 +650,8 @@ Expected Shortfall</code></pre>
 </div>
 <p>計算終了後は並列バックエンドを通常状態へ戻す。</p>
 </section>
-<section id="i-9.7-3つのvarの比較" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.7-3つのvarの比較">I-9.7 3つのVaRの比較</h2>
+<section id="i-9.7-3つの市場varの比較" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.7-3つの市場varの比較">I-9.7 3つの市場VaRの比較</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tbl_var_comparison <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  tbl_gaussian_var,</span>
@@ -622,7 +678,7 @@ Expected Shortfall</code></pre>
 <span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>() <span class="sc">+</span></span>
 <span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
 <span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"VaR"</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"市場VaR"</span></span>
 <span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a><span class="fu">show_plot_LFL</span>(plot_var_comparison)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -630,18 +686,22 @@ Expected Shortfall</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="ch09_market_risk_var_files/figure-html/plot-var-comparison-1.png" class="img-fluid figure-img" width="672"></p>
-<figcaption>VaR計算法の比較</figcaption>
+<figcaption>市場VaR計算法の比較</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>同じ信頼水準でも、VaRは損失分布の推定方法によって異なる。したがって、VaRは単なる一つの統計量ではなく、データ、モデル、保有期間、信頼水準と一体として解釈する必要がある。</p>
+<p>同じ信頼水準でも、市場VaRは損失分布の推定方法によって異なる。したがって、市場VaRは単なる一つの統計量ではなく、データ、モデル、保有期間、信頼水準と一体として解釈する必要がある。</p>
 </section>
-<section id="i-9.8-expected-shortfall" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.8-expected-shortfall">I-9.8 Expected Shortfall</h2>
-<p>VaRの重要な限界は、VaRを超えた領域の損失の大きさを表現しないことである。</p>
-<p>Expected Shortfall（ES）は、損失がVaRを超えるテール領域の平均損失として直感的に理解できる。</p>
-<p>[ ES_ = E[LLVaR_] ]</p>
+<section id="i-9.8-期待ショートフォール" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.8-期待ショートフォール">I-9.8 期待ショートフォール</h2>
+<p>市場VaRの重要な限界は、市場VaRを超えた領域の損失の大きさを表現しないことである。</p>
+<p>期待ショートフォール（ES）は、損失が市場VaRを超えるテール領域の平均損失として直感的に理解できる。</p>
+<p><span class="math display">\[
+ES_\alpha
+=
+E[L\mid L\ge \mathrm{VaR}_{\alpha}]
+\]</span></p>
 <p>実証分布では次のように計算できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>historical_es <span class="ot">&lt;-</span> tbl_portfolio_losses <span class="sc">|&gt;</span></span>
@@ -652,7 +712,7 @@ Expected Shortfall</code></pre>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(ES)</span>
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>tbl_var_es <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">measure =</span> <span class="fu">c</span>(<span class="st">"VaR"</span>, <span class="st">"Expected Shortfall"</span>),</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">measure =</span> <span class="fu">c</span>(<span class="st">"VaR"</span>, <span class="st">"期待ショートフォール"</span>),</span>
 <span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> <span class="fu">c</span>(</span>
 <span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    historical_var,</span>
 <span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    historical_es</span>
@@ -661,10 +721,10 @@ Expected Shortfall</code></pre>
 <span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table_LFL</span>(tbl_var_es)</span>
 <span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 2</span></span>
-<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   measure               value</span></span>
-<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;</span></span>
-<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 VaR                0.066008</span></span>
-<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Expected Shortfall 0.087030</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   measure                 value</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                   &lt;dbl&gt;</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 VaR                  0.066008</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 期待ショートフォール 0.087030</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>plot_var_es <span class="ot">&lt;-</span> tbl_var_es <span class="sc">|&gt;</span></span>
@@ -685,204 +745,118 @@ Expected Shortfall</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="ch09_market_risk_var_files/figure-html/plot-var-es-1.png" class="img-fluid figure-img" width="672"></p>
-<figcaption>VaRとExpected Shortfall</figcaption>
+<figcaption>市場VaRと期待ショートフォール</figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>通常、同一の信頼水準ではESはVaR以上となる。VaRがテール領域への入口を示すのに対し、ESはその先で平均的にどの程度の損失が生じるかを表す。</p>
+<p>通常、同一の信頼水準ではESは市場VaR以上となる。市場VaRがテール領域への入口を示すのに対し、ESはその先で平均的にどの程度の損失が生じるかを表す。</p>
 </section>
-<section id="i-9.9-varのリスク寄与度" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.9-varのリスク寄与度">I-9.9 VaRのリスク寄与度</h2>
-<p>ポートフォリオ全体のVaRだけでは、どの資産がリスクを生み出しているかは分からない。分散共分散法では、VaRを各資産の寄与に分解する考え方へ発展させることができる。</p>
+<section id="i-9.9-市場varのリスク寄与度" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.9-市場varのリスク寄与度">I-9.9 市場VaRのリスク寄与度</h2>
+<p>ポートフォリオ全体の市場VaRだけでは、どの資産がリスクを生み出しているかは分からない。分散共分散法では、市場VaRを各資産の寄与に分解する考え方へ発展させることができる。</p>
 <p>ポートフォリオ・ボラティリティを</p>
-<p>[ _p = ]</p>
-<p>とすると、資産 (i) のボラティリティに対する限界寄与は</p>
-<p>[ = ]</p>
+<p><span class="math display">\[
+\sigma_p
+=
+\sqrt{
+w^\top \Sigma w
+}
+\]</span></p>
+<p>とすると、資産 <span class="math inline">\(i\)</span> のボラティリティに対する限界寄与は</p>
+<p><span class="math display">\[
+\frac{\partial \sigma_p}{\partial w_i}
+=
+\frac{(\Sigma w)_i}{\sigma_p}
+\]</span></p>
 <p>である。</p>
 <p>成分リスク寄与は</p>
-<p>[ RC_i = w_i ]</p>
+<p><span class="math display">\[
+RC_i
+=
+w_i
+\frac{(\Sigma w)_i}{\sigma_p}
+\]</span></p>
 <p>となり、</p>
-<p>[ _i RC_i=_p ]</p>
+<p><span class="math display">\[
+\sum_i RC_i=\sigma_p
+\]</span></p>
 <p>が成立する。この考え方は、第8章のリスク・バジェッティングと直接つながっている。</p>
 </section>
-<section id="i-9.10-varバックテスト" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.10-varバックテスト">I-9.10 VaRバックテスト</h2>
-<p>VaRモデルは計算して終わりではない。実際の損失がVaRを超えた回数を観測し、モデルが想定した信頼水準と整合しているかを確認する必要がある。</p>
-<p>時点 (t) の損失を (L_t)、その時点より前の情報だけから推定したVaRを (VaR_t) とすると、超過指標を</p>
-<p>[ I_t = ( L_t&gt;VaR_t ) ]</p>
+<section id="i-9.10-市場varバックテスト" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.10-市場varバックテスト">I-9.10 市場VaRバックテスト</h2>
+<p>市場VaRモデルは計算して終わりではない。実際の損失が市場VaRを超えた回数を観測し、モデルが想定した信頼水準と整合しているかを確認する必要がある。</p>
+<p>時点 <span class="math inline">\(t\)</span> の損失を <span class="math inline">\(L_t\)</span>、市場VaRを <span class="math inline">\(\mathrm{VaR}_t\)</span> とすると、超過指標を</p>
+<p><span class="math display">\[
+I_t
+=
+\mathbf{1}
+\left(
+L_t&gt;\mathrm{VaR}_t
+\right)
+\]</span></p>
 <p>と定義する。</p>
-<p>バックテストで重要なのは、VaRの推定に将来のデータを使用しないことである。ここでは36か月のローリング・ウィンドウを用いる。最初の36か月から翌月のVaRを推定し、その翌月の実現損失と比較する。その後、推定期間を1か月ずつ前へ移動する。</p>
-<pre class="text"><code>過去36か月
-    ↓
-翌月のVaRを推定
-    ↓
-翌月の実現損失と比較
-    ↓
-1か月進める
-    ↓
-同じ処理を繰り返す</code></pre>
+<p>ここでは説明を単純にするため、全期間から求めたヒストリカル市場VaRに対する超過回数を確認する。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>var_window <span class="ot">&lt;-</span> <span class="dv">36</span>L</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>n_returns <span class="ot">&lt;-</span> <span class="fu">nrow</span>(tbl_portfolio_losses)</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>tbl_var_backtest <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">test_index =</span> <span class="fu">seq.int</span>(</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    var_window <span class="sc">+</span> <span class="dv">1</span>L,</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    n_returns</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">month_ID =</span> purrr<span class="sc">::</span><span class="fu">map_int</span>(</span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>      test_index,</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>      \(test_index) {</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>        tbl_portfolio_losses<span class="sc">$</span>month_ID[[test_index]]</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">VaR =</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>      test_index,</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>      \(test_index) {</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>        vec_estimation_losses <span class="ot">&lt;-</span></span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>          tbl_portfolio_losses<span class="sc">$</span>loss[</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>            (test_index <span class="sc">-</span> var_window)<span class="sc">:</span>(test_index <span class="sc">-</span> <span class="dv">1</span>L)</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>          ]</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">quantile</span>(</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>          vec_estimation_losses,</span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>          <span class="at">probs =</span> confidence_level,</span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>          <span class="at">na.rm =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>          <span class="at">names =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>          <span class="at">type =</span> <span class="dv">7</span></span>
-<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">loss =</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
-<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>      test_index,</span>
-<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>      \(test_index) {</span>
-<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a>        tbl_portfolio_losses<span class="sc">$</span>loss[[test_index]]</span>
-<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a>    ),</span>
-<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">exception =</span> loss <span class="sc">&gt;</span> VaR</span>
-<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table_LFL</span>(tbl_var_backtest)</span>
-<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 35 × 5</span></span>
-<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    tes_index mon_ID      VaR       loss exception</span></span>
-<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;        &lt;int&gt;  &lt;int&gt;    &lt;dbl&gt;      &lt;dbl&gt; &lt;lgl&gt;    </span></span>
-<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1        37     38 0.061167  0.010777  FALSE    </span></span>
-<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2        38     39 0.061167  0.063474  TRUE     </span></span>
-<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3        39     40 0.063255  0.068542  TRUE     </span></span>
-<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4        40     41 0.064741 -0.029561  FALSE    </span></span>
-<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5        41     42 0.064741 -0.0029576 FALSE    </span></span>
-<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6        42     43 0.064741 -0.015267  FALSE    </span></span>
-<span id="cb15-53"><a href="#cb15-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7        43     44 0.064741  0.097812  TRUE     </span></span>
-<span id="cb15-54"><a href="#cb15-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8        44     45 0.071500 -0.061063  FALSE    </span></span>
-<span id="cb15-55"><a href="#cb15-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9        45     46 0.071500  0.0032924 FALSE    </span></span>
-<span id="cb15-56"><a href="#cb15-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10        46     47 0.071500  0.0040814 FALSE    </span></span>
-<span id="cb15-57"><a href="#cb15-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 25 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>tbl_var_backtest <span class="ot">&lt;-</span> tbl_portfolio_losses <span class="sc">|&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">VaR =</span> historical_var,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">exception =</span> loss <span class="sc">&gt;</span> VaR</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>tbl_var_backtest_summary <span class="ot">&lt;-</span> tbl_var_backtest <span class="sc">|&gt;</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">observations =</span> <span class="fu">n</span>(),</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">exceptions =</span> <span class="fu">sum</span>(exception, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">exception_rate =</span> <span class="fu">mean</span>(exception, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">expected_exception_rate =</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>      <span class="dv">1</span> <span class="sc">-</span> confidence_level</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table_LFL</span>(</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>  tbl_var_backtest_summary</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 4</span></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   observations exceptions exc_rate exp_rate</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          &lt;int&gt;      &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1           71          4 0.056338 0.050000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>この計算では、各行のVaRはその月より前の36か月だけから推定されている。したがって、同じ標本からVaRと超過回数を同時に計算するイン・サンプル評価ではなく、逐次的なアウト・オブ・サンプル評価となる。</p>
-<p>超過回数と超過率を集計する。</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tbl_var_backtest_summary <span class="ot">&lt;-</span> tbl_var_backtest <span class="sc">|&gt;</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">observations =</span> <span class="fu">n</span>(),</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">exceptions =</span> <span class="fu">sum</span>(exception, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">exception_rate =</span> <span class="fu">mean</span>(exception, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">expected_exception_rate =</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>      <span class="dv">1</span> <span class="sc">-</span> confidence_level</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table_LFL</span>(</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  tbl_var_backtest_summary</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 4</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   observations exceptions exc_rate exp_rate</span></span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          &lt;int&gt;      &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1           35          4  0.11429 0.050000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>さらに、実現損失とその時点で予測されていたVaRを時系列で比較する。</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>plot_var_backtest <span class="ot">&lt;-</span> tbl_var_backtest <span class="sc">|&gt;</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    month_ID,</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    loss,</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    VaR</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">c</span>(loss, VaR),</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"series"</span>,</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"value"</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">x =</span> month_ID,</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">y =</span> value,</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">linetype =</span> series</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Month"</span>,</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Loss / VaR"</span>,</span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">linetype =</span> <span class="cn">NULL</span></span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="fu">show_plot_LFL</span>(plot_var_backtest)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output-display">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="ch09_market_risk_var_files/figure-html/plot-rolling-var-backtest-1.png" class="img-fluid figure-img" width="672"></p>
-<figcaption>ローリングHistorical VaRと実現損失</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>VaRを超えた月だけを抽出すると、モデルが捉えられなかったテール損失を直接確認できる。</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>tbl_var_exceptions <span class="ot">&lt;-</span> tbl_var_backtest <span class="sc">|&gt;</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(exception) <span class="sc">|&gt;</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    month_ID,</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    loss,</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    VaR</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="fu">show_table_LFL</span>(tbl_var_exceptions)</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 3</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   mon_ID     loss      VaR</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;int&gt;    &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     39 0.063474 0.061167</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     40 0.068542 0.063255</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     44 0.097812 0.064741</span></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4     72 0.10139  0.064741</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>95% VaRであれば、十分に長い期間では超過率は概ね5%に近づくことが期待される。ただし、超過回数だけでモデルの妥当性が完全に判断できるわけではない。超過が特定の期間に集中していないか、相場急変時にVaRがリスクの増大へ十分追随しているか、といった時系列的な性質も重要である。</p>
+<p>実務的なバックテストでは、各時点で利用可能であった過去データのみを使って市場VaRを推定し、翌期の実現損失と比較する。したがって、ローリング・ウィンドウによるVaR推定へ拡張することが重要である。</p>
 </section>
-<section id="i-9.11-frtbとexpected-shortfall" class="level2">
-<h2 class="anchored" data-anchor-id="i-9.11-frtbとexpected-shortfall">I-9.11 FRTBとExpected Shortfall</h2>
-<p>世界金融危機後の市場リスク規制は、単にVaRのパラメータを変更するだけではなく、市場ストレス、流動性、モデル化可能性、トレーディング勘定の境界などを含めて再設計された。</p>
-<p>FRTBの内部モデル方式ではExpected Shortfallが中心的な市場リスク尺度となる。これは「VaRが誤っていてESが正しい」という単純な置き換えではない。VaRは現在でもリスク管理やバックテストを理解するうえで重要な基礎概念であり、ESを理解するためにもVaRの分位点という考え方が出発点となる。</p>
+<section id="i-9.11-frtbと期待ショートフォール" class="level2">
+<h2 class="anchored" data-anchor-id="i-9.11-frtbと期待ショートフォール">I-9.11 FRTBと期待ショートフォール</h2>
+<p>世界金融危機後の市場リスク規制は、単に市場VaRのパラメータを変更するだけではなく、市場ストレス、流動性、モデル化可能性、トレーディング勘定の境界などを含めて再設計された。</p>
+<p>FRTBの内部モデル方式では期待ショートフォールが中心的な市場リスク尺度となる。これは「市場VaRが誤っていてESが正しい」という単純な置き換えではない。市場VaRは現在でもリスク管理やバックテストを理解するうえで重要な基礎概念であり、ESを理解するためにも市場VaRの分位点という考え方が出発点となる。</p>
 <p>本章で扱った流れは次のように整理できる。</p>
 <pre class="text"><code>市場リターン
     ↓
 ポートフォリオ損益
     ↓
 損失分布
-    ├─ Gaussian VaR
-    ├─ Historical VaR
-    └─ Monte Carlo VaR
+    ├─ Gaussian 市場VaR
+    ├─ Historical 市場VaR
+    └─ Monte Carlo 市場VaR
               ↓
-      Expected Shortfall
+      期待ショートフォール
               ↓
       リスク寄与度
               ↓
         バックテスト
               ↓
        FRTBへの接続</code></pre>
-<p>第10章では、市場価格の変動ではなく企業のデフォルトによって生じる信用損失を扱う。One-Factor Gaussianモデルを用いて相関したデフォルトを生成し、ポートフォリオ損失分布からCredit VaRを計算する。</p>
-<p>市場VaRとCredit VaRは対象とするリスクが異なる一方、</p>
-<p>[ ]</p>
+<p>第10章では、市場価格の変動ではなく企業のデフォルトによって生じる信用損失を扱う。One-Factor Gaussianモデルを用いて相関したデフォルトを生成し、ポートフォリオ損失分布から信用VaRを計算する。</p>
+<p>市場VaRと信用VaRは対象とするリスクが異なる一方、</p>
+<p><span class="math display">\[
+\boxed{
+\text{リスク要因}
+\rightarrow
+\text{損失シナリオ}
+\rightarrow
+\text{損失分布}
+\rightarrow
+\text{テールリスク}
+}
+\]</span></p>
 <p>という計算構造を共有している。この構造はさらに第11章のCLOトランシェ評価へつながっていく。</p>
 
 
@@ -1296,8 +1270,8 @@ Expected Shortfall</code></pre>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="pagination-link" aria-label="第I-10章 信用リスクとCredit VaR">
-        <span class="nav-page-text"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="pagination-link" aria-label="第I-10章 信用リスクと信用VaR">
+        <span class="nav-page-text"><span class="chapter-title">第I-10章 信用リスクと信用VaR</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

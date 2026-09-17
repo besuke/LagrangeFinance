@@ -230,12 +230,12 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a>
+  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></a>
+  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクと信用VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -372,9 +372,9 @@ window.Quarto = {
   <li><a href="#i-8.4.3-最大リターンポートフォリオ" id="toc-i-8.4.3-最大リターンポートフォリオ" class="nav-link" data-scroll-target="#i-8.4.3-最大リターンポートフォリオ">I-8.4.3 最大リターン・ポートフォリオ</a></li>
   <li><a href="#i-8.4.4-最大シャープレシオポートフォリオ" id="toc-i-8.4.4-最大シャープレシオポートフォリオ" class="nav-link" data-scroll-target="#i-8.4.4-最大シャープレシオポートフォリオ">I-8.4.4 最大シャープレシオ・ポートフォリオ</a></li>
   </ul></li>
-  <li><a href="#i-8.5-expected-shortfallとリスクバジェッティング" id="toc-i-8.5-expected-shortfallとリスクバジェッティング" class="nav-link" data-scroll-target="#i-8.5-expected-shortfallとリスクバジェッティング">I-8.5 Expected Shortfallとリスク・バジェッティング</a>
+  <li><a href="#i-8.5-期待ショートフォールとリスクバジェッティング" id="toc-i-8.5-期待ショートフォールとリスクバジェッティング" class="nav-link" data-scroll-target="#i-8.5-期待ショートフォールとリスクバジェッティング">I-8.5 期待ショートフォールとリスク・バジェッティング</a>
   <ul class="collapse">
-  <li><a href="#i-8.5.1-expected-shortfall" id="toc-i-8.5.1-expected-shortfall" class="nav-link" data-scroll-target="#i-8.5.1-expected-shortfall">I-8.5.1 Expected Shortfall</a></li>
+  <li><a href="#i-8.5.1-期待ショートフォール" id="toc-i-8.5.1-期待ショートフォール" class="nav-link" data-scroll-target="#i-8.5.1-期待ショートフォール">I-8.5.1 期待ショートフォール</a></li>
   <li><a href="#i-8.5.2-リスクバジェッティング" id="toc-i-8.5.2-リスクバジェッティング" class="nav-link" data-scroll-target="#i-8.5.2-リスクバジェッティング">I-8.5.2 リスク・バジェッティング</a></li>
   </ul></li>
   <li><a href="#i-8.6-目標リターンと目標リスク" id="toc-i-8.6-目標リターンと目標リスク" class="nav-link" data-scroll-target="#i-8.6-目標リターンと目標リスク">I-8.6 目標リターンと目標リスク</a></li>
@@ -408,7 +408,7 @@ window.Quarto = {
 </header>
 
 
-<p>本章では、これまでに作成した株式リターン履歴を用いて、制約付きポートフォリオ最適化を実装する。第5章で確認した平均分散法を出発点とし、最小分散、平均分散、最大リターン、最大シャープレシオ、最小Expected Shortfall、リスク・バジェッティング、目標リターン、目標リスクへと拡張する。</p>
+<p>本章では、これまでに作成した株式リターン履歴を用いて、制約付きポートフォリオ最適化を実装する。第5章で確認した平均分散法を出発点とし、最小分散、平均分散、最大リターン、最大シャープレシオ、最小期待ショートフォール、リスク・バジェッティング、目標リターン、目標リスクへと拡張する。</p>
 <p>計算にはGaussQuantのポートフォリオAPIを用いる。これにより、最適化問題そのものを本章内で再実装するのではなく、投資ユニバース、リターンデータ、制約条件、最適化手法を分離して記述できる。</p>
 <pre class="text"><code>株式リターン履歴
         ↓
@@ -623,11 +623,11 @@ SR=\frac{\mu_p-r_f}{\sigma_p}
 </div>
 </section>
 </section>
-<section id="i-8.5-expected-shortfallとリスクバジェッティング" class="level2">
-<h2 class="anchored" data-anchor-id="i-8.5-expected-shortfallとリスクバジェッティング">I-8.5 Expected Shortfallとリスク・バジェッティング</h2>
-<section id="i-8.5.1-expected-shortfall" class="level3">
-<h3 class="anchored" data-anchor-id="i-8.5.1-expected-shortfall">I-8.5.1 Expected Shortfall</h3>
-<p>損失を <span class="math inline">\(L\)</span>、信頼水準を <span class="math inline">\(\alpha\)</span> とする。Expected Shortfallは、VaRを超えるテール損失の平均として扱う。</p>
+<section id="i-8.5-期待ショートフォールとリスクバジェッティング" class="level2">
+<h2 class="anchored" data-anchor-id="i-8.5-期待ショートフォールとリスクバジェッティング">I-8.5 期待ショートフォールとリスク・バジェッティング</h2>
+<section id="i-8.5.1-期待ショートフォール" class="level3">
+<h3 class="anchored" data-anchor-id="i-8.5.1-期待ショートフォール">I-8.5.1 期待ショートフォール</h3>
+<p>損失を <span class="math inline">\(L\)</span>、信頼水準を <span class="math inline">\(\alpha\)</span> とする。期待ショートフォールは、市場VaRを超えるテール損失の平均として扱う。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>confidence_level <span class="ot">&lt;-</span> <span class="fl">0.95</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -638,7 +638,7 @@ SR=\frac{\mu_p-r_f}{\sigma_p}
 <span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">confidence_level =</span> confidence_level</span>
 <span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Expected Shortfallは次章の市場リスク計測で詳しく扱う。本章では、分散だけでなく損失分布のテールを目的関数にできることを確認する。</p>
+<p>期待ショートフォールは次章の市場リスク計測で詳しく扱う。本章では、分散だけでなく損失分布のテールを目的関数にできることを確認する。</p>
 </section>
 <section id="i-8.5.2-リスクバジェッティング" class="level3">
 <h3 class="anchored" data-anchor-id="i-8.5.2-リスクバジェッティング">I-8.5.2 リスク・バジェッティング</h3>
@@ -751,17 +751,13 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <h2 class="anchored" data-anchor-id="i-8.8-efficient-frontier">I-8.8 Efficient Frontier</h2>
 <p>目標期待リターンを変化させながら最小分散ポートフォリオを求めることでEfficient Frontierを構成できる。本節では、GaussQuantの <code>target_return</code> 最適化を繰り返し、専用の <code>portfolio_frontier_GQL()</code> を導入する前段階として最適化APIとEfficient Frontierの関係を確認する。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>frontier_epsilon <span class="ot">&lt;-</span> <span class="fu">max</span>(</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span>(maximum_return <span class="sc">-</span> minimum_return) <span class="sc">*</span> <span class="fl">1e-6</span>,</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  .Machine<span class="sc">$</span>double.eps<span class="sc">^</span><span class="fl">0.5</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>vec_target_returns <span class="ot">&lt;-</span> <span class="fu">seq</span>(</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  minimum_return,</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  maximum_return <span class="sc">-</span> frontier_epsilon,</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">length.out =</span> <span class="dv">30</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>vec_target_returns <span class="ot">&lt;-</span> <span class="fu">seq</span>(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  minimum_return,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  maximum_return,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">length.out =</span> <span class="dv">31</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">1</span><span class="sc">:</span><span class="dv">30</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>最大リターン点そのものは <code>result_maximum_return</code> で別途計算済みである。したがって、<code>target_return</code> によるフロンティア計算では最大リターン境界を1点だけ除外し、境界上での数値的な退化を避ける。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>lst_frontier_results <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map</span>(</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  vec_target_returns,</span>
@@ -800,7 +796,7 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>plot_efficient_frontier <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  tbl_efficient_frontier,</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> volatility,</span>
@@ -812,8 +808,9 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
 <span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Volatility"</span>,</span>
 <span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Expected Return"</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a><span class="fu">show_plot_LFL</span>(plot_efficient_frontier)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -827,27 +824,18 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>tbl_key_portfolios <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  result_minimum_variance<span class="sc">$</span>statistics <span class="sc">|&gt;</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>      <span class="at">names_from =</span> metric,</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">values_from =</span> value</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">portfolio =</span> <span class="st">"Minimum Variance"</span>),</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  result_maximum_sharpe<span class="sc">$</span>statistics <span class="sc">|&gt;</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">names_from =</span> metric,</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">values_from =</span> value</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">portfolio =</span> <span class="st">"Maximum Sharpe"</span>),</span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  result_maximum_return<span class="sc">$</span>statistics <span class="sc">|&gt;</span></span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(</span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">names_from =</span> metric,</span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">values_from =</span> value</span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">portfolio =</span> <span class="st">"Maximum Return"</span>)</span>
-<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> metric, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">portfolio =</span> <span class="st">"Minimum Variance"</span>),</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  result_maximum_sharpe<span class="sc">$</span>statistics <span class="sc">|&gt;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> metric, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">portfolio =</span> <span class="st">"Maximum Sharpe"</span>),</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  result_maximum_return<span class="sc">$</span>statistics <span class="sc">|&gt;</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> metric, <span class="at">values_from =</span> value) <span class="sc">|&gt;</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">portfolio =</span> <span class="st">"Maximum Return"</span>)</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>plot_efficient_frontier_key_points <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  tbl_efficient_frontier,</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> volatility,</span>
@@ -874,8 +862,9 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
 <span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Volatility"</span>,</span>
 <span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Expected Return"</span></span>
-<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a><span class="fu">show_plot_LFL</span>(plot_efficient_frontier_key_points)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -897,7 +886,7 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>plot_weight_comparison <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(</span>
 <span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  tbl_weight_comparison,</span>
 <span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">aes</span>(</span>
 <span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> asset,</span>
@@ -913,13 +902,14 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Asset"</span>,</span>
 <span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Weight"</span></span>
 <span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(</span>
-<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">angle =</span> <span class="dv">90</span>,</span>
-<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">hjust =</span> <span class="dv">1</span></span>
-<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(</span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a>      <span class="at">angle =</span> <span class="dv">90</span>,</span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">hjust =</span> <span class="dv">1</span></span>
+<span id="cb24-29"><a href="#cb24-29" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb24-30"><a href="#cb24-30" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb24-31"><a href="#cb24-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-32"><a href="#cb24-32" aria-hidden="true" tabindex="-1"></a><span class="fu">show_plot_LFL</span>(plot_weight_comparison)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -1011,9 +1001,9 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <section id="i-8.11-本章のまとめ" class="level2">
 <h2 class="anchored" data-anchor-id="i-8.11-本章のまとめ">I-8.11 本章のまとめ</h2>
 <p>本章では、ポートフォリオ最適化をGaussQuantの統一APIで実装した。最適化ロジックを章内に直接記述する方法から、ポートフォリオ仕様、制約条件、最適化手法を分離する構成へ変更した。</p>
-<p>最小分散、平均分散、最大リターン、最大シャープレシオに加えて、Expected Shortfall、リスク・バジェッティング、目標リターン、目標リスクを同じAPIで扱うことで、ポートフォリオ最適化を一般的なリスク配分問題として捉えることができる。</p>
+<p>最小分散、平均分散、最大リターン、最大シャープレシオに加えて、期待ショートフォール、リスク・バジェッティング、目標リターン、目標リスクを同じAPIで扱うことで、ポートフォリオ最適化を一般的なリスク配分問題として捉えることができる。</p>
 <p>また、目標リターンを連続的に変化させることでEfficient Frontierを構成し、最小分散点と最大シャープレシオ点を同一平面上で確認した。</p>
-<p>次章では、ポートフォリオの損失分布そのものに焦点を移し、VaRとExpected Shortfallを中心に市場リスク計測を扱う。</p>
+<p>次章では、ポートフォリオの損失分布そのものに焦点を移し、市場VaRと期待ショートフォールを中心に市場リスク計測を扱う。</p>
 
 
 </section>
@@ -1426,8 +1416,8 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../part1_empirical/ch09_market_risk_var.html" class="pagination-link" aria-label="第I-9章 市場リスクとVaR">
-        <span class="nav-page-text"><span class="chapter-title">第I-9章 市場リスクとVaR</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../part1_empirical/ch09_market_risk_var.html" class="pagination-link" aria-label="第I-9章 市場リスクと市場VaR">
+        <span class="nav-page-text"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

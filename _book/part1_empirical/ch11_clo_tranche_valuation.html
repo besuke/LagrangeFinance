@@ -108,6 +108,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -201,12 +230,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a>
+  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></a>
+  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクと信用VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -553,19 +582,27 @@ Z-Tranche
       ↓
 複数のトランチへ配分</code></pre>
 <p>CLOでは主として、</p>
-<p>[ ]</p>
+<p><span class="math display">\[
+\text{Portfolio Credit Loss}
+\rightarrow
+\text{Tranche Loss}
+\]</span></p>
 <p>を考える。</p>
 <p>MBS/CMOでは主として、</p>
-<p>[ ]</p>
+<p><span class="math display">\[
+\text{Mortgage Cash Flow}
+\rightarrow
+\text{Tranche Cash Flow}
+\]</span></p>
 <p>を考える。</p>
 <p>つまり、証券化の本質は<strong>原資産のリスクを消去することではなく、異なる性質を持つ証券へ再配分すること</strong>にある。</p>
 </section>
 <section id="i-11.8-attachment-pointとdetachment-point" class="level2">
 <h2 class="anchored" data-anchor-id="i-11.8-attachment-pointとdetachment-point">I-11.8 Attachment PointとDetachment Point</h2>
 <p>ここからCLOの信用トランチを数理的に表現する。</p>
-<p>ポートフォリオ損失率を (L) とする。</p>
-<p>あるトランチがポートフォリオ損失率 (A) から損失を負担し始め、(D) で全額毀損するとする。</p>
-<p>(A) をAttachment Point、(D) をDetachment Pointという。</p>
+<p>ポートフォリオ損失率を <span class="math inline">\(L\)</span> とする。</p>
+<p>あるトランチがポートフォリオ損失率 <span class="math inline">\(A\)</span> から損失を負担し始め、<span class="math inline">\(D\)</span> で全額毀損するとする。</p>
+<p><span class="math inline">\(A\)</span> をAttachment Point、<span class="math inline">\(D\)</span> をDetachment Pointという。</p>
 <p>たとえば、</p>
 <pre class="text"><code>Portfolio Loss
 0%                                      100%
@@ -582,11 +619,27 @@ Senior     10% - 100%</code></pre>
 </section>
 <section id="i-11.9-トランチ損失" class="level2">
 <h2 class="anchored" data-anchor-id="i-11.9-トランチ損失">I-11.9 トランチ損失</h2>
-<p>Attachment Point (A)、Detachment Point (D) のトランチ損失は、</p>
-<p>[ L_{A,D} = { (L-A,0), D-A } ]</p>
+<p>Attachment Point <span class="math inline">\(A\)</span>、Detachment Point <span class="math inline">\(D\)</span> のトランチ損失は、</p>
+<p><span class="math display">\[
+L_{A,D}
+=
+\min
+\left\{
+\max(L-A,0),
+D-A
+\right\}
+\]</span></p>
 <p>で表される。</p>
-<p>トランチ元本 (D-A) に対する損失率として表すなら、</p>
-<p>[ TL_{A,D} = ]</p>
+<p>トランチ元本 <span class="math inline">\(D-A\)</span> に対する損失率として表すなら、</p>
+<p><span class="math display">\[
+TL_{A,D}
+=
+\frac{
+\min\{\max(L-A,0),D-A\}
+}{
+D-A
+}
+\]</span></p>
 <p>となる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>tranche_loss_LFL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -689,12 +742,22 @@ Senior     10% - 100%</code></pre>
 <section id="i-11.10-第10章の信用損失分布をトランチへ配分する" class="level2">
 <h2 class="anchored" data-anchor-id="i-11.10-第10章の信用損失分布をトランチへ配分する">I-11.10 第10章の信用損失分布をトランチへ配分する</h2>
 <p>第10章ではOne-Factor Gaussianモデルによって</p>
-<p>[ L = <em>i EAD_i LGD_i </em>{{Default_i}} ]</p>
+<p><span class="math display">\[
+L
+=
+\sum_i
+EAD_i LGD_i
+\mathbf{1}_{\{Default_i\}}
+\]</span></p>
 <p>をシミュレーションした。</p>
-<p>総EADを (EAD_{}) とすれば、</p>
-<p>[ l = ]</p>
+<p>総EADを <span class="math inline">\(EAD_{\mathrm{total}}\)</span> とすれば、</p>
+<p><span class="math display">\[
+l
+=
+\frac{L}{EAD_{\mathrm{total}}}
+\]</span></p>
 <p>によってポートフォリオ損失率へ変換できる。</p>
-<p>この (l) をAttachment / Detachment構造へ通せば、各トランチの損失分布が得られる。</p>
+<p>この <span class="math inline">\(l\)</span> をAttachment / Detachment構造へ通せば、各トランチの損失分布が得られる。</p>
 <pre class="text"><code>One-Factor Gaussian
         ↓
 Correlated Defaults
@@ -706,15 +769,21 @@ Portfolio Loss Rate
 Attachment / Detachment
         ↓
 Tranche Loss Distribution</code></pre>
-<p>つまり、第10章のCredit VaRモデルと第11章のCLOモデルは別々のモデルではない。</p>
+<p>つまり、第10章の信用VaRモデルと第11章のCLOモデルは別々のモデルではない。</p>
 <p><strong>同じ信用損失エンジンの出力を、異なる優先順位へ配分しているだけである。</strong></p>
 </section>
 <section id="i-11.11-expected-tranche-loss" class="level2">
 <h2 class="anchored" data-anchor-id="i-11.11-expected-tranche-loss">I-11.11 Expected Tranche Loss</h2>
-<p>シナリオ (s) におけるトランチ損失を</p>
-<p>[ L_{A,D}^{(s)} ]</p>
+<p>シナリオ <span class="math inline">\(s\)</span> におけるトランチ損失を</p>
+<p><span class="math display">\[
+L_{A,D}^{(s)}
+\]</span></p>
 <p>とすれば、Expected Tranche Lossは</p>
-<p>[ ETL_{A,D} = E[L_{A,D}] ]</p>
+<p><span class="math display">\[
+ETL_{A,D}
+=
+E[L_{A,D}]
+\]</span></p>
 <p>である。</p>
 <p>Equityは小さなポートフォリオ損失から損失を受けるためETLが大きい。</p>
 <p>SeniorはAttachment Pointが高いため、通常の信用環境では損失を受けない。しかし極端な同時デフォルトが発生すると損失が生じる。</p>
@@ -726,15 +795,50 @@ Tranche Loss Distribution</code></pre>
 <p>Protection Buyerが支払うプレミアムをPremium Leg、</p>
 <p>信用損失発生時にProtection Sellerが負担する損失をLoss Legとする。</p>
 <p>概念的には、</p>
-<p>[ PV_{} = s _t DF(t) E[ OutstandingTranche_t] t ]</p>
+<p><span class="math display">\[
+PV_{\mathrm{Premium}}
+=
+s
+\sum_t
+DF(t)
+E[
+OutstandingTranche_t
+]
+\Delta t
+\]</span></p>
 <p>であり、</p>
-<p>[ PV_{} = _t DF(t) E[ L_{A,D}(t)] ]</p>
+<p><span class="math display">\[
+PV_{\mathrm{Loss}}
+=
+\sum_t
+DF(t)
+E[
+\Delta L_{A,D}(t)
+]
+\]</span></p>
 <p>となる。</p>
-<p>Fair Spread (s^) は、</p>
-<p>[ PV_{} = PV_{} ]</p>
+<p>Fair Spread <span class="math inline">\(s^\ast\)</span> は、</p>
+<p><span class="math display">\[
+PV_{\mathrm{Premium}}
+=
+PV_{\mathrm{Loss}}
+\]</span></p>
 <p>を満たすスプレッドである。</p>
 <p>したがって、</p>
-<p>[ s^ = ]</p>
+<p><span class="math display">\[
+s^\ast
+=
+\frac{
+PV_{\mathrm{Loss}}
+}{
+\sum_t
+DF(t)
+E[
+OutstandingTranche_t
+]
+\Delta t
+}
+\]</span></p>
 <p>となる。</p>
 <p>ここで初めて、信用損失分布が「価格」へ変換される。</p>
 </section>
@@ -759,9 +863,17 @@ Premium Leg / Loss Leg
           ↓
 Fair Spread / Tranche Value</code></pre>
 <p>この構造は、信用ポートフォリオのリスク計測と証券化商品の価格評価が、同じ損失分布を基礎としていることを示している。</p>
-<p>第10章では損失分布の分位点を取ることでCredit VaRを求めた。</p>
+<p>第10章では損失分布の分位点を取ることで信用VaRを求めた。</p>
 <p>本章では同じ損失分布をAttachment / Detachmentによって切り分け、各トランチのキャッシュフローへ変換する。</p>
-<p>[ ]</p>
+<p><span class="math display">\[
+\boxed{
+\text{同じLoss Distribution}
+\begin{cases}
+\rightarrow \text{信用VaR} \\
+\rightarrow CLO\ Tranche\ Pricing
+\end{cases}
+}
+\]</span></p>
 <p>これが、第I部におけるポートフォリオ・リスクモデルから証券化商品評価までの接続である。</p>
 
 
@@ -1170,8 +1282,8 @@ Fair Spread / Tranche Value</code></pre>
   </script>
 <nav class="page-navigation">
   <div class="nav-page nav-page-previous">
-      <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="pagination-link" aria-label="第I-10章 信用リスクとCredit VaR">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></span>
+      <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="pagination-link" aria-label="第I-10章 信用リスクと信用VaR">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第I-10章 信用リスクと信用VaR</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

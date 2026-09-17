@@ -230,12 +230,12 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクとVaR</span></a>
+  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクとCredit VaR</span></a>
+  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクと信用VaR</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -1958,11 +1958,11 @@ x=
 <span id="cb19-102"><a href="#cb19-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
 <span id="cb19-103"><a href="#cb19-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                   compound_yield_pct calculation_time_ms</span></span>
 <span id="cb19-104"><a href="#cb19-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                    &lt;chr&gt;              &lt;chr&gt;              </span></span>
-<span id="cb19-105"><a href="#cb19-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.04               </span></span>
-<span id="cb19-106"><a href="#cb19-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.14               </span></span>
-<span id="cb19-107"><a href="#cb19-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.36               </span></span>
-<span id="cb19-108"><a href="#cb19-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           0.90               </span></span>
-<span id="cb19-109"><a href="#cb19-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           1.72</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb19-105"><a href="#cb19-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.02               </span></span>
+<span id="cb19-106"><a href="#cb19-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.10               </span></span>
+<span id="cb19-107"><a href="#cb19-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.28               </span></span>
+<span id="cb19-108"><a href="#cb19-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           0.66               </span></span>
+<span id="cb19-109"><a href="#cb19-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           0.94</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>以上の結果から、本例では Brent法 → ニュートン・ラフソン法 → 二分法 → polyroot の順に高速な結果となった。Brent法は二分法の安定性と補間法の高速性を組み合わせた手法であり、本例のように価格関数が利回りに対して滑らかで単調な問題では特に有効である。一方、ニュートン・ラフソン法は解析微分を必要とするものの高い収束性能を持ち、二分法は計算速度では劣るものの安定性に優れる。polyrootは規則的なキャッシュフローでは利用できるが、本例の40年債では80次多項式となるため計算負荷が大きくなる。</p>
 <p>GaussQuantも同じ40年債、同じクリーンプライスを入力としている。ただし、単純な価格式だけを解く自作アルゴリズムとは異なり、債券オブジェクト、利払スケジュール、日数計算規則、価格種別などのマーケットコンベンションを含めて処理する。そのため、速度差には求根法そのものの差だけでなく、実務的な債券評価処理のオーバーヘッドも含まれる。</p>
