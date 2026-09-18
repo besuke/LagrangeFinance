@@ -29,7 +29,7 @@ _freeze/
 .quarto/
 **/*.quarto_ipynb
 **/*_files/
-site_libs/
+/site_libs/
 
 *.bak
 *.bak_*
