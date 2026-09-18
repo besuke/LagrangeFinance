@@ -21,6 +21,7 @@ _freeze/
 # 完成版の対象外PDFをGit管理する
 !/_pdf_exclude_build/
 !/_pdf_exclude_build/lagrange-finance-exclude.pdf
+!/images/
 
 .DS_Store
 **pycache**/
@@ -34,15 +35,6 @@ site_libs/
 *.bak_*
 *.tmp
 *.patch
-
-part1_empirical/PV.png
-part1_empirical/IRR.pdf
-
-# Local cleanup and rendering intermediates
-_render_single/
-commit_and_clean_lagrangefinance*.ps1
-clean_lagrangefinance_local*.ps1
-render_html*.log
 
 # LaTeX temporary files
 *.aux

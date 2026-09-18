@@ -74,5 +74,5 @@ format:
     geometry:
       - top=14mm
       - bottom=14mm
-      - left=14mm
-      - right=14mm
+      - left=22mm
+      - right=22mm
