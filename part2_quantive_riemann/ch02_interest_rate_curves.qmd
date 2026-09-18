@@ -150,13 +150,13 @@ jgb_yield_curve_plot <- tbl_jgb_yield_spline |>
   ) +
   ggplot2::geom_line(
     linewidth = 0.9,
-    colour = "#005A9C"
+    colour = "#003A7C"
   ) +
   ggplot2::geom_point(
     data = tbl_jgb_yield |>
       dplyr::filter(date == latest_jgb_date),
-    size = 2,
-    colour = "#C43C39"
+    size = 1.5,
+    colour = "#393939"
   ) +
   ggplot2::scale_x_continuous(
     breaks = c(1, 2, 5, 10, 20, 30, 40)
@@ -213,7 +213,7 @@ tbl_jgb_spline_animation <- tbl_jgb_yield_spline |>
 
 tbl_jgb_time_series <- tbl_jgb_yield_animation |>
   dplyr::filter(
-    tenor_years %in% c(2, 5, 10, 20, 30, 40)
+    tenor_years %in% c(1, 2, 5, 10, 20, 30, 40)
   ) |>
   dplyr::mutate(
     tenor = factor(
@@ -312,13 +312,13 @@ if (!file.exists(jgb_yield_animation_file)) {
       )
     ) +
     ggplot2::geom_line(
-      linewidth = 1.5,
-      colour = "#005A9C"
+      linewidth = 0.8,
+      colour = "#003A7C"
     ) +
     ggplot2::geom_point(
       data = tbl_jgb_yield_animation,
-      size = 1.8,
-      colour = "#C43C39"
+      size = 1.5,
+      colour = "#393939"
     ) +
     ggplot2::scale_x_continuous(
       breaks = c(1, 2, 5, 10, 20, 30, 40),
@@ -340,19 +340,19 @@ if (!file.exists(jgb_yield_animation_file)) {
       y = "Compound yield (%)"
     ) +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(size = 13),
-      axis.text.y = ggplot2::element_text(size = 13),
-      axis.title.x = ggplot2::element_text(size = 14),
-      axis.title.y = ggplot2::element_text(size = 14)
+      axis.text.x = ggplot2::element_text(size = 20),
+      axis.text.y = ggplot2::element_text(size = 20),
+      axis.title.x = ggplot2::element_text(size = 22),
+      axis.title.y = ggplot2::element_text(size = 22)
     ) +
     gganimate::transition_states(
       date,
       transition_length = 1,
       state_length = 0,
       wrap = FALSE
-    ) 
-  
-    jgb_yield_curve_animation <- gganimate::animate(
+    )
+
+  jgb_yield_curve_animation <- gganimate::animate(
     jgb_yield_curve_animation_plot,
     width = 900,
     height = 560,
@@ -420,10 +420,10 @@ if (!file.exists(jgb_yield_time_series_animation_file)) {
       linetype = ggplot2::guide_legend(nrow = 1)
     ) +
     ggplot2::theme(
-      axis.text.x = ggplot2::element_text(size = 13),
-      axis.text.y = ggplot2::element_text(size = 13),
-      axis.title.x = ggplot2::element_text(size = 14),
-      axis.title.y = ggplot2::element_text(size = 14)
+      axis.text.x = ggplot2::element_text(size = 20),
+      axis.text.y = ggplot2::element_text(size = 20),
+      axis.title.x = ggplot2::element_text(size = 22),
+      axis.title.y = ggplot2::element_text(size = 22)
     ) +
     gganimate::transition_reveal(date)
 

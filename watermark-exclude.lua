@@ -10,7 +10,10 @@
 local excluded_titles = {
   ["第I-7章"] = true,
   ["第I-8章"] = true,
-
+  ["第II-9章"] = true,
+  ["第II-10章"] = true,
+  ["第II-11章"] = true,
+  
   ["第II-6章"] = true,
   ["第II-7章"] = true,
   ["第II-8章"] = true,

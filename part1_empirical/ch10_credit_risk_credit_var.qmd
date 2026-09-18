@@ -674,7 +674,7 @@ plot_correlation_sensitivity <-
   geom_point() +
   labs(
     x = "Asset correlation",
-    y = "信用VaR",
+    y = "Credit VaR",
     linetype = NULL
   )
 
