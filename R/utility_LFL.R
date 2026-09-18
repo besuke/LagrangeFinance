@@ -1799,6 +1799,8 @@ read_derived_parquet_file_LFL <- function(
     "lubridate",
     "slider",
     "ggthemes",
+    "gganimate",
+    "gifski",
     "glue",
     "scales",
     "arrow",

@@ -67,9 +67,7 @@ tbl_jgb_yield <- tbl_jgb_yield_raw |>
       date_text,
       format = "%Y/%m/%d"
     ),
-    tenor_years = readr::parse_number(
-      tenor
-    ),
+    tenor_years = readr::parse_number(tenor),
     compound_yield_pct = readr::parse_double(
       yield_text,
       na = c("", "-")
@@ -158,10 +156,10 @@ jgb_yield_curve_plot <- tbl_jgb_yield_spline |>
     data = tbl_jgb_yield |>
       dplyr::filter(date == latest_jgb_date),
     size = 2,
-    colour = "#898989"
+    colour = "#C43C39"
   ) +
   ggplot2::scale_x_continuous(
-    breaks = c(1, 2, 10, 20, 30, 40)
+    breaks = c(1, 2, 5, 10, 20, 30, 40)
   ) +
   ggplot2::labs(
     title = "Japanese Government Bond Yield Curve",
@@ -266,8 +264,7 @@ jgb_yield_time_series_plot <- tbl_jgb_time_series |>
     ggplot2::aes(
       x = date,
       y = compound_yield_pct,
-      colour = tenor,
-      linetype = tenor
+      colour = tenor
     )
   ) +
   ggplot2::geom_line(
@@ -289,17 +286,24 @@ jgb_yield_time_series_plot <- tbl_jgb_time_series |>
 show_plot_LFL(jgb_yield_time_series_plot)
 ```
 
-HTML出力では、`gganimate`と`gifski`が利用可能な場合に二つのアニメーションを生成する。軸の範囲は全期間で固定し、フレーム間の見かけ上の変化が軸の伸縮によって誇張されないようにする。
+HTML出力では、`gganimate`と`gifski`が利用可能な場合に二つのアニメーションを生成する。
 
 ```{r}
 #| label: jgb-yield-curve-animation
 #| eval: true
 
-if (
-  knitr::is_html_output() &&
-    requireNamespace("gganimate", quietly = TRUE) &&
-    requireNamespace("gifski", quietly = TRUE)
-) {
+jgb_yield_animation_file <- file.path(
+  "images",
+  "jgb_yield_curve_animation.gif"
+)
+
+if (!file.exists(jgb_yield_animation_file)) {
+  dir.create(
+    "images",
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+
   jgb_yield_curve_animation_plot <- tbl_jgb_spline_animation |>
     ggplot2::ggplot(
       ggplot2::aes(
@@ -308,13 +312,13 @@ if (
       )
     ) +
     ggplot2::geom_line(
-      linewidth = 0.9,
+      linewidth = 1.5,
       colour = "#005A9C"
     ) +
     ggplot2::geom_point(
       data = tbl_jgb_yield_animation,
       size = 1.8,
-      colour = "#898989"
+      colour = "#C43C39"
     ) +
     ggplot2::scale_x_continuous(
       breaks = c(1, 2, 5, 10, 20, 30, 40),
@@ -335,13 +339,20 @@ if (
       x = "Maturity (years)",
       y = "Compound yield (%)"
     ) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(size = 13),
+      axis.text.y = ggplot2::element_text(size = 13),
+      axis.title.x = ggplot2::element_text(size = 14),
+      axis.title.y = ggplot2::element_text(size = 14)
+    ) +
     gganimate::transition_states(
       date,
       transition_length = 1,
       state_length = 0,
       wrap = FALSE
-    )
-  gganimate::animate(
+    ) 
+  
+    jgb_yield_curve_animation <- gganimate::animate(
     jgb_yield_curve_animation_plot,
     width = 900,
     height = 560,
@@ -351,11 +362,8 @@ if (
   )
 
   gganimate::anim_save(
-    filename = file.path(
-      "images",
-      "jgb_yield_curve_animation.gif"
-    ),
-    animation = jgb_yield_animation
+    filename = jgb_yield_animation_file,
+    animation = jgb_yield_curve_animation
   )
 }
 ```
@@ -364,22 +372,28 @@ if (
 #| label: jgb-yield-time-series-animation
 #| eval: true
 
-if (
-  knitr::is_html_output() &&
-    requireNamespace("gganimate", quietly = TRUE) &&
-    requireNamespace("gifski", quietly = TRUE)
-) {
+jgb_yield_time_series_animation_file <- file.path(
+  "images",
+  "jgb_yield_time_series_animation.gif"
+)
+
+if (!file.exists(jgb_yield_time_series_animation_file)) {
+  dir.create(
+    "images",
+    recursive = TRUE,
+    showWarnings = FALSE
+  )
+
   jgb_yield_time_series_animation_plot <- tbl_jgb_time_series |>
     ggplot2::ggplot(
       ggplot2::aes(
         x = date,
         y = compound_yield_pct,
-        colour = tenor,
-        linetype = tenor
+        colour = tenor
       )
     ) +
     ggplot2::geom_line(
-      linewidth = 0.6
+      linewidth = 1.2
     ) +
     ggplot2::scale_x_date(
       limits = range(
@@ -405,8 +419,15 @@ if (
       colour = ggplot2::guide_legend(nrow = 1),
       linetype = ggplot2::guide_legend(nrow = 1)
     ) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(size = 13),
+      axis.text.y = ggplot2::element_text(size = 13),
+      axis.title.x = ggplot2::element_text(size = 14),
+      axis.title.y = ggplot2::element_text(size = 14)
+    ) +
     gganimate::transition_reveal(date)
-  jgb_yield_animation <- gganimate::animate(
+
+  jgb_yield_time_series_animation <- gganimate::animate(
     jgb_yield_time_series_animation_plot,
     width = 900,
     height = 560,
@@ -416,11 +437,8 @@ if (
   )
 
   gganimate::anim_save(
-    filename = file.path(
-      "images",
-      "jgb_yield_curve_animation.gif"
-    ),
-    animation = jgb_yield_animation
+    filename = jgb_yield_time_series_animation_file,
+    animation = jgb_yield_time_series_animation
   )
 }
 ```
@@ -431,31 +449,25 @@ if (
 
 評価日を0、将来時点を $t$ とし、時点 $t$ に1を受け取るキャッシュフローの現在価値を $D(0,t)$ とする。$D(0,t)$ は割引係数である。連続複利のゼロ金利を $z(0,t)$ とすると、両者の関係は次式で表される。
 
-$$
-D(0,t)
+$$D(0,t)
 =
-\exp\left[-z(0,t)t\right]
-$$
+\exp\left[-z(0,t)t\right]$$
 
 したがって、割引係数からゼロ金利を求めると次式となる。
 
-$$
-z(0,t)
+$$z(0,t)
 =
--\frac{\log D(0,t)}{t}
-$$
+-\frac{\log D(0,t)}{t}$$
 
 二つの時点 $t_1$ と $t_2$ の間に適用される連続複利のフォワード金利を $f(t_1,t_2)$ とすると、次式で求められる。
 
-$$
-f(t_1,t_2)
+$$f(t_1,t_2)
 =
 -\frac{
 \log\left[D(0,t_2)/D(0,t_1)\right]
 }{
 t_2-t_1
-}
-$$
+}$$
 
 割引係数、ゼロ金利およびフォワード金利は同じ期間構造を異なる方法で表している。ただし、補間方法の違いは、とくにフォワード金利の形状に強く表れる。
 
@@ -974,15 +986,13 @@ FRAは、将来の一定期間に適用される金利を直接観測する商�
 
 Implied Term Structureは、既存カーブが示す将来の割引関係を保ったまま、参照日を将来へ移した期間構造である。元のカーブの参照日を $t_0$、新しい参照日を $t_1$、将来日を $t_2$ とすると、Implied Term Structureの割引係数は概念的に次式で表される。
 
-$$
-D_{t_1}(t_2)
+$$D_{t_1}(t_2)
 =
 \frac{
 D_{t_0}(t_2)
 }{
 D_{t_0}(t_1)
-}
-$$
+}$$
 
 ```{r implied-term-structure}
 implied_reference_date <- GaussQuant::date_GQL(
@@ -1277,18 +1287,15 @@ GaussQuant::show_tbl_GQH(
 
 割引係数が正であることは、裁定のない期間構造を確認するための基本条件である。ただし、正の割引係数だけでは十分ではない。入力商品の再評価、補間区間のフォワード金利、外挿方法、日数計算規則および参照日の設定も確認する必要がある。
 
-
 ## II-2.6 日本国債先物とCTD
 
 日本の長期国債先物は、実在する特定銘柄ではなく、クーポン6%、償還期限10年の標準物を取引対象とする。満期時には、取引所が定めた受渡適格銘柄の中から売方が実際に受け渡す銘柄を選択する。各銘柄ではクーポンと残存期間が異なるため、標準物との価値の差をConversion Factor（CF）で調整する。
 
 受渡価格の基本部分は次式で表される。
 
-$$
-\text{Invoice Price}
+$$\text{Invoice Price}
 =
-F\times CF
-$$
+F\times CF$$
 
 ここで $F$ は国債先物価格、$CF$ はConversion Factorである。実際の受渡金額では、さらに受渡日の経過利子が加わる。
 
@@ -1414,29 +1421,23 @@ GaussQuant::show_tbl_GQH(
 
 Gross Basisは、現物クリーン価格とCFで調整した先物価格との差である。
 
-$$
-\text{Gross Basis}_i
+$$\text{Gross Basis}_i
 =
-P_i-F\times CF_i
-$$
+P_i-F\times CF_i$$
 
 現物債を評価日から受渡日まで保有すると、クーポン収入と経過利子の変化を受け取る一方、現物購入資金にはFunding Costが発生する。本章では短期資金調達金利を1.23%とし、単純化したCash-and-Carryで比較する。
 
-$$
-\text{Carry}
+$$\text{Carry}
 =
 \text{Coupon Income}
 +
 (AI_T-AI_0)
 -
-\text{Funding Cost}
-$$
+\text{Funding Cost}$$
 
-$$
-\text{Net Basis}
+$$\text{Net Basis}
 =
-\text{Gross Basis}-\text{Carry}
-$$
+\text{Gross Basis}-\text{Carry}$$
 
 ```{r jgb-current-basis}
 valuation_date <- as.Date(valuation_date_chr)
@@ -1518,13 +1519,11 @@ Net Basisが最小となる銘柄は、同じ前提で比較したときに売�
 
 シナリオでは、長期金利を8%、短期Funding Rateを9%とする。
 
-$$
-9\%_{\text{short}}
+$$9\%_{\text{short}}
 >
 8\%_{\text{long}}
 >
-6\%_{\text{standard coupon}}
-$$
+6\%_{\text{standard coupon}}$$
 
 現在の順イールドから、標準物6%を上回る逆イールドへ変化するイメージを次の図に示す。
 
