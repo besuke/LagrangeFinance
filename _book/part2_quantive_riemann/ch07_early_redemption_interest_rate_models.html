@@ -361,14 +361,14 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#ii-7.1-契約条件と評価の基準" id="toc-ii-7.1-契約条件と評価の基準" class="nav-link" data-scroll-target="#ii-7.1-契約条件と評価の基準">II-7.1 契約条件と評価の基準</a></li>
   <li><a href="#ii-7.2-bullet-bondと埋め込みコール権" id="toc-ii-7.2-bullet-bondと埋め込みコール権" class="nav-link" data-scroll-target="#ii-7.2-bullet-bondと埋め込みコール権">II-7.2 Bullet Bondと埋め込みコール権</a></li>
-  <li><a href="#ii-7.3-発行体の行使判断後ろ向きの評価" id="toc-ii-7.3-発行体の行使判断後ろ向きの評価" class="nav-link" data-scroll-target="#ii-7.3-発行体の行使判断後ろ向きの評価">II-7.3 発行体の行使判断：後ろ向きの評価</a></li>
+  <li><a href="#ii-7.3-発行体の行使判断バックワードの評価" id="toc-ii-7.3-発行体の行使判断バックワードの評価" class="nav-link" data-scroll-target="#ii-7.3-発行体の行使判断バックワードの評価">II-7.3 発行体の行使判断：バックワードの評価</a></li>
   <li><a href="#ii-7.4-hullwhiteで継続価値を計算する" id="toc-ii-7.4-hullwhiteで継続価値を計算する" class="nav-link" data-scroll-target="#ii-7.4-hullwhiteで継続価値を計算する">II-7.4 Hull–Whiteで継続価値を計算する</a>
   <ul class="collapse">
   <li><a href="#ii-7.4.1-状態と割引の共同分布" id="toc-ii-7.4.1-状態と割引の共同分布" class="nav-link" data-scroll-target="#ii-7.4.1-状態と割引の共同分布">II-7.4.1 状態と割引の共同分布</a></li>
-  <li><a href="#ii-7.4.2-各行使日の後ろ向き計算" id="toc-ii-7.4.2-各行使日の後ろ向き計算" class="nav-link" data-scroll-target="#ii-7.4.2-各行使日の後ろ向き計算">II-7.4.2 各行使日の後ろ向き計算</a></li>
+  <li><a href="#ii-7.4.2-各行使日のバックワード計算" id="toc-ii-7.4.2-各行使日のバックワード計算" class="nav-link" data-scroll-target="#ii-7.4.2-各行使日のバックワード計算">II-7.4.2 各行使日のバックワード計算</a></li>
   <li><a href="#ii-7.4.3-どの状態で発行体がコールするか" id="toc-ii-7.4.3-どの状態で発行体がコールするか" class="nav-link" data-scroll-target="#ii-7.4.3-どの状態で発行体がコールするか">II-7.4.3 どの状態で発行体がコールするか</a></li>
   </ul></li>
-  <li><a href="#ii-7.5-金利変動とコール権の価値" id="toc-ii-7.5-金利変動とコール権の価値" class="nav-link" data-scroll-target="#ii-7.5-金利変動とコール権の価値">II-7.5 金利変動とコール権の価値</a></li>
+  <li><a href="#ii-7.5-金利変動とコールオプション価値" id="toc-ii-7.5-金利変動とコールオプション価値" class="nav-link" data-scroll-target="#ii-7.5-金利変動とコールオプション価値">II-7.5 金利変動とコールオプション価値</a></li>
   <li><a href="#ii-7.6-数値計算の確かめ方" id="toc-ii-7.6-数値計算の確かめ方" class="nav-link" data-scroll-target="#ii-7.6-数値計算の確かめ方">II-7.6 数値計算の確かめ方</a></li>
   <li><a href="#ii-7.7-bermudan-swaptionとの関係と拡張" id="toc-ii-7.7-bermudan-swaptionとの関係と拡張" class="nav-link" data-scroll-target="#ii-7.7-bermudan-swaptionとの関係と拡張">II-7.7 Bermudan Swaptionとの関係と拡張</a></li>
   <li><a href="#参考資料" id="toc-参考資料" class="nav-link" data-scroll-target="#参考資料">参考資料</a></li>
@@ -402,7 +402,7 @@ window.Quarto = {
 <section id="第ii-7章-金利モデルによる早期償還評価" class="level1">
 <h1>第II-7章 金利モデルによる早期償還評価</h1>
 <p>固定利付債の発行体に期限前償還権があると、金利が低下した際に、高いクーポンの支払いを打ち切って借り換えることができる。第5章でモデルのパラメータを市場に合わせ、第6章で金利の動きを定義した。本章では、そのモデルを使い、<strong>各行使日にどの価値を比較して債券価格が決まるか</strong>を計算する。</p>
-<p>中心例は発行体が指定日に額面で償還できる固定利付債（Callable Bond）である。最初に契約と行使の順序を定め、Hull–White 1因子モデルのもとで後ろ向きに価値を計算する。最後にBermudan Swaptionとの関係と、複数フォワード金利モデルへ進む場合の計算上の違いを整理する。以下の金利、クーポン、ボラティリティはすべて<strong>教材用の架空の値</strong>である。</p>
+<p>中心例は発行体が指定日に額面で償還できる固定利付債（Callable Bond）である。最初に契約と行使の順序を定め、Hull–White 1因子モデルのもとでバックワードに価値を計算する。最後にBermudan Swaptionとの関係と、複数フォワード金利モデルへ進む場合の計算上の違いを整理する。以下の金利、クーポン、ボラティリティはすべて<strong>教材用の架空の値</strong>である。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="fu">file.path</span>(<span class="st">"R"</span>, <span class="st">"utility_LFL.R"</span>))) {</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">source</span>(<span class="fu">file.path</span>(<span class="st">"R"</span>, <span class="st">"utility_LFL.R"</span>))</span>
@@ -496,12 +496,12 @@ window.Quarto = {
 </section>
 <section id="ii-7.2-bullet-bondと埋め込みコール権" class="level2">
 <h2 class="anchored" data-anchor-id="ii-7.2-bullet-bondと埋め込みコール権">II-7.2 Bullet Bondと埋め込みコール権</h2>
-<p>コール権のないBullet Bondの時点0の価格は、支払額を <span class="math inline">\(C_i\)</span>、満期元本を <span class="math inline">\(N\)</span>、割引係数を <span class="math inline">\(P(0,t_i)\)</span> として</p>
+<p>コールオプションないBullet Bondの時点0の価格は、支払額を <span class="math inline">\(C_i\)</span>、満期元本を <span class="math inline">\(N\)</span>、割引係数を <span class="math inline">\(P(0,t_i)\)</span> として</p>
 <p><span class="math display">\[
 V_0^{\mathrm{bullet}}
 =\sum_{i=1}^{n} C_i P(0,t_i)+N P(0,t_n).
 \]</span></p>
-<p>初期カーブを完全に再現するモデルなら、同じキャッシュフローから得るBullet Bondの価格はこの値に一致する。コール価格や行使日などの条件が一致すれば、発行体のコール権の価値は</p>
+<p>初期カーブを完全に再現するモデルなら、同じキャッシュフローから得るBullet Bondの価格はこの値に一致する。コール価格や行使日などの条件が一致すれば、発行体のコールオプション価値は</p>
 <p><span class="math display">\[
 V_0^{\mathrm{issuer\ call}}
 =V_0^{\mathrm{bullet}}-V_0^{\mathrm{callable}}\geq0
@@ -529,8 +529,8 @@ V_0^{\mathrm{issuer\ call}}
 <span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1       104.69</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ii-7.3-発行体の行使判断後ろ向きの評価" class="level2">
-<h2 class="anchored" data-anchor-id="ii-7.3-発行体の行使判断後ろ向きの評価">II-7.3 発行体の行使判断：後ろ向きの評価</h2>
+<section id="ii-7.3-発行体の行使判断バックワードの評価" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.3-発行体の行使判断バックワードの評価">II-7.3 発行体の行使判断：バックワードの評価</h2>
 <p>クーポン支払日の直後に、将来の支払義務の価値を発行体が比較する。その時点から次の支払日までの<strong>継続価値</strong>を <span class="math inline">\(H_i(x)\)</span>、コール時に支払う元本を <span class="math inline">\(K_i\)</span>、当日のクーポンを <span class="math inline">\(C_i\)</span> とする。直前の投資家側の価格は</p>
 <p><span class="math display">\[
 V_i(x)=C_i+\min\{K_i,H_i(x)\}
@@ -668,8 +668,8 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 <span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ii-7.4.2-各行使日の後ろ向き計算" class="level3">
-<h3 class="anchored" data-anchor-id="ii-7.4.2-各行使日の後ろ向き計算">II-7.4.2 各行使日の後ろ向き計算</h3>
+<section id="ii-7.4.2-各行使日のバックワード計算" class="level3">
+<h3 class="anchored" data-anchor-id="ii-7.4.2-各行使日のバックワード計算">II-7.4.2 各行使日のバックワード計算</h3>
 <p>満期にクーポンと元本を置き、一つ前の支払日に条件付き割引期待値を求める。以後、コール可能日では <span class="math inline">\(\min\)</span> を取ってさかのぼる。比較のため、まったく同じ状態格子と割引演算子でBullet Bondも評価する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>compute_callable_bond_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -792,7 +792,7 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 <span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>    model_result<span class="sc">$</span>bullet_price <span class="sc">-</span> bullet_curve_price</span>
 <span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a><span class="fu">show_early_redemption_tbl_LRL</span>(</span>
-<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>  tbl_price_comparison, <span class="st">"Bullet、Callableとコール権の価値"</span></span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>  tbl_price_comparison, <span class="st">"Bullet、Callableとコールオプション価値"</span></span>
 <span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
 <span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   bullet_from_initial_…¹ bullet_from_model callable_from_model issuer_call_value</span></span>
@@ -857,8 +857,8 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 </div>
 </section>
 </section>
-<section id="ii-7.5-金利変動とコール権の価値" class="level2">
-<h2 class="anchored" data-anchor-id="ii-7.5-金利変動とコール権の価値">II-7.5 金利変動とコール権の価値</h2>
+<section id="ii-7.5-金利変動とコールオプション価値" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.5-金利変動とコールオプション価値">II-7.5 金利変動とコールオプション価値</h2>
 <p>第5章で市場から推定したボラティリティを受け取れば、同じ手順で債券価格を求められる。次は初期割引曲線と平均回帰速度を固定し、金利ボラティリティを変えた<strong>比較実験</strong>である。<span class="math inline">\(\sigma=0\)</span> は確率変動のない決定論的な基準になる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tbl_volatility_sensitivity <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
@@ -904,7 +904,7 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 <span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#286DA8"</span>) <span class="sc">+</span></span>
 <span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.4</span>, <span class="at">colour =</span> <span class="st">"#286DA8"</span>) <span class="sc">+</span></span>
 <span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
-<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"同じ初期曲線におけるコール権のモデル価値"</span>,</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"同じ初期曲線におけるコールオプションモデル価値"</span>,</span>
 <span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"短期金利ボラティリティのパラメータ（bp/√年）"</span>,</span>
 <span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"額面100当たりの発行体コール権価値"</span></span>
 <span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -916,7 +916,7 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 </div>
 </div>
 </div>
-<p>ボラティリティが大きいほど、発行体に有利な低金利の状態を利用できるため、この例ではコール権の価値が増える。一般の実取引では、各シナリオでキャリブレーションや他の市場入力も変わることがあり、この表だけをリスク量とは呼ばない。価格感応度を比べるときは、カーブ、スプレッド、ボラティリティなどのどれを固定するか明確にする。</p>
+<p>ボラティリティが大きいほど、発行体に有利な低金利の状態を利用できるため、この例ではコールオプション価値が増える。一般の実取引では、各シナリオでキャリブレーションや他の市場入力も変わることがあり、この表だけをリスク量とは呼ばない。価格感応度を比べるときは、カーブ、スプレッド、ボラティリティなどのどれを固定するか明確にする。</p>
 </section>
 <section id="ii-7.6-数値計算の確かめ方" class="level2">
 <h2 class="anchored" data-anchor-id="ii-7.6-数値計算の確かめ方">II-7.6 数値計算の確かめ方</h2>
@@ -972,7 +972,7 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 <ul>
 <li><a href="https://academic.oup.com/rfs/article-abstract/3/4/573/1585938">Hull and White, “Pricing Interest-Rate-Derivative Securities” (1990)</a>：初期金利期間構造への適合と1因子モデル。</li>
 <li><a href="https://www.finmath.net/finmath-lib/">finmath lib: Interest Rate Models</a>：短期金利モデル、金利期間構造モデルとBermudan商品。</li>
-<li><a href="https://www.finmath.net/topics/bermudanoptionmontecarlo/">finmath.net: Bermudan Option Valuation in a Monte-Carlo Simulation</a>：後ろ向きの行使判断と条件付き期待値の回帰。</li>
+<li><a href="https://www.finmath.net/topics/bermudanoptionmontecarlo/">finmath.net: Bermudan Option Valuation in a Monte-Carlo Simulation</a>：バックワードの行使判断と条件付き期待値の回帰。</li>
 </ul>
 <p>本章のRコードは、実日付の債券契約や信用・スプレッドを含まない教材用の評価器である。数値結果を市場の取引価格として使用する前に、商品条件、入力曲線、オプション市場への適合と数値収束を確認する。</p>
 
