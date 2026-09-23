@@ -45,30 +45,24 @@ source(file.path("R", "utility_LFL.R"))
 
 満期 $T_n$ のTONAR OISパーレートを $S_n$、固定レッグの各計算期間を $\alpha_i$、ディスカウントファクターを $DF(T_i)$ とする。固定レッグの現在価値は、想定元本を1とすれば、
 
-$$
-PV_{\mathrm{fixed}}
+$$PV_{\mathrm{fixed}}
 =
-S_n\sum_{i=1}^{n}\alpha_iDF(T_i)
-$$
+S_n\sum_{i=1}^{n}\alpha_iDF(T_i)$$
 
 と表される。一方、標準的なOISの変動レッグの現在価値は、概念的に
 
-$$
-PV_{\mathrm{float}}
+$$PV_{\mathrm{float}}
 =
-1-DF(T_n)
-$$
+1-DF(T_n)$$
 
 である。パーレートでは両者が等しいため、
 
-$$
-\boxed{
+$$\boxed{
 S_n
 =
 \frac{1-DF(T_n)}
 {\displaystyle\sum_{i=1}^{n}\alpha_iDF(T_i)}
-}
-$$
+}$$
 
 となる。TONAR OISの市場クォートは、この固定レッグと変動レッグを釣り合わせるパーレートである。
 
@@ -76,15 +70,13 @@ $$
 
 上式を満期 $T_n$ のディスカウントファクターについて解くと、
 
-$$
-\boxed{
+$$\boxed{
 DF(T_n)
 =
 \frac{
 1-S_n\displaystyle\sum_{i=1}^{n-1}\alpha_iDF(T_i)
 }{1+S_n\alpha_n}
-}
-$$
+}$$
 
 となる。短い満期で求めたディスカウントファクターを使って、次の満期の値を順番に求めていく手続きがブートストラップである。本章では導出の意味を理解することに重点を置き、実際のマーケットコンベンションと補間を含むカーブ構築は第II-2章で扱う。
 
@@ -92,23 +84,17 @@ $$
 
 ディスカウントファクターは、将来の1単位の金額を評価時点の価値へ変換する倍率である。時点 $t_i$ のキャッシュフローを $CF_i$ とすれば、金融商品の現在価値は、
 
-$$
-PV=\sum_{i=1}^{n}CF_iDF(t_i)
-$$
+$$PV=\sum_{i=1}^{n}CF_iDF(t_i)$$
 
 となる。連続複利のスポットレートを $z(T)$ とすると、
 
-$$
-DF(T)=\exp\{-z(T)T\}
-$$
+$$DF(T)=\exp\{-z(T)T\}$$
 
 したがって、
 
-$$
-\boxed{
+$$\boxed{
 z(T)=-\frac{\log DF(T)}{T}
-}
-$$
+}$$
 
 である。スポットレートは、評価時点から満期までの期間全体を表す平均的な金利と捉えることができる。
 
@@ -116,31 +102,25 @@ $$
 
 インスタント・フォワードレートを $f(T)$ とすると、
 
-$$
-DF(T)
+$$DF(T)
 =
-\exp\left\{-\int_0^T f(u)\,du\right\}
-$$
+\exp\left\{-\int_0^T f(u)\,du\right\}$$
 
 である。したがって、スポットレートは、現在から満期までのフォワードレートの平均として、
 
-$$
-\boxed{
+$$\boxed{
 z(T)=\frac{1}{T}\int_0^T f(u)\,du
-}
-$$
+}$$
 
 と表される。また、
 
-$$
-\boxed{
+$$\boxed{
 f(T)
 =
 -\frac{\partial\log DF(T)}{\partial T}
 =
 z(T)+T\frac{\partial z(T)}{\partial T}
-}
-$$
+}$$
 
 である。この微分関係により、イールドカーブの傾きとスポットレート、フォワードレートの大小関係が結びつく。
 
@@ -150,37 +130,29 @@ $$
 
 スポットレートカーブが右上がりなら、$z'(T)>0$ である。したがって、
 
-$$
-f(T)=z(T)+Tz'(T)>z(T)
-$$
+$$f(T)=z(T)+Tz'(T)>z(T)$$
 
 となる。スポットレートが現在から満期までの平均勾配、フォワードレートが満期付近の局所的な勾配だと考えれば、上り坂が次第に急になるとき、局所的な勾配がそれまでの平均を上回ることは直観的にも明らかである。
 
 パーレートとスポットレートの関係は、途中で利払いのある債券と、満期まで何も支払わないゼロクーポン債を比べると理解しやすい。額面を1、満期を2年、年1回払いのクーポンを $c$ とすれば、パー債は、
 
-$$
-1=cDF(1)+(1+c)DF(2)
-$$
+$$1=cDF(1)+(1+c)DF(2)$$
 
 を満たすため、
 
-$$
-c=\frac{1-DF(2)}{DF(1)+DF(2)}
-$$
+$$c=\frac{1-DF(2)}{DF(1)+DF(2)}$$
 
 となる。順イールドでは、パー債は相対的に低い短期金利で評価される1年後のクーポンを先に回収できる。この途中キャッシュフローの現在価値があるため、価格を額面1にするクーポン率は、すべての収益を2年後に受け取るゼロクーポン債の2年スポットレートより低くてよい。
 
 したがって、滑らかで単調な順イールドでは、典型的に、
 
-$$
-\boxed{
+$$\boxed{
 \text{パーレート}
 <
 \text{スポットレート}
 <
 \text{フォワードレート}
-}
-$$
+}$$
 
 となる。
 
@@ -188,23 +160,19 @@ $$
 
 スポットレートカーブが右下がりなら、$z'(T)<0$ であり、
 
-$$
-f(T)=z(T)+Tz'(T)<z(T)
-$$
+$$f(T)=z(T)+Tz'(T)<z(T)$$
 
 となる。スポットレートには、それ以前の高い短期金利が平均として残るため、満期付近のフォワードレートはスポットレートより低い。
 
 また、パー債が途中で受け取るクーポンには短期側の高い金利が反映される。このため、途中利払いのないゼロクーポン債のスポットレートより、価格を額面にするパーレートの方が高くなる。したがって、滑らかで単調な逆イールドでは、典型的に、
 
-$$
-\boxed{
+$$\boxed{
 \text{パーレート}
 >
 \text{スポットレート}
 >
 \text{フォワードレート}
-}
-$$
+}$$
 
 となる。
 
@@ -212,15 +180,13 @@ $$
 
 スポットレートが満期によらず一定なら、$z'(T)=0$ なので、$f(T)=z(T)$ となる。複利方式と支払頻度をそろえた理想的な条件では、
 
-$$
-\boxed{
+$$\boxed{
 \text{パーレート}
 =
 \text{スポットレート}
 =
 \text{フォワードレート}
-}
-$$
+}$$
 
 となる。
 
@@ -511,28 +477,24 @@ GaussQuant::show_tbl_GQH(
 
 日本の公社債市場では単利利回りが広く用いられてきた。額面100円、年間クーポン額を $C$、償還価格を $R$、単価を $P$、残存年数を $T$ とすると、単利の最終利回り $Y$ は
 
-$$
-Y=
+$$Y=
 \frac{
 C+\dfrac{R-P}{T}
 }{
 P
 }
-\times 100
-$$
+\times 100$$
 
 で表される。
 
 逆に、単利利回り $y=Y/100$ から単価を求めると、
 
-$$
-P=
+$$P=
 \frac{
 C+\dfrac{R}{T}
 }{
 y+\dfrac{1}{T}
-}
-$$
+}$$
 
 となる。実務では残存日数、残存年数および単価について所定の端数処理を適用するため、計算システムでは式だけでなく丸め・切り捨て規則まで実装する必要がある。以下では、受渡日を2022年4月1日に統一し、単利利回り6.515%から日本市場の計算規則に従って求めた単価を、本章以降のクリーンプライスとして一貫して使用する。
 
@@ -582,13 +544,11 @@ GaussQuant::show_tbl_GQH(
 
 債券市場で表示される単価は通常クリーンプライスである。受渡時には、直前利払日から受渡日までに発生した経過利子を加える。
 
-$$
-\text{Dirty Price}
+$$\text{Dirty Price}
 =
 \text{Clean Price}
 +
-\text{Accrued Interest}
-$$
+\text{Accrued Interest}$$
 
 ### II-1.4.3 ダーティプライスと受渡金額
 
@@ -604,11 +564,9 @@ $$
 
 複利利回りでは、各キャッシュフローをその支払時点まで複利で割り引く。市場単価を $P$、キャッシュフローを $CF_i$、支払時点を $t_i$ とすると、複利利回り $y$ は概念的に
 
-$$
-P =
+$$P =
 \sum_{i=1}^{n}
-\frac{CF_i}{(1+y/m)^{m t_i}}
-$$
+\frac{CF_i}{(1+y/m)^{m t_i}}$$
 
 を満たす利回りである。ここで $m$ は年間複利回数である。
 
@@ -695,11 +653,9 @@ GaussQuant::show_tbl_GQH(
 
 離散複利で表された利回りは、同じ経済価値を保ったまま連続複利へ変換できる。半年複利 $y$ と等価な連続複利 $r_c$ は、
 
-$$
-r_c
+$$r_c
 =
-2\log\left(1+\frac{y}{2}\right)
-$$
+2\log\left(1+\frac{y}{2}\right)$$
 
 である。
 
@@ -784,11 +740,9 @@ GaussQuant::show_tbl_GQH(
 
 修正デュレーションは、利回り変化に対する価格の一次感応度を表す。
 
-$$
-\frac{\Delta P}{P}
+$$\frac{\Delta P}{P}
 \approx
--D_{\mathrm{mod}}\Delta y
-$$
+-D_{\mathrm{mod}}\Delta y$$
 
 ```{r}
 #| label: bond-duration
@@ -1044,32 +998,26 @@ GaussQuant::show_tbl_GQH(
 
 単価 $P$ を「円／額面100円」で表すと、
 
-$$
-\mathrm{BPV}
+$$\mathrm{BPV}
 =
--\frac{\partial P}{\partial Y}
-$$
+-\frac{\partial P}{\partial Y}$$
 
 と定義できる。この $-\partial P/\partial Y$ は「円／1%」であるが、1bp = 0.01%、1円 = 100銭であるため、数値はそのまま **銭／bp** と一致する。
 
 本例では、
 
-$$
--\frac{\partial P}{\partial Y}
+$$-\frac{\partial P}{\partial Y}
 \approx
-15.1421
-$$
+15.1421$$
 
 であるため、BPVは約15.1421銭／bp、すなわち0.151421円／bpである。
 
 一般的なModified Durationは利回りを小数で扱う定義なので、
 
-$$
-D_{\mathrm{mod}}
+$$D_{\mathrm{mod}}
 =
 -\frac{100}{P}
-\frac{\partial P}{\partial Y}
-$$
+\frac{\partial P}{\partial Y}$$
 
 となる。VBAで%単位の微分値を扱う場合には、この100倍の換算を明示する必要がある。
 
@@ -1079,15 +1027,13 @@ $$
 
 複利利回りから債券価格を求める計算は直接評価である。一方、市場で観測されたクリーンプライスから複利利回りを求めるには、
 
-$$
-f(y)
+$$f(y)
 =
 P_{\mathrm{model}}(y)
 -
 P_{\mathrm{market}}
 =
-0
-$$
+0$$
 
 を満たす $y$ を求める必要がある。これは典型的な非線形方程式の求根問題である。
 
@@ -1173,31 +1119,26 @@ compute_bond_yield_derivative_LRL <- function(
 
 ニュートン・ラフソン法は、現在の推定値における関数値と微分値から次の推定値を求める。
 
-$$
-y_{k+1}
+$$y_{k+1}
 =
 y_k
 -
-\frac{f(y_k)}{f'(y_k)}
-$$
+\frac{f(y_k)}{f'(y_k)}$$
 
 ここではVBAと同じく $Y$ を **%単位**で扱う。つまり、6.71047990% は $Y=6.71047990$ とする。小数表記の $0.067104799$ ではない点が重要である。
 
 半年複利の割引係数を
 
-$$
-\alpha=
+$$\alpha=
 \left(
 1+\frac{Y}{200}
-\right)^{-1}
-$$
+\right)^{-1}$$
 
 とおく。
 
 残存年数を $T$、年2回払いのクーポン率を $C$（%）、額面を100とすると、$Y\neq0$ の場合の債券単価は
 
-$$
-P
+$$P
 =
 100
 \left\{
@@ -1207,26 +1148,21 @@ P
 \right)
 +
 \alpha^{2T}
-\right\}.
-$$
+\right\}.$$
 
 また、$Y=0$ の場合は
 
-$$
-P=100+CT
-$$
+$$P=100+CT$$
 
 となる。
 
 この価格関数を、%単位の利回り $Y$ で微分する。VBAではBPVを
 
-$$
-\boxed{
+$$\boxed{
 \mathrm{BPV}
 =
 -\frac{\partial P}{\partial Y}
-}
-$$
+}$$
 
 と定義している。
 
@@ -1234,77 +1170,61 @@ $$
 
 一方、
 
-$$
-1\mathrm{bp}=0.01\%
-$$
+$$1\mathrm{bp}=0.01\%$$
 
 であり、
 
-$$
-1\text{円}=100\text{銭}
-$$
+$$1\text{円}=100\text{銭}$$
 
 である。
 
 したがって、利回り変化をbp、単価変化を銭で表すと、
 
-$$
-\Delta p(\text{銭})
+$$\Delta p(\text{銭})
 =
 \Delta P(\text{円})
-\times 100
-$$
+\times 100$$
 
 である。
 
 また、
 
-$$
-\Delta Y(\%)
+$$\Delta Y(\%)
 =
-\frac{\Delta y(\mathrm{bp})}{100}
-$$
+\frac{\Delta y(\mathrm{bp})}{100}$$
 
 なので、
 
-$$
-\Delta p(\text{銭})
+$$\Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \Delta Y(\%)
-\times 100
-$$
+\times 100$$
 
 に代入すると、
 
-$$
-\Delta p(\text{銭})
+$$\Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \frac{\Delta y(\mathrm{bp})}{100}
-\times 100
-$$
+\times 100$$
 
 となる。したがって、
 
-$$
-\boxed{
+$$\boxed{
 \Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \Delta y(\mathrm{bp})
-}
-$$
+}$$
 
 であり、1bpの変化に対しては、
 
-$$
-\boxed{
+$$\boxed{
 \mathrm{BPV}(\text{銭}/\mathrm{bp})
 =
 -\frac{\partial P}{\partial Y}
-}
-$$
+}$$
 
 となる。
 
@@ -1312,66 +1232,53 @@ $$
 
 例えば本章の40年債では、
 
-$$
--\frac{\partial P}{\partial Y}
+$$-\frac{\partial P}{\partial Y}
 \approx
-15.1421
-$$
+15.1421$$
 
 なので、
 
-$$
-\mathrm{BPV}
+$$\mathrm{BPV}
 \approx
-15.1421\ \text{銭}/\mathrm{bp}
-$$
+15.1421\ \text{銭}/\mathrm{bp}$$
 
 である。円単位では、
 
-$$
-15.1421\text{銭}
+$$15.1421\text{銭}
 =
-0.151421\text{円}
-$$
+0.151421\text{円}$$
 
 なので、
 
-$$
-\mathrm{BPV}
+$$\mathrm{BPV}
 \approx
-0.151421\ \text{円}/\mathrm{bp}
-$$
+0.151421\ \text{円}/\mathrm{bp}$$
 
 となる。
 
 同様に、Convexityでは価格関数の2階微分を用いる。VBAの定義では $Y$ を%単位で扱うため、
 
-$$
-\mathrm{Convexity}_{\%}
+$$\mathrm{Convexity}_{\%}
 =
 \frac{1}{P+\mathrm{Acc}}
-\frac{\partial^2 P}{\partial Y^2}
-$$
+\frac{\partial^2 P}{\partial Y^2}$$
 
 である。
 
 ただし、一般的なConvexityは利回りを小数単位で扱う。そのため、%単位の2階微分から通常のConvexityへ換算する場合には、
 
-$$
-\boxed{
+$$\boxed{
 \mathrm{Convexity}
 =
 \frac{10000}{P+\mathrm{Acc}}
 \frac{\partial^2 P}{\partial Y^2}
-}
-$$
+}$$
 
 となる。1階微分では100倍、2階微分では $100^2=10000$ 倍になる点が重要である。
 
 また、利回り変化をbp、単価変化を銭で表した2次近似では、
 
-$$
-\Delta p(\text{銭})
+$$\Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \Delta y(\mathrm{bp})
@@ -1381,20 +1288,17 @@ $$
 \frac{\partial^2 P}{\partial Y^2}
 \left\{
 \Delta y(\mathrm{bp})
-\right\}^2.
-$$
+\right\}^2.$$
 
 したがって、bp・銭単位で2次項を使う場合には、2階微分を
 
-$$
-\boxed{
+$$\boxed{
 \frac{\partial^2 p}
 {\partial y(\mathrm{bp})^2}
 =
 \frac{1}{100}
 \frac{\partial^2 P}{\partial Y^2}
-}
-$$
+}$$
 
 として扱う。
 
@@ -1402,29 +1306,24 @@ $$
 
 VBAでは $Y=0$ を別ケースとして明示的に扱う。半年複利の割引係数は
 
-$$
-\alpha=
+$$\alpha=
 \left(
 1+\frac{Y}{200}
-\right)^{-1}
-$$
+\right)^{-1}$$
 
 であり、$Y=0$ では $\alpha=1$ となる。
 
 債券単価は、
 
-$$
-\boxed{
+$$\boxed{
 P=100+CT
-}
-$$
+}$$
 
 となる。
 
 1階微分は、
 
-$$
-\boxed{
+$$\boxed{
 \left.
 \frac{\partial P}{\partial Y}
 \right|_{Y=0}
@@ -1435,15 +1334,13 @@ $$
 +
 T
 \right\}
-}
-$$
+}$$
 
 である。
 
 したがって、
 
-$$
-\boxed{
+$$\boxed{
 \mathrm{BPV}_{Y=0}
 =
 -
@@ -1454,15 +1351,13 @@ $$
 \frac{CT(2T+1)}{400}
 +
 T
-}
-$$
+}$$
 
 となり、この数値はVBAの単位規約ではそのまま銭／bpである。
 
 2階微分は、
 
-$$
-\boxed{
+$$\boxed{
 \left.
 \frac{\partial^2 P}{\partial Y^2}
 \right|_{Y=0}
@@ -1473,36 +1368,31 @@ $$
 +
 100
 \right\}
-}
-$$
+}$$
 
 である。
 
 したがって、$Y=0$ のModified Durationは、
 
-$$
-\boxed{
+$$\boxed{
 D_{\mathrm{mod},Y=0}
 =
 -\frac{100}{P+\mathrm{Acc}}
 \left.
 \frac{\partial P}{\partial Y}
 \right|_{Y=0}
-}
-$$
+}$$
 
 Convexityは、
 
-$$
-\boxed{
+$$\boxed{
 \mathrm{Convexity}_{Y=0}
 =
 \frac{10000}{P+\mathrm{Acc}}
 \left.
 \frac{\partial^2 P}{\partial Y^2}
 \right|_{Y=0}
-}
-$$
+}$$
 
 となる。
 
@@ -1512,8 +1402,7 @@ $$
 
 $Y\neq0$ では、
 
-$$
-P
+$$P
 =
 100
 \left\{
@@ -1524,15 +1413,13 @@ P
 \right\},
 \qquad
 \alpha=
-\left(1+\frac{Y}{200}\right)^{-1}
-$$
+\left(1+\frac{Y}{200}\right)^{-1}$$
 
 を直接微分する。
 
 VBAで使用する1階微分は、
 
-$$
-\boxed{
+$$\boxed{
 \frac{\partial P}{\partial Y}
 =
 -100\frac{C}{Y^2}
@@ -1542,15 +1429,13 @@ $$
 1-\frac{C}{Y}
 \right)
 T\alpha^{2T+1}
-}
-$$
+}$$
 
 である。
 
 2階微分は、
 
-$$
-\boxed{
+$$\boxed{
 \frac{\partial^2P}{\partial Y^2}
 =
 \frac{T(2T+1)}{200}
@@ -1564,8 +1449,7 @@ $$
 +
 200\frac{C}{Y^3}
 (1-\alpha^{2T})
-}
-$$
+}$$
 
 となる。
 
@@ -1573,34 +1457,27 @@ $$
 
 さらに、一般的なModified Durationは利回りを小数単位で定義するため、VBAの%単位微分との関係は
 
-$$
-D_{\mathrm{mod}}
+$$D_{\mathrm{mod}}
 =
 -\frac{100}{P+\mathrm{Acc}}
-\frac{\partial P}{\partial Y}
-$$
+\frac{\partial P}{\partial Y}$$
 
 である。受渡日が利払日で経過利子が0なら、
 
-$$
-D_{\mathrm{mod}}
+$$D_{\mathrm{mod}}
 =
 -\frac{100}{P}
-\frac{\partial P}{\partial Y}
-$$
+\frac{\partial P}{\partial Y}$$
 
 となる。
 
 ニュートン・ラフソン法では、この解析微分 $\partial P/\partial Y$ をそのまま傾きとして使用する。価格方程式
 
-$$
-f(Y)=P(Y)-P_{\mathrm{market}}=0
-$$
+$$f(Y)=P(Y)-P_{\mathrm{market}}=0$$
 
 に対して、
 
-$$
-Y_{n+1}
+$$Y_{n+1}
 =
 Y_n
 -
@@ -1608,8 +1485,7 @@ Y_n
 P(Y_n)-P_{\mathrm{market}}
 }{
 \partial P/\partial Y
-}
-$$
+}$$
 
 と更新する。この式では $Y$ 自体が%単位なので、途中で $10^{-4}$ や100を追加で掛ける必要はない。
 
@@ -1765,10 +1641,8 @@ yield_brent_result <- compute_bond_yield_brent_LRL()
 
 規則的な固定利付債では、
 
-$$
-x=
-\frac{1}{1+Y/200}
-$$
+$$x=
+\frac{1}{1+Y/200}$$
 
 と置くことで、価格方程式を $x$ の多項式として表現できる。この場合、Rの `polyroot()` を利用してすべての複素根を求め、経済的に意味のある実根を選択できる。
 

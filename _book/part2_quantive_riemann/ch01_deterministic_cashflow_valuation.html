@@ -466,84 +466,64 @@ window.Quarto = {
 <section id="ii-1.1.3-tonar-oisのパーレート" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.1.3-tonar-oisのパーレート">II-1.1.3 TONAR OISのパーレート</h3>
 <p>満期 <span class="math inline">\(T_n\)</span> のTONAR OISパーレートを <span class="math inline">\(S_n\)</span>、固定レッグの各計算期間を <span class="math inline">\(\alpha_i\)</span>、ディスカウントファクターを <span class="math inline">\(DF(T_i)\)</span> とする。固定レッグの現在価値は、想定元本を1とすれば、</p>
-<p><span class="math display">\[
-PV_{\mathrm{fixed}}
+<p><span class="math display">\[PV_{\mathrm{fixed}}
 =
-S_n\sum_{i=1}^{n}\alpha_iDF(T_i)
-\]</span></p>
+S_n\sum_{i=1}^{n}\alpha_iDF(T_i)\]</span></p>
 <p>と表される。一方、標準的なOISの変動レッグの現在価値は、概念的に</p>
-<p><span class="math display">\[
-PV_{\mathrm{float}}
+<p><span class="math display">\[PV_{\mathrm{float}}
 =
-1-DF(T_n)
-\]</span></p>
+1-DF(T_n)\]</span></p>
 <p>である。パーレートでは両者が等しいため、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 S_n
 =
 \frac{1-DF(T_n)}
 {\displaystyle\sum_{i=1}^{n}\alpha_iDF(T_i)}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。TONAR OISの市場クォートは、この固定レッグと変動レッグを釣り合わせるパーレートである。</p>
 </section>
 <section id="ii-1.1.4-パーレートからディスカウントファクターの導出" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.1.4-パーレートからディスカウントファクターの導出">II-1.1.4 パーレートからディスカウントファクターの導出</h3>
 <p>上式を満期 <span class="math inline">\(T_n\)</span> のディスカウントファクターについて解くと、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 DF(T_n)
 =
 \frac{
 1-S_n\displaystyle\sum_{i=1}^{n-1}\alpha_iDF(T_i)
 }{1+S_n\alpha_n}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。短い満期で求めたディスカウントファクターを使って、次の満期の値を順番に求めていく手続きがブートストラップである。本章では導出の意味を理解することに重点を置き、実際のマーケットコンベンションと補間を含むカーブ構築は第II-2章で扱う。</p>
 </section>
 <section id="ii-1.1.5-ディスカウントファクターからスポットレート" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.1.5-ディスカウントファクターからスポットレート">II-1.1.5 ディスカウントファクターからスポットレート</h3>
 <p>ディスカウントファクターは、将来の1単位の金額を評価時点の価値へ変換する倍率である。時点 <span class="math inline">\(t_i\)</span> のキャッシュフローを <span class="math inline">\(CF_i\)</span> とすれば、金融商品の現在価値は、</p>
-<p><span class="math display">\[
-PV=\sum_{i=1}^{n}CF_iDF(t_i)
-\]</span></p>
+<p><span class="math display">\[PV=\sum_{i=1}^{n}CF_iDF(t_i)\]</span></p>
 <p>となる。連続複利のスポットレートを <span class="math inline">\(z(T)\)</span> とすると、</p>
-<p><span class="math display">\[
-DF(T)=\exp\{-z(T)T\}
-\]</span></p>
+<p><span class="math display">\[DF(T)=\exp\{-z(T)T\}\]</span></p>
 <p>したがって、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 z(T)=-\frac{\log DF(T)}{T}
-}
-\]</span></p>
+}\]</span></p>
 <p>である。スポットレートは、評価時点から満期までの期間全体を表す平均的な金利と捉えることができる。</p>
 </section>
 <section id="ii-1.1.6-スポットレートからフォワードレート" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.1.6-スポットレートからフォワードレート">II-1.1.6 スポットレートからフォワードレート</h3>
 <p>インスタント・フォワードレートを <span class="math inline">\(f(T)\)</span> とすると、</p>
-<p><span class="math display">\[
-DF(T)
+<p><span class="math display">\[DF(T)
 =
-\exp\left\{-\int_0^T f(u)\,du\right\}
-\]</span></p>
+\exp\left\{-\int_0^T f(u)\,du\right\}\]</span></p>
 <p>である。したがって、スポットレートは、現在から満期までのフォワードレートの平均として、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 z(T)=\frac{1}{T}\int_0^T f(u)\,du
-}
-\]</span></p>
+}\]</span></p>
 <p>と表される。また、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 f(T)
 =
 -\frac{\partial\log DF(T)}{\partial T}
 =
 z(T)+T\frac{\partial z(T)}{\partial T}
-}
-\]</span></p>
+}\]</span></p>
 <p>である。この微分関係により、イールドカーブの傾きとスポットレート、フォワードレートの大小関係が結びつく。</p>
 </section>
 </section>
@@ -552,62 +532,48 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 <section id="ii-1.2.1-順イールド" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.2.1-順イールド">II-1.2.1 順イールド</h3>
 <p>スポットレートカーブが右上がりなら、<span class="math inline">\(z'(T)&gt;0\)</span> である。したがって、</p>
-<p><span class="math display">\[
-f(T)=z(T)+Tz'(T)&gt;z(T)
-\]</span></p>
+<p><span class="math display">\[f(T)=z(T)+Tz'(T)&gt;z(T)\]</span></p>
 <p>となる。スポットレートが現在から満期までの平均勾配、フォワードレートが満期付近の局所的な勾配だと考えれば、上り坂が次第に急になるとき、局所的な勾配がそれまでの平均を上回ることは直観的にも明らかである。</p>
 <p>パーレートとスポットレートの関係は、途中で利払いのある債券と、満期まで何も支払わないゼロクーポン債を比べると理解しやすい。額面を1、満期を2年、年1回払いのクーポンを <span class="math inline">\(c\)</span> とすれば、パー債は、</p>
-<p><span class="math display">\[
-1=cDF(1)+(1+c)DF(2)
-\]</span></p>
+<p><span class="math display">\[1=cDF(1)+(1+c)DF(2)\]</span></p>
 <p>を満たすため、</p>
-<p><span class="math display">\[
-c=\frac{1-DF(2)}{DF(1)+DF(2)}
-\]</span></p>
+<p><span class="math display">\[c=\frac{1-DF(2)}{DF(1)+DF(2)}\]</span></p>
 <p>となる。順イールドでは、パー債は相対的に低い短期金利で評価される1年後のクーポンを先に回収できる。この途中キャッシュフローの現在価値があるため、価格を額面1にするクーポン率は、すべての収益を2年後に受け取るゼロクーポン債の2年スポットレートより低くてよい。</p>
 <p>したがって、滑らかで単調な順イールドでは、典型的に、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \text{パーレート}
 &lt;
 \text{スポットレート}
 &lt;
 \text{フォワードレート}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。</p>
 </section>
 <section id="ii-1.2.2-逆イールド" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.2.2-逆イールド">II-1.2.2 逆イールド</h3>
 <p>スポットレートカーブが右下がりなら、<span class="math inline">\(z'(T)&lt;0\)</span> であり、</p>
-<p><span class="math display">\[
-f(T)=z(T)+Tz'(T)&lt;z(T)
-\]</span></p>
+<p><span class="math display">\[f(T)=z(T)+Tz'(T)&lt;z(T)\]</span></p>
 <p>となる。スポットレートには、それ以前の高い短期金利が平均として残るため、満期付近のフォワードレートはスポットレートより低い。</p>
 <p>また、パー債が途中で受け取るクーポンには短期側の高い金利が反映される。このため、途中利払いのないゼロクーポン債のスポットレートより、価格を額面にするパーレートの方が高くなる。したがって、滑らかで単調な逆イールドでは、典型的に、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \text{パーレート}
 &gt;
 \text{スポットレート}
 &gt;
 \text{フォワードレート}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。</p>
 </section>
 <section id="ii-1.2.3-フラットカーブ" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.2.3-フラットカーブ">II-1.2.3 フラットカーブ</h3>
 <p>スポットレートが満期によらず一定なら、<span class="math inline">\(z'(T)=0\)</span> なので、<span class="math inline">\(f(T)=z(T)\)</span> となる。複利方式と支払頻度をそろえた理想的な条件では、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \text{パーレート}
 =
 \text{スポットレート}
 =
 \text{フォワードレート}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。</p>
 </section>
 <section id="ii-1.2.4-tonarによる三曲線の比較" class="level3">
@@ -916,25 +882,21 @@ f(T)=z(T)+Tz'(T)&lt;z(T)
 <section id="ii-1.4.1-単利利回りと債券単価" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.4.1-単利利回りと債券単価">II-1.4.1 単利利回りと債券単価</h3>
 <p>日本の公社債市場では単利利回りが広く用いられてきた。額面100円、年間クーポン額を <span class="math inline">\(C\)</span>、償還価格を <span class="math inline">\(R\)</span>、単価を <span class="math inline">\(P\)</span>、残存年数を <span class="math inline">\(T\)</span> とすると、単利の最終利回り <span class="math inline">\(Y\)</span> は</p>
-<p><span class="math display">\[
-Y=
+<p><span class="math display">\[Y=
 \frac{
 C+\dfrac{R-P}{T}
 }{
 P
 }
-\times 100
-\]</span></p>
+\times 100\]</span></p>
 <p>で表される。</p>
 <p>逆に、単利利回り <span class="math inline">\(y=Y/100\)</span> から単価を求めると、</p>
-<p><span class="math display">\[
-P=
+<p><span class="math display">\[P=
 \frac{
 C+\dfrac{R}{T}
 }{
 y+\dfrac{1}{T}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。実務では残存日数、残存年数および単価について所定の端数処理を適用するため、計算システムでは式だけでなく丸め・切り捨て規則まで実装する必要がある。以下では、受渡日を2022年4月1日に統一し、単利利回り6.515%から日本市場の計算規則に従って求めた単価を、本章以降のクリーンプライスとして一貫して使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>yen_coupon_rate_pct <span class="ot">&lt;-</span> <span class="fl">7.50</span></span>
@@ -986,13 +948,11 @@ y+\dfrac{1}{T}
 <section id="ii-1.4.2-経過利子とクリーンプライス" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.4.2-経過利子とクリーンプライス">II-1.4.2 経過利子とクリーンプライス</h3>
 <p>債券市場で表示される単価は通常クリーンプライスである。受渡時には、直前利払日から受渡日までに発生した経過利子を加える。</p>
-<p><span class="math display">\[
-\text{Dirty Price}
+<p><span class="math display">\[\text{Dirty Price}
 =
 \text{Clean Price}
 +
-\text{Accrued Interest}
-\]</span></p>
+\text{Accrued Interest}\]</span></p>
 </section>
 <section id="ii-1.4.3-ダーティプライスと受渡金額" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.4.3-ダーティプライスと受渡金額">II-1.4.3 ダーティプライスと受渡金額</h3>
@@ -1008,11 +968,9 @@ y+\dfrac{1}{T}
 <section id="ii-1.5.2-複利利回りによる評価" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.5.2-複利利回りによる評価">II-1.5.2 複利利回りによる評価</h3>
 <p>複利利回りでは、各キャッシュフローをその支払時点まで複利で割り引く。市場単価を <span class="math inline">\(P\)</span>、キャッシュフローを <span class="math inline">\(CF_i\)</span>、支払時点を <span class="math inline">\(t_i\)</span> とすると、複利利回り <span class="math inline">\(y\)</span> は概念的に</p>
-<p><span class="math display">\[
-P =
+<p><span class="math display">\[P =
 \sum_{i=1}^{n}
-\frac{CF_i}{(1+y/m)^{m t_i}}
-\]</span></p>
+\frac{CF_i}{(1+y/m)^{m t_i}}\]</span></p>
 <p>を満たす利回りである。ここで <span class="math inline">\(m\)</span> は年間複利回数である。</p>
 <p>本章では、ここで用いる市場単価を任意に与えるのではなく、前節の単利利回りから求めたクリーンプライスとする。したがって、計算の流れは <strong>単利利回り → クリーンプライス → 複利利回り</strong> となる。</p>
 <div class="cell">
@@ -1103,11 +1061,9 @@ P =
 <section id="ii-1.5.4-連続複利による再評価" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.5.4-連続複利による再評価">II-1.5.4 連続複利による再評価</h3>
 <p>離散複利で表された利回りは、同じ経済価値を保ったまま連続複利へ変換できる。半年複利 <span class="math inline">\(y\)</span> と等価な連続複利 <span class="math inline">\(r_c\)</span> は、</p>
-<p><span class="math display">\[
-r_c
+<p><span class="math display">\[r_c
 =
-2\log\left(1+\frac{y}{2}\right)
-\]</span></p>
+2\log\left(1+\frac{y}{2}\right)\]</span></p>
 <p>である。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>continuous_yield <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="sc">*</span> <span class="fu">log1p</span>(compound_yield <span class="sc">/</span> <span class="dv">2</span>)</span>
@@ -1193,11 +1149,9 @@ r_c
 <section id="ii-1.7.2-修正デュレーション" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.7.2-修正デュレーション">II-1.7.2 修正デュレーション</h3>
 <p>修正デュレーションは、利回り変化に対する価格の一次感応度を表す。</p>
-<p><span class="math display">\[
-\frac{\Delta P}{P}
+<p><span class="math display">\[\frac{\Delta P}{P}
 \approx
--D_{\mathrm{mod}}\Delta y
-\]</span></p>
+-D_{\mathrm{mod}}\Delta y\]</span></p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># VBA定義に合わせ、利回り Y は「%」単位で扱う。</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 例: 6.71047990% は Y = 6.71047990。</span></span>
@@ -1473,26 +1427,20 @@ r_c
 <h3 class="anchored" data-anchor-id="ii-1.7.4-bpvによる価格感応度">II-1.7.4 BPVによる価格感応度</h3>
 <p>本章ではVBAの定義に合わせ、複利利回り <span class="math inline">\(Y\)</span> を <strong>%単位</strong>で扱う。したがって、<span class="math inline">\(Y=6.71047990\)</span> は6.71047990%を意味する。</p>
 <p>単価 <span class="math inline">\(P\)</span> を「円／額面100円」で表すと、</p>
-<p><span class="math display">\[
-\mathrm{BPV}
+<p><span class="math display">\[\mathrm{BPV}
 =
--\frac{\partial P}{\partial Y}
-\]</span></p>
+-\frac{\partial P}{\partial Y}\]</span></p>
 <p>と定義できる。この <span class="math inline">\(-\partial P/\partial Y\)</span> は「円／1%」であるが、1bp = 0.01%、1円 = 100銭であるため、数値はそのまま <strong>銭／bp</strong> と一致する。</p>
 <p>本例では、</p>
-<p><span class="math display">\[
--\frac{\partial P}{\partial Y}
+<p><span class="math display">\[-\frac{\partial P}{\partial Y}
 \approx
-15.1421
-\]</span></p>
+15.1421\]</span></p>
 <p>であるため、BPVは約15.1421銭／bp、すなわち0.151421円／bpである。</p>
 <p>一般的なModified Durationは利回りを小数で扱う定義なので、</p>
-<p><span class="math display">\[
-D_{\mathrm{mod}}
+<p><span class="math display">\[D_{\mathrm{mod}}
 =
 -\frac{100}{P}
-\frac{\partial P}{\partial Y}
-\]</span></p>
+\frac{\partial P}{\partial Y}\]</span></p>
 <p>となる。VBAで%単位の微分値を扱う場合には、この100倍の換算を明示する必要がある。</p>
 </section>
 </section>
@@ -1501,15 +1449,13 @@ D_{\mathrm{mod}}
 <section id="ii-1.8.1-債券単価と利回りの逆問題" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.8.1-債券単価と利回りの逆問題">II-1.8.1 債券単価と利回りの逆問題</h3>
 <p>複利利回りから債券価格を求める計算は直接評価である。一方、市場で観測されたクリーンプライスから複利利回りを求めるには、</p>
-<p><span class="math display">\[
-f(y)
+<p><span class="math display">\[f(y)
 =
 P_{\mathrm{model}}(y)
 -
 P_{\mathrm{market}}
 =
-0
-\]</span></p>
+0\]</span></p>
 <p>を満たす <span class="math inline">\(y\)</span> を求める必要がある。これは典型的な非線形方程式の求根問題である。</p>
 <p>数値解法の違いを明確にするため、ここでも本章の冒頭から使用している<strong>残存40年の固定利付債</strong>をそのまま用いる。年2回払い、額面100、クーポン7.50%、単利利回り6.515%であり、単利利回りから求めたクリーンプライスを共通の市場価格とする。その同じクリーンプライスから複利利回りを逆算し、各数値解法の精度と計算時間を比較する。</p>
 <p>40年債では半年ごとのキャッシュフローが80回存在するため、短期債よりも反復計算の差が表れやすい。実務上も、超長期国債や長期社債の評価では、価格計算と利回り計算を大量に繰り返すため、求根アルゴリズムの速度と安定性が重要となる。</p>
@@ -1593,25 +1539,20 @@ P_{\mathrm{market}}
 <section id="ii-1.8.2-ニュートンラフソン法" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.8.2-ニュートンラフソン法">II-1.8.2 ニュートン・ラフソン法</h3>
 <p>ニュートン・ラフソン法は、現在の推定値における関数値と微分値から次の推定値を求める。</p>
-<p><span class="math display">\[
-y_{k+1}
+<p><span class="math display">\[y_{k+1}
 =
 y_k
 -
-\frac{f(y_k)}{f'(y_k)}
-\]</span></p>
+\frac{f(y_k)}{f'(y_k)}\]</span></p>
 <p>ここではVBAと同じく <span class="math inline">\(Y\)</span> を <strong>%単位</strong>で扱う。つまり、6.71047990% は <span class="math inline">\(Y=6.71047990\)</span> とする。小数表記の <span class="math inline">\(0.067104799\)</span> ではない点が重要である。</p>
 <p>半年複利の割引係数を</p>
-<p><span class="math display">\[
-\alpha=
+<p><span class="math display">\[\alpha=
 \left(
 1+\frac{Y}{200}
-\right)^{-1}
-\]</span></p>
+\right)^{-1}\]</span></p>
 <p>とおく。</p>
 <p>残存年数を <span class="math inline">\(T\)</span>、年2回払いのクーポン率を <span class="math inline">\(C\)</span>（%）、額面を100とすると、<span class="math inline">\(Y\neq0\)</span> の場合の債券単価は</p>
-<p><span class="math display">\[
-P
+<p><span class="math display">\[P
 =
 100
 \left\{
@@ -1621,127 +1562,93 @@ P
 \right)
 +
 \alpha^{2T}
-\right\}.
-\]</span></p>
+\right\}.\]</span></p>
 <p>また、<span class="math inline">\(Y=0\)</span> の場合は</p>
-<p><span class="math display">\[
-P=100+CT
-\]</span></p>
+<p><span class="math display">\[P=100+CT\]</span></p>
 <p>となる。</p>
 <p>この価格関数を、%単位の利回り <span class="math inline">\(Y\)</span> で微分する。VBAではBPVを</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \mathrm{BPV}
 =
 -\frac{\partial P}{\partial Y}
-}
-\]</span></p>
+}\]</span></p>
 <p>と定義している。</p>
 <p>ここで <span class="math inline">\(\partial P/\partial Y\)</span> の単位は「円／1 percentage point」である。すなわち、利回りが1.00%変化したときの、額面100円あたりの単価変化を表す。</p>
 <p>一方、</p>
-<p><span class="math display">\[
-1\mathrm{bp}=0.01\%
-\]</span></p>
+<p><span class="math display">\[1\mathrm{bp}=0.01\%\]</span></p>
 <p>であり、</p>
-<p><span class="math display">\[
-1\text{円}=100\text{銭}
-\]</span></p>
+<p><span class="math display">\[1\text{円}=100\text{銭}\]</span></p>
 <p>である。</p>
 <p>したがって、利回り変化をbp、単価変化を銭で表すと、</p>
-<p><span class="math display">\[
-\Delta p(\text{銭})
+<p><span class="math display">\[\Delta p(\text{銭})
 =
 \Delta P(\text{円})
-\times 100
-\]</span></p>
+\times 100\]</span></p>
 <p>である。</p>
 <p>また、</p>
-<p><span class="math display">\[
-\Delta Y(\%)
+<p><span class="math display">\[\Delta Y(\%)
 =
-\frac{\Delta y(\mathrm{bp})}{100}
-\]</span></p>
+\frac{\Delta y(\mathrm{bp})}{100}\]</span></p>
 <p>なので、</p>
-<p><span class="math display">\[
-\Delta p(\text{銭})
+<p><span class="math display">\[\Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \Delta Y(\%)
-\times 100
-\]</span></p>
+\times 100\]</span></p>
 <p>に代入すると、</p>
-<p><span class="math display">\[
-\Delta p(\text{銭})
+<p><span class="math display">\[\Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \frac{\Delta y(\mathrm{bp})}{100}
-\times 100
-\]</span></p>
+\times 100\]</span></p>
 <p>となる。したがって、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \Delta y(\mathrm{bp})
-}
-\]</span></p>
+}\]</span></p>
 <p>であり、1bpの変化に対しては、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \mathrm{BPV}(\text{銭}/\mathrm{bp})
 =
 -\frac{\partial P}{\partial Y}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。</p>
 <p>つまり、%単位で計算した <span class="math inline">\(-\partial P/\partial Y\)</span> の<strong>数値そのもの</strong>が、銭／bpで表したBPVになる。</p>
 <p>例えば本章の40年債では、</p>
-<p><span class="math display">\[
--\frac{\partial P}{\partial Y}
+<p><span class="math display">\[-\frac{\partial P}{\partial Y}
 \approx
-15.1421
-\]</span></p>
+15.1421\]</span></p>
 <p>なので、</p>
-<p><span class="math display">\[
-\mathrm{BPV}
+<p><span class="math display">\[\mathrm{BPV}
 \approx
-15.1421\ \text{銭}/\mathrm{bp}
-\]</span></p>
+15.1421\ \text{銭}/\mathrm{bp}\]</span></p>
 <p>である。円単位では、</p>
-<p><span class="math display">\[
-15.1421\text{銭}
+<p><span class="math display">\[15.1421\text{銭}
 =
-0.151421\text{円}
-\]</span></p>
+0.151421\text{円}\]</span></p>
 <p>なので、</p>
-<p><span class="math display">\[
-\mathrm{BPV}
+<p><span class="math display">\[\mathrm{BPV}
 \approx
-0.151421\ \text{円}/\mathrm{bp}
-\]</span></p>
+0.151421\ \text{円}/\mathrm{bp}\]</span></p>
 <p>となる。</p>
 <p>同様に、Convexityでは価格関数の2階微分を用いる。VBAの定義では <span class="math inline">\(Y\)</span> を%単位で扱うため、</p>
-<p><span class="math display">\[
-\mathrm{Convexity}_{\%}
+<p><span class="math display">\[\mathrm{Convexity}_{\%}
 =
 \frac{1}{P+\mathrm{Acc}}
-\frac{\partial^2 P}{\partial Y^2}
-\]</span></p>
+\frac{\partial^2 P}{\partial Y^2}\]</span></p>
 <p>である。</p>
 <p>ただし、一般的なConvexityは利回りを小数単位で扱う。そのため、%単位の2階微分から通常のConvexityへ換算する場合には、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \mathrm{Convexity}
 =
 \frac{10000}{P+\mathrm{Acc}}
 \frac{\partial^2 P}{\partial Y^2}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。1階微分では100倍、2階微分では <span class="math inline">\(100^2=10000\)</span> 倍になる点が重要である。</p>
 <p>また、利回り変化をbp、単価変化を銭で表した2次近似では、</p>
-<p><span class="math display">\[
-\Delta p(\text{銭})
+<p><span class="math display">\[\Delta p(\text{銭})
 \approx
 \frac{\partial P}{\partial Y}
 \Delta y(\mathrm{bp})
@@ -1751,40 +1658,32 @@ P=100+CT
 \frac{\partial^2 P}{\partial Y^2}
 \left\{
 \Delta y(\mathrm{bp})
-\right\}^2.
-\]</span></p>
+\right\}^2.\]</span></p>
 <p>したがって、bp・銭単位で2次項を使う場合には、2階微分を</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \frac{\partial^2 p}
 {\partial y(\mathrm{bp})^2}
 =
 \frac{1}{100}
 \frac{\partial^2 P}{\partial Y^2}
-}
-\]</span></p>
+}\]</span></p>
 <p>として扱う。</p>
 </section>
 <section id="y0-の場合" class="level3">
 <h3 class="anchored" data-anchor-id="y0-の場合"><span class="math inline">\(Y=0\)</span> の場合</h3>
 <p>VBAでは <span class="math inline">\(Y=0\)</span> を別ケースとして明示的に扱う。半年複利の割引係数は</p>
-<p><span class="math display">\[
-\alpha=
+<p><span class="math display">\[\alpha=
 \left(
 1+\frac{Y}{200}
-\right)^{-1}
-\]</span></p>
+\right)^{-1}\]</span></p>
 <p>であり、<span class="math inline">\(Y=0\)</span> では <span class="math inline">\(\alpha=1\)</span> となる。</p>
 <p>債券単価は、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 P=100+CT
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。</p>
 <p>1階微分は、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \left.
 \frac{\partial P}{\partial Y}
 \right|_{Y=0}
@@ -1795,12 +1694,10 @@ P=100+CT
 +
 T
 \right\}
-}
-\]</span></p>
+}\]</span></p>
 <p>である。</p>
 <p>したがって、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \mathrm{BPV}_{Y=0}
 =
 -
@@ -1811,12 +1708,10 @@ T
 \frac{CT(2T+1)}{400}
 +
 T
-}
-\]</span></p>
+}\]</span></p>
 <p>となり、この数値はVBAの単位規約ではそのまま銭／bpである。</p>
 <p>2階微分は、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \left.
 \frac{\partial^2 P}{\partial Y^2}
 \right|_{Y=0}
@@ -1827,39 +1722,33 @@ T
 +
 100
 \right\}
-}
-\]</span></p>
+}\]</span></p>
 <p>である。</p>
 <p>したがって、<span class="math inline">\(Y=0\)</span> のModified Durationは、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 D_{\mathrm{mod},Y=0}
 =
 -\frac{100}{P+\mathrm{Acc}}
 \left.
 \frac{\partial P}{\partial Y}
 \right|_{Y=0}
-}
-\]</span></p>
+}\]</span></p>
 <p>Convexityは、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \mathrm{Convexity}_{Y=0}
 =
 \frac{10000}{P+\mathrm{Acc}}
 \left.
 \frac{\partial^2 P}{\partial Y^2}
 \right|_{Y=0}
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。</p>
 <p>なお、受渡日が利払日で経過利子 <span class="math inline">\(\mathrm{Acc}=0\)</span> の場合は、上式の <span class="math inline">\(P+\mathrm{Acc}\)</span> は単に <span class="math inline">\(P\)</span> となる。</p>
 </section>
 <section id="yneq0-の解析微分" class="level3">
 <h3 class="anchored" data-anchor-id="yneq0-の解析微分"><span class="math inline">\(Y\neq0\)</span> の解析微分</h3>
 <p><span class="math inline">\(Y\neq0\)</span> では、</p>
-<p><span class="math display">\[
-P
+<p><span class="math display">\[P
 =
 100
 \left\{
@@ -1870,12 +1759,10 @@ P
 \right\},
 \qquad
 \alpha=
-\left(1+\frac{Y}{200}\right)^{-1}
-\]</span></p>
+\left(1+\frac{Y}{200}\right)^{-1}\]</span></p>
 <p>を直接微分する。</p>
 <p>VBAで使用する1階微分は、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \frac{\partial P}{\partial Y}
 =
 -100\frac{C}{Y^2}
@@ -1885,12 +1772,10 @@ P
 1-\frac{C}{Y}
 \right)
 T\alpha^{2T+1}
-}
-\]</span></p>
+}\]</span></p>
 <p>である。</p>
 <p>2階微分は、</p>
-<p><span class="math display">\[
-\boxed{
+<p><span class="math display">\[\boxed{
 \frac{\partial^2P}{\partial Y^2}
 =
 \frac{T(2T+1)}{200}
@@ -1904,32 +1789,24 @@ T\alpha^{2T+1}
 +
 200\frac{C}{Y^3}
 (1-\alpha^{2T})
-}
-\]</span></p>
+}\]</span></p>
 <p>となる。</p>
 <p>これにより、価格 <span class="math inline">\(P\)</span>、BPV、Modified Duration、Convexityをすべて同一の価格関数と同一の%単位規約から計算できる。</p>
 <p>さらに、一般的なModified Durationは利回りを小数単位で定義するため、VBAの%単位微分との関係は</p>
-<p><span class="math display">\[
-D_{\mathrm{mod}}
+<p><span class="math display">\[D_{\mathrm{mod}}
 =
 -\frac{100}{P+\mathrm{Acc}}
-\frac{\partial P}{\partial Y}
-\]</span></p>
+\frac{\partial P}{\partial Y}\]</span></p>
 <p>である。受渡日が利払日で経過利子が0なら、</p>
-<p><span class="math display">\[
-D_{\mathrm{mod}}
+<p><span class="math display">\[D_{\mathrm{mod}}
 =
 -\frac{100}{P}
-\frac{\partial P}{\partial Y}
-\]</span></p>
+\frac{\partial P}{\partial Y}\]</span></p>
 <p>となる。</p>
 <p>ニュートン・ラフソン法では、この解析微分 <span class="math inline">\(\partial P/\partial Y\)</span> をそのまま傾きとして使用する。価格方程式</p>
-<p><span class="math display">\[
-f(Y)=P(Y)-P_{\mathrm{market}}=0
-\]</span></p>
+<p><span class="math display">\[f(Y)=P(Y)-P_{\mathrm{market}}=0\]</span></p>
 <p>に対して、</p>
-<p><span class="math display">\[
-Y_{n+1}
+<p><span class="math display">\[Y_{n+1}
 =
 Y_n
 -
@@ -1937,8 +1814,7 @@ Y_n
 P(Y_n)-P_{\mathrm{market}}
 }{
 \partial P/\partial Y
-}
-\]</span></p>
+}\]</span></p>
 <p>と更新する。この式では <span class="math inline">\(Y\)</span> 自体が%単位なので、途中で <span class="math inline">\(10^{-4}\)</span> や100を追加で掛ける必要はない。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ニュートン・ラフソン法は、VBAと同じ解析微分 dP/dY をそのまま使用する。</span></span>
@@ -2092,10 +1968,8 @@ P(Y_n)-P_{\mathrm{market}}
 <section id="ii-1.8.5-多項式求根法" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.8.5-多項式求根法">II-1.8.5 多項式求根法</h3>
 <p>規則的な固定利付債では、</p>
-<p><span class="math display">\[
-x=
-\frac{1}{1+Y/200}
-\]</span></p>
+<p><span class="math display">\[x=
+\frac{1}{1+Y/200}\]</span></p>
 <p>と置くことで、価格方程式を <span class="math inline">\(x\)</span> の多項式として表現できる。この場合、Rの <code>polyroot()</code> を利用してすべての複素根を求め、経済的に意味のある実根を選択できる。</p>
 <p>40年・半年払いでは80次多項式となるため、短期債の場合よりも多項式求根法の計算負荷が明確になる。</p>
 <div class="cell">
@@ -2264,11 +2138,11 @@ x=
 <span id="cb18-102"><a href="#cb18-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
 <span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                   compound_yield_pct calculation_time_ms</span></span>
 <span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                    &lt;chr&gt;              &lt;chr&gt;              </span></span>
-<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.10               </span></span>
-<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.28               </span></span>
-<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.74               </span></span>
-<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           1.56               </span></span>
-<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           3.54</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.02               </span></span>
+<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.10               </span></span>
+<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.38               </span></span>
+<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           0.78               </span></span>
+<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           1.18</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>以上の結果から、本例では Brent法 → ニュートン・ラフソン法 → 二分法 → polyroot の順に高速な結果となった。Brent法は二分法の安定性と補間法の高速性を組み合わせた手法であり、本例のように価格関数が利回りに対して滑らかで単調な問題では特に有効である。一方、ニュートン・ラフソン法は解析微分を必要とするものの高い収束性能を持ち、二分法は計算速度では劣るものの安定性に優れる。polyrootは規則的なキャッシュフローでは利用できるが、本例の40年債では80次多項式となるため計算負荷が大きくなる。</p>
 <p>GaussQuantも同じ40年債、同じクリーンプライスを入力としている。ただし、単純な価格式だけを解く自作アルゴリズムとは異なり、債券オブジェクト、利払スケジュール、日数計算規則、価格種別などのマーケットコンベンションを含めて処理する。そのため、速度差には求根法そのものの差だけでなく、実務的な債券評価処理のオーバーヘッドも含まれる。</p>

@@ -382,10 +382,10 @@ window.Quarto = {
   <li><a href="#ii-8.4.1-zero-npv-クレジットデリバティブからhazard-rateを推定する" id="toc-ii-8.4.1-zero-npv-クレジットデリバティブからhazard-rateを推定する" class="nav-link" data-scroll-target="#ii-8.4.1-zero-npv-クレジットデリバティブからhazard-rateを推定する">II-8.4.1 Zero-NPV クレジットデリバティブからHazard Rateを推定する</a></li>
   <li><a href="#ii-8.4.2-spreadとrecovery-rateの感応度" id="toc-ii-8.4.2-spreadとrecovery-rateの感応度" class="nav-link" data-scroll-target="#ii-8.4.2-spreadとrecovery-rateの感応度">II-8.4.2 SpreadとRecovery Rateの感応度</a></li>
   </ul></li>
-  <li><a href="#ii-8.5-標準クレジットデリバティブ2015とisdaカーブ" id="toc-ii-8.5-標準クレジットデリバティブ2015とisdaカーブ" class="nav-link" data-scroll-target="#ii-8.5-標準クレジットデリバティブ2015とisdaカーブ">II-8.5 標準クレジットデリバティブ2015とISDAカーブ</a>
+  <li><a href="#ii-8.5-標準cdsとisdaカーブ" id="toc-ii-8.5-標準cdsとisdaカーブ" class="nav-link" data-scroll-target="#ii-8.5-標準cdsとisdaカーブ">II-8.5 標準CDSとISDAカーブ</a>
   <ul class="collapse">
-  <li><a href="#ii-8.5.1-標準クレジットデリバティブとクレジットデリバティブ2015満期" id="toc-ii-8.5.1-標準クレジットデリバティブとクレジットデリバティブ2015満期" class="nav-link" data-scroll-target="#ii-8.5.1-標準クレジットデリバティブとクレジットデリバティブ2015満期">II-8.5.1 標準クレジットデリバティブとクレジットデリバティブ2015満期</a></li>
-  <li><a href="#ii-8.5.2-標準クレジットデリバティブ2015-schedule" id="toc-ii-8.5.2-標準クレジットデリバティブ2015-schedule" class="nav-link" data-scroll-target="#ii-8.5.2-標準クレジットデリバティブ2015-schedule">II-8.5.2 標準クレジットデリバティブ2015 Schedule</a></li>
+  <li><a href="#ii-8.5.1-標準cdsの満期" id="toc-ii-8.5.1-標準cdsの満期" class="nav-link" data-scroll-target="#ii-8.5.1-標準cdsの満期">II-8.5.1 標準CDSの満期</a></li>
+  <li><a href="#ii-8.5.2-標準cdsの支払スケジュール" id="toc-ii-8.5.2-標準cdsの支払スケジュール" class="nav-link" data-scroll-target="#ii-8.5.2-標準cdsの支払スケジュール">II-8.5.2 標準CDSの支払スケジュール</a></li>
   <li><a href="#ii-8.5.3-isda用割引カーブ" id="toc-ii-8.5.3-isda用割引カーブ" class="nav-link" data-scroll-target="#ii-8.5.3-isda用割引カーブ">II-8.5.3 ISDA用割引カーブ</a></li>
   <li><a href="#ii-8.5.4-isda整合hazard-rateの推定" id="toc-ii-8.5.4-isda整合hazard-rateの推定" class="nav-link" data-scroll-target="#ii-8.5.4-isda整合hazard-rateの推定">II-8.5.4 ISDA整合Hazard Rateの推定</a></li>
   </ul></li>
@@ -1183,10 +1183,10 @@ RPV01
 <p>Recovery RateとHazard Rateは、CDS Spreadだけから完全に独立して識別できない。実務ではRecovery Rateを外生的に仮定し、その仮定の下でDefault Probability Curveを構築することが多い。</p>
 </section>
 </section>
-<section id="ii-8.5-標準クレジットデリバティブ2015とisdaカーブ" class="level2">
-<h2 class="anchored" data-anchor-id="ii-8.5-標準クレジットデリバティブ2015とisdaカーブ">II-8.5 標準クレジットデリバティブ2015とISDAカーブ</h2>
-<section id="ii-8.5.1-標準クレジットデリバティブとクレジットデリバティブ2015満期" class="level3">
-<h3 class="anchored" data-anchor-id="ii-8.5.1-標準クレジットデリバティブとクレジットデリバティブ2015満期">II-8.5.1 標準クレジットデリバティブとクレジットデリバティブ2015満期</h3>
+<section id="ii-8.5-標準cdsとisdaカーブ" class="level2">
+<h2 class="anchored" data-anchor-id="ii-8.5-標準cdsとisdaカーブ">II-8.5 標準CDSとISDAカーブ</h2>
+<section id="ii-8.5.1-標準cdsの満期" class="level3">
+<h3 class="anchored" data-anchor-id="ii-8.5.1-標準cdsの満期">II-8.5.1 標準CDSの満期</h3>
 <p>標準CDSでは、満期を単純に取引日から5年後とするのではなく、CDS IMM日とCDS2015ルールに従って決定する。</p>
 <p>次の5年物CDSを考える。</p>
 <ul>
@@ -1267,8 +1267,8 @@ RPV01
 <span id="cb11-66"><a href="#cb11-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 ois_discount_rate  0.0025</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="ii-8.5.2-標準クレジットデリバティブ2015-schedule" class="level3">
-<h3 class="anchored" data-anchor-id="ii-8.5.2-標準クレジットデリバティブ2015-schedule">II-8.5.2 標準クレジットデリバティブ2015 Schedule</h3>
+<section id="ii-8.5.2-標準cdsの支払スケジュール" class="level3">
+<h3 class="anchored" data-anchor-id="ii-8.5.2-標準cdsの支払スケジュール">II-8.5.2 標準CDSの支払スケジュール</h3>
 <p>CDS2015ルールにより、Premium支払日は標準化された四半期日へ調整される。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>cds_calendar_isda <span class="ot">&lt;-</span> QuantLib<span class="sc">::</span><span class="fu">WeekendsOnly</span>()</span>

@@ -713,9 +713,9 @@ GaussQuant::show_tbl_GQH(
 
 Recovery RateとHazard Rateは、CDS Spreadだけから完全に独立して識別できない。実務ではRecovery Rateを外生的に仮定し、その仮定の下でDefault Probability Curveを構築することが多い。
 
-## II-8.5 標準クレジットデリバティブ2015とISDAカーブ
+## II-8.5 標準CDSとISDAカーブ
 
-### II-8.5.1 標準クレジットデリバティブとクレジットデリバティブ2015満期
+### II-8.5.1 標準CDSの満期
 
 標準CDSでは、満期を単純に取引日から5年後とするのではなく、CDS IMM日とCDS2015ルールに従って決定する。
 
@@ -788,7 +788,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### II-8.5.2 標準クレジットデリバティブ2015 Schedule
+### II-8.5.2 標準CDSの支払スケジュール
 
 CDS2015ルールにより、Premium支払日は標準化された四半期日へ調整される。
 

@@ -290,7 +290,7 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-### II-4.3.2 ヨーロピアン putの解析解と二項ツリー
+### II-4.3.2 ヨーロピアン プットの解析解と二項ツリー
 
 Europeanオプションは満期時にのみ行使できるため、Black–Scholes–Mertonモデルの解析解を利用できる。
 
