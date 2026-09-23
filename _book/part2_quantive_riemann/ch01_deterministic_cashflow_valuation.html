@@ -276,17 +276,17 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch05_normal_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 金利モデル（期間構造なし）ノーマルモデル</span></a>
+  <a href="../part2_quantive_riemann/ch05_interest_rate_model_calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 金利モデルのキャリブレーション</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch06_sabr_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 SABRモデル</span></a>
+  <a href="../part2_quantive_riemann/ch06_short_rate_and_forward_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 ショートレートモデルとフォワード金利モデル</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch07_callable_hull_white.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 金利期間構造モデルと期限前償還債評価</span></a>
+  <a href="../part2_quantive_riemann/ch07_early_redemption_interest_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 金利モデルによる早期償還評価</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -1210,188 +1210,259 @@ r_c
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#   D_mod = -100 / P * dP/dY</span></span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="co"># となる。</span></span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>bond_price_vba <span class="ot">&lt;-</span> <span class="cf">function</span>(yield_pct) {</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (yield_pct <span class="sc">==</span> <span class="dv">0</span>) {</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>      face_amount <span class="sc">+</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        yen_coupon_rate_pct <span class="sc">*</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>          yen_remaining_years</span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  alpha <span class="ot">&lt;-</span> (<span class="dv">1</span> <span class="sc">+</span> yield_pct <span class="sc">/</span> <span class="dv">200</span>)<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  face_amount <span class="sc">*</span> (</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    yen_coupon_rate_pct <span class="sc">/</span> yield_pct <span class="sc">*</span></span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>      (<span class="dv">1</span> <span class="sc">-</span> alpha<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> yen_remaining_years)) <span class="sc">+</span></span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>      alpha<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> yen_remaining_years)</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>bond_dP_dY_vba <span class="ot">&lt;-</span> <span class="cf">function</span>(yield_pct) {</span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  C <span class="ot">&lt;-</span> yen_coupon_rate_pct</span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  T <span class="ot">&lt;-</span> yen_remaining_years</span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (yield_pct <span class="sc">==</span> <span class="dv">0</span>) {</span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span>(</span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>        C <span class="sc">*</span> T <span class="sc">*</span> (<span class="dv">2</span> <span class="sc">*</span> T <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">400</span> <span class="sc">+</span></span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>          T</span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">&lt;-</span> yield_pct</span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>  alpha <span class="ot">&lt;-</span> (<span class="dv">1</span> <span class="sc">+</span> Y <span class="sc">/</span> <span class="dv">200</span>)<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span> C <span class="sc">/</span> Y<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span></span>
-<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">-</span> alpha<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> T)) <span class="sc">-</span></span>
-<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">-</span> C <span class="sc">/</span> Y) <span class="sc">*</span></span>
-<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>      T <span class="sc">*</span></span>
-<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>      alpha<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> T <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>bond_d2P_dY2_vba <span class="ot">&lt;-</span> <span class="cf">function</span>(yield_pct) {</span>
-<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>  C <span class="ot">&lt;-</span> yen_coupon_rate_pct</span>
-<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  T <span class="ot">&lt;-</span> yen_remaining_years</span>
-<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (yield_pct <span class="sc">==</span> <span class="dv">0</span>) {</span>
-<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
-<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>      T <span class="sc">*</span> (<span class="dv">2</span> <span class="sc">*</span> T <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">20000</span> <span class="sc">*</span></span>
-<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>        (</span>
-<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>          C <span class="sc">*</span> (T <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">3</span> <span class="sc">+</span></span>
-<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>            <span class="dv">100</span></span>
-<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">&lt;-</span> yield_pct</span>
-<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>  alpha <span class="ot">&lt;-</span> (<span class="dv">1</span> <span class="sc">+</span> Y <span class="sc">/</span> <span class="dv">200</span>)<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>  T <span class="sc">*</span> (<span class="dv">2</span> <span class="sc">*</span> T <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">200</span> <span class="sc">*</span></span>
-<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">-</span> C <span class="sc">/</span> Y) <span class="sc">*</span></span>
-<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>    alpha<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> T <span class="sc">+</span> <span class="dv">2</span>) <span class="sc">-</span></span>
-<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>    <span class="dv">2</span> <span class="sc">*</span> C <span class="sc">*</span> T <span class="sc">/</span> Y<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span></span>
-<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>      alpha<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> T <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>    <span class="dv">200</span> <span class="sc">*</span> C <span class="sc">/</span> Y<span class="sc">^</span><span class="dv">3</span> <span class="sc">*</span></span>
-<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>      (<span class="dv">1</span> <span class="sc">-</span> alpha<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> T))</span>
-<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>tbl_vba_zero_yield <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>value,</span>
-<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>  <span class="st">"price_Y0"</span>, <span class="fu">bond_price_vba</span>(<span class="dv">0</span>),</span>
-<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dP_dY_Y0"</span>, <span class="fu">bond_dP_dY_vba</span>(<span class="dv">0</span>),</span>
-<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>  <span class="st">"BPV_sen_per_bp_Y0"</span>, <span class="sc">-</span><span class="fu">bond_dP_dY_vba</span>(<span class="dv">0</span>),</span>
-<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>  <span class="st">"d2P_dY2_Y0"</span>, <span class="fu">bond_d2P_dY2_vba</span>(<span class="dv">0</span>),</span>
-<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>  <span class="st">"modified_duration_Y0"</span>,</span>
-<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span> <span class="fu">bond_dP_dY_vba</span>(<span class="dv">0</span>) <span class="sc">/</span></span>
-<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>      <span class="fu">bond_price_vba</span>(<span class="dv">0</span>),</span>
-<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>  <span class="st">"convexity_Y0"</span>,</span>
-<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>    <span class="dv">10000</span> <span class="sc">*</span> <span class="fu">bond_d2P_dY2_vba</span>(<span class="dv">0</span>) <span class="sc">/</span></span>
-<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>      <span class="fu">bond_price_vba</span>(<span class="dv">0</span>)</span>
-<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>  tbl_vba_zero_yield,</span>
-<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VBA定義：利回り0%の場合"</span></span>
-<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 2</span></span>
-<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item                    value</span></span>
-<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                   &lt;dbl&gt;</span></span>
-<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 price_Y0              400    </span></span>
-<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 dP_dY_Y0             -100.75 </span></span>
-<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 BPV_sen_per_bp_Y0     100.75 </span></span>
-<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 d2P_dY2_Y0             32.805</span></span>
-<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 modified_duration_Y0   25.188</span></span>
-<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 convexity_Y0          820.12</span></span>
-<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a>vba_price <span class="ot">&lt;-</span> <span class="fu">bond_price_vba</span>(yen_compound_yield_pct)</span>
-<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a>vba_dP_dY <span class="ot">&lt;-</span> <span class="fu">bond_dP_dY_vba</span>(yen_compound_yield_pct)</span>
-<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a>vba_d2P_dY2 <span class="ot">&lt;-</span> <span class="fu">bond_d2P_dY2_vba</span>(yen_compound_yield_pct)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>compute_bond_price_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct,</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  coupon_rate_pct,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  remaining_years</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (compound_yield_pct <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>      face_amount <span class="sc">+</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>        coupon_rate_pct <span class="sc">*</span> remaining_years</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  discount_factor_half_year <span class="ot">&lt;-</span> (</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span> <span class="sc">+</span> compound_yield_pct <span class="sc">/</span> <span class="dv">200</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  face_amount <span class="sc">*</span> (</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>    coupon_rate_pct <span class="sc">/</span> compound_yield_pct <span class="sc">*</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>      (</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1</span> <span class="sc">-</span> discount_factor_half_year<span class="sc">^</span>(</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>          <span class="dv">2</span> <span class="sc">*</span> remaining_years</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">+</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>      discount_factor_half_year<span class="sc">^</span>(<span class="dv">2</span> <span class="sc">*</span> remaining_years)</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>compute_bond_price_derivative_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct,</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>  coupon_rate_pct,</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>  remaining_years</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (compound_yield_pct <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span>(</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>        coupon_rate_pct <span class="sc">*</span> remaining_years <span class="sc">*</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>          (<span class="dv">2</span> <span class="sc">*</span> remaining_years <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">400</span> <span class="sc">+</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>          remaining_years</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>  discount_factor_half_year <span class="ot">&lt;-</span> (</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span> <span class="sc">+</span> compound_yield_pct <span class="sc">/</span> <span class="dv">200</span></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span> coupon_rate_pct <span class="sc">/</span> compound_yield_pct<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>    (</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>      <span class="dv">1</span> <span class="sc">-</span> discount_factor_half_year<span class="sc">^</span>(</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2</span> <span class="sc">*</span> remaining_years</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">-</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">-</span> coupon_rate_pct <span class="sc">/</span> compound_yield_pct) <span class="sc">*</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>      remaining_years <span class="sc">*</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>      discount_factor_half_year<span class="sc">^</span>(</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2</span> <span class="sc">*</span> remaining_years <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>compute_bond_price_second_derivative_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct,</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a>  coupon_rate_pct,</span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>  remaining_years</span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (compound_yield_pct <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>      remaining_years <span class="sc">*</span></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>        (<span class="dv">2</span> <span class="sc">*</span> remaining_years <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">20000</span> <span class="sc">*</span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>        (</span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>          coupon_rate_pct <span class="sc">*</span></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>            (remaining_years <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">3</span> <span class="sc">+</span></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a>            <span class="dv">100</span></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>  discount_factor_half_year <span class="ot">&lt;-</span> (</span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>    <span class="dv">1</span> <span class="sc">+</span> compound_yield_pct <span class="sc">/</span> <span class="dv">200</span></span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">^</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a>  remaining_years <span class="sc">*</span></span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">2</span> <span class="sc">*</span> remaining_years <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">200</span> <span class="sc">*</span></span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">-</span> coupon_rate_pct <span class="sc">/</span> compound_yield_pct) <span class="sc">*</span></span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>    discount_factor_half_year<span class="sc">^</span>(</span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a>      <span class="dv">2</span> <span class="sc">*</span> remaining_years <span class="sc">+</span> <span class="dv">2</span></span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">-</span></span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a>    <span class="dv">2</span> <span class="sc">*</span> coupon_rate_pct <span class="sc">*</span> remaining_years <span class="sc">/</span></span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a>      compound_yield_pct<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a>      discount_factor_half_year<span class="sc">^</span>(</span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2</span> <span class="sc">*</span> remaining_years <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">+</span></span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a>    <span class="dv">200</span> <span class="sc">*</span> coupon_rate_pct <span class="sc">/</span> compound_yield_pct<span class="sc">^</span><span class="dv">3</span> <span class="sc">*</span></span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a>      (</span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1</span> <span class="sc">-</span> discount_factor_half_year<span class="sc">^</span>(</span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a>          <span class="dv">2</span> <span class="sc">*</span> remaining_years</span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a>bpv_sen_per_bp <span class="ot">&lt;-</span> <span class="sc">-</span>vba_dP_dY</span>
-<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a>bpv_yen_per_bp <span class="ot">&lt;-</span> bpv_sen_per_bp <span class="sc">/</span> <span class="dv">100</span></span>
-<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a>modified_duration <span class="ot">&lt;-</span> (</span>
-<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span></span>
-<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a>    vba_dP_dY <span class="sc">/</span></span>
-<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a>    vba_price</span>
-<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a>convexity_value <span class="ot">&lt;-</span> (</span>
-<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a>  <span class="dv">10000</span> <span class="sc">*</span></span>
-<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a>    vba_d2P_dY2 <span class="sc">/</span></span>
-<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a>    vba_price</span>
-<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a>vba_mduration_pct_unit <span class="ot">&lt;-</span> (</span>
-<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span>vba_dP_dY <span class="sc">/</span></span>
-<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>    vba_price</span>
-<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a>compute_bond_price_example_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct</span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_LRL</span>(</span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a>    <span class="at">compound_yield_pct =</span> compound_yield_pct,</span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a>    <span class="at">coupon_rate_pct =</span> yen_coupon_rate_pct,</span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a>    <span class="at">remaining_years =</span> yen_remaining_years</span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a>compute_bond_price_derivative_example_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct</span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_derivative_LRL</span>(</span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a>    <span class="at">compound_yield_pct =</span> compound_yield_pct,</span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a>    <span class="at">coupon_rate_pct =</span> yen_coupon_rate_pct,</span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a>    <span class="at">remaining_years =</span> yen_remaining_years</span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a>vba_convexity_pct_unit <span class="ot">&lt;-</span> (</span>
-<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a>  vba_d2P_dY2 <span class="sc">/</span></span>
-<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a>    vba_price</span>
-<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a>tbl_yen_risk <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">bond_risk_from_compound_yield_YEN_GQL</span>(</span>
-<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> settlement_date_chr,</span>
-<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a>  <span class="at">end_date =</span> maturity_date_chr,</span>
-<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon_rate =</span> yen_coupon_rate_pct,</span>
-<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a>  <span class="at">compound_yield =</span> yen_compound_yield_pct,</span>
-<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a>  <span class="at">redemption =</span> yen_redemption,</span>
-<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon_frequency =</span> <span class="dv">2</span>,</span>
-<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a>  <span class="at">compound_frequency =</span> <span class="dv">2</span>,</span>
-<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a>  <span class="at">accrued_interest =</span> <span class="dv">0</span></span>
-<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a>tbl_risk_compare <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>vba_formula, <span class="sc">~</span>gaussquant,</span>
-<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a>  <span class="st">"price"</span>, vba_price, yen_compound_price,</span>
-<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a>  <span class="st">"modified_duration"</span>, modified_duration,</span>
-<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a>    tbl_yen_risk<span class="sc">$</span>modified_duration[[<span class="dv">1</span>]],</span>
-<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a>  <span class="st">"convexity"</span>, convexity_value,</span>
-<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a>    tbl_yen_risk<span class="sc">$</span>convexity[[<span class="dv">1</span>]],</span>
-<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a>  <span class="st">"bpv_yen_per_bp"</span>, bpv_yen_per_bp,</span>
-<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a>    tbl_yen_risk<span class="sc">$</span>bpv_yen[[<span class="dv">1</span>]],</span>
-<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a>  <span class="st">"bpv_sen_per_bp"</span>, bpv_sen_per_bp,</span>
-<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span> <span class="sc">*</span> tbl_yen_risk<span class="sc">$</span>bpv_yen[[<span class="dv">1</span>]]</span>
-<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a>  tbl_risk_compare,</span>
-<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VBA定義とGaussQuantによる金利リスクの照合"</span></span>
-<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
-<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item              vba_formula gaussquant</span></span>
-<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                   &lt;dbl&gt;      &lt;dbl&gt;</span></span>
-<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 price               110.93     110.93   </span></span>
-<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 modified_duration    13.651     13.651  </span></span>
-<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 convexity           321.17     321.17   </span></span>
-<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 bpv_yen_per_bp        0.15142    0.15142</span></span>
-<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 bpv_sen_per_bp       15.142     15.142</span></span>
-<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a>tbl_vba_derivatives <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>value,</span>
-<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dP_dY_yen_per_1pct"</span>, vba_dP_dY,</span>
-<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a>  <span class="st">"d2P_dY2_yen_per_pct2"</span>, vba_d2P_dY2,</span>
-<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a>  <span class="st">"vba_mDuration_per_pct"</span>, vba_mduration_pct_unit,</span>
-<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a>  <span class="st">"vba_convexity_per_pct2"</span>, vba_convexity_pct_unit,</span>
-<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a>  <span class="st">"BPV_sen_per_bp"</span>, bpv_sen_per_bp</span>
-<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a>compute_bond_price_second_derivative_example_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct</span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_second_derivative_LRL</span>(</span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a>    <span class="at">compound_yield_pct =</span> compound_yield_pct,</span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a>    <span class="at">coupon_rate_pct =</span> yen_coupon_rate_pct,</span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a>    <span class="at">remaining_years =</span> yen_remaining_years</span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a>tbl_vba_zero_yield <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>value,</span>
+<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a>  <span class="st">"price_Y0"</span>, <span class="fu">compute_bond_price_example_LRL</span>(<span class="dv">0</span>),</span>
+<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dP_dY_Y0"</span>, <span class="fu">compute_bond_price_derivative_example_LRL</span>(<span class="dv">0</span>),</span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a>  <span class="st">"BPV_sen_per_bp_Y0"</span>, <span class="sc">-</span><span class="fu">compute_bond_price_derivative_example_LRL</span>(<span class="dv">0</span>),</span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a>  <span class="st">"d2P_dY2_Y0"</span>, <span class="fu">compute_bond_price_second_derivative_example_LRL</span>(<span class="dv">0</span>),</span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a>  <span class="st">"modified_duration_Y0"</span>,</span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span> <span class="fu">compute_bond_price_derivative_example_LRL</span>(<span class="dv">0</span>) <span class="sc">/</span></span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a>      <span class="fu">compute_bond_price_example_LRL</span>(<span class="dv">0</span>),</span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a>  <span class="st">"convexity_Y0"</span>,</span>
+<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a>    <span class="dv">10000</span> <span class="sc">*</span> <span class="fu">compute_bond_price_second_derivative_example_LRL</span>(<span class="dv">0</span>) <span class="sc">/</span></span>
+<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a>      <span class="fu">compute_bond_price_example_LRL</span>(<span class="dv">0</span>)</span>
+<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a>  tbl_vba_zero_yield,</span>
+<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VBA定義：利回り0%の場合"</span></span>
+<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 2</span></span>
+<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item                    value</span></span>
+<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                   &lt;dbl&gt;</span></span>
+<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 price_Y0              400    </span></span>
+<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 dP_dY_Y0             -100.75 </span></span>
+<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 BPV_sen_per_bp_Y0     100.75 </span></span>
+<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 d2P_dY2_Y0             32.805</span></span>
+<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 modified_duration_Y0   25.188</span></span>
+<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 convexity_Y0          820.12</span></span>
+<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a>formula_price <span class="ot">&lt;-</span> <span class="fu">compute_bond_price_example_LRL</span>(</span>
+<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a>  yen_compound_yield_pct</span>
+<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a>formula_price_derivative <span class="ot">&lt;-</span></span>
+<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_derivative_example_LRL</span>(</span>
+<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a>    yen_compound_yield_pct</span>
+<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a>formula_price_second_derivative <span class="ot">&lt;-</span></span>
+<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_second_derivative_example_LRL</span>(</span>
+<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a>    yen_compound_yield_pct</span>
+<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a>  tbl_vba_derivatives,</span>
-<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VBAの%単位による微分量"</span></span>
-<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
-<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item                        value</span></span>
-<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                       &lt;dbl&gt;</span></span>
-<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 dP_dY_yen_per_1pct     -15.142   </span></span>
-<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 d2P_dY2_yen_per_pct2     3.5627  </span></span>
-<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 vba_mDuration_per_pct    0.13651 </span></span>
-<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 vba_convexity_per_pct2   0.032117</span></span>
-<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 BPV_sen_per_bp          15.142</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a>bpv_sen_per_bp <span class="ot">&lt;-</span> <span class="sc">-</span>formula_price_derivative</span>
+<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a>bpv_yen_per_bp <span class="ot">&lt;-</span> bpv_sen_per_bp <span class="sc">/</span> <span class="dv">100</span></span>
+<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a>modified_duration <span class="ot">&lt;-</span> (</span>
+<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span></span>
+<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a>    formula_price_derivative <span class="sc">/</span></span>
+<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a>    formula_price</span>
+<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a>convexity_value <span class="ot">&lt;-</span> (</span>
+<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a>  <span class="dv">10000</span> <span class="sc">*</span></span>
+<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a>    formula_price_second_derivative <span class="sc">/</span></span>
+<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a>    formula_price</span>
+<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a>formula_modified_duration_pct_unit <span class="ot">&lt;-</span> (</span>
+<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a>  <span class="sc">-</span>formula_price_derivative <span class="sc">/</span></span>
+<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a>    formula_price</span>
+<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a>formula_convexity_pct_unit <span class="ot">&lt;-</span> (</span>
+<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a>  formula_price_second_derivative <span class="sc">/</span></span>
+<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a>    formula_price</span>
+<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a>tbl_yen_risk <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">bond_risk_from_compound_yield_YEN_GQL</span>(</span>
+<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a>  <span class="at">start_date =</span> settlement_date_chr,</span>
+<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a>  <span class="at">end_date =</span> maturity_date_chr,</span>
+<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon_rate =</span> yen_coupon_rate_pct,</span>
+<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a>  <span class="at">compound_yield =</span> yen_compound_yield_pct,</span>
+<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a>  <span class="at">redemption =</span> yen_redemption,</span>
+<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon_frequency =</span> <span class="dv">2</span>,</span>
+<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a>  <span class="at">compound_frequency =</span> <span class="dv">2</span>,</span>
+<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a>  <span class="at">accrued_interest =</span> <span class="dv">0</span></span>
+<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a>tbl_risk_compare <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>analytical_formula, <span class="sc">~</span>gaussquant,</span>
+<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a>  <span class="st">"price"</span>, formula_price, yen_compound_price,</span>
+<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a>  <span class="st">"modified_duration"</span>, modified_duration,</span>
+<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a>    tbl_yen_risk<span class="sc">$</span>modified_duration[[<span class="dv">1</span>]],</span>
+<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a>  <span class="st">"convexity"</span>, convexity_value,</span>
+<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a>    tbl_yen_risk<span class="sc">$</span>convexity[[<span class="dv">1</span>]],</span>
+<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a>  <span class="st">"bpv_yen_per_bp"</span>, bpv_yen_per_bp,</span>
+<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a>    tbl_yen_risk<span class="sc">$</span>bpv_yen[[<span class="dv">1</span>]],</span>
+<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a>  <span class="st">"bpv_sen_per_bp"</span>, bpv_sen_per_bp,</span>
+<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a>    <span class="dv">100</span> <span class="sc">*</span> tbl_yen_risk<span class="sc">$</span>bpv_yen[[<span class="dv">1</span>]]</span>
+<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a>  tbl_risk_compare,</span>
+<span id="cb10-233"><a href="#cb10-233" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VBA定義とGaussQuantによる金利リスクの照合"</span></span>
+<span id="cb10-234"><a href="#cb10-234" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-235"><a href="#cb10-235" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
+<span id="cb10-236"><a href="#cb10-236" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item              analytical_formula gaussquant</span></span>
+<span id="cb10-237"><a href="#cb10-237" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                          &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb10-238"><a href="#cb10-238" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 price                      110.93     110.93   </span></span>
+<span id="cb10-239"><a href="#cb10-239" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 modified_duration           13.651     13.651  </span></span>
+<span id="cb10-240"><a href="#cb10-240" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 convexity                  321.17     321.17   </span></span>
+<span id="cb10-241"><a href="#cb10-241" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 bpv_yen_per_bp               0.15142    0.15142</span></span>
+<span id="cb10-242"><a href="#cb10-242" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 bpv_sen_per_bp              15.142     15.142</span></span>
+<span id="cb10-243"><a href="#cb10-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-244"><a href="#cb10-244" aria-hidden="true" tabindex="-1"></a>tbl_vba_derivatives <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb10-245"><a href="#cb10-245" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>value,</span>
+<span id="cb10-246"><a href="#cb10-246" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dP_dY_yen_per_1pct"</span>, formula_price_derivative,</span>
+<span id="cb10-247"><a href="#cb10-247" aria-hidden="true" tabindex="-1"></a>  <span class="st">"d2P_dY2_yen_per_pct2"</span>, formula_price_second_derivative,</span>
+<span id="cb10-248"><a href="#cb10-248" aria-hidden="true" tabindex="-1"></a>  <span class="st">"modified_duration_per_pct"</span>, formula_modified_duration_pct_unit,</span>
+<span id="cb10-249"><a href="#cb10-249" aria-hidden="true" tabindex="-1"></a>  <span class="st">"convexity_per_pct2"</span>, formula_convexity_pct_unit,</span>
+<span id="cb10-250"><a href="#cb10-250" aria-hidden="true" tabindex="-1"></a>  <span class="st">"BPV_sen_per_bp"</span>, bpv_sen_per_bp</span>
+<span id="cb10-251"><a href="#cb10-251" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-252"><a href="#cb10-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-253"><a href="#cb10-253" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb10-254"><a href="#cb10-254" aria-hidden="true" tabindex="-1"></a>  tbl_vba_derivatives,</span>
+<span id="cb10-255"><a href="#cb10-255" aria-hidden="true" tabindex="-1"></a>  <span class="st">"VBAの%単位による微分量"</span></span>
+<span id="cb10-256"><a href="#cb10-256" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-257"><a href="#cb10-257" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 2</span></span>
+<span id="cb10-258"><a href="#cb10-258" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item                           value</span></span>
+<span id="cb10-259"><a href="#cb10-259" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                          &lt;dbl&gt;</span></span>
+<span id="cb10-260"><a href="#cb10-260" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 dP_dY_yen_per_1pct        -15.142   </span></span>
+<span id="cb10-261"><a href="#cb10-261" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 d2P_dY2_yen_per_pct2        3.5627  </span></span>
+<span id="cb10-262"><a href="#cb10-262" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 modified_duration_per_pct   0.13651 </span></span>
+<span id="cb10-263"><a href="#cb10-263" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 convexity_per_pct2          0.032117</span></span>
+<span id="cb10-264"><a href="#cb10-264" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 BPV_sen_per_bp             15.142</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-1.7.3-コンベクシティ" class="level3">
@@ -1489,18 +1560,34 @@ P_{\mathrm{market}}
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 数値解法でもVBAと同じく、複利利回りは%単位で扱う。</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 例: 6.71047990% -&gt; yield_pct = 6.71047990</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>bond_price_from_yield <span class="ot">&lt;-</span> <span class="cf">function</span>(yield_pct) {</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bond_price_vba</span>(yield_pct)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>yield_objective <span class="ot">&lt;-</span> <span class="cf">function</span>(yield_pct) {</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bond_price_from_yield</span>(yield_pct) <span class="sc">-</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    benchmark_market_price</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>yield_derivative <span class="ot">&lt;-</span> <span class="cf">function</span>(yield_pct) {</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bond_dP_dY_vba</span>(yield_pct)</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>compute_bond_price_benchmark_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_LRL</span>(</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">compound_yield_pct =</span> compound_yield_pct,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">coupon_rate_pct =</span> benchmark_coupon_rate_pct,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">remaining_years =</span> benchmark_years</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_objective_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_benchmark_LRL</span>(</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    compound_yield_pct</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">-</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    benchmark_market_price</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_derivative_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>  compound_yield_pct</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_price_derivative_LRL</span>(</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">compound_yield_pct =</span> compound_yield_pct,</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">coupon_rate_pct =</span> benchmark_coupon_rate_pct,</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">remaining_years =</span> benchmark_years</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-1.8.2-ニュートンラフソン法" class="level3">
@@ -1857,7 +1944,7 @@ P(Y_n)-P_{\mathrm{market}}
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ニュートン・ラフソン法は、VBAと同じ解析微分 dP/dY をそのまま使用する。</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Yの単位は%なので、更新式にも追加の1e-4換算は不要。</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>yield_newton <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_newton_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">initial_yield_pct =</span> benchmark_simple_yield_pct,</span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">tolerance =</span> <span class="fl">1e-12</span>,</span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_iter =</span> <span class="dv">100</span>L</span>
@@ -1873,57 +1960,61 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(state)</span>
 <span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>      }</span>
 <span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>      f_value <span class="ot">&lt;-</span> <span class="fu">yield_objective</span>(state<span class="sc">$</span>yield_pct)</span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>      derivative <span class="ot">&lt;-</span> <span class="fu">yield_derivative</span>(state<span class="sc">$</span>yield_pct)</span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>      next_yield_pct <span class="ot">&lt;-</span> (</span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        state<span class="sc">$</span>yield_pct <span class="sc">-</span></span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>          f_value <span class="sc">/</span> derivative</span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">yield_pct =</span> next_yield_pct,</span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>        <span class="at">converged =</span> <span class="fu">abs</span>(f_value) <span class="sc">&lt;</span> tolerance</span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">$</span>yield_pct</span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>yield_newton_result <span class="ot">&lt;-</span> <span class="fu">yield_newton</span>()</span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>tbl_newton_check <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
-<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>value,</span>
-<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>  <span class="st">"initial_yield_pct"</span>, benchmark_simple_yield_pct,</span>
-<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>  <span class="st">"compound_yield_pct"</span>, yield_newton_result,</span>
-<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>  <span class="st">"price"</span>, <span class="fu">bond_price_from_yield</span>(yield_newton_result),</span>
-<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dP_dY"</span>, <span class="fu">yield_derivative</span>(yield_newton_result),</span>
-<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>  <span class="st">"BPV_sen_per_bp"</span>, <span class="sc">-</span><span class="fu">yield_derivative</span>(yield_newton_result),</span>
-<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  <span class="st">"modified_duration"</span>,</span>
-<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span></span>
-<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>      <span class="fu">yield_derivative</span>(yield_newton_result) <span class="sc">/</span></span>
-<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>      <span class="fu">bond_price_from_yield</span>(yield_newton_result)</span>
-<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>  tbl_newton_check,</span>
-<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ニュートン・ラフソン法：VBA解析微分による複利利回り計算"</span></span>
-<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 2</span></span>
-<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item                  value</span></span>
-<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;</span></span>
-<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 initial_yield_pct    6.515 </span></span>
-<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 compound_yield_pct   6.7105</span></span>
-<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 price              110.93  </span></span>
-<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 dP_dY              -15.142 </span></span>
-<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 BPV_sen_per_bp      15.142 </span></span>
-<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 modified_duration   13.651</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>      objective_value <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_objective_LRL</span>(</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        state<span class="sc">$</span>yield_pct</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>      price_derivative <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_derivative_LRL</span>(</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        state<span class="sc">$</span>yield_pct</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>      next_yield_pct <span class="ot">&lt;-</span> (</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>        state<span class="sc">$</span>yield_pct <span class="sc">-</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>          objective_value <span class="sc">/</span> price_derivative</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>        <span class="at">yield_pct =</span> next_yield_pct,</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>        <span class="at">converged =</span> <span class="fu">abs</span>(objective_value) <span class="sc">&lt;</span> tolerance</span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">$</span>yield_pct</span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>yield_newton_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_newton_LRL</span>()</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>tbl_newton_check <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>item, <span class="sc">~</span>value,</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>  <span class="st">"initial_yield_pct"</span>, benchmark_simple_yield_pct,</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>  <span class="st">"compound_yield_pct"</span>, yield_newton_result,</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>  <span class="st">"price"</span>, <span class="fu">compute_bond_price_benchmark_LRL</span>(yield_newton_result),</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>  <span class="st">"dP_dY"</span>, <span class="fu">compute_bond_yield_derivative_LRL</span>(yield_newton_result),</span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>  <span class="st">"BPV_sen_per_bp"</span>, <span class="sc">-</span><span class="fu">compute_bond_yield_derivative_LRL</span>(yield_newton_result),</span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>  <span class="st">"modified_duration"</span>,</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span><span class="dv">100</span> <span class="sc">*</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>      <span class="fu">compute_bond_yield_derivative_LRL</span>(yield_newton_result) <span class="sc">/</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>      <span class="fu">compute_bond_price_benchmark_LRL</span>(yield_newton_result)</span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>  tbl_newton_check,</span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>  <span class="st">"ニュートン・ラフソン法：VBA解析微分による複利利回り計算"</span></span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 6 × 2</span></span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   item                  value</span></span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;</span></span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 initial_yield_pct    6.515 </span></span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 compound_yield_pct   6.7105</span></span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 price              110.93  </span></span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 dP_dY              -15.142 </span></span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 BPV_sen_per_bp      15.142 </span></span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 modified_duration   13.651</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-1.8.3-二分法" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.8.3-二分法">II-1.8.3 二分法</h3>
 <p>二分法は、根を挟む区間を半分ずつ狭めていく方法である。収束速度はニュートン・ラフソン法より遅いが、適切に根を挟む区間を設定すれば安定して解を求められる。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>yield_bisection <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_bisection_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">lower =</span> <span class="sc">-</span><span class="dv">1</span>,</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">upper =</span> <span class="dv">20</span>,</span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">tolerance =</span> <span class="fl">1e-12</span>,</span>
@@ -1946,52 +2037,56 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>        state<span class="sc">$</span>lower <span class="sc">+</span> state<span class="sc">$</span>upper</span>
 <span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>      ) <span class="sc">/</span> <span class="dv">2</span></span>
 <span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>      f_lower <span class="ot">&lt;-</span> <span class="fu">yield_objective</span>(state<span class="sc">$</span>lower)</span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>      f_mid <span class="ot">&lt;-</span> <span class="fu">yield_objective</span>(midpoint)</span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>      next_state <span class="ot">&lt;-</span> <span class="cf">if</span> (</span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>        <span class="fu">sign</span>(f_lower) <span class="sc">==</span> <span class="fu">sign</span>(f_mid)</span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>      ) {</span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(</span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>          <span class="at">lower =</span> midpoint,</span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>          <span class="at">upper =</span> state<span class="sc">$</span>upper</span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(</span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>          <span class="at">lower =</span> state<span class="sc">$</span>lower,</span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>          <span class="at">upper =</span> midpoint</span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
-<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>        <span class="at">lower =</span> next_state<span class="sc">$</span>lower,</span>
-<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>        <span class="at">upper =</span> next_state<span class="sc">$</span>upper,</span>
-<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>        <span class="at">root =</span> midpoint,</span>
-<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>        <span class="at">converged =</span> <span class="fu">abs</span>(f_mid) <span class="sc">&lt;</span> tolerance <span class="sc">||</span></span>
-<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>          <span class="fu">abs</span>(state<span class="sc">$</span>upper <span class="sc">-</span> state<span class="sc">$</span>lower) <span class="sc">&lt;</span> tolerance</span>
-<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>      )</span>
-<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>  result<span class="sc">$</span>root</span>
-<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a>yield_bisection_result <span class="ot">&lt;-</span> <span class="fu">yield_bisection</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>      objective_lower <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_objective_LRL</span>(</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>        state<span class="sc">$</span>lower</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>      objective_midpoint <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_objective_LRL</span>(</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>        midpoint</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>      next_state <span class="ot">&lt;-</span> <span class="cf">if</span> (</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>        <span class="fu">sign</span>(objective_lower) <span class="sc">==</span> <span class="fu">sign</span>(objective_midpoint)</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>      ) {</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(</span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>          <span class="at">lower =</span> midpoint,</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>          <span class="at">upper =</span> state<span class="sc">$</span>upper</span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>          <span class="at">lower =</span> state<span class="sc">$</span>lower,</span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>          <span class="at">upper =</span> midpoint</span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>        <span class="at">lower =</span> next_state<span class="sc">$</span>lower,</span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>        <span class="at">upper =</span> next_state<span class="sc">$</span>upper,</span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>        <span class="at">root =</span> midpoint,</span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>        <span class="at">converged =</span> <span class="fu">abs</span>(objective_midpoint) <span class="sc">&lt;</span> tolerance <span class="sc">||</span></span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>          <span class="fu">abs</span>(state<span class="sc">$</span>upper <span class="sc">-</span> state<span class="sc">$</span>lower) <span class="sc">&lt;</span> tolerance</span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a>  result<span class="sc">$</span>root</span>
+<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>yield_bisection_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_bisection_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-1.8.4-brent法" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.8.4-brent法">II-1.8.4 Brent法</h3>
 <p>Rの <code>uniroot()</code> はBrent法系の区間求根アルゴリズムを用いる。二分法の堅牢性と補間による高速な収束を組み合わせた実用的な方法である。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>yield_brent <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_brent_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  stats<span class="sc">::</span><span class="fu">uniroot</span>(</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    yield_objective,</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    compute_bond_yield_objective_LRL,</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">interval =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">20</span>),</span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">tol =</span> <span class="fl">1e-12</span></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  )<span class="sc">$</span>root</span>
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>yield_brent_result <span class="ot">&lt;-</span> <span class="fu">yield_brent</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>yield_brent_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_brent_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-1.8.5-多項式求根法" class="level3">
@@ -2004,7 +2099,7 @@ x=
 <p>と置くことで、価格方程式を <span class="math inline">\(x\)</span> の多項式として表現できる。この場合、Rの <code>polyroot()</code> を利用してすべての複素根を求め、経済的に意味のある実根を選択できる。</p>
 <p>40年・半年払いでは80次多項式となるため、短期債の場合よりも多項式求根法の計算負荷が明確になる。</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>yield_polyroot <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_polyroot_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  poly_coefficients <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span>benchmark_market_price,</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rep</span>(</span>
@@ -2030,14 +2125,14 @@ x=
 <span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>      <span class="fu">abs</span>(</span>
 <span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>        purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
 <span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>          yield_candidates,</span>
-<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>          yield_objective</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>          compute_bond_yield_objective_LRL</span>
 <span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>        )</span>
 <span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>      )</span>
 <span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>  ]</span>
 <span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>yield_polyroot_result <span class="ot">&lt;-</span> <span class="fu">yield_polyroot</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>yield_polyroot_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_polyroot_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-1.8.6-gaussquantによる利回り計算" class="level3">
@@ -2047,7 +2142,7 @@ x=
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 第II-1章で使用している同一の40年債オブジェクトをそのまま利用する</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">set_eval_date_GQL</span>(trade_date)</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>yield_gaussquant <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_gaussquant_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="dv">100</span> <span class="sc">*</span> GaussQuant<span class="sc">::</span><span class="fu">bond_yield_from_clean_safe_GQL</span>(</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">bond =</span> bond_obj,</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">clean_price =</span> benchmark_market_price,</span>
@@ -2057,7 +2152,7 @@ x=
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>yield_gaussquant_result <span class="ot">&lt;-</span> <span class="fu">yield_gaussquant</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>yield_gaussquant_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_gaussquant_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-1.8.7-数値解法の精度と計算速度" class="level3">
@@ -2085,7 +2180,7 @@ x=
 <span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>benchmark_repetitions <span class="ot">&lt;-</span> <span class="dv">500</span>L</span>
 <span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>benchmark_solver <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_benchmark_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
 <span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  method,</span>
 <span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>  solver,</span>
 <span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>  result,</span>
@@ -2120,33 +2215,33 @@ x=
 <span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>tbl_solver_timing <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
-<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">benchmark_solver</span>(</span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_yield_benchmark_LRL</span>(</span>
 <span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ニュートン・ラフソン法"</span>,</span>
-<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>    yield_newton,</span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>    compute_bond_yield_newton_LRL,</span>
 <span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>    yield_newton_result,</span>
-<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>    bond_price_from_yield</span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>    compute_bond_price_benchmark_LRL</span>
 <span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">benchmark_solver</span>(</span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_yield_benchmark_LRL</span>(</span>
 <span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>    <span class="st">"二分法"</span>,</span>
-<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>    yield_bisection,</span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a>    compute_bond_yield_bisection_LRL,</span>
 <span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a>    yield_bisection_result,</span>
-<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>    bond_price_from_yield</span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>    compute_bond_price_benchmark_LRL</span>
 <span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">benchmark_solver</span>(</span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_yield_benchmark_LRL</span>(</span>
 <span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Brent法（uniroot）"</span>,</span>
-<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a>    yield_brent,</span>
+<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a>    compute_bond_yield_brent_LRL,</span>
 <span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a>    yield_brent_result,</span>
-<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a>    bond_price_from_yield</span>
+<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a>    compute_bond_price_benchmark_LRL</span>
 <span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">benchmark_solver</span>(</span>
+<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_yield_benchmark_LRL</span>(</span>
 <span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a>    <span class="st">"多項式求根法（polyroot）"</span>,</span>
-<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a>    yield_polyroot,</span>
+<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a>    compute_bond_yield_polyroot_LRL,</span>
 <span id="cb18-77"><a href="#cb18-77" aria-hidden="true" tabindex="-1"></a>    yield_polyroot_result,</span>
-<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a>    bond_price_from_yield</span>
+<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a>    compute_bond_price_benchmark_LRL</span>
 <span id="cb18-79"><a href="#cb18-79" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">benchmark_solver</span>(</span>
+<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_bond_yield_benchmark_LRL</span>(</span>
 <span id="cb18-81"><a href="#cb18-81" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GaussQuant"</span>,</span>
-<span id="cb18-82"><a href="#cb18-82" aria-hidden="true" tabindex="-1"></a>    yield_gaussquant,</span>
+<span id="cb18-82"><a href="#cb18-82" aria-hidden="true" tabindex="-1"></a>    compute_bond_yield_gaussquant_LRL,</span>
 <span id="cb18-83"><a href="#cb18-83" aria-hidden="true" tabindex="-1"></a>    yield_gaussquant_result,</span>
 <span id="cb18-84"><a href="#cb18-84" aria-hidden="true" tabindex="-1"></a>    <span class="cn">NULL</span></span>
 <span id="cb18-85"><a href="#cb18-85" aria-hidden="true" tabindex="-1"></a>  )</span>
@@ -2170,10 +2265,10 @@ x=
 <span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                   compound_yield_pct calculation_time_ms</span></span>
 <span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                    &lt;chr&gt;              &lt;chr&gt;              </span></span>
 <span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.10               </span></span>
-<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.24               </span></span>
-<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.80               </span></span>
-<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           1.62               </span></span>
-<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           3.44</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.28               </span></span>
+<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.74               </span></span>
+<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           1.56               </span></span>
+<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           3.54</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>以上の結果から、本例では Brent法 → ニュートン・ラフソン法 → 二分法 → polyroot の順に高速な結果となった。Brent法は二分法の安定性と補間法の高速性を組み合わせた手法であり、本例のように価格関数が利回りに対して滑らかで単調な問題では特に有効である。一方、ニュートン・ラフソン法は解析微分を必要とするものの高い収束性能を持ち、二分法は計算速度では劣るものの安定性に優れる。polyrootは規則的なキャッシュフローでは利用できるが、本例の40年債では80次多項式となるため計算負荷が大きくなる。</p>
 <p>GaussQuantも同じ40年債、同じクリーンプライスを入力としている。ただし、単純な価格式だけを解く自作アルゴリズムとは異なり、債券オブジェクト、利払スケジュール、日数計算規則、価格種別などのマーケットコンベンションを含めて処理する。そのため、速度差には求根法そのものの差だけでなく、実務的な債券評価処理のオーバーヘッドも含まれる。</p>

@@ -1,0 +1,554 @@
+---
+title: "第II-7章 金利モデルによる早期償還評価"
+subtitle: "Hull–Whiteモデル、発行体コール権と継続価値"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+# 第II-7章 金利モデルによる早期償還評価
+
+固定利付債の発行体に期限前償還権があると、金利が低下した際に、高いクーポンの支払いを打ち切って借り換えることができる。第5章でモデルのパラメータを市場に合わせ、第6章で金利の動きを定義した。本章では、そのモデルを使い、**各行使日にどの価値を比較して債券価格が決まるか**を計算する。
+
+中心例は発行体が指定日に額面で償還できる固定利付債（Callable Bond）である。最初に契約と行使の順序を定め、Hull–White 1因子モデルのもとで後ろ向きに価値を計算する。最後にBermudan Swaptionとの関係と、複数フォワード金利モデルへ進む場合の計算上の違いを整理する。以下の金利、クーポン、ボラティリティはすべて**教材用の架空の値**である。
+
+```{r}
+#| label: early-redemption-setup
+
+if (file.exists(file.path("R", "utility_LFL.R"))) {
+  source(file.path("R", "utility_LFL.R"))
+}
+suppressPackageStartupMessages(library(tidyverse))
+
+show_early_redemption_tbl_LRL <- function(tbl, title) {
+  if (requireNamespace("GaussQuant", quietly = TRUE)) {
+    GaussQuant::show_tbl_GQH(tbl, title)
+  } else {
+    print(tbl)
+  }
+  invisible(tbl)
+}
+```
+
+## II-7.1 契約条件と評価の基準
+
+額面100、年率3%の固定クーポン、半年払い、満期5年の債券を考える。各クーポンは $100\times0.03\times0.5=1.5$。発行体は1年目から4年半目までの各クーポン日に、**その日のクーポンを支払った後**、残りの元本を100で償還できるとする。満期日には通常の元本償還があり、コール判断はない。
+
+| 項目 | この章での設定 |
+|---|---|
+| 評価時点と金利期間 | $t=0$、半年ごとの等間隔の年数 |
+| クーポン | 各 $t=0.5,1.0,\ldots,5.0$ に1.5 |
+| コール可能日 | $t=1.0,1.5,\ldots,4.5$ |
+| コール価格 | クーポン支払い後の元本に対し100（ex-couponの額面価格） |
+| 金利曲線 | 連続複利2%のフラットな初期割引曲線 |
+| 信用と費用 | デフォルト、スプレッド、税、取引費用は含めない |
+
+したがって、この例の値は評価時点の将来キャッシュフローの**モデル現在価値**である。経過利息のある取引日で表示するクリーン価格や決済価格ではない。実取引では発行日・決済日、営業日規則、日数計算、通知期間、コール価格の定義も別に指定する。
+
+```{r}
+#| label: early-redemption-contract
+
+notional <- 100
+coupon_rate <- 0.03
+period_years <- 0.5
+maturity_years <- 5
+flat_zero_rate <- 0.02
+first_call_year <- 1
+call_price <- 100
+
+tbl_cashflows <- tibble::tibble(
+  payment_time = seq(period_years, maturity_years, by = period_years),
+  coupon = notional * coupon_rate * period_years,
+  principal_at_maturity = dplyr::if_else(
+    payment_time == maturity_years, notional, 0
+  ),
+  issuer_can_call = payment_time >= first_call_year &
+    payment_time < maturity_years,
+  call_principal = dplyr::if_else(
+    issuer_can_call, call_price, NA_real_
+  )
+)
+
+show_early_redemption_tbl_LRL(tbl_cashflows, "クーポンと発行体コール日")
+```
+
+## II-7.2 Bullet Bondと埋め込みコール権
+
+コール権のないBullet Bondの時点0の価格は、支払額を $C_i$、満期元本を $N$、割引係数を $P(0,t_i)$ として
+
+$$
+V_0^{\mathrm{bullet}}
+=\sum_{i=1}^{n} C_i P(0,t_i)+N P(0,t_n).
+$$
+
+初期カーブを完全に再現するモデルなら、同じキャッシュフローから得るBullet Bondの価格はこの値に一致する。コール価格や行使日などの条件が一致すれば、発行体のコール権の価値は
+
+$$
+V_0^{\mathrm{issuer\ call}}
+=V_0^{\mathrm{bullet}}-V_0^{\mathrm{callable}}\geq0
+$$
+
+となる。これは同一の信用・割引・クーポン条件で比較した**価格差**であり、別に提示された任意のReceiver Swaption価格と自動的に一致するわけではない。
+
+```{r}
+#| label: early-redemption-bullet
+
+compute_bullet_price_LRL <- function(tbl_cashflows, flat_rate) {
+  stopifnot(is.finite(flat_rate))
+  sum(
+    (tbl_cashflows$coupon + tbl_cashflows$principal_at_maturity) *
+      exp(-flat_rate * tbl_cashflows$payment_time)
+  )
+}
+
+bullet_curve_price <- compute_bullet_price_LRL(
+  tbl_cashflows, flat_zero_rate
+)
+show_early_redemption_tbl_LRL(
+  tibble::tibble(bullet_price = bullet_curve_price),
+  "初期割引曲線によるBullet Bondの価格"
+)
+```
+
+## II-7.3 発行体の行使判断：後ろ向きの評価
+
+クーポン支払日の直後に、将来の支払義務の価値を発行体が比較する。その時点から次の支払日までの**継続価値**を $H_i(x)$、コール時に支払う元本を $K_i$、当日のクーポンを $C_i$ とする。直前の投資家側の価格は
+
+$$
+V_i(x)=C_i+\min\{K_i,H_i(x)\}
+\quad (\text{発行体がコール可能な日}),
+$$
+
+であり、コール不可の日は $V_i(x)=C_i+H_i(x)$、満期では $V_n(x)=C_n+N$。**クーポン $C_i$ はコール時にも支払われる**ため、比較する二つの枝の共通部分として外に置いた。
+
+継続価値は、リスク中立測度のもとで
+
+$$
+H_i(x)=\mathbb E^{\mathbb Q}\!\left[
+\exp\left(-\int_{t_i}^{t_{i+1}}r_s\,ds\right)
+V_{i+1}(x_{t_{i+1}})\mid x_{t_i}=x\right].
+$$
+
+発行体は $H_i(x)>K_i$ のときコールする。等号のときの扱いは価格を変えない。$\min$ が表すのは、発行体が投資家に対する残存債務をより安く決済できる枝を選ぶことである。
+
+```mermaid
+flowchart TD
+  A["当日のクーポンを支払う"] --> B["元本のコール価格と継続価値を比較"]
+  B -->|"継続価値が高い"| C["元本を支払い償還"]
+  B -->|"継続価値が低い"| D["債券を継続"]
+```
+
+## II-7.4 Hull–Whiteで継続価値を計算する
+
+### II-7.4.1 状態と割引の共同分布
+
+第6章と同じく、$r_t=\phi(t)+x_t$、$dx_t=-a x_tdt+\sigma dW_t$ を使う。一定の $a>0,\sigma\geq0$ とフラットな初期曲線 $P(0,T)=e^{-\bar rT}$ について
+
+$$
+\phi(t)=\bar r+
+\frac{\sigma^2}{2a^2}(1-e^{-at})^2.
+$$
+
+$h=t_{i+1}-t_i$、$b=e^{-ah}$、$B=(1-b)/a$ と置く。時点 $t_i$ の $x$ を条件とした次の状態 $X$ と期間内の確率的な割引用積分 $I$ は
+
+$$
+X=bx+\varepsilon_X,\qquad
+I=\int_{t_i}^{t_{i+1}}x_sds=Bx+\varepsilon_I,
+$$
+
+であり、誤差の組は平均0の二変量正規分布になる。その分散・共分散を
+
+$$
+\begin{aligned}
+v_X&=\frac{\sigma^2(1-b^2)}{2a},\\
+v_I&=\frac{\sigma^2}{a^2}
+\left[h-\frac{2(1-b)}{a}+\frac{1-b^2}{2a}\right],\\
+c_{XI}&=\frac{\sigma^2(1-b)^2}{2a^2}
+\end{aligned}
+$$
+
+と書く。積分を単に $h r_{t_i}$ とする近似を避けるため、$X$ の値に条件づけた $I$ の正規分布を用いる。$v_X>0$ の場合、標準正規 $Z$ に対し
+
+$$
+\begin{aligned}
+H_i(x)=&\exp\left[-\int_{t_i}^{t_{i+1}}\phi(s)ds
+-Bx+\tfrac12\left(v_I-\frac{c_{XI}^2}{v_X}\right)\right]\\
+&\times\mathbb E_Z\left[
+e^{-(c_{XI}/\sqrt{v_X})Z}
+V_{i+1}(bx+\sqrt{v_X}Z)\right].
+\end{aligned}
+$$
+
+この1次元の期待値を正規分布用のGauss–Hermite求積で計算し、次時点の状態ごとの価格を線形補間する。状態の格子幅と両端、および求積点数による**数値誤差**が残る。$\sigma=0$ のときは決定論的な遷移に切り替える。
+
+```{r}
+#| label: hull-white-conditional-discount
+
+compute_normal_quadrature_LRL <- function(number_of_nodes = 24L) {
+  stopifnot(number_of_nodes >= 2)
+  number_of_nodes <- as.integer(number_of_nodes)
+  off_diagonal <- sqrt(seq_len(number_of_nodes - 1L))
+  jacobi <- matrix(0, number_of_nodes, number_of_nodes)
+  jacobi[cbind(
+    seq_len(number_of_nodes - 1L),
+    seq_len(number_of_nodes - 1L) + 1L
+  )] <- off_diagonal
+  jacobi[cbind(
+    seq_len(number_of_nodes - 1L) + 1L,
+    seq_len(number_of_nodes - 1L)
+  )] <- off_diagonal
+  roots <- eigen(jacobi, symmetric = TRUE)
+  list(nodes = roots$values, weights = roots$vectors[1, ]^2)
+}
+
+compute_hw_shift_integral_LRL <- function(
+  start_time, end_time, flat_rate, mean_reversion, volatility
+) {
+  a <- mean_reversion
+  h <- end_time - start_time
+  flat_rate * h + volatility^2 / (2 * a^2) * (
+    h - 2 * (exp(-a * start_time) - exp(-a * end_time)) / a +
+      (exp(-2 * a * start_time) - exp(-2 * a * end_time)) /
+        (2 * a)
+  )
+}
+
+compute_discounted_step_LRL <- function(
+  next_values, state_grid, current_states,
+  start_time, end_time, flat_rate,
+  mean_reversion, volatility, quadrature
+) {
+  a <- mean_reversion
+  h <- end_time - start_time
+  b <- exp(-a * h)
+  B <- -expm1(-a * h) / a
+  deterministic_integral <- compute_hw_shift_integral_LRL(
+    start_time, end_time, flat_rate, a, volatility
+  )
+  if (volatility == 0) {
+    return(
+      exp(-deterministic_integral - B * current_states) *
+        stats::approx(
+          state_grid, next_values, xout = b * current_states,
+          rule = 2
+        )$y
+    )
+  }
+
+  variance_next <- volatility^2 * (-expm1(-2 * a * h)) / (2 * a)
+  variance_integral <- volatility^2 / a^2 * (
+    h - 2 * B + (-expm1(-2 * a * h)) / (2 * a)
+  )
+  covariance <- volatility^2 * (-expm1(-a * h))^2 /
+    (2 * a^2)
+  residual_variance <- max(
+    variance_integral - covariance^2 / variance_next, 0
+  )
+  standard_deviation_next <- sqrt(variance_next)
+
+  next_states <- outer(
+    current_states, quadrature$nodes,
+    function(state, shock) b * state + standard_deviation_next * shock
+  )
+  interpolated_values <- matrix(
+    stats::approx(
+      state_grid, next_values, xout = as.vector(next_states),
+      rule = 2
+    )$y,
+    nrow = length(current_states)
+  )
+  conditional_weights <- quadrature$weights * exp(
+    -covariance / standard_deviation_next * quadrature$nodes
+  )
+  as.vector(
+    exp(-deterministic_integral - B * current_states +
+      residual_variance / 2) *
+      (interpolated_values %*% conditional_weights)
+  )
+}
+```
+
+### II-7.4.2 各行使日の後ろ向き計算
+
+満期にクーポンと元本を置き、一つ前の支払日に条件付き割引期待値を求める。以後、コール可能日では $\min$ を取ってさかのぼる。比較のため、まったく同じ状態格子と割引演算子でBullet Bondも評価する。
+
+```{r}
+#| label: callable-hull-white-backward
+
+compute_callable_bond_LRL <- function(
+  tbl_cashflows, flat_rate, mean_reversion, volatility,
+  number_of_grid_points = 321L,
+  grid_limit = 0.13, quadrature_nodes = 24L
+) {
+  stopifnot(
+    nrow(tbl_cashflows) >= 2, mean_reversion > 0,
+    volatility >= 0, number_of_grid_points >= 3,
+    grid_limit > 0, quadrature_nodes >= 2,
+    all(diff(tbl_cashflows$payment_time) > 0),
+    all(tbl_cashflows$coupon >= 0),
+    all(tbl_cashflows$principal_at_maturity[
+      -nrow(tbl_cashflows)
+    ] == 0),
+    all(!is.na(tbl_cashflows$call_principal[
+      tbl_cashflows$issuer_can_call
+    ]))
+  )
+  grid <- seq(-grid_limit, grid_limit,
+    length.out = number_of_grid_points
+  )
+  quadrature <- compute_normal_quadrature_LRL(quadrature_nodes)
+  number_of_periods <- nrow(tbl_cashflows)
+  maturity_value <- rep(
+    tbl_cashflows$coupon[number_of_periods] +
+      tbl_cashflows$principal_at_maturity[number_of_periods],
+    length(grid)
+  )
+  terminal <- list(
+    bullet = maturity_value,
+    callable = maturity_value,
+    decisions = list()
+  )
+  history <- purrr::accumulate(
+    rev(seq_len(number_of_periods - 1L)),
+    .init = terminal,
+    .f = function(next_state, payment_index) {
+      start_time <- tbl_cashflows$payment_time[payment_index]
+      end_time <- tbl_cashflows$payment_time[payment_index + 1L]
+      price_step <- function(next_values) {
+        compute_discounted_step_LRL(
+          next_values, grid, grid,
+          start_time, end_time, flat_rate,
+          mean_reversion, volatility, quadrature
+        )
+      }
+      bullet_continuation <- price_step(next_state$bullet)
+      callable_continuation <- price_step(next_state$callable)
+      can_call <- tbl_cashflows$issuer_can_call[payment_index]
+      call_amount <- tbl_cashflows$call_principal[payment_index]
+      exercise_now <- if (can_call) {
+        callable_continuation > call_amount
+      } else {
+        rep(FALSE, length(grid))
+      }
+      investor_value <- if (can_call) {
+        pmin(call_amount, callable_continuation)
+      } else {
+        callable_continuation
+      }
+      decision <- if (can_call) {
+        list(tibble::tibble(
+          payment_time = start_time,
+          state = grid,
+          short_rate = flat_rate +
+            volatility^2 / (2 * mean_reversion^2) *
+              (1 - exp(-mean_reversion * start_time))^2 + grid,
+          continuation_ex_coupon = callable_continuation,
+          call_principal = call_amount,
+          exercise_now = exercise_now
+        ))
+      } else {
+        list()
+      }
+      list(
+        bullet = tbl_cashflows$coupon[payment_index] +
+          bullet_continuation,
+        callable = tbl_cashflows$coupon[payment_index] +
+          investor_value,
+        decisions = c(decision, next_state$decisions)
+      )
+    }
+  )
+  first_period <- history[[length(history)]]
+  price_at_zero <- function(next_values) {
+    compute_discounted_step_LRL(
+      next_values, grid, current_states = 0,
+      start_time = 0,
+      end_time = tbl_cashflows$payment_time[1],
+      flat_rate = flat_rate,
+      mean_reversion = mean_reversion,
+      volatility = volatility,
+      quadrature = quadrature
+    )
+  }
+  bullet_price <- price_at_zero(first_period$bullet)
+  callable_price <- price_at_zero(first_period$callable)
+  list(
+    bullet_price = bullet_price,
+    callable_price = callable_price,
+    issuer_call_value = bullet_price - callable_price,
+    decisions = dplyr::bind_rows(first_period$decisions),
+    grid = grid
+  )
+}
+
+model_result <- compute_callable_bond_LRL(
+  tbl_cashflows, flat_rate = flat_zero_rate,
+  mean_reversion = 0.15, volatility = 0.012
+)
+
+tbl_price_comparison <- tibble::tibble(
+  bullet_from_initial_curve = bullet_curve_price,
+  bullet_from_model = model_result$bullet_price,
+  callable_from_model = model_result$callable_price,
+  issuer_call_value = model_result$issuer_call_value,
+  model_minus_initial_bullet =
+    model_result$bullet_price - bullet_curve_price
+)
+show_early_redemption_tbl_LRL(
+  tbl_price_comparison, "Bullet、Callableとコール権の価値"
+)
+
+stopifnot(
+  abs(model_result$bullet_price - bullet_curve_price) < 0.02,
+  model_result$issuer_call_value >= -1e-8
+)
+
+tbl_without_call <- tbl_cashflows |>
+  dplyr::mutate(
+    issuer_can_call = FALSE,
+    call_principal = NA_real_
+  )
+model_without_call <- compute_callable_bond_LRL(
+  tbl_without_call, flat_rate = flat_zero_rate,
+  mean_reversion = 0.15, volatility = 0.012
+)
+stopifnot(
+  abs(model_without_call$callable_price -
+    model_without_call$bullet_price) < 1e-8
+)
+```
+
+最後の行は、同じモデルと同じ契約条件でBullet価格が初期曲線へ近いこと、発行体の権利価値が負にならないことを検査する。価格の差が0でない場合は、状態格子、境界、補間、求積点数を見直す。**格子上のコール可能な点の割合は、実際のコール確率ではない**。
+
+### II-7.4.3 どの状態で発行体がコールするか
+
+次の図は行使可能日のうち $t=2.0$ における、クーポン支払後の継続価値とコール価格を示す。短期金利の状態が低いほど、高いクーポンが続く債券を発行体が額面で償還する誘因が強い。
+
+```{r}
+#| label: callable-decision-plot
+
+tbl_decision_at_year_2 <- model_result$decisions |>
+  dplyr::filter(abs(payment_time - 2) < 1e-10) |>
+  dplyr::filter(dplyr::between(short_rate, -0.02, 0.08))
+
+ggplot2::ggplot(
+  tbl_decision_at_year_2,
+  ggplot2::aes(x = 100 * short_rate)
+) +
+  ggplot2::geom_line(
+    ggplot2::aes(y = continuation_ex_coupon,
+      colour = "継続価値"), linewidth = 0.9
+  ) +
+  ggplot2::geom_line(
+    ggplot2::aes(y = call_principal,
+      colour = "コール価格"), linewidth = 0.8
+  ) +
+  ggplot2::labs(
+    title = "2年目のコール判断（クーポン支払後）",
+    x = "その時点の短期金利（%）", y = "残存元本の価格",
+    colour = NULL
+  )
+```
+
+## II-7.5 金利変動とコール権の価値
+
+第5章で市場から推定したボラティリティを受け取れば、同じ手順で債券価格を求められる。次は初期割引曲線と平均回帰速度を固定し、金利ボラティリティを変えた**比較実験**である。$\sigma=0$ は確率変動のない決定論的な基準になる。
+
+```{r}
+#| label: callable-volatility-sensitivity
+
+tbl_volatility_sensitivity <- tibble::tibble(
+  short_rate_volatility = c(0, 0.006, 0.012, 0.020)
+) |>
+  dplyr::mutate(
+    valuation = purrr::map(
+      short_rate_volatility,
+      ~compute_callable_bond_LRL(
+        tbl_cashflows, flat_rate = flat_zero_rate,
+        mean_reversion = 0.15, volatility = .x
+      )
+    ),
+    callable_price = purrr::map_dbl(
+      valuation, "callable_price"
+    ),
+    issuer_call_value = purrr::map_dbl(
+      valuation, "issuer_call_value"
+    ),
+    bullet_grid_error = purrr::map_dbl(
+      valuation, "bullet_price"
+    ) - bullet_curve_price
+  ) |>
+  dplyr::select(-valuation)
+
+show_early_redemption_tbl_LRL(
+  tbl_volatility_sensitivity,
+  "短期金利ボラティリティと発行体コール権"
+)
+
+ggplot2::ggplot(
+  tbl_volatility_sensitivity,
+  ggplot2::aes(10000 * short_rate_volatility,
+    issuer_call_value)
+) +
+  ggplot2::geom_line(colour = "#286DA8") +
+  ggplot2::geom_point(size = 2.4, colour = "#286DA8") +
+  ggplot2::labs(
+    title = "同じ初期曲線におけるコール権のモデル価値",
+    x = "短期金利ボラティリティのパラメータ（bp/√年）",
+    y = "額面100当たりの発行体コール権価値"
+  )
+```
+
+ボラティリティが大きいほど、発行体に有利な低金利の状態を利用できるため、この例ではコール権の価値が増える。一般の実取引では、各シナリオでキャリブレーションや他の市場入力も変わることがあり、この表だけをリスク量とは呼ばない。価格感応度を比べるときは、カーブ、スプレッド、ボラティリティなどのどれを固定するか明確にする。
+
+## II-7.6 数値計算の確かめ方
+
+本章の評価は価格関数を有限の状態格子に補間する。格子幅と求積点数を変えて結果が安定するか確かめる。次は同じ契約を二つの格子で評価した例であり、価格差を表示する。
+
+```{r}
+#| label: callable-grid-convergence
+
+tbl_grid_convergence <- tibble::tibble(
+  number_of_grid_points = c(161L, 321L, 641L),
+  quadrature_nodes = c(16L, 24L, 32L)
+) |>
+  dplyr::mutate(
+    valuation = purrr::map2(
+      number_of_grid_points, quadrature_nodes,
+      ~compute_callable_bond_LRL(
+        tbl_cashflows, flat_rate = flat_zero_rate,
+        mean_reversion = 0.15, volatility = 0.012,
+        number_of_grid_points = .x, quadrature_nodes = .y
+      )
+    ),
+    callable_price = purrr::map_dbl(
+      valuation, "callable_price"
+    ),
+    bullet_grid_error = purrr::map_dbl(
+      valuation, "bullet_price"
+    ) - bullet_curve_price
+  ) |>
+  dplyr::select(-valuation) |>
+  dplyr::mutate(
+    change_from_previous = callable_price -
+      dplyr::lag(callable_price)
+  )
+
+show_early_redemption_tbl_LRL(
+  tbl_grid_convergence, "格子・求積点を増やしたときの価格"
+)
+```
+
+二つの数値設定を同時に変えているため、差が大きいときは状態格子と求積点数を**それぞれ独立に**増やして原因を調べる。初期Bullet価格との一致に加え、行使日をなくすとCallableがBulletに一致すること、行使日を追加した場合は投資家のCallable価格が上がらないことも、実装の検査になる。
+
+## II-7.7 Bermudan Swaptionとの関係と拡張
+
+固定クーポン債を発行体が償還できる権利は、金利低下局面で価値が増える点で、固定を受け取るReceiver Swaptionと似る。複数行使日の権利はBermudan型である。ただし、Callable BondとBermudan Receiver Swaptionを**同額の権利**とみなすには、債券クーポンとスワップの固定・変動キャッシュフロー、元本、行使日、決済とコール価格の対応を厳密に合わせる必要がある。この章では価格を機械的に置き換えない。
+
+Hull–White 1因子では継続価値を一つの状態の関数として計算でき、Tree、有限差分、状態格子の積分などが候補になる。本章は状態格子と正規求積を用いた。一方、BGM/LMMやRFR向けFMMを使って多数のフォワード金利を動かす場合は、共通の測度のもとで経路を作り、行使日時点の情報に条件づけた継続価値を回帰などで推定する方法がある。**将来の経路ごとに実現した利益を直接比べ、過去の行使を決める方法は使わない**。
+
+実取引への拡張では、OIS割引と予測カーブの分離、発行体信用スプレッドの影響、約定上の通知日と利払い日のずれ、クリーン価格と経過利息の扱いを揃える。信用スプレッドを単一の確定値として上乗せしても、発行体の信用状況と行使判断の依存を十分に表現したことにはならない。
+

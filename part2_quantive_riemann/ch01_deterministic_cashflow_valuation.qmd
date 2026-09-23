@@ -804,85 +804,148 @@ $$
 #   D_mod = -100 / P * dP/dY
 # となる。
 
-bond_price_vba <- function(yield_pct) {
-  if (yield_pct == 0) {
+compute_bond_price_LRL <- function(
+  compound_yield_pct,
+  coupon_rate_pct,
+  remaining_years
+) {
+  if (compound_yield_pct == 0) {
     return(
       face_amount +
-        yen_coupon_rate_pct *
-          yen_remaining_years
+        coupon_rate_pct * remaining_years
     )
   }
 
-  alpha <- (1 + yield_pct / 200)^(-1)
+  discount_factor_half_year <- (
+    1 + compound_yield_pct / 200
+  )^(-1)
 
   face_amount * (
-    yen_coupon_rate_pct / yield_pct *
-      (1 - alpha^(2 * yen_remaining_years)) +
-      alpha^(2 * yen_remaining_years)
+    coupon_rate_pct / compound_yield_pct *
+      (
+        1 - discount_factor_half_year^(
+          2 * remaining_years
+        )
+      ) +
+      discount_factor_half_year^(2 * remaining_years)
   )
 }
-bond_dP_dY_vba <- function(yield_pct) {
-  C <- yen_coupon_rate_pct
-  T <- yen_remaining_years
 
-  if (yield_pct == 0) {
+compute_bond_price_derivative_LRL <- function(
+  compound_yield_pct,
+  coupon_rate_pct,
+  remaining_years
+) {
+  if (compound_yield_pct == 0) {
     return(
       -(
-        C * T * (2 * T + 1) / 400 +
-          T
+        coupon_rate_pct * remaining_years *
+          (2 * remaining_years + 1) / 400 +
+          remaining_years
       )
     )
   }
 
-  Y <- yield_pct
-  alpha <- (1 + Y / 200)^(-1)
+  discount_factor_half_year <- (
+    1 + compound_yield_pct / 200
+  )^(-1)
 
-  -100 * C / Y^2 *
-    (1 - alpha^(2 * T)) -
-    (1 - C / Y) *
-      T *
-      alpha^(2 * T + 1)
+  -100 * coupon_rate_pct / compound_yield_pct^2 *
+    (
+      1 - discount_factor_half_year^(
+        2 * remaining_years
+      )
+    ) -
+    (1 - coupon_rate_pct / compound_yield_pct) *
+      remaining_years *
+      discount_factor_half_year^(
+        2 * remaining_years + 1
+      )
 }
 
-bond_d2P_dY2_vba <- function(yield_pct) {
-  C <- yen_coupon_rate_pct
-  T <- yen_remaining_years
-
-  if (yield_pct == 0) {
+compute_bond_price_second_derivative_LRL <- function(
+  compound_yield_pct,
+  coupon_rate_pct,
+  remaining_years
+) {
+  if (compound_yield_pct == 0) {
     return(
-      T * (2 * T + 1) / 20000 *
+      remaining_years *
+        (2 * remaining_years + 1) / 20000 *
         (
-          C * (T + 1) / 3 +
+          coupon_rate_pct *
+            (remaining_years + 1) / 3 +
             100
         )
     )
   }
 
-  Y <- yield_pct
-  alpha <- (1 + Y / 200)^(-1)
+  discount_factor_half_year <- (
+    1 + compound_yield_pct / 200
+  )^(-1)
 
-  T * (2 * T + 1) / 200 *
-    (1 - C / Y) *
-    alpha^(2 * T + 2) -
-    2 * C * T / Y^2 *
-      alpha^(2 * T + 1) +
-    200 * C / Y^3 *
-      (1 - alpha^(2 * T))
+  remaining_years *
+    (2 * remaining_years + 1) / 200 *
+    (1 - coupon_rate_pct / compound_yield_pct) *
+    discount_factor_half_year^(
+      2 * remaining_years + 2
+    ) -
+    2 * coupon_rate_pct * remaining_years /
+      compound_yield_pct^2 *
+      discount_factor_half_year^(
+        2 * remaining_years + 1
+      ) +
+    200 * coupon_rate_pct / compound_yield_pct^3 *
+      (
+        1 - discount_factor_half_year^(
+          2 * remaining_years
+        )
+      )
+}
+
+compute_bond_price_example_LRL <- function(
+  compound_yield_pct
+) {
+  compute_bond_price_LRL(
+    compound_yield_pct = compound_yield_pct,
+    coupon_rate_pct = yen_coupon_rate_pct,
+    remaining_years = yen_remaining_years
+  )
+}
+
+compute_bond_price_derivative_example_LRL <- function(
+  compound_yield_pct
+) {
+  compute_bond_price_derivative_LRL(
+    compound_yield_pct = compound_yield_pct,
+    coupon_rate_pct = yen_coupon_rate_pct,
+    remaining_years = yen_remaining_years
+  )
+}
+
+compute_bond_price_second_derivative_example_LRL <- function(
+  compound_yield_pct
+) {
+  compute_bond_price_second_derivative_LRL(
+    compound_yield_pct = compound_yield_pct,
+    coupon_rate_pct = yen_coupon_rate_pct,
+    remaining_years = yen_remaining_years
+  )
 }
 
 
 tbl_vba_zero_yield <- tibble::tribble(
   ~item, ~value,
-  "price_Y0", bond_price_vba(0),
-  "dP_dY_Y0", bond_dP_dY_vba(0),
-  "BPV_sen_per_bp_Y0", -bond_dP_dY_vba(0),
-  "d2P_dY2_Y0", bond_d2P_dY2_vba(0),
+  "price_Y0", compute_bond_price_example_LRL(0),
+  "dP_dY_Y0", compute_bond_price_derivative_example_LRL(0),
+  "BPV_sen_per_bp_Y0", -compute_bond_price_derivative_example_LRL(0),
+  "d2P_dY2_Y0", compute_bond_price_second_derivative_example_LRL(0),
   "modified_duration_Y0",
-    -100 * bond_dP_dY_vba(0) /
-      bond_price_vba(0),
+    -100 * compute_bond_price_derivative_example_LRL(0) /
+      compute_bond_price_example_LRL(0),
   "convexity_Y0",
-    10000 * bond_d2P_dY2_vba(0) /
-      bond_price_vba(0)
+    10000 * compute_bond_price_second_derivative_example_LRL(0) /
+      compute_bond_price_example_LRL(0)
 )
 
 GaussQuant::show_tbl_GQH(
@@ -890,33 +953,41 @@ GaussQuant::show_tbl_GQH(
   "VBA定義：利回り0%の場合"
 )
 
-vba_price <- bond_price_vba(yen_compound_yield_pct)
-vba_dP_dY <- bond_dP_dY_vba(yen_compound_yield_pct)
-vba_d2P_dY2 <- bond_d2P_dY2_vba(yen_compound_yield_pct)
+formula_price <- compute_bond_price_example_LRL(
+  yen_compound_yield_pct
+)
+formula_price_derivative <-
+  compute_bond_price_derivative_example_LRL(
+    yen_compound_yield_pct
+  )
+formula_price_second_derivative <-
+  compute_bond_price_second_derivative_example_LRL(
+    yen_compound_yield_pct
+  )
 
-bpv_sen_per_bp <- -vba_dP_dY
+bpv_sen_per_bp <- -formula_price_derivative
 bpv_yen_per_bp <- bpv_sen_per_bp / 100
 
 modified_duration <- (
   -100 *
-    vba_dP_dY /
-    vba_price
+    formula_price_derivative /
+    formula_price
 )
 
 convexity_value <- (
   10000 *
-    vba_d2P_dY2 /
-    vba_price
+    formula_price_second_derivative /
+    formula_price
 )
 
-vba_mduration_pct_unit <- (
-  -vba_dP_dY /
-    vba_price
+formula_modified_duration_pct_unit <- (
+  -formula_price_derivative /
+    formula_price
 )
 
-vba_convexity_pct_unit <- (
-  vba_d2P_dY2 /
-    vba_price
+formula_convexity_pct_unit <- (
+  formula_price_second_derivative /
+    formula_price
 )
 
 tbl_yen_risk <- GaussQuant::bond_risk_from_compound_yield_YEN_GQL(
@@ -931,8 +1002,8 @@ tbl_yen_risk <- GaussQuant::bond_risk_from_compound_yield_YEN_GQL(
 )
 
 tbl_risk_compare <- tibble::tribble(
-  ~item, ~vba_formula, ~gaussquant,
-  "price", vba_price, yen_compound_price,
+  ~item, ~analytical_formula, ~gaussquant,
+  "price", formula_price, yen_compound_price,
   "modified_duration", modified_duration,
     tbl_yen_risk$modified_duration[[1]],
   "convexity", convexity_value,
@@ -950,10 +1021,10 @@ GaussQuant::show_tbl_GQH(
 
 tbl_vba_derivatives <- tibble::tribble(
   ~item, ~value,
-  "dP_dY_yen_per_1pct", vba_dP_dY,
-  "d2P_dY2_yen_per_pct2", vba_d2P_dY2,
-  "vba_mDuration_per_pct", vba_mduration_pct_unit,
-  "vba_convexity_per_pct2", vba_convexity_pct_unit,
+  "dP_dY_yen_per_1pct", formula_price_derivative,
+  "d2P_dY2_yen_per_pct2", formula_price_second_derivative,
+  "modified_duration_per_pct", formula_modified_duration_pct_unit,
+  "convexity_per_pct2", formula_convexity_pct_unit,
   "BPV_sen_per_bp", bpv_sen_per_bp
 )
 
@@ -1068,17 +1139,33 @@ GaussQuant::show_tbl_GQH(
 # 数値解法でもVBAと同じく、複利利回りは%単位で扱う。
 # 例: 6.71047990% -> yield_pct = 6.71047990
 
-bond_price_from_yield <- function(yield_pct) {
-  bond_price_vba(yield_pct)
+compute_bond_price_benchmark_LRL <- function(
+  compound_yield_pct
+) {
+  compute_bond_price_LRL(
+    compound_yield_pct = compound_yield_pct,
+    coupon_rate_pct = benchmark_coupon_rate_pct,
+    remaining_years = benchmark_years
+  )
 }
 
-yield_objective <- function(yield_pct) {
-  bond_price_from_yield(yield_pct) -
+compute_bond_yield_objective_LRL <- function(
+  compound_yield_pct
+) {
+  compute_bond_price_benchmark_LRL(
+    compound_yield_pct
+  ) -
     benchmark_market_price
 }
 
-yield_derivative <- function(yield_pct) {
-  bond_dP_dY_vba(yield_pct)
+compute_bond_yield_derivative_LRL <- function(
+  compound_yield_pct
+) {
+  compute_bond_price_derivative_LRL(
+    compound_yield_pct = compound_yield_pct,
+    coupon_rate_pct = benchmark_coupon_rate_pct,
+    remaining_years = benchmark_years
+  )
 }
 ```
 
@@ -1532,7 +1619,7 @@ $$
 # ニュートン・ラフソン法は、VBAと同じ解析微分 dP/dY をそのまま使用する。
 # Yの単位は%なので、更新式にも追加の1e-4換算は不要。
 
-yield_newton <- function(
+compute_bond_yield_newton_LRL <- function(
   initial_yield_pct = benchmark_simple_yield_pct,
   tolerance = 1e-12,
   max_iter = 100L
@@ -1548,35 +1635,39 @@ yield_newton <- function(
         return(state)
       }
 
-      f_value <- yield_objective(state$yield_pct)
-      derivative <- yield_derivative(state$yield_pct)
+      objective_value <- compute_bond_yield_objective_LRL(
+        state$yield_pct
+      )
+      price_derivative <- compute_bond_yield_derivative_LRL(
+        state$yield_pct
+      )
 
       next_yield_pct <- (
         state$yield_pct -
-          f_value / derivative
+          objective_value / price_derivative
       )
 
       list(
         yield_pct = next_yield_pct,
-        converged = abs(f_value) < tolerance
+        converged = abs(objective_value) < tolerance
       )
     }
   )$yield_pct
 }
 
-yield_newton_result <- yield_newton()
+yield_newton_result <- compute_bond_yield_newton_LRL()
 
 tbl_newton_check <- tibble::tribble(
   ~item, ~value,
   "initial_yield_pct", benchmark_simple_yield_pct,
   "compound_yield_pct", yield_newton_result,
-  "price", bond_price_from_yield(yield_newton_result),
-  "dP_dY", yield_derivative(yield_newton_result),
-  "BPV_sen_per_bp", -yield_derivative(yield_newton_result),
+  "price", compute_bond_price_benchmark_LRL(yield_newton_result),
+  "dP_dY", compute_bond_yield_derivative_LRL(yield_newton_result),
+  "BPV_sen_per_bp", -compute_bond_yield_derivative_LRL(yield_newton_result),
   "modified_duration",
     -100 *
-      yield_derivative(yield_newton_result) /
-      bond_price_from_yield(yield_newton_result)
+      compute_bond_yield_derivative_LRL(yield_newton_result) /
+      compute_bond_price_benchmark_LRL(yield_newton_result)
 )
 
 GaussQuant::show_tbl_GQH(
@@ -1592,7 +1683,7 @@ GaussQuant::show_tbl_GQH(
 ```{r}
 #| label: yield-bisection-method
 
-yield_bisection <- function(
+compute_bond_yield_bisection_LRL <- function(
   lower = -1,
   upper = 20,
   tolerance = 1e-12,
@@ -1615,11 +1706,15 @@ yield_bisection <- function(
         state$lower + state$upper
       ) / 2
 
-      f_lower <- yield_objective(state$lower)
-      f_mid <- yield_objective(midpoint)
+      objective_lower <- compute_bond_yield_objective_LRL(
+        state$lower
+      )
+      objective_midpoint <- compute_bond_yield_objective_LRL(
+        midpoint
+      )
 
       next_state <- if (
-        sign(f_lower) == sign(f_mid)
+        sign(objective_lower) == sign(objective_midpoint)
       ) {
         list(
           lower = midpoint,
@@ -1636,7 +1731,7 @@ yield_bisection <- function(
         lower = next_state$lower,
         upper = next_state$upper,
         root = midpoint,
-        converged = abs(f_mid) < tolerance ||
+        converged = abs(objective_midpoint) < tolerance ||
           abs(state$upper - state$lower) < tolerance
       )
     }
@@ -1645,7 +1740,7 @@ yield_bisection <- function(
   result$root
 }
 
-yield_bisection_result <- yield_bisection()
+yield_bisection_result <- compute_bond_yield_bisection_LRL()
 ```
 
 ### II-1.8.4 Brent法
@@ -1655,15 +1750,15 @@ Rの `uniroot()` はBrent法系の区間求根アルゴリズムを用いる。�
 ```{r}
 #| label: yield-brent-method
 
-yield_brent <- function() {
+compute_bond_yield_brent_LRL <- function() {
   stats::uniroot(
-    yield_objective,
+    compute_bond_yield_objective_LRL,
     interval = c(-1, 20),
     tol = 1e-12
   )$root
 }
 
-yield_brent_result <- yield_brent()
+yield_brent_result <- compute_bond_yield_brent_LRL()
 ```
 
 ### II-1.8.5 多項式求根法
@@ -1682,7 +1777,7 @@ $$
 ```{r}
 #| label: yield-polyroot-method
 
-yield_polyroot <- function() {
+compute_bond_yield_polyroot_LRL <- function() {
   poly_coefficients <- c(
     -benchmark_market_price,
     rep(
@@ -1708,14 +1803,14 @@ yield_polyroot <- function() {
       abs(
         purrr::map_dbl(
           yield_candidates,
-          yield_objective
+          compute_bond_yield_objective_LRL
         )
       )
     )
   ]
 }
 
-yield_polyroot_result <- yield_polyroot()
+yield_polyroot_result <- compute_bond_yield_polyroot_LRL()
 ```
 
 ### II-1.8.6 GaussQuantによる利回り計算
@@ -1728,7 +1823,7 @@ GaussQuantについても同じ40年債、同じクリーンプライスを用�
 # 第II-1章で使用している同一の40年債オブジェクトをそのまま利用する
 GaussQuant::set_eval_date_GQL(trade_date)
 
-yield_gaussquant <- function() {
+compute_bond_yield_gaussquant_LRL <- function() {
   100 * GaussQuant::bond_yield_from_clean_safe_GQL(
     bond = bond_obj,
     clean_price = benchmark_market_price,
@@ -1738,7 +1833,7 @@ yield_gaussquant <- function() {
   )
 }
 
-yield_gaussquant_result <- yield_gaussquant()
+yield_gaussquant_result <- compute_bond_yield_gaussquant_LRL()
 ```
 
 ### II-1.8.7 数値解法の精度と計算速度
@@ -1765,7 +1860,7 @@ GaussQuant::show_tbl_GQH(
 
 benchmark_repetitions <- 500L
 
-benchmark_solver <- function(
+compute_bond_yield_benchmark_LRL <- function(
   method,
   solver,
   result,
@@ -1800,33 +1895,33 @@ benchmark_solver <- function(
 }
 
 tbl_solver_timing <- dplyr::bind_rows(
-  benchmark_solver(
+  compute_bond_yield_benchmark_LRL(
     "ニュートン・ラフソン法",
-    yield_newton,
+    compute_bond_yield_newton_LRL,
     yield_newton_result,
-    bond_price_from_yield
+    compute_bond_price_benchmark_LRL
   ),
-  benchmark_solver(
+  compute_bond_yield_benchmark_LRL(
     "二分法",
-    yield_bisection,
+    compute_bond_yield_bisection_LRL,
     yield_bisection_result,
-    bond_price_from_yield
+    compute_bond_price_benchmark_LRL
   ),
-  benchmark_solver(
+  compute_bond_yield_benchmark_LRL(
     "Brent法（uniroot）",
-    yield_brent,
+    compute_bond_yield_brent_LRL,
     yield_brent_result,
-    bond_price_from_yield
+    compute_bond_price_benchmark_LRL
   ),
-  benchmark_solver(
+  compute_bond_yield_benchmark_LRL(
     "多項式求根法（polyroot）",
-    yield_polyroot,
+    compute_bond_yield_polyroot_LRL,
     yield_polyroot_result,
-    bond_price_from_yield
+    compute_bond_price_benchmark_LRL
   ),
-  benchmark_solver(
+  compute_bond_yield_benchmark_LRL(
     "GaussQuant",
-    yield_gaussquant,
+    compute_bond_yield_gaussquant_LRL,
     yield_gaussquant_result,
     NULL
   )

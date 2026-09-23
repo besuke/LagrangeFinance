@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第II-7章 金利モデルによる早期償還評価 – エンタープライズ金融モデル構築</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../part2_quantive_riemann/ch08_credit_risk_cds.html" rel="next">
+<link href="../part2_quantive_riemann/ch06_short_rate_and_forward_rate_models.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-9e3e5b9121e68b3f077afb32f2c64d95.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学　無裁定モデル</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch07_early_redemption_interest_rate_models.html"><span class="chapter-title">第II-7章 金利モデルによる早期償還評価</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">エンタープライズ金融モデル構築</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">はじめに</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第I部 金融工学　均衡モデル</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch01_r_basics_tidyverse.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-1章 Rによるデータ分析の基礎</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch02_financial_data.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-2章 財務データの整理と分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch03_stock_data_time_series.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-3章 株式データと時系列分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch04_factor_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-4章 ファクターモデル分析</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch05_asset_pricing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-5章 資産価格モデルとポートフォリオ最適化</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch06_event_study.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-6章 イベント・スタディ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch07_machine_learning_factor_selection.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-7章 機械学習によるファクター選定</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch08_constrained_portfolio_optimization.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-8章 制約付きポートフォリオ最適化とバックテスト</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch09_market_risk_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-9章 市場リスクと市場VaR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch10_credit_risk_credit_var.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-10章 信用リスクと信用VaR</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part1_empirical/ch11_clo_tranche_valuation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第I-11章 CLOと信用ポートフォリオのトランシェ評価</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第II部 金融工学　無裁定モデル</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-1章 債券評価と金利リスクの基礎</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch02_interest_rate_curves.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-2章 金利カーブ構築と債券先物の金利感応度</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch03_ois_swaps_multicurve.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-3章 OISスワップとマルチカーブ評価</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch04_black_model.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-4章 株価・為替と幾何ブラウン運動モデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch05_interest_rate_model_calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 金利モデルのキャリブレーション</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch06_short_rate_and_forward_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 ショートレートモデルとフォワード金利モデル</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch07_early_redemption_interest_rate_models.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第II-7章 金利モデルによる早期償還評価</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch08_credit_risk_cds.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-8章 信用リスクとクレジットデリバティブ</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part2_quantive_riemann/ch09_exotic_derivatives_prdc.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-9章 金利為替系デリバティブ</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融工学における計算技術の発展と並列コンピューティング</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 エンタープライズ金融計算システムの構築</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#第ii-7章-金利モデルによる早期償還評価" id="toc-第ii-7章-金利モデルによる早期償還評価" class="nav-link active" data-scroll-target="#第ii-7章-金利モデルによる早期償還評価">第II-7章 金利モデルによる早期償還評価</a>
+  <ul class="collapse">
+  <li><a href="#ii-7.1-契約条件と評価の基準" id="toc-ii-7.1-契約条件と評価の基準" class="nav-link" data-scroll-target="#ii-7.1-契約条件と評価の基準">II-7.1 契約条件と評価の基準</a></li>
+  <li><a href="#ii-7.2-bullet-bondと埋め込みコール権" id="toc-ii-7.2-bullet-bondと埋め込みコール権" class="nav-link" data-scroll-target="#ii-7.2-bullet-bondと埋め込みコール権">II-7.2 Bullet Bondと埋め込みコール権</a></li>
+  <li><a href="#ii-7.3-発行体の行使判断後ろ向きの評価" id="toc-ii-7.3-発行体の行使判断後ろ向きの評価" class="nav-link" data-scroll-target="#ii-7.3-発行体の行使判断後ろ向きの評価">II-7.3 発行体の行使判断：後ろ向きの評価</a></li>
+  <li><a href="#ii-7.4-hullwhiteで継続価値を計算する" id="toc-ii-7.4-hullwhiteで継続価値を計算する" class="nav-link" data-scroll-target="#ii-7.4-hullwhiteで継続価値を計算する">II-7.4 Hull–Whiteで継続価値を計算する</a>
+  <ul class="collapse">
+  <li><a href="#ii-7.4.1-状態と割引の共同分布" id="toc-ii-7.4.1-状態と割引の共同分布" class="nav-link" data-scroll-target="#ii-7.4.1-状態と割引の共同分布">II-7.4.1 状態と割引の共同分布</a></li>
+  <li><a href="#ii-7.4.2-各行使日の後ろ向き計算" id="toc-ii-7.4.2-各行使日の後ろ向き計算" class="nav-link" data-scroll-target="#ii-7.4.2-各行使日の後ろ向き計算">II-7.4.2 各行使日の後ろ向き計算</a></li>
+  <li><a href="#ii-7.4.3-どの状態で発行体がコールするか" id="toc-ii-7.4.3-どの状態で発行体がコールするか" class="nav-link" data-scroll-target="#ii-7.4.3-どの状態で発行体がコールするか">II-7.4.3 どの状態で発行体がコールするか</a></li>
+  </ul></li>
+  <li><a href="#ii-7.5-金利変動とコール権の価値" id="toc-ii-7.5-金利変動とコール権の価値" class="nav-link" data-scroll-target="#ii-7.5-金利変動とコール権の価値">II-7.5 金利変動とコール権の価値</a></li>
+  <li><a href="#ii-7.6-数値計算の確かめ方" id="toc-ii-7.6-数値計算の確かめ方" class="nav-link" data-scroll-target="#ii-7.6-数値計算の確かめ方">II-7.6 数値計算の確かめ方</a></li>
+  <li><a href="#ii-7.7-bermudan-swaptionとの関係と拡張" id="toc-ii-7.7-bermudan-swaptionとの関係と拡張" class="nav-link" data-scroll-target="#ii-7.7-bermudan-swaptionとの関係と拡張">II-7.7 Bermudan Swaptionとの関係と拡張</a></li>
+  <li><a href="#参考資料" id="toc-参考資料" class="nav-link" data-scroll-target="#参考資料">参考資料</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html">第II部 金融工学　無裁定モデル</a></li><li class="breadcrumb-item"><a href="../part2_quantive_riemann/ch07_early_redemption_interest_rate_models.html"><span class="chapter-title">第II-7章 金利モデルによる早期償還評価</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-title">第II-7章 金利モデルによる早期償還評価</span></h1>
+<p class="subtitle lead">Hull–Whiteモデル、発行体コール権と継続価値</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="第ii-7章-金利モデルによる早期償還評価" class="level1">
+<h1>第II-7章 金利モデルによる早期償還評価</h1>
+<p>固定利付債の発行体に期限前償還権があると、金利が低下した際に、高いクーポンの支払いを打ち切って借り換えることができる。第5章でモデルのパラメータを市場に合わせ、第6章で金利の動きを定義した。本章では、そのモデルを使い、<strong>各行使日にどの価値を比較して債券価格が決まるか</strong>を計算する。</p>
+<p>中心例は発行体が指定日に額面で償還できる固定利付債（Callable Bond）である。最初に契約と行使の順序を定め、Hull–White 1因子モデルのもとで後ろ向きに価値を計算する。最後にBermudan Swaptionとの関係と、複数フォワード金利モデルへ進む場合の計算上の違いを整理する。以下の金利、クーポン、ボラティリティはすべて<strong>教材用の架空の値</strong>である。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="fu">file.path</span>(<span class="st">"R"</span>, <span class="st">"utility_LFL.R"</span>))) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">source</span>(<span class="fu">file.path</span>(<span class="st">"R"</span>, <span class="st">"utility_LFL.R"</span>))</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressPackageStartupMessages</span>(<span class="fu">library</span>(tidyverse))</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>show_early_redemption_tbl_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(tbl, title) {</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">requireNamespace</span>(<span class="st">"GaussQuant"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(tbl, title)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">print</span>(tbl)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">invisible</span>(tbl)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="ii-7.1-契約条件と評価の基準" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.1-契約条件と評価の基準">II-7.1 契約条件と評価の基準</h2>
+<p>額面100、年率3%の固定クーポン、半年払い、満期5年の債券を考える。各クーポンは <span class="math inline">\(100\times0.03\times0.5=1.5\)</span>。発行体は1年目から4年半目までの各クーポン日に、<strong>その日のクーポンを支払った後</strong>、残りの元本を100で償還できるとする。満期日には通常の元本償還があり、コール判断はない。</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>項目</th>
+<th>この章での設定</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>評価時点と金利期間</td>
+<td><span class="math inline">\(t=0\)</span>、半年ごとの等間隔の年数</td>
+</tr>
+<tr class="even">
+<td>クーポン</td>
+<td>各 <span class="math inline">\(t=0.5,1.0,\ldots,5.0\)</span> に1.5</td>
+</tr>
+<tr class="odd">
+<td>コール可能日</td>
+<td><span class="math inline">\(t=1.0,1.5,\ldots,4.5\)</span></td>
+</tr>
+<tr class="even">
+<td>コール価格</td>
+<td>クーポン支払い後の元本に対し100（ex-couponの額面価格）</td>
+</tr>
+<tr class="odd">
+<td>金利曲線</td>
+<td>連続複利2%のフラットな初期割引曲線</td>
+</tr>
+<tr class="even">
+<td>信用と費用</td>
+<td>デフォルト、スプレッド、税、取引費用は含めない</td>
+</tr>
+</tbody>
+</table>
+<p>したがって、この例の値は評価時点の将来キャッシュフローの<strong>モデル現在価値</strong>である。経過利息のある取引日で表示するクリーン価格や決済価格ではない。実取引では発行日・決済日、営業日規則、日数計算、通知期間、コール価格の定義も別に指定する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>notional <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>coupon_rate <span class="ot">&lt;-</span> <span class="fl">0.03</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>period_years <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>maturity_years <span class="ot">&lt;-</span> <span class="dv">5</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>flat_zero_rate <span class="ot">&lt;-</span> <span class="fl">0.02</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>first_call_year <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>call_price <span class="ot">&lt;-</span> <span class="dv">100</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>tbl_cashflows <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">payment_time =</span> <span class="fu">seq</span>(period_years, maturity_years, <span class="at">by =</span> period_years),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">coupon =</span> notional <span class="sc">*</span> coupon_rate <span class="sc">*</span> period_years,</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">principal_at_maturity =</span> dplyr<span class="sc">::</span><span class="fu">if_else</span>(</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    payment_time <span class="sc">==</span> maturity_years, notional, <span class="dv">0</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">issuer_can_call =</span> payment_time <span class="sc">&gt;=</span> first_call_year <span class="sc">&amp;</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    payment_time <span class="sc">&lt;</span> maturity_years,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">call_principal =</span> dplyr<span class="sc">::</span><span class="fu">if_else</span>(</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    issuer_can_call, call_price, <span class="cn">NA_real_</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="fu">show_early_redemption_tbl_LRL</span>(tbl_cashflows, <span class="st">"クーポンと発行体コール日"</span>)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 10 × 5</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    payment_time coupon principal_at_maturity issuer_can_call call_principal</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;           &lt;dbl&gt;  &lt;dbl&gt;                 &lt;dbl&gt; &lt;lgl&gt;                    &lt;dbl&gt;</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1          0.5    1.5                     0 FALSE                       NA</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2          1      1.5                     0 TRUE                       100</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3          1.5    1.5                     0 TRUE                       100</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4          2      1.5                     0 TRUE                       100</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5          2.5    1.5                     0 TRUE                       100</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6          3      1.5                     0 TRUE                       100</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7          3.5    1.5                     0 TRUE                       100</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8          4      1.5                     0 TRUE                       100</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9          4.5    1.5                     0 TRUE                       100</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10          5      1.5                   100 FALSE                       NA</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="ii-7.2-bullet-bondと埋め込みコール権" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.2-bullet-bondと埋め込みコール権">II-7.2 Bullet Bondと埋め込みコール権</h2>
+<p>コール権のないBullet Bondの時点0の価格は、支払額を <span class="math inline">\(C_i\)</span>、満期元本を <span class="math inline">\(N\)</span>、割引係数を <span class="math inline">\(P(0,t_i)\)</span> として</p>
+<p><span class="math display">\[
+V_0^{\mathrm{bullet}}
+=\sum_{i=1}^{n} C_i P(0,t_i)+N P(0,t_n).
+\]</span></p>
+<p>初期カーブを完全に再現するモデルなら、同じキャッシュフローから得るBullet Bondの価格はこの値に一致する。コール価格や行使日などの条件が一致すれば、発行体のコール権の価値は</p>
+<p><span class="math display">\[
+V_0^{\mathrm{issuer\ call}}
+=V_0^{\mathrm{bullet}}-V_0^{\mathrm{callable}}\geq0
+\]</span></p>
+<p>となる。これは同一の信用・割引・クーポン条件で比較した<strong>価格差</strong>であり、別に提示された任意のReceiver Swaption価格と自動的に一致するわけではない。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>compute_bullet_price_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(tbl_cashflows, flat_rate) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">is.finite</span>(flat_rate))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    (tbl_cashflows<span class="sc">$</span>coupon <span class="sc">+</span> tbl_cashflows<span class="sc">$</span>principal_at_maturity) <span class="sc">*</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">exp</span>(<span class="sc">-</span>flat_rate <span class="sc">*</span> tbl_cashflows<span class="sc">$</span>payment_time)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>bullet_curve_price <span class="ot">&lt;-</span> <span class="fu">compute_bullet_price_LRL</span>(</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  tbl_cashflows, flat_zero_rate</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">show_early_redemption_tbl_LRL</span>(</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  tibble<span class="sc">::</span><span class="fu">tibble</span>(<span class="at">bullet_price =</span> bullet_curve_price),</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">"初期割引曲線によるBullet Bondの価格"</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 1</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   bullet_price</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          &lt;dbl&gt;</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1       104.69</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="ii-7.3-発行体の行使判断後ろ向きの評価" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.3-発行体の行使判断後ろ向きの評価">II-7.3 発行体の行使判断：後ろ向きの評価</h2>
+<p>クーポン支払日の直後に、将来の支払義務の価値を発行体が比較する。その時点から次の支払日までの<strong>継続価値</strong>を <span class="math inline">\(H_i(x)\)</span>、コール時に支払う元本を <span class="math inline">\(K_i\)</span>、当日のクーポンを <span class="math inline">\(C_i\)</span> とする。直前の投資家側の価格は</p>
+<p><span class="math display">\[
+V_i(x)=C_i+\min\{K_i,H_i(x)\}
+\quad (\text{発行体がコール可能な日}),
+\]</span></p>
+<p>であり、コール不可の日は <span class="math inline">\(V_i(x)=C_i+H_i(x)\)</span>、満期では <span class="math inline">\(V_n(x)=C_n+N\)</span>。<strong>クーポン <span class="math inline">\(C_i\)</span> はコール時にも支払われる</strong>ため、比較する二つの枝の共通部分として外に置いた。</p>
+<p>継続価値は、リスク中立測度のもとで</p>
+<p><span class="math display">\[
+H_i(x)=\mathbb E^{\mathbb Q}\!\left[
+\exp\left(-\int_{t_i}^{t_{i+1}}r_s\,ds\right)
+V_{i+1}(x_{t_{i+1}})\mid x_{t_i}=x\right].
+\]</span></p>
+<p>発行体は <span class="math inline">\(H_i(x)&gt;K_i\)</span> のときコールする。等号のときの扱いは価格を変えない。<span class="math inline">\(\min\)</span> が表すのは、発行体が投資家に対する残存債務をより安く決済できる枝を選ぶことである。</p>
+<pre class="mermaid"><code>flowchart TD
+  A["当日のクーポンを支払う"] --&gt; B["元本のコール価格と継続価値を比較"]
+  B --&gt;|"継続価値が高い"| C["元本を支払い償還"]
+  B --&gt;|"継続価値が低い"| D["債券を継続"]</code></pre>
+</section>
+<section id="ii-7.4-hullwhiteで継続価値を計算する" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.4-hullwhiteで継続価値を計算する">II-7.4 Hull–Whiteで継続価値を計算する</h2>
+<section id="ii-7.4.1-状態と割引の共同分布" class="level3">
+<h3 class="anchored" data-anchor-id="ii-7.4.1-状態と割引の共同分布">II-7.4.1 状態と割引の共同分布</h3>
+<p>第6章と同じく、<span class="math inline">\(r_t=\phi(t)+x_t\)</span>、<span class="math inline">\(dx_t=-a x_tdt+\sigma dW_t\)</span> を使う。一定の <span class="math inline">\(a&gt;0,\sigma\geq0\)</span> とフラットな初期曲線 <span class="math inline">\(P(0,T)=e^{-\bar rT}\)</span> について</p>
+<p><span class="math display">\[
+\phi(t)=\bar r+
+\frac{\sigma^2}{2a^2}(1-e^{-at})^2.
+\]</span></p>
+<p><span class="math inline">\(h=t_{i+1}-t_i\)</span>、<span class="math inline">\(b=e^{-ah}\)</span>、<span class="math inline">\(B=(1-b)/a\)</span> と置く。時点 <span class="math inline">\(t_i\)</span> の <span class="math inline">\(x\)</span> を条件とした次の状態 <span class="math inline">\(X\)</span> と期間内の確率的な割引用積分 <span class="math inline">\(I\)</span> は</p>
+<p><span class="math display">\[
+X=bx+\varepsilon_X,\qquad
+I=\int_{t_i}^{t_{i+1}}x_sds=Bx+\varepsilon_I,
+\]</span></p>
+<p>であり、誤差の組は平均0の二変量正規分布になる。その分散・共分散を</p>
+<p><span class="math display">\[
+\begin{aligned}
+v_X&amp;=\frac{\sigma^2(1-b^2)}{2a},\\
+v_I&amp;=\frac{\sigma^2}{a^2}
+\left[h-\frac{2(1-b)}{a}+\frac{1-b^2}{2a}\right],\\
+c_{XI}&amp;=\frac{\sigma^2(1-b)^2}{2a^2}
+\end{aligned}
+\]</span></p>
+<p>と書く。積分を単に <span class="math inline">\(h r_{t_i}\)</span> とする近似を避けるため、<span class="math inline">\(X\)</span> の値に条件づけた <span class="math inline">\(I\)</span> の正規分布を用いる。<span class="math inline">\(v_X&gt;0\)</span> の場合、標準正規 <span class="math inline">\(Z\)</span> に対し</p>
+<p><span class="math display">\[
+\begin{aligned}
+H_i(x)=&amp;\exp\left[-\int_{t_i}^{t_{i+1}}\phi(s)ds
+-Bx+\tfrac12\left(v_I-\frac{c_{XI}^2}{v_X}\right)\right]\\
+&amp;\times\mathbb E_Z\left[
+e^{-(c_{XI}/\sqrt{v_X})Z}
+V_{i+1}(bx+\sqrt{v_X}Z)\right].
+\end{aligned}
+\]</span></p>
+<p>この1次元の期待値を正規分布用のGauss–Hermite求積で計算し、次時点の状態ごとの価格を線形補間する。状態の格子幅と両端、および求積点数による<strong>数値誤差</strong>が残る。<span class="math inline">\(\sigma=0\)</span> のときは決定論的な遷移に切り替える。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>compute_normal_quadrature_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">number_of_nodes =</span> <span class="dv">24</span>L) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(number_of_nodes <span class="sc">&gt;=</span> <span class="dv">2</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  number_of_nodes <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(number_of_nodes)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  off_diagonal <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">seq_len</span>(number_of_nodes <span class="sc">-</span> <span class="dv">1</span>L))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  jacobi <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, number_of_nodes, number_of_nodes)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  jacobi[<span class="fu">cbind</span>(</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">seq_len</span>(number_of_nodes <span class="sc">-</span> <span class="dv">1</span>L),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">seq_len</span>(number_of_nodes <span class="sc">-</span> <span class="dv">1</span>L) <span class="sc">+</span> <span class="dv">1</span>L</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  )] <span class="ot">&lt;-</span> off_diagonal</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  jacobi[<span class="fu">cbind</span>(</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">seq_len</span>(number_of_nodes <span class="sc">-</span> <span class="dv">1</span>L) <span class="sc">+</span> <span class="dv">1</span>L,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">seq_len</span>(number_of_nodes <span class="sc">-</span> <span class="dv">1</span>L)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  )] <span class="ot">&lt;-</span> off_diagonal</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  roots <span class="ot">&lt;-</span> <span class="fu">eigen</span>(jacobi, <span class="at">symmetric =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">nodes =</span> roots<span class="sc">$</span>values, <span class="at">weights =</span> roots<span class="sc">$</span>vectors[<span class="dv">1</span>, ]<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>compute_hw_shift_integral_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  start_time, end_time, flat_rate, mean_reversion, volatility</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> mean_reversion</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  h <span class="ot">&lt;-</span> end_time <span class="sc">-</span> start_time</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  flat_rate <span class="sc">*</span> h <span class="sc">+</span> volatility<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> a<span class="sc">^</span><span class="dv">2</span>) <span class="sc">*</span> (</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    h <span class="sc">-</span> <span class="dv">2</span> <span class="sc">*</span> (<span class="fu">exp</span>(<span class="sc">-</span>a <span class="sc">*</span> start_time) <span class="sc">-</span> <span class="fu">exp</span>(<span class="sc">-</span>a <span class="sc">*</span> end_time)) <span class="sc">/</span> a <span class="sc">+</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>      (<span class="fu">exp</span>(<span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> a <span class="sc">*</span> start_time) <span class="sc">-</span> <span class="fu">exp</span>(<span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> a <span class="sc">*</span> end_time)) <span class="sc">/</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        (<span class="dv">2</span> <span class="sc">*</span> a)</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>compute_discounted_step_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  next_values, state_grid, current_states,</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>  start_time, end_time, flat_rate,</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>  mean_reversion, volatility, quadrature</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> mean_reversion</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>  h <span class="ot">&lt;-</span> end_time <span class="sc">-</span> start_time</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">exp</span>(<span class="sc">-</span>a <span class="sc">*</span> h)</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  B <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fu">expm1</span>(<span class="sc">-</span>a <span class="sc">*</span> h) <span class="sc">/</span> a</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>  deterministic_integral <span class="ot">&lt;-</span> <span class="fu">compute_hw_shift_integral_LRL</span>(</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    start_time, end_time, flat_rate, a, volatility</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (volatility <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>      <span class="fu">exp</span>(<span class="sc">-</span>deterministic_integral <span class="sc">-</span> B <span class="sc">*</span> current_states) <span class="sc">*</span></span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        stats<span class="sc">::</span><span class="fu">approx</span>(</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>          state_grid, next_values, <span class="at">xout =</span> b <span class="sc">*</span> current_states,</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>          <span class="at">rule =</span> <span class="dv">2</span></span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>        )<span class="sc">$</span>y</span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  variance_next <span class="ot">&lt;-</span> volatility<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> (<span class="sc">-</span><span class="fu">expm1</span>(<span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> a <span class="sc">*</span> h)) <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> a)</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  variance_integral <span class="ot">&lt;-</span> volatility<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> a<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> (</span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>    h <span class="sc">-</span> <span class="dv">2</span> <span class="sc">*</span> B <span class="sc">+</span> (<span class="sc">-</span><span class="fu">expm1</span>(<span class="sc">-</span><span class="dv">2</span> <span class="sc">*</span> a <span class="sc">*</span> h)) <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> a)</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>  covariance <span class="ot">&lt;-</span> volatility<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> (<span class="sc">-</span><span class="fu">expm1</span>(<span class="sc">-</span>a <span class="sc">*</span> h))<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span></span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">2</span> <span class="sc">*</span> a<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>  residual_variance <span class="ot">&lt;-</span> <span class="fu">max</span>(</span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>    variance_integral <span class="sc">-</span> covariance<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> variance_next, <span class="dv">0</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>  standard_deviation_next <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(variance_next)</span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>  next_states <span class="ot">&lt;-</span> <span class="fu">outer</span>(</span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>    current_states, quadrature<span class="sc">$</span>nodes,</span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(state, shock) b <span class="sc">*</span> state <span class="sc">+</span> standard_deviation_next <span class="sc">*</span> shock</span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>  interpolated_values <span class="ot">&lt;-</span> <span class="fu">matrix</span>(</span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>    stats<span class="sc">::</span><span class="fu">approx</span>(</span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>      state_grid, next_values, <span class="at">xout =</span> <span class="fu">as.vector</span>(next_states),</span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>      <span class="at">rule =</span> <span class="dv">2</span></span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>y,</span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">nrow =</span> <span class="fu">length</span>(current_states)</span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>  conditional_weights <span class="ot">&lt;-</span> quadrature<span class="sc">$</span>weights <span class="sc">*</span> <span class="fu">exp</span>(</span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span>covariance <span class="sc">/</span> standard_deviation_next <span class="sc">*</span> quadrature<span class="sc">$</span>nodes</span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.vector</span>(</span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>    <span class="fu">exp</span>(<span class="sc">-</span>deterministic_integral <span class="sc">-</span> B <span class="sc">*</span> current_states <span class="sc">+</span></span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>      residual_variance <span class="sc">/</span> <span class="dv">2</span>) <span class="sc">*</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>      (interpolated_values <span class="sc">%*%</span> conditional_weights)</span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="ii-7.4.2-各行使日の後ろ向き計算" class="level3">
+<h3 class="anchored" data-anchor-id="ii-7.4.2-各行使日の後ろ向き計算">II-7.4.2 各行使日の後ろ向き計算</h3>
+<p>満期にクーポンと元本を置き、一つ前の支払日に条件付き割引期待値を求める。以後、コール可能日では <span class="math inline">\(\min\)</span> を取ってさかのぼる。比較のため、まったく同じ状態格子と割引演算子でBullet Bondも評価する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>compute_callable_bond_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  tbl_cashflows, flat_rate, mean_reversion, volatility,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">number_of_grid_points =</span> <span class="dv">321</span>L,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_limit =</span> <span class="fl">0.13</span>, <span class="at">quadrature_nodes =</span> <span class="dv">24</span>L</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">nrow</span>(tbl_cashflows) <span class="sc">&gt;=</span> <span class="dv">2</span>, mean_reversion <span class="sc">&gt;</span> <span class="dv">0</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    volatility <span class="sc">&gt;=</span> <span class="dv">0</span>, number_of_grid_points <span class="sc">&gt;=</span> <span class="dv">3</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    grid_limit <span class="sc">&gt;</span> <span class="dv">0</span>, quadrature_nodes <span class="sc">&gt;=</span> <span class="dv">2</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">all</span>(<span class="fu">diff</span>(tbl_cashflows<span class="sc">$</span>payment_time) <span class="sc">&gt;</span> <span class="dv">0</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">all</span>(tbl_cashflows<span class="sc">$</span>coupon <span class="sc">&gt;=</span> <span class="dv">0</span>),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">all</span>(tbl_cashflows<span class="sc">$</span>principal_at_maturity[</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>      <span class="sc">-</span><span class="fu">nrow</span>(tbl_cashflows)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    ] <span class="sc">==</span> <span class="dv">0</span>),</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">all</span>(<span class="sc">!</span><span class="fu">is.na</span>(tbl_cashflows<span class="sc">$</span>call_principal[</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>      tbl_cashflows<span class="sc">$</span>issuer_can_call</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    ]))</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="sc">-</span>grid_limit, grid_limit,</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">length.out =</span> number_of_grid_points</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  quadrature <span class="ot">&lt;-</span> <span class="fu">compute_normal_quadrature_LRL</span>(quadrature_nodes)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>  number_of_periods <span class="ot">&lt;-</span> <span class="fu">nrow</span>(tbl_cashflows)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>  maturity_value <span class="ot">&lt;-</span> <span class="fu">rep</span>(</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    tbl_cashflows<span class="sc">$</span>coupon[number_of_periods] <span class="sc">+</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>      tbl_cashflows<span class="sc">$</span>principal_at_maturity[number_of_periods],</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">length</span>(grid)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>  terminal <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">bullet =</span> maturity_value,</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">callable =</span> maturity_value,</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">decisions =</span> <span class="fu">list</span>()</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  history <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">accumulate</span>(</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rev</span>(<span class="fu">seq_len</span>(number_of_periods <span class="sc">-</span> <span class="dv">1</span>L)),</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">.init =</span> terminal,</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">.f =</span> <span class="cf">function</span>(next_state, payment_index) {</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      start_time <span class="ot">&lt;-</span> tbl_cashflows<span class="sc">$</span>payment_time[payment_index]</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>      end_time <span class="ot">&lt;-</span> tbl_cashflows<span class="sc">$</span>payment_time[payment_index <span class="sc">+</span> <span class="dv">1</span>L]</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>      price_step <span class="ot">&lt;-</span> <span class="cf">function</span>(next_values) {</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        <span class="fu">compute_discounted_step_LRL</span>(</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>          next_values, grid, grid,</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>          start_time, end_time, flat_rate,</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>          mean_reversion, volatility, quadrature</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>      bullet_continuation <span class="ot">&lt;-</span> <span class="fu">price_step</span>(next_state<span class="sc">$</span>bullet)</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>      callable_continuation <span class="ot">&lt;-</span> <span class="fu">price_step</span>(next_state<span class="sc">$</span>callable)</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>      can_call <span class="ot">&lt;-</span> tbl_cashflows<span class="sc">$</span>issuer_can_call[payment_index]</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>      call_amount <span class="ot">&lt;-</span> tbl_cashflows<span class="sc">$</span>call_principal[payment_index]</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>      exercise_now <span class="ot">&lt;-</span> <span class="cf">if</span> (can_call) {</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>        callable_continuation <span class="sc">&gt;</span> call_amount</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rep</span>(<span class="cn">FALSE</span>, <span class="fu">length</span>(grid))</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>      investor_value <span class="ot">&lt;-</span> <span class="cf">if</span> (can_call) {</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        <span class="fu">pmin</span>(call_amount, callable_continuation)</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        callable_continuation</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>      decision <span class="ot">&lt;-</span> <span class="cf">if</span> (can_call) {</span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>          <span class="at">payment_time =</span> start_time,</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>          <span class="at">state =</span> grid,</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>          <span class="at">short_rate =</span> flat_rate <span class="sc">+</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>            volatility<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> (<span class="dv">2</span> <span class="sc">*</span> mean_reversion<span class="sc">^</span><span class="dv">2</span>) <span class="sc">*</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>              (<span class="dv">1</span> <span class="sc">-</span> <span class="fu">exp</span>(<span class="sc">-</span>mean_reversion <span class="sc">*</span> start_time))<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> grid,</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>          <span class="at">continuation_ex_coupon =</span> callable_continuation,</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>          <span class="at">call_principal =</span> call_amount,</span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>          <span class="at">exercise_now =</span> exercise_now</span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>        ))</span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>      } <span class="cf">else</span> {</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>()</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>        <span class="at">bullet =</span> tbl_cashflows<span class="sc">$</span>coupon[payment_index] <span class="sc">+</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>          bullet_continuation,</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>        <span class="at">callable =</span> tbl_cashflows<span class="sc">$</span>coupon[payment_index] <span class="sc">+</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>          investor_value,</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>        <span class="at">decisions =</span> <span class="fu">c</span>(decision, next_state<span class="sc">$</span>decisions)</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>  first_period <span class="ot">&lt;-</span> history[[<span class="fu">length</span>(history)]]</span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>  price_at_zero <span class="ot">&lt;-</span> <span class="cf">function</span>(next_values) {</span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    <span class="fu">compute_discounted_step_LRL</span>(</span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>      next_values, grid, <span class="at">current_states =</span> <span class="dv">0</span>,</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>      <span class="at">start_time =</span> <span class="dv">0</span>,</span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>      <span class="at">end_time =</span> tbl_cashflows<span class="sc">$</span>payment_time[<span class="dv">1</span>],</span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>      <span class="at">flat_rate =</span> flat_rate,</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>      <span class="at">mean_reversion =</span> mean_reversion,</span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>      <span class="at">volatility =</span> volatility,</span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>      <span class="at">quadrature =</span> quadrature</span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>  bullet_price <span class="ot">&lt;-</span> <span class="fu">price_at_zero</span>(first_period<span class="sc">$</span>bullet)</span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>  callable_price <span class="ot">&lt;-</span> <span class="fu">price_at_zero</span>(first_period<span class="sc">$</span>callable)</span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>    <span class="at">bullet_price =</span> bullet_price,</span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>    <span class="at">callable_price =</span> callable_price,</span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>    <span class="at">issuer_call_value =</span> bullet_price <span class="sc">-</span> callable_price,</span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>    <span class="at">decisions =</span> dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(first_period<span class="sc">$</span>decisions),</span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>    <span class="at">grid =</span> grid</span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>model_result <span class="ot">&lt;-</span> <span class="fu">compute_callable_bond_LRL</span>(</span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>  tbl_cashflows, <span class="at">flat_rate =</span> flat_zero_rate,</span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean_reversion =</span> <span class="fl">0.15</span>, <span class="at">volatility =</span> <span class="fl">0.012</span></span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>tbl_price_comparison <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>  <span class="at">bullet_from_initial_curve =</span> bullet_curve_price,</span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>  <span class="at">bullet_from_model =</span> model_result<span class="sc">$</span>bullet_price,</span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>  <span class="at">callable_from_model =</span> model_result<span class="sc">$</span>callable_price,</span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>  <span class="at">issuer_call_value =</span> model_result<span class="sc">$</span>issuer_call_value,</span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a>  <span class="at">model_minus_initial_bullet =</span></span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>    model_result<span class="sc">$</span>bullet_price <span class="sc">-</span> bullet_curve_price</span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a><span class="fu">show_early_redemption_tbl_LRL</span>(</span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>  tbl_price_comparison, <span class="st">"Bullet、Callableとコール権の価値"</span></span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   bullet_from_initial_…¹ bullet_from_model callable_from_model issuer_call_value</span></span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                    &lt;dbl&gt;             &lt;dbl&gt;               &lt;dbl&gt;             &lt;dbl&gt;</span></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1                 104.69            104.69              100.45            4.2355</span></span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ abbreviated name: ¹​bullet_from_initial_curve</span></span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: model_minus_initial_bullet &lt;dbl&gt;</span></span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span>(model_result<span class="sc">$</span>bullet_price <span class="sc">-</span> bullet_curve_price) <span class="sc">&lt;</span> <span class="fl">0.02</span>,</span>
+<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a>  model_result<span class="sc">$</span>issuer_call_value <span class="sc">&gt;=</span> <span class="sc">-</span><span class="fl">1e-8</span></span>
+<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a>tbl_without_call <span class="ot">&lt;-</span> tbl_cashflows <span class="sc">|&gt;</span></span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a>    <span class="at">issuer_can_call =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>    <span class="at">call_principal =</span> <span class="cn">NA_real_</span></span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>model_without_call <span class="ot">&lt;-</span> <span class="fu">compute_callable_bond_LRL</span>(</span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>  tbl_without_call, <span class="at">flat_rate =</span> flat_zero_rate,</span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>  <span class="at">mean_reversion =</span> <span class="fl">0.15</span>, <span class="at">volatility =</span> <span class="fl">0.012</span></span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a>  <span class="fu">abs</span>(model_without_call<span class="sc">$</span>callable_price <span class="sc">-</span></span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>    model_without_call<span class="sc">$</span>bullet_price) <span class="sc">&lt;</span> <span class="fl">1e-8</span></span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>最後の行は、同じモデルと同じ契約条件でBullet価格が初期曲線へ近いこと、発行体の権利価値が負にならないことを検査する。価格の差が0でない場合は、状態格子、境界、補間、求積点数を見直す。<strong>格子上のコール可能な点の割合は、実際のコール確率ではない</strong>。</p>
+</section>
+<section id="ii-7.4.3-どの状態で発行体がコールするか" class="level3">
+<h3 class="anchored" data-anchor-id="ii-7.4.3-どの状態で発行体がコールするか">II-7.4.3 どの状態で発行体がコールするか</h3>
+<p>次の図は行使可能日のうち <span class="math inline">\(t=2.0\)</span> における、クーポン支払後の継続価値とコール価格を示す。短期金利の状態が低いほど、高いクーポンが続く債券を発行体が額面で償還する誘因が強い。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tbl_decision_at_year_2 <span class="ot">&lt;-</span> model_result<span class="sc">$</span>decisions <span class="sc">|&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(<span class="fu">abs</span>(payment_time <span class="sc">-</span> <span class="dv">2</span>) <span class="sc">&lt;</span> <span class="fl">1e-10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(dplyr<span class="sc">::</span><span class="fu">between</span>(short_rate, <span class="sc">-</span><span class="fl">0.02</span>, <span class="fl">0.08</span>))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  tbl_decision_at_year_2,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">x =</span> <span class="dv">100</span> <span class="sc">*</span> short_rate)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>(</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">y =</span> continuation_ex_coupon,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">colour =</span> <span class="st">"継続価値"</span>), <span class="at">linewidth =</span> <span class="fl">0.9</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>(</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="at">y =</span> call_principal,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">colour =</span> <span class="st">"コール価格"</span>), <span class="at">linewidth =</span> <span class="fl">0.8</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"2年目のコール判断（クーポン支払後）"</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"その時点の短期金利（%）"</span>, <span class="at">y =</span> <span class="st">"残存元本の価格"</span>,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="cn">NULL</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ch07_early_redemption_interest_rate_models_files/figure-html/callable-decision-plot-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="ii-7.5-金利変動とコール権の価値" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.5-金利変動とコール権の価値">II-7.5 金利変動とコール権の価値</h2>
+<p>第5章で市場から推定したボラティリティを受け取れば、同じ手順で債券価格を求められる。次は初期割引曲線と平均回帰速度を固定し、金利ボラティリティを変えた<strong>比較実験</strong>である。<span class="math inline">\(\sigma=0\)</span> は確率変動のない決定論的な基準になる。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tbl_volatility_sensitivity <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">short_rate_volatility =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.006</span>, <span class="fl">0.012</span>, <span class="fl">0.020</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">valuation =</span> purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>      short_rate_volatility,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>      <span class="sc">~</span><span class="fu">compute_callable_bond_LRL</span>(</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        tbl_cashflows, <span class="at">flat_rate =</span> flat_zero_rate,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">mean_reversion =</span> <span class="fl">0.15</span>, <span class="at">volatility =</span> .x</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">callable_price =</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      valuation, <span class="st">"callable_price"</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">issuer_call_value =</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      valuation, <span class="st">"issuer_call_value"</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">bullet_grid_error =</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>      valuation, <span class="st">"bullet_price"</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">-</span> bullet_curve_price</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>valuation)</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="fu">show_early_redemption_tbl_LRL</span>(</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  tbl_volatility_sensitivity,</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="st">"短期金利ボラティリティと発行体コール権"</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 4</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   short_rate_volatility callable_price issuer_call_value bullet_grid_error</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                   &lt;dbl&gt;          &lt;dbl&gt;             &lt;dbl&gt;             &lt;dbl&gt;</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1                 0            100.98             3.7116        5.6843e-14</span></span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2                 0.006        100.93             3.7521        2.3079e- 4</span></span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3                 0.012        100.45             4.2355        2.2624e- 4</span></span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4                 0.02          99.425            5.2622        2.0805e- 4</span></span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>ggplot2<span class="sc">::</span><span class="fu">ggplot</span>(</span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  tbl_volatility_sensitivity,</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">aes</span>(<span class="dv">10000</span> <span class="sc">*</span> short_rate_volatility,</span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>    issuer_call_value)</span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>) <span class="sc">+</span></span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#286DA8"</span>) <span class="sc">+</span></span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.4</span>, <span class="at">colour =</span> <span class="st">"#286DA8"</span>) <span class="sc">+</span></span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  ggplot2<span class="sc">::</span><span class="fu">labs</span>(</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"同じ初期曲線におけるコール権のモデル価値"</span>,</span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"短期金利ボラティリティのパラメータ（bp/√年）"</span>,</span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"額面100当たりの発行体コール権価値"</span></span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="ch07_early_redemption_interest_rate_models_files/figure-html/callable-volatility-sensitivity-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>ボラティリティが大きいほど、発行体に有利な低金利の状態を利用できるため、この例ではコール権の価値が増える。一般の実取引では、各シナリオでキャリブレーションや他の市場入力も変わることがあり、この表だけをリスク量とは呼ばない。価格感応度を比べるときは、カーブ、スプレッド、ボラティリティなどのどれを固定するか明確にする。</p>
+</section>
+<section id="ii-7.6-数値計算の確かめ方" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.6-数値計算の確かめ方">II-7.6 数値計算の確かめ方</h2>
+<p>本章の評価は価格関数を有限の状態格子に補間する。格子幅と求積点数を変えて結果が安定するか確かめる。次は同じ契約を二つの格子で評価した例であり、価格差を表示する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>tbl_grid_convergence <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">number_of_grid_points =</span> <span class="fu">c</span>(<span class="dv">161</span>L, <span class="dv">321</span>L, <span class="dv">641</span>L),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">quadrature_nodes =</span> <span class="fu">c</span>(<span class="dv">16</span>L, <span class="dv">24</span>L, <span class="dv">32</span>L)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">valuation =</span> purrr<span class="sc">::</span><span class="fu">map2</span>(</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>      number_of_grid_points, quadrature_nodes,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      <span class="sc">~</span><span class="fu">compute_callable_bond_LRL</span>(</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        tbl_cashflows, <span class="at">flat_rate =</span> flat_zero_rate,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">mean_reversion =</span> <span class="fl">0.15</span>, <span class="at">volatility =</span> <span class="fl">0.012</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">number_of_grid_points =</span> .x, <span class="at">quadrature_nodes =</span> .y</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">callable_price =</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>      valuation, <span class="st">"callable_price"</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">bullet_grid_error =</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>      valuation, <span class="st">"bullet_price"</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">-</span> bullet_curve_price</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>valuation) <span class="sc">|&gt;</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">change_from_previous =</span> callable_price <span class="sc">-</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">lag</span>(callable_price)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="fu">show_early_redemption_tbl_LRL</span>(</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  tbl_grid_convergence, <span class="st">"格子・求積点を増やしたときの価格"</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 5</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   number_of_grid_points quadrature_nodes callable_price bullet_grid_error</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                   &lt;int&gt;            &lt;int&gt;          &lt;dbl&gt;             &lt;dbl&gt;</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1                   161               16         100.45       0.00077934 </span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2                   321               24         100.45       0.00022624 </span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3                   641               32         100.45       0.000059765</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: change_from_previous &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>二つの数値設定を同時に変えているため、差が大きいときは状態格子と求積点数を<strong>それぞれ独立に</strong>増やして原因を調べる。初期Bullet価格との一致に加え、行使日をなくすとCallableがBulletに一致すること、行使日を追加した場合は投資家のCallable価格が上がらないことも、実装の検査になる。</p>
+</section>
+<section id="ii-7.7-bermudan-swaptionとの関係と拡張" class="level2">
+<h2 class="anchored" data-anchor-id="ii-7.7-bermudan-swaptionとの関係と拡張">II-7.7 Bermudan Swaptionとの関係と拡張</h2>
+<p>固定クーポン債を発行体が償還できる権利は、金利低下局面で価値が増える点で、固定を受け取るReceiver Swaptionと似る。複数行使日の権利はBermudan型である。ただし、Callable BondとBermudan Receiver Swaptionを<strong>同額の権利</strong>とみなすには、債券クーポンとスワップの固定・変動キャッシュフロー、元本、行使日、決済とコール価格の対応を厳密に合わせる必要がある。この章では価格を機械的に置き換えない。</p>
+<p>Hull–White 1因子では継続価値を一つの状態の関数として計算でき、Tree、有限差分、状態格子の積分などが候補になる。本章は状態格子と正規求積を用いた。一方、BGM/LMMやRFR向けFMMを使って多数のフォワード金利を動かす場合は、共通の測度のもとで経路を作り、行使日時点の情報に条件づけた継続価値を回帰などで推定する方法がある。<strong>将来の経路ごとに実現した利益を直接比べ、過去の行使を決める方法は使わない</strong>。</p>
+<p>実取引への拡張では、OIS割引と予測カーブの分離、発行体信用スプレッドの影響、約定上の通知日と利払い日のずれ、クリーン価格と経過利息の扱いを揃える。信用スプレッドを単一の確定値として上乗せしても、発行体の信用状況と行使判断の依存を十分に表現したことにはならない。</p>
+</section>
+<section id="参考資料" class="level2">
+<h2 class="anchored" data-anchor-id="参考資料">参考資料</h2>
+<ul>
+<li><a href="https://academic.oup.com/rfs/article-abstract/3/4/573/1585938">Hull and White, “Pricing Interest-Rate-Derivative Securities” (1990)</a>：初期金利期間構造への適合と1因子モデル。</li>
+<li><a href="https://www.finmath.net/finmath-lib/">finmath lib: Interest Rate Models</a>：短期金利モデル、金利期間構造モデルとBermudan商品。</li>
+<li><a href="https://www.finmath.net/topics/bermudanoptionmontecarlo/">finmath.net: Bermudan Option Valuation in a Monte-Carlo Simulation</a>：後ろ向きの行使判断と条件付き期待値の回帰。</li>
+</ul>
+<p>本章のRコードは、実日付の債券契約や信用・スプレッドを含まない教材用の評価器である。数値結果を市場の取引価格として使用する前に、商品条件、入力曲線、オプション市場への適合と数値収束を確認する。</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../part2_quantive_riemann/ch06_short_rate_and_forward_rate_models.html" class="pagination-link" aria-label="第II-6章 ショートレートモデルとフォワード金利モデル">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第II-6章 ショートレートモデルとフォワード金利モデル</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../part2_quantive_riemann/ch08_credit_risk_cds.html" class="pagination-link" aria-label="第II-8章 信用リスクとクレジットデリバティブ">
+        <span class="nav-page-text"><span class="chapter-title">第II-8章 信用リスクとクレジットデリバティブ</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
