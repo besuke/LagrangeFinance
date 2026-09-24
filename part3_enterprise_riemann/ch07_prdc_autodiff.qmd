@@ -53,7 +53,6 @@ $$
 
 ## III-7.1 金利為替系デリバティブと多因子市場モデル
 
-### III-7.1.1 市場リスクファクター
 PRDCは、為替と複数通貨の金利を同時に扱うハイブリッド商品である。
 
 単純なOptionでは、
@@ -111,7 +110,6 @@ Foreign Rateも、
 このような商品では、連鎖律をプログラム全体へ適用する
 Automatic Differentiationの考え方が特に重要になる。
 
-### III-7.1.2 為替連動クーポン
 
 PRDCには多様なCoupon構造、Callable条件、Notional Exchange、
 Target Redemption、Barrierなどが存在する。
@@ -183,7 +181,6 @@ $$
 
 という計算グラフを微分可能な演算として構成することである。
 
-### III-7.1.3 為替のリスク中立過程
 
 JPYをDomestic Currency、
 Foreign Currencyを外貨とする。
@@ -316,12 +313,11 @@ JPY Curve ------------> Discount Factors
 
 となる。
 
-### III-7.2.1 計算条件
 
 本章では5年間、年1回Couponを支払う簡略PRDCを考える。
 
 ```{r}
-#| label: prdc-autodiff-01
+#| label: prdc-market-input
 tbl_prdc_input <- tribble(
   ~parameter, ~value,
   "notional",      100000000,
@@ -340,7 +336,7 @@ tbl_prdc_input
 JPY CurveとForeign Curveを設定する。
 
 ```{r}
-#| label: prdc-autodiff-02
+#| label: prdc-jpy-foreign-curves
 tbl_prdc_curve <- tribble(
   ~year, ~jpy_rate, ~foreign_rate,
   1, 0.0100, 0.0400,
@@ -353,12 +349,11 @@ tbl_prdc_curve <- tribble(
 tbl_prdc_curve
 ```
 
-### III-7.2.2 深層学習ライブラリによる為替パス生成
 
 Monte Carloで使用する乱数を固定する。
 
 ```{r}
-#| label: prdc-autodiff-03
+#| label: prdc-mc-common-random-numbers
 torch_manual_seed(1234)
 
 n_paths <- 20000
@@ -379,7 +374,7 @@ z <- torch_randn(
 `requires_grad = TRUE`を指定する。
 
 ```{r}
-#| label: prdc-autodiff-04
+#| label: prdc-market-risk-tensors
 fx_spot_t <- torch_tensor(
   150.00,
   requires_grad = TRUE
@@ -404,7 +399,7 @@ fx_vol_t <- torch_tensor(
 その他の契約条件をTensorとして準備する。
 
 ```{r}
-#| label: prdc-autodiff-05
+#| label: prdc-contract-tensors
 notional_t <- torch_tensor(
   100000000
 )
@@ -430,13 +425,12 @@ dt_t <- torch_ones(
 )
 ```
 
-### III-7.2.3 微分可能なプライシング
 
 PRDCのMonte Carlo Pricingを、
 Tensor演算だけで構成する。
 
 ```{r}
-#| label: prdc-autodiff-06
+#| label: prdc-mc-pricing-function
 prdc_price_torch <- function(
     fx_spot,
     jpy_curve,
@@ -526,12 +520,11 @@ prdc_price_torch <- function(
 したがって、最終的な`prdc_npv`から、
 入力された市場リスクファクターまで計算グラフが維持される。
 
-### III-7.2.4 モンテカルロによる現在価値
 
 価格を計算する。
 
 ```{r}
-#| label: prdc-autodiff-07
+#| label: prdc-mc-present-value
 prdc_npv <- prdc_price_torch(
   fx_spot = fx_spot_t,
   jpy_curve = jpy_curve_t,
@@ -570,7 +563,7 @@ $$
 Forward計算で得られたScalar NPVを出発点として、複数の市場入力へGradientを逆伝播させる。PRDCのように「多数入力・少数出力」となるPricingでは、Reverse Modeの利点が最も現れやすい。
 
 ```{r}
-#| label: prdc-autodiff-08
+#| label: prdc-autodiff-risk-gradient
 prdc_grad <- autograd_grad(
   outputs = prdc_npv,
   inputs = list(
@@ -615,7 +608,6 @@ $$
 
 である。
 
-### III-7.3.1 FXデルタ
 
 FX Deltaは、
 
@@ -630,7 +622,7 @@ $$
 である。
 
 ```{r}
-#| label: prdc-autodiff-09
+#| label: prdc-fx-delta
 fx_delta <- fx_delta_t$item()
 
 fx_delta
@@ -643,7 +635,6 @@ FX Deltaの符号や大きさは大きく変化する。
 実際のPRDCではCurrency Pairの定義やCoupon Formulaによって
 感応度の符号は異なる。
 
-### III-7.3.2 円金利リスク
 
 JPY Curveの各Nodeに対する感応度は、
 
@@ -671,7 +662,7 @@ $$
 となる。
 
 ```{r}
-#| label: prdc-autodiff-10
+#| label: prdc-jpy-curve-dv01
 tbl_jpy_risk <- tibble(
   year = tbl_prdc_curve$year,
   rate = tbl_prdc_curve$jpy_rate,
@@ -709,7 +700,6 @@ $$
 
 が連鎖律を通じて含まれる。
 
-### III-7.3.3 外貨金利リスク
 
 Foreign Curveについても同様に、
 
@@ -726,7 +716,7 @@ $$
 である。
 
 ```{r}
-#| label: prdc-autodiff-11
+#| label: prdc-foreign-curve-dv01
 tbl_foreign_risk <- tibble(
   year = tbl_prdc_curve$year,
   rate = tbl_prdc_curve$foreign_rate,
@@ -766,7 +756,6 @@ $$
 
 という経路が存在する。
 
-### III-7.3.4 FXベガ
 
 FX Volatilityに対する感応度は、
 
@@ -782,7 +771,7 @@ $$
 である。
 
 ```{r}
-#| label: prdc-autodiff-12
+#| label: prdc-fx-vega
 fx_vega <- fx_vega_t$item()
 
 fx_vega
@@ -802,7 +791,7 @@ $$
 を定義することもできる。
 
 ```{r}
-#| label: prdc-autodiff-13
+#| label: prdc-fx-vega01
 fx_vega_01 <- fx_vega * 0.01
 
 fx_vega_01
@@ -817,12 +806,11 @@ FloorやCapへ到達するPathの割合も変化する。
 自動微分では、このPath生成からPayoffまでの連鎖を
 同じ計算グラフの中で扱う。
 
-### III-7.3.5 リスク集計
 
 主要なScalar Riskをまとめる。
 
 ```{r}
-#| label: prdc-autodiff-14
+#| label: prdc-risk-summary
 tbl_prdc_risk_summary <- tribble(
   ~metric, ~value,
   "NPV", prdc_npv$item(),
@@ -843,7 +831,7 @@ tbl_prdc_risk_summary
 さらにCurve RiskはVectorとして保持する。
 
 ```{r}
-#| label: prdc-autodiff-15
+#| label: prdc-curve-risk-summary
 tbl_curve_risk <- bind_rows(
   tbl_jpy_risk |>
     mutate(
@@ -882,7 +870,6 @@ $$
 
 を取得したことになる。
 
-### III-7.3.6 有限差分法による検証
 
 自動微分の結果を確認するため、
 FX DeltaをFinite Differenceで検算する。
@@ -895,7 +882,7 @@ Monte Carloで有限差分を比較する場合には、
 FX SpotだけをBumpする。
 
 ```{r}
-#| label: prdc-autodiff-16
+#| label: prdc-finite-difference-fx-delta
 fx_bump <- 0.01
 
 fx_up <- torch_tensor(
@@ -1011,7 +998,6 @@ Exercise Decisionなど不連続性の強い商品では、
 「あらゆる金融商品をそのまま微分すればよい」
 という意味ではないことを示している。
 
-### III-7.4.2 微分不可なペイオフの感応度
 
 PRDCのような商品では、
 
@@ -1098,7 +1084,6 @@ GPUによるHardware Accelerationと、
 Automatic DifferentiationによるAlgorithmic Accelerationが
 同じTensor計算基盤の上で共存できることである。
 
-### III-7.5.2 自動微分による多因子感応度の一括計算
 
 PRDCのPricing Graphをもう一度整理する。
 
@@ -1141,7 +1126,6 @@ $$
 このForwardとReverseの組み合わせが、
 PRDCをDifferentiable Pricing Modelとして扱うという意味である。
 
-### III-7.5.3 エンタープライズ・リスク計算への展開
 
 第III部で扱った商品を並べると、
 自動微分の役割が明確になる。

@@ -129,7 +129,6 @@ $$
 
 である。Hardwareを増やすだけでは、Bump & RevalueというAlgorithmそのものが要求する再計算回数は減らない。
 
-
 Automatic Differentiation自体は新しい数学ではない。しかし近年、TensorFlow、Keras、PyTorch、Rの`torch`など、Deep Learningの発展によって成熟したTensor計算Libraryが、安価で安定したAutomatic Differentiation環境を提供するようになった。
 
 これらのLibraryでは、PricingをTensor演算として記述すると、その計算過程がComputational Graphとして保持される。最終的な価格からReverse ModeでGraphを逆向きにたどることで、多数の入力Risk Factorに対するGradientを効率的に取得できる。
@@ -167,7 +166,6 @@ $$
 $$
 
 へ進む。
-
 
 第III部では、この二つの方向をRで実装する。
 
@@ -219,12 +217,10 @@ Trade / Market / Scenario Data
            Result
 ```
 
-### III-1.4.1 現在価値計算のタスク化
-
 まず、単純な現在価値計算をTaskとして定義する。
 
 ```{r}
-#| label: define-present-value-function
+#| label: parallel-present-value-function
 
 calculate_present_value_LFL <- function(cashflow, discount_rate, maturity) {
   tibble(
@@ -239,7 +235,7 @@ calculate_present_value_LFL <- function(cashflow, discount_rate, maturity) {
 計算対象をtibbleとして用意する。
 
 ```{r}
-#| label: create-parallel-calculation-data
+#| label: parallel-scenario-data
 
 tbl_calculation <- tribble(
   ~scenario_ID, ~cashflow, ~discount_rate, ~maturity,
@@ -254,12 +250,10 @@ tbl_calculation <- tribble(
 show_table_LFL(tbl_calculation)
 ```
 
-### III-1.4.2 逐次計算
-
 最初に`purrr::pmap()`で逐次実行する。
 
 ```{r}
-#| label: calculate-sequential-with-pmap
+#| label: sequential-present-value
 
 tbl_sequential_result <- tbl_calculation |>
   mutate(
@@ -274,13 +268,11 @@ tbl_sequential_result <- tbl_calculation |>
 show_table_LFL(tbl_sequential_result)
 ```
 
-### III-1.4.3 マルチコアによる並列計算
-
 次に`future::multisession`を利用してWorkerを起動する。
 利用可能なCoreをすべて占有せず、この例では最大2 Workerに制限する。
 
 ```{r}
-#| label: define-future-plan
+#| label: multisession-worker-plan
 
 available_cores <- future::availableCores()
 workers <- max(1L, min(2L, available_cores - 1L))
@@ -301,7 +293,7 @@ show_table_LFL(tbl_future_setting)
 計算ロジックを変えず、`purrr::pmap()`を`furrr::future_pmap()`へ置き換える。
 
 ```{r}
-#| label: calculate-parallel-with-future-pmap
+#| label: parallel-present-value
 #| warning: false
 
 tbl_parallel_result <- tbl_calculation |>
@@ -321,7 +313,7 @@ show_table_LFL(tbl_parallel_result)
 逐次計算と並列計算が同じ結果を返すことを確認する。
 
 ```{r}
-#| label: compare-sequential-parallel-results
+#| label: sequential-parallel-comparison
 
 tbl_result_comparison <- tbl_sequential_result |>
   select(
@@ -344,7 +336,7 @@ show_table_LFL(tbl_result_comparison)
 ```
 
 ```{r}
-#| label: validate-parallel-results
+#| label: parallel-result-validation
 
 stopifnot(
   isTRUE(
@@ -360,7 +352,7 @@ stopifnot(
 計算終了後はPlanを逐次処理へ戻す。
 
 ```{r}
-#| label: restore-sequential-plan
+#| label: sequential-plan-restore
 
 future::plan(future::sequential)
 ```
@@ -372,7 +364,7 @@ future::plan(future::sequential)
 そこで、一定時間を要する独立Taskを使って逐次処理と並列処理を比較する。
 
 ```{r}
-#| label: define-parallel-benchmark-function
+#| label: parallel-benchmark-task
 
 calculate_task_LFL <- function(task_ID) {
   Sys.sleep(0.10)
@@ -387,7 +379,7 @@ vec_task_ID <- seq_len(12L)
 ```
 
 ```{r}
-#| label: benchmark-sequential-processing
+#| label: sequential-benchmark
 
 sequential_time <- system.time(
   tbl_sequential_benchmark <- purrr::map(
@@ -398,7 +390,7 @@ sequential_time <- system.time(
 ```
 
 ```{r}
-#| label: benchmark-parallel-processing
+#| label: parallel-benchmark
 #| warning: false
 
 future::plan(
@@ -418,7 +410,7 @@ future::plan(future::sequential)
 ```
 
 ```{r}
-#| label: summarize-parallel-benchmark
+#| label: parallel-benchmark-summary
 
 tbl_benchmark <- tribble(
   ~method, ~elapsed_seconds,

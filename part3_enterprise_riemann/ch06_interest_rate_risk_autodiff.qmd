@@ -131,7 +131,6 @@ $$
 これは、金利リスクが単なるDiscounting Riskではなく、
 Projected Cash Flowの変化も含むことを意味する。
 
-### III-6.1.1 固定レグ
 
 元本$N$、固定金利$K$、Accrual Factor $\alpha_i$とすると、
 固定レッグのキャッシュフローは、
@@ -172,7 +171,6 @@ $$
 金利が上昇すると割引係数が低下するため、
 Fixed Legの現在価値は低下する。
 
-### III-6.1.2 変動レグ
 
 本章では、自動微分の仕組みを明確にするため、
 Floating Couponを単純化して、
@@ -238,7 +236,6 @@ $$
 
 の両方が金利感応度に含まれる。
 
-### III-6.1.3 スワップの現在価値
 
 Receive Float / Pay Fixed Swapを考える。
 
@@ -301,12 +298,11 @@ $$
 
 をsigned DV01として扱う。
 
-### III-6.2.1 深層学習ライブラリによるスワップ評価
 
 まず計算条件を設定する。
 
 ```{r}
-#| label: interest-rate-risk-01
+#| label: swap-market-input
 tbl_swap_input <- tribble(
   ~parameter, ~value,
   "notional",   100000000,
@@ -321,7 +317,7 @@ tbl_swap_input
 半年ごとの支払いを想定する。
 
 ```{r}
-#| label: interest-rate-risk-02
+#| label: swap-payment-schedule
 notional <- 100000000
 fixed_rate <- 0.0200
 rate_value <- 0.0250
@@ -341,7 +337,7 @@ accrual <- rep(
 `torch` Tensorへ変換する。
 
 ```{r}
-#| label: interest-rate-risk-03
+#| label: swap-risk-tensors
 rate <- torch_tensor(
   rate_value,
   requires_grad = TRUE
@@ -367,7 +363,7 @@ fixed_rate_t <- torch_tensor(
 割引係数を計算する。
 
 ```{r}
-#| label: interest-rate-risk-04
+#| label: swap-discount-factors
 df <- torch_exp(
   -rate * time_t
 )
@@ -376,7 +372,7 @@ df <- torch_exp(
 Fixed Legを計算する。
 
 ```{r}
-#| label: interest-rate-risk-05
+#| label: swap-fixed-leg-present-value
 fixed_cf <- notional_t *
   fixed_rate_t *
   accrual_t
@@ -391,7 +387,7 @@ pv_fixed
 Floating Legを計算する。
 
 ```{r}
-#| label: interest-rate-risk-06
+#| label: swap-floating-leg-present-value
 float_cf <- notional_t *
   (
     torch_exp(
@@ -410,7 +406,7 @@ pv_float
 Receive Float / Pay FixedのSwap NPVは、
 
 ```{r}
-#| label: interest-rate-risk-07
+#| label: swap-present-value
 swap_npv <- pv_float - pv_fixed
 
 swap_npv
@@ -418,12 +414,11 @@ swap_npv
 
 となる。
 
-### III-6.2.2 自動微分による金利感応度
 
 価格に対して`backward()`を実行する。
 
 ```{r}
-#| label: interest-rate-risk-08
+#| label: swap-autodiff-rate-gradient
 swap_npv$backward()
 
 rate$grad
@@ -440,7 +435,7 @@ $$
 1bpへ換算する。
 
 ```{r}
-#| label: interest-rate-risk-09
+#| label: swap-autodiff-dv01-summary
 tbl_swap_result <- tribble(
   ~metric, ~value,
   "npv",   swap_npv$item(),
@@ -473,12 +468,11 @@ rate
 
 というComputational Graphを逆向きにたどることである。
 
-### III-6.2.3 有限差分法による検証
 
 同じSwap価格を通常のR関数として定義する。
 
 ```{r}
-#| label: interest-rate-risk-10
+#| label: swap-flat-rate-pricing-function
 swap_value_flat <- function(
     rate,
     notional,
@@ -514,7 +508,7 @@ swap_value_flat <- function(
 1bp BumpによるForward Differenceを計算する。
 
 ```{r}
-#| label: interest-rate-risk-11
+#| label: swap-finite-difference-up-bump
 bump <- 1e-4
 
 base_npv <- swap_value_flat(
@@ -541,7 +535,7 @@ fd_dv01
 Central Differenceによる一次微分も確認する。
 
 ```{r}
-#| label: interest-rate-risk-12
+#| label: swap-finite-difference-down-bump
 down_npv <- swap_value_flat(
   rate = rate_value - bump,
   notional = notional,
@@ -632,12 +626,11 @@ $$
 
 これがBucketed DV01やPoint Sensitivityの基本になる。
 
-### III-6.3.1 イールドカーブのテンソル化
 
 単純化したZero Curveを考える。
 
 ```{r}
-#| label: interest-rate-risk-13
+#| label: yield-curve-node-data
 tbl_curve <- tribble(
   ~tenor, ~rate,
   0.5, 0.0180,
@@ -653,7 +646,7 @@ tbl_curve
 Curve Rate全体を一つのTensorとして定義する。
 
 ```{r}
-#| label: interest-rate-risk-14
+#| label: yield-curve-risk-tensors
 curve_rate <- torch_tensor(
   tbl_curve$rate,
   requires_grad = TRUE
@@ -667,7 +660,7 @@ curve_time <- torch_tensor(
 簡単なZero Coupon Cash Flowを考える。
 
 ```{r}
-#| label: interest-rate-risk-15
+#| label: yield-curve-cash-flows
 cash_flow <- torch_tensor(
   c(
     500000,
@@ -682,7 +675,7 @@ cash_flow <- torch_tensor(
 各Node Rateをその満期のZero Rateとして使用する。
 
 ```{r}
-#| label: interest-rate-risk-16
+#| label: yield-curve-present-value
 curve_df <- torch_exp(
   -curve_rate * curve_time
 )
@@ -697,7 +690,7 @@ curve_pv
 自動微分を実行する。
 
 ```{r}
-#| label: interest-rate-risk-17
+#| label: yield-curve-autodiff-gradient
 curve_pv$backward()
 
 curve_rate$grad
@@ -720,7 +713,7 @@ $$
 1bp換算する。
 
 ```{r}
-#| label: interest-rate-risk-18
+#| label: yield-curve-bucketed-dv01
 tbl_bucketed_dv01 <- tibble(
   tenor = tbl_curve$tenor,
   rate = tbl_curve$rate,
@@ -778,7 +771,7 @@ $$
 は、数学的にはそのままCurve Gradientである。
 
 ```{r}
-#| label: interest-rate-risk-19
+#| label: yield-curve-gps
 tbl_gps <- tbl_bucketed_dv01 |>
   transmute(
     tenor,
@@ -812,13 +805,12 @@ $$
 
 へ拡張できる。
 
-### III-6.4.1 Total 金利感応度とBucketed Risk
 
 単純化された設定では、Bucketed DV01を合計することで、
 Curve全体を同時に1bp動かしたときの感応度に対応する量を得ることができる。
 
 ```{r}
-#| label: interest-rate-risk-20
+#| label: yield-curve-total-dv01
 tbl_total_bucketed_dv01 <- tbl_bucketed_dv01 |>
   summarise(
     total_dv01 = sum(
@@ -844,7 +836,6 @@ $$
 重要なのは、各リスクファクターに対する局所感応度を
 Gradientとして保持することである。
 
-### III-6.4.2 Market QuoteからCurve Riskへ
 
 実務の金利リスクでは、直接Zero RateをBumpするだけでは不十分である。
 
@@ -933,7 +924,6 @@ $$
 この式は、金利リスク計測とAutomatic Differentiationをつなぐ
 重要な関係である。
 
-### III-6.4.3 Multi-Curveへの拡張
 
 実際のSwapでは、Discount CurveとForward Curveを分離する
 Multi-Curve Frameworkが一般的である。
@@ -991,7 +981,6 @@ $$
 
 という複数のリスクファクターを同時に扱うためである。
 
-### III-6.4.4 自動微分による金利リスク計測の意味
 
 有限差分によるBucketed Riskでは、
 Curve Nodeの数だけBump & Revalueを繰り返す必要がある。
@@ -1055,7 +1044,6 @@ $$
 
 への変換である。
 
-### III-6.4.5 まとめ
 
 本章では、Option Greeksで確認した自動微分を
 金利商品へ拡張した。

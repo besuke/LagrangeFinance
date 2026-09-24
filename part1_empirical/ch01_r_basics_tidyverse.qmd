@@ -24,9 +24,7 @@ Base Rの項目構成は、Positが公開している[Base R Cheatsheet](https:/
 
 ## I-1.1 Rの基礎
 
-### I-1.1.1 Rの基本操作
 
-#### オブジェクトと代入
 
 Rでは、計算結果やデータをオブジェクトとして保存する。代入には`<-`を用いる。
 
@@ -43,7 +41,6 @@ present_value
 
 オブジェクト名には、内容が分かる英単語を用いる。本書では複数の単語をアンダースコアで結ぶsnake_caseを基本とする。
 
-#### 四則演算と代表的な数学関数
 
 ```{r}
 #| label: arithmetic-functions
@@ -61,7 +58,6 @@ round(pi, digits = 3)
 signif(pi, digits = 4)
 ```
 
-#### オブジェクトの型と構造
 
 ```{r}
 #| label: object-types
@@ -80,7 +76,6 @@ typeof(numeric_value)
 str(numeric_value)
 ```
 
-#### 欠損値
 
 欠損値は`NA`で表す。欠損値の有無は`is.na()`で確認する。
 
@@ -95,9 +90,7 @@ sum(is.na(returns_with_na))
 mean(returns_with_na, na.rm = TRUE)
 ```
 
-### I-1.1.2 ベクトル
 
-#### ベクトルの作成
 
 ```{r}
 #| label: vector-creation
@@ -113,7 +106,6 @@ fine_grid
 repeated_values
 ```
 
-#### ベクトルの要素
 
 Rの添字は1から始まる。
 
@@ -127,7 +119,6 @@ interest_rates[-1]
 interest_rates[interest_rates >= 0.015]
 ```
 
-#### 名前付きベクトル
 
 ```{r}
 #| label: named-vector
@@ -139,7 +130,6 @@ portfolio_weights["bond"]
 sum(portfolio_weights)
 ```
 
-#### ベクトル化
 
 Rでは、多くの計算をベクトル全体に一度に適用できる。
 
@@ -154,9 +144,7 @@ present_values <- cash_flow / (1 + discount_rates)
 tibble(discount_rates, present_values)
 ```
 
-### I-1.1.3 行列、リスト、データフレーム
 
-#### 行列
 
 ```{r}
 #| label: matrix-basics
@@ -176,7 +164,6 @@ return_matrix[, "stock_a"]
 colMeans(return_matrix)
 ```
 
-#### リスト
 
 リストには、型や長さの異なるオブジェクトをまとめて保存できる。
 
@@ -195,7 +182,6 @@ analysis_result$coefficients
 analysis_result[["observations"]]
 ```
 
-#### データフレーム
 
 ```{r}
 #| label: data-frame-basics
@@ -239,9 +225,7 @@ project_data <- tribble(
 project_data
 ```
 
-### I-1.1.4 条件判定と独自関数
 
-#### 条件判定
 
 ```{r}
 #| label: conditional-logic
@@ -274,7 +258,6 @@ credit_scores |>
   )
 ```
 
-#### 独自関数
 
 ```{r}
 #| label: custom-function
@@ -298,9 +281,7 @@ calculate_present_value(
 )
 ```
 
-### I-1.1.5 記述統計
 
-#### 代表値と散らばり
 
 ```{r}
 #| label: descriptive-statistics
@@ -317,7 +298,6 @@ sd(sample_returns)
 quantile(sample_returns)
 ```
 
-#### 共分散と相関
 
 ```{r}
 #| label: covariance-correlation
@@ -329,7 +309,6 @@ cov(stock_a, stock_b)
 cor(stock_a, stock_b)
 ```
 
-#### 順位
 
 ```{r}
 #| label: ranking
@@ -341,7 +320,6 @@ rank(-firm_returns)
 order(firm_returns, decreasing = TRUE)
 ```
 
-### I-1.1.6 確率分布
 
 Rの確率分布関数には共通した命名規則がある。
 
@@ -352,7 +330,6 @@ Rの確率分布関数には共通した命名規則がある。
 | `p` | 累積確率を求める |
 | `q` | 累積確率に対応する分位点を求める |
 
-#### 一様分布
 
 ```{r}
 #| label: uniform-distribution
@@ -367,7 +344,6 @@ punif(0.5, min = 0, max = 1)
 qunif(0.95, min = 0, max = 1)
 ```
 
-#### 正規分布
 
 ```{r}
 #| label: normal-distribution
@@ -394,7 +370,6 @@ probability_below
 value_at_risk_95
 ```
 
-#### 二項分布
 
 ```{r}
 #| label: binomial-distribution
@@ -409,7 +384,6 @@ pbinom(12, size = 20, prob = 0.6)
 qbinom(0.95, size = 20, prob = 0.6)
 ```
 
-#### ポアソン分布
 
 ```{r}
 #| label: poisson-distribution
@@ -424,7 +398,6 @@ ppois(2, lambda = 3)
 qpois(0.95, lambda = 3)
 ```
 
-#### 分布関数の比較
 
 ```{r}
 #| label: distribution-function-table
@@ -443,7 +416,6 @@ distribution_functions
 
 ## I-1.2 tidyverseによるデータ整形
 
-### I-1.2.1 プロジェクト内のデータを読み込む
 
 本書で使用するデータは、プロジェクトルートの`data`ディレクトリに置き、外部入力に近いデータを`raw`、分析によって作成したデータを`derived`に分ける。プロジェクトルートの探索やファイル検索は`R/utility_LFL.R`へ集約し、各章では分析対象となる相対パスだけを指定する。
 
@@ -465,7 +437,6 @@ if (length(vec_missing_columns) > 0) {
 show_table_LFL(tbl_daily_stock_return)
 ```
 
-#### データの構造を確認する
 
 ```{r}
 #| label: inspect-daily-stock-return
@@ -477,9 +448,7 @@ ncol(tbl_daily_stock_return)
 names(tbl_daily_stock_return)
 ```
 
-### I-1.2.2 dplyrによるデータ操作
 
-#### 列を選ぶ
 
 ```{r}
 #| label: dplyr-select
@@ -488,7 +457,6 @@ tbl_daily_stock_return |>
   select(date, firm1)
 ```
 
-#### 行を抽出する
 
 ```{r}
 #| label: dplyr-filter
@@ -506,7 +474,6 @@ tbl_daily_stock_return |>
   filter(firm1 > 0, firm2 > 0)
 ```
 
-#### 列を追加する
 
 ```{r}
 #| label: dplyr-mutate
@@ -526,7 +493,6 @@ return_data <- tbl_daily_stock_return |>
 return_data
 ```
 
-#### 並べ替える
 
 ```{r}
 #| label: dplyr-arrange
@@ -538,7 +504,6 @@ return_data |>
   arrange(desc(firm1))
 ```
 
-#### 要約する
 
 ```{r}
 #| label: dplyr-summarise
@@ -554,7 +519,6 @@ return_data |>
   )
 ```
 
-#### グループごとに集計する
 
 ```{r}
 #| label: dplyr-group-by
@@ -570,7 +534,6 @@ return_data |>
   arrange(desc(observations))
 ```
 
-#### 件数を数える
 
 ```{r}
 #| label: dplyr-count
@@ -579,7 +542,6 @@ return_data |>
   count(market_direction, sort = TRUE)
 ```
 
-#### データを結合する
 
 ```{r}
 #| label: dplyr-join
@@ -605,7 +567,6 @@ return_summary |>
   left_join(firm_master, by = "firm")
 ```
 
-### I-1.2.3 stringrによる文字列処理
 
 文字列処理では、関数名が`str_`で始まる`stringr`を使用する。
 
@@ -632,7 +593,6 @@ company_names <- company_names |>
 company_names
 ```
 
-#### 置換と結合
 
 ```{r}
 #| label: stringr-replace-combine
@@ -645,9 +605,7 @@ company_names |>
   select(clean_name, short_name, display_name)
 ```
 
-### I-1.2.4 tidyrによるデータ整形
 
-#### wide形式からlong形式へ変換する
 
 元のデータでは、`firm1`と`firm2`が別々の列に格納されている。`pivot_longer()`を使うと、企業名とリターンをそれぞれ一つの列へまとめられる。
 
@@ -664,7 +622,6 @@ return_long <- tbl_daily_stock_return |>
 return_long
 ```
 
-#### long形式からwide形式へ戻す
 
 ```{r}
 #| label: pivot-wider
@@ -676,7 +633,6 @@ return_long |>
   )
 ```
 
-#### 文字列を複数列へ分ける
 
 ```{r}
 #| label: separate-wider-delim
@@ -693,7 +649,6 @@ security_codes |>
   )
 ```
 
-#### 欠損値を処理する
 
 ```{r}
 #| label: tidyr-missing-values
@@ -710,11 +665,9 @@ missing_data |>
   drop_na()
 ```
 
-### I-1.2.5 ggplot2による可視化
 
 `ggplot2`では、データを`ggplot()`へ渡し、`aes()`で変数と視覚要素の対応を指定し、`geom_*()`で図形を追加する。
 
-#### 折れ線グラフ
 
 ```{r}
 #| label: ggplot-line
@@ -731,7 +684,6 @@ missing_data |>
   )) |> add_lagrange_theme_LFL()
 ```
 
-#### ヒストグラム
 
 ```{r}
 #| label: ggplot-histogram
@@ -749,7 +701,6 @@ missing_data |>
   add_lagrange_theme_LFL()
 ```
 
-#### 密度関数
 
 ```{r}
 #| label: ggplot-density
@@ -767,7 +718,6 @@ missing_data |>
   add_lagrange_theme_LFL()
 ```
 
-#### 正規分布の密度と累積分布
 
 ```{r}
 #| label: ggplot-normal-functions
@@ -796,7 +746,6 @@ normal_curve <- tibble(
   add_lagrange_theme_LFL()
 ```
 
-#### シミュレーション結果を比較する
 
 ```{r}
 #| label: ggplot-simulated-distributions
@@ -823,9 +772,7 @@ add_lagrange_theme_LFL(p)
 
 ## I-1.3 関数型プログラミングと並列計算
 
-### I-1.3.1 purrrによる反復処理
 
-#### map()と型を指定するmap系関数
 
 `map()`は結果をリストとして返す。数値ベクトルが必要な場合は`map_dbl()`を用いる。
 
@@ -850,7 +797,6 @@ present_value_table <- tibble(
 present_value_table
 ```
 
-#### map2()で二つのベクトルを同時に処理する
 
 ```{r}
 #| label: purrr-map2
@@ -865,7 +811,6 @@ map2_dbl(
 )
 ```
 
-#### pmap()で複数の列を処理する
 
 ```{r}
 #| label: purrr-pmap
@@ -888,7 +833,6 @@ cash_flow_scenarios |>
   )
 ```
 
-#### 複数列へ同じ集計を適用する
 
 ```{r}
 #| label: purrr-column-summary
@@ -912,7 +856,6 @@ return_columns |>
   )
 ```
 
-#### 複数の確率分布を同じ形式で生成する
 
 ```{r}
 #| label: purrr-distribution-simulation
@@ -934,7 +877,6 @@ simulated_distributions <- distribution_specs |>
 simulated_distributions
 ```
 
-#### walk()で副作用だけを実行する
 
 `walk()`は、返り値を保存するのではなく、表示などの副作用もしくはファイル出力などに実行するときに使う。
 
@@ -946,7 +888,6 @@ c("firm1", "firm2") |>
 ```
 
 
-### I-1.3.2 nestによるグループ別データ管理
 
 `tidyr::nest()`は、グループごとのデータを一つのリスト列へ格納する。`group_by()`が主に集計単位を指定するのに対し、`nest()`は銘柄別、業種別、ポートフォリオ別などのデータそのものを保持する。これにより、各グループへ同じ回帰分析、リスク計算、バックテストを適用しやすくなる。
 
@@ -995,7 +936,6 @@ tbl_nested_summary <- tbl_nested |>
 tbl_nested_summary
 ```
 
-### I-1.3.3 futureとfurrrによる並列計算
 
 `purrr::map()`は要素を順番に処理する。互いに独立した計算が多数ある場合、`future`と`furrr`を使うと、`map()`に近い記法のまま複数のRセッションへ処理を分配できる。Windowsでは`plan(multisession)`を使用する。
 
@@ -1121,7 +1061,6 @@ p <- tbl_pi_benchmark |>
 
 金融データが大きくなると、すべての行と列をRのメモリへ読み込んでから処理する方法には限界がある。本節では、データベースを`dplyr`の文法で操作する`dbplyr`と、ParquetファイルやDatasetを効率よく扱うArrowを確認する。
 
-### I-1.4.1 dbplyrによるデータベース操作
 
 `dbplyr`は、`dplyr`の処理をSQLへ変換する。データベース上で`filter()`、`select()`、`mutate()`、`summarise()`などを実行し、必要な結果だけを`collect()`でRへ取り込める。
 
@@ -1131,7 +1070,6 @@ p <- tbl_pi_benchmark |>
 
 重要なのは、`collect()`を最後まで遅らせることである。先にデータベース側で行と列を絞り込めば、Rへ転送するデータ量を小さくできる。
 
-### I-1.4.2 ArrowによるParquetデータ処理
 
 Apache Arrowは、列指向データを効率よく扱うための仕組みである。Rでは、Parquetファイルの読書き、複数ファイルから成るDatasetの検索、PythonやC++など他言語との効率的なデータ交換に利用できる。
 
@@ -1177,7 +1115,6 @@ arrow::read_parquet(path_parquet) |>
   slice_head(n = 10)
 ```
 
-### I-1.4.3 Arrow Dataset
 
 複数のParquetファイルをまとめて扱う場合はDatasetを使用する。ここでは銘柄をパーティションとして保存する。
 
@@ -1215,7 +1152,6 @@ tbl_arrow_selected <- dataset_finance |>
 tbl_arrow_selected
 ```
 
-### I-1.4.4 Sparkとの関係
 
 ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Dataset、異なる言語間の高速なデータ交換を中心とし、1台のPCでも利用しやすい。Sparkは、複数のコンピュータから成るクラスタへデータと計算を分散するための処理基盤である。
 
@@ -1224,7 +1160,6 @@ ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Data
 
 最後に、`data/raw/market/daily_stock_returns.parquet`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
 
-### I-1.5.1 分析用データを作る
 
 ```{r}
 #| label: integrated-analysis-data
@@ -1248,7 +1183,6 @@ analysis_data <- tbl_daily_stock_return |>
 analysis_data
 ```
 
-### I-1.5.2 企業別の要約統計量を計算する
 
 ```{r}
 #| label: integrated-analysis-summary
@@ -1268,7 +1202,6 @@ firm_summary <- analysis_data |>
 firm_summary
 ```
 
-### I-1.5.3 累積リターンを計算する
 
 ```{r}
 #| label: integrated-analysis-cumulative
@@ -1284,7 +1217,6 @@ cumulative_return_data <- analysis_data |>
 cumulative_return_data
 ```
 
-### I-1.5.4 purrrで企業別の統計量を再計算する
 
 ```{r}
 #| label: integrated-analysis-purrr
@@ -1309,7 +1241,6 @@ firm_names |>
   )
 ```
 
-### I-1.5.5 累積リターンを可視化する
 
 ```{r}
 #| label: integrated-analysis-plot
@@ -1341,7 +1272,6 @@ p |> add_lagrange_theme_LFL()
 
 
 
-### I-1.6.1 金融データ分析パイプライン
 
 本章で扱った技術は、次の流れとしてつながる。
 

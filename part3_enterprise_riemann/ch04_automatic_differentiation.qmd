@@ -205,7 +205,6 @@ $$
 
 である。
 
-### III-4.3.1 連鎖律
 
 自動微分を理解するうえで最も重要な数学が連鎖律である。
 
@@ -284,7 +283,6 @@ $$
 この連鎖律をプログラムの計算過程全体に適用することが、
 Automatic Differentiationの基本的な考え方である。
 
-### III-4.3.2 コンピュテーション・グラフ
 
 プログラムによる計算を、変数と演算の関係として表したものを
 Computational Graphと呼ぶ。
@@ -340,9 +338,7 @@ $$
 この「計算を行った経路を逆向きにたどる」という考え方が、
 Reverse Modeの直感的な理解につながる。
 
-### III-4.3.3 自動微分の計算モード
 
-### III-4.3.1 フォワードモード
 Forward Modeでは、入力側から出力側へ向かって、
 値と同時に微分値を伝播させる。
 
@@ -386,7 +382,6 @@ $$
 
 Forward Modeは、入力変数が少なく出力変数が多い問題に適している。
 
-### III-4.3.2 リバースモード
 
 Reverse Modeでは、まず通常どおりForward計算を行い、
 最終出力を求める。
@@ -441,7 +436,6 @@ $$
 
 という構造を持つ金融計算では、Reverse Modeが特に重要となる。
 
-### III-4.3.4 自動微分と金融工学
 
 金融分野では、Reverse Mode Automatic Differentiationを
 Adjoint Algorithmic Differentiation（AAD）という名称で扱うことが多い。
@@ -487,7 +481,6 @@ dV/dx1 dV/dx2 ... dV/dxn
 
 ## III-4.4 深層学習ライブラリによる市場リスク感応度
 
-### III-4.4.1 一変数関数の自動微分
 ここから、Rの`torch`を使って実際に自動微分を確認する。
 
 次の関数を考える。
@@ -521,7 +514,7 @@ $$
 `torch`では、微分対象のTensorに`requires_grad = TRUE`を指定する。
 
 ```{r}
-#| label: autodiff-01
+#| label: autodiff-single-variable-graph
 x <- torch_tensor(
   2,
   requires_grad = TRUE
@@ -535,7 +528,7 @@ y
 `backward()`を実行すると、計算グラフを逆向きにたどって勾配が計算される。
 
 ```{r}
-#| label: autodiff-02
+#| label: autodiff-single-variable-gradient
 y$backward()
 
 x$grad
@@ -544,7 +537,7 @@ x$grad
 理論値は、
 
 ```{r}
-#| label: autodiff-03
+#| label: autodiff-analytic-gradient
 analytic_grad <- 2 * 2 + 3
 
 analytic_grad
@@ -565,7 +558,6 @@ $$
 実際に実行されたTensor演算からComputational Graphを構築し、
 そのグラフに対して連鎖律を逆方向に適用している。
 
-### III-4.4.2 多変数関数の偏微分
 
 次に、
 
@@ -604,7 +596,7 @@ $$
 となる。
 
 ```{r}
-#| label: autodiff-04
+#| label: autodiff-multivariable-gradient
 x <- torch_tensor(
   2,
   requires_grad = TRUE
@@ -653,7 +645,6 @@ $$
 
 を求める構造と同じである。
 
-### III-4.3.3 自動微分による市場リスク感応度
 
 ここまでの内容を金融工学へ置き換えると、
 

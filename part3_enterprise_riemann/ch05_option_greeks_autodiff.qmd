@@ -55,7 +55,7 @@ GaussQuantはQuantLibを利用した既存のPricing Engineとして使い、
 同じEuropean Call OptionをGaussQuantとMonte Carloで評価する。
 
 ```{r}
-#| label: option-input
+#| label: option-market-input
 
 valuation_date <- "2026-01-02"
 maturity_date <- "2027-01-02"
@@ -92,11 +92,10 @@ tbl_option_input
 
 ## III-5.2 ブラック・ショールズ式による解析解
 
-### III-5.2.1 GaussQuantによる解析評価
 GaussQuantでは、European OptionをQuantLibオブジェクトとして構築できる。
 
 ```{r}
-#| label: gaussquant-option
+#| label: option-gaussquant-pricing
 
 option_gql <- GaussQuant::make_european_option_GQL(
   spot = spot_value,
@@ -113,7 +112,7 @@ option_gql <- GaussQuant::make_european_option_GQL(
 価格とGreeksをまとめて取得する。
 
 ```{r}
-#| label: gaussquant-option-summary
+#| label: option-gaussquant-greeks
 
 tbl_gaussquant_greeks <- GaussQuant::option_summary_GQL(
   option_gql
@@ -194,14 +193,13 @@ $$
 
 となる。
 
-### III-5.3.1 共通乱数
 
 GaussQuantとの比較や感応度の検算では、Monte Carlo Noiseをできるだけ抑える必要がある。
 
 本章では乱数を一度だけ生成し、価格計算と感応度計算で同じ乱数を使用する。
 
 ```{r}
-#| label: monte-carlo-random-numbers
+#| label: option-mc-common-random-numbers
 
 torch_manual_seed(
   mc_seed
@@ -215,12 +213,11 @@ z_t <- torch_randn(
 乱数$Z$は市場リスクファクターではないため、
 `requires_grad = TRUE`は指定しない。
 
-### III-5.3.2 微分可能なプライシング
 
 Monte Carlo PricingをTensor演算だけで構成する。
 
 ```{r}
-#| label: monte-carlo-pricing-function
+#| label: option-mc-pricing-function
 
 european_call_mc_torch <- function(
     spot,
@@ -266,12 +263,11 @@ $$
 からTerminal Spot、Payoff、Discounting、Monte Carlo Averageまでが
 一つのComputational Graphとして接続される。
 
-### III-5.3.3 深層学習ライブラリによるテンソル計算
 
 微分対象となる市場変数をTensorとして定義する。
 
 ```{r}
-#| label: option-risk-tensors
+#| label: option-mc-risk-tensors
 
 spot_t <- torch_tensor(
   spot_value,
@@ -302,12 +298,11 @@ maturity_t <- torch_tensor(
 )
 ```
 
-### III-5.3.4 モンテカルロによる現在価値
 
 同じ乱数を用いてMonte Carlo価格を計算する。
 
 ```{r}
-#| label: monte-carlo-option-npv
+#| label: option-mc-present-value
 
 option_npv_mc_t <- european_call_mc_torch(
   spot = spot_t,
@@ -322,12 +317,11 @@ option_npv_mc_t <- european_call_mc_torch(
 option_npv_mc_t
 ```
 
-### III-5.3.5 自動微分による一次感応度
 
 Monte Carlo価格を最終出力としてReverse Mode Automatic Differentiationを行う。
 
 ```{r}
-#| label: monte-carlo-first-order-greeks
+#| label: option-mc-first-order-greeks
 
 first_grad <- autograd_grad(
   outputs = option_npv_mc_t,
@@ -394,7 +388,6 @@ Monte Carlo Gammaを単純な二階ADだけで安定して推定することは�
 Smooth Payoffを用いて二階自動微分を確認する。
 
 ## III-5.4 微分不可なオプションペイオフのケーススタディ
-### III-5.4.1 平滑化ペイオフ
 
 正の部分、
 
@@ -422,7 +415,7 @@ $$
 $\varepsilon$を小さくすれば通常のCall Payoffへ近づく。
 
 ```{r}
-#| label: smooth-payoff-function
+#| label: option-smooth-payoff-function
 
 smooth_positive_part_torch <- function(
     x,
@@ -441,7 +434,7 @@ smooth_positive_part_torch <- function(
 Smooth Payoffを使ったMonte Carlo Pricing Functionを定義する。
 
 ```{r}
-#| label: smooth-monte-carlo-pricing-function
+#| label: option-smooth-mc-pricing-function
 
 european_call_mc_smooth_torch <- function(
     spot,
@@ -483,7 +476,7 @@ european_call_mc_smooth_torch <- function(
 Gamma用に新しい計算グラフを構築する。
 
 ```{r}
-#| label: monte-carlo-gamma-graph
+#| label: option-gamma-computational-graph
 
 spot_gamma_t <- torch_tensor(
   spot_value,
@@ -515,7 +508,7 @@ option_npv_gamma_t <- european_call_mc_smooth_torch(
 まずDeltaを計算し、Gradient Graphを保持する。
 
 ```{r}
-#| label: monte-carlo-delta-for-gamma
+#| label: option-delta-for-gamma
 
 delta_gamma_t <- autograd_grad(
   outputs = option_npv_gamma_t,
@@ -528,11 +521,10 @@ delta_gamma_t <- autograd_grad(
 delta_gamma_t
 ```
 
-### III-5.4.2 自動微分によるガンマ
 さらにDeltaをSpotで微分する。
 
 ```{r}
-#| label: monte-carlo-gamma
+#| label: option-mc-gamma
 
 gamma_mc <- autograd_grad(
   outputs = delta_gamma_t,
@@ -558,12 +550,11 @@ $$
 
 ただし、このGammaはSmooth Payoffによる近似値である点に注意する。
 
-### III-5.4.3 解析解とモンテカルロ自動微分の比較
 
 Monte Carloの結果をまとめる。
 
 ```{r}
-#| label: monte-carlo-greeks-summary
+#| label: option-mc-greeks-summary
 
 tbl_mc_greeks <- tribble(
   ~metric, ~value,
@@ -580,7 +571,7 @@ tbl_mc_greeks
 GaussQuantと比較する。
 
 ```{r}
-#| label: gaussquant-monte-carlo-comparison
+#| label: option-gaussquant-mc-comparison
 
 tbl_option_greeks_comparison <- tbl_gaussquant_greeks |>
   rename(
@@ -626,14 +617,13 @@ NPV、Delta、Vega、Thetaは、Monte Carlo Path上の微分をそのまま利�
 GammaについてはCall PayoffのKinkがあるため、
 Smooth Payoffによる二階ADを使用している。
 
-### III-5.4.4 モンテカルロ標準誤差
 
 Monte Carlo価格には統計誤差が存在する。
 
 価格の差を解釈するため、標準誤差も確認する。
 
 ```{r}
-#| label: monte-carlo-standard-error
+#| label: option-mc-standard-error
 
 with_no_grad({
   terminal_spot_se_t <- torch_tensor(
@@ -689,7 +679,6 @@ tbl_mc_error
 GaussQuantとMonte Carlo価格の差がMonte Carlo Standard Errorと同程度であれば、
 差の多くはSimulation Noiseとして説明できる。
 
-### III-5.4.5 自動微分の意味
 
 本章で重要なのは、Black-Scholesの解析式を自動微分したことではない。
 
@@ -745,7 +734,6 @@ $$
 
 となる。
 
-### III-5.4.6 金利為替系デリバティブへの接続
 
 European Optionでは、Risk Factorは少数であった。
 
@@ -796,7 +784,6 @@ FX Delta + JPY DV01 + Foreign DV01 + Vega
 本章のMonte Carlo + torch実装は、
 第III-7章で扱うPRDC Riskへの直接の準備となる。
 
-### III-5.4.7 まとめ
 
 本章では、European Optionについて、
 

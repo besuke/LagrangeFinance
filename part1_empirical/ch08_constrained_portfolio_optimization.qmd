@@ -61,7 +61,6 @@ $$
 
 ## I-8.2 投資ユニバースとリターンデータ
 
-### I-8.2.1 データの読み込み
 
 ```{r}
 #| label: read-chapter-08-data
@@ -92,7 +91,6 @@ tbl_input_overview <- tibble::tribble(
 show_table_LFL(tbl_input_overview)
 ```
 
-### I-8.2.2 最初のリバランス年度
 
 ```{r}
 #| label: select-first-rebalance-year
@@ -111,7 +109,6 @@ vec_assets <- tbl_universe_one_year |>
   as.character()
 ```
 
-### I-8.2.3 GaussQuant形式への変換
 
 `portfolio_optimize_GQL()` はlong形式のリターンデータを受け取る。本章では `firm_ID` を資産名、`month_ID` を時点として利用する。
 
@@ -165,7 +162,6 @@ show_table_LFL(tbl_portfolio_constraints)
 
 ## I-8.4 基本的なポートフォリオ最適化
 
-### I-8.4.1 最小分散ポートフォリオ
 
 $$
 \min_{\boldsymbol{w}}
@@ -187,7 +183,6 @@ tbl_minimum_variance_weights <- result_minimum_variance$weights |>
 show_table_LFL(tbl_minimum_variance_weights)
 ```
 
-### I-8.4.2 平均分散ポートフォリオ
 
 $$
 \max_{\boldsymbol{w}}
@@ -210,7 +205,6 @@ result_mean_variance <- GaussQuant::portfolio_optimize_GQL(
 )
 ```
 
-### I-8.4.3 最大リターン・ポートフォリオ
 
 ```{r}
 #| label: optimize-maximum-return
@@ -222,7 +216,6 @@ result_maximum_return <- GaussQuant::portfolio_optimize_GQL(
 )
 ```
 
-### I-8.4.4 最大シャープレシオ・ポートフォリオ
 
 $$
 SR=\frac{\mu_p-r_f}{\sigma_p}
@@ -243,7 +236,6 @@ result_maximum_sharpe <- GaussQuant::portfolio_optimize_GQL(
 
 ## I-8.5 期待ショートフォールとリスク・バジェッティング
 
-### I-8.5.1 期待ショートフォール
 
 損失を $L$、信頼水準を $\alpha$ とする。期待ショートフォールは、市場VaRを超えるテール損失の平均として扱う。
 
@@ -262,7 +254,6 @@ result_minimum_ES <- GaussQuant::portfolio_optimize_GQL(
 
 期待ショートフォールは次章の市場リスク計測で詳しく扱う。本章では、分散だけでなく損失分布のテールを目的関数にできることを確認する。
 
-### I-8.5.2 リスク・バジェッティング
 
 ポートフォリオ分散への資産 $i$ の寄与は、
 
