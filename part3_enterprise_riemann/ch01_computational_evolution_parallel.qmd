@@ -21,7 +21,7 @@ source(file.path("R", "utility_LFL.R"))
 
 第III部全体の中心にあるのは、金融計算を高速化する二つの方向である。一つは、CPU、GPU、Grid、Cloudなどの計算資源を拡張する**Hardware / Infrastructure Acceleration**であり、もう一つは、Automatic Differentiationによって計算方法そのものを変える**Algorithmic Acceleration**である。
 
-## III-1.1 金融工学とコンピュータの60年
+## III-1.1 金融における情報工学の歩み
 
 1960年代から1970年代にかけて、Portfolio Theory、CAPM、Black-Scholes / Mertonモデルなど、現代金融工学の基礎となる理論が整備された。当時の計算資源は現在と比べて極めて限られており、実務へ取り込みやすいモデルは解析解を持つものが中心であった。
 
@@ -79,7 +79,7 @@ GPU / Cloud / Open Source / Tensor Computing
 Flexible HPC / Massive Monte Carlo / Automatic Differentiation
 ```
 
-## III-1.2 2020年代に変わった金融計算の前提
+## III-1.2 リーマンショックを経たテクノロジーの潮流
 
 2020年代の変化は、単にコンピュータが高速になったことではない。大きいのは、計算資源を「所有する」ことから、必要なときに必要な規模だけ「利用する」方向へ移ったことである。
 
@@ -103,7 +103,7 @@ CPU / GPU Tensor Computing
 Massive Monte Carlo
 ```
 
-## III-1.3 ハードウェア高速化だけでは残る問題
+## III-1.3 金融計算におけるハードウェアの限界
 
 計算資源を増やすことで、一回のPricingは速くできる。しかしRisk SensitivityをBump & Revalueで求める場合、Risk FactorごとにPricingを繰り返す構造は残る。
 
@@ -129,7 +129,6 @@ $$
 
 である。Hardwareを増やすだけでは、Bump & RevalueというAlgorithmそのものが要求する再計算回数は減らない。
 
-## III-1.4 自動微分が実用技術になった理由
 
 Automatic Differentiation自体は新しい数学ではない。しかし近年、TensorFlow、Keras、PyTorch、Rの`torch`など、Deep Learningの発展によって成熟したTensor計算Libraryが、安価で安定したAutomatic Differentiation環境を提供するようになった。
 
@@ -169,7 +168,6 @@ $$
 
 へ進む。
 
-## III-1.5 第III部で扱う二つの計算技術
 
 第III部では、この二つの方向をRで実装する。
 
@@ -199,7 +197,7 @@ $$
 
 まず本章では、その第一歩として一台のPCの中で計算を分割し、複数Workerへ配布する並列計算を実装する。
 
-## III-1.6 Rによる並列コンピューティング
+## III-1.4 並列コンピューティング
 
 Rでは`purrr`による逐次処理と、`future` / `furrr`による並列処理をよく似た形で記述できる。
 金融計算では、入力データをtibbleとして保持し、Pricing Functionを各行へ適用する構造にすると、
@@ -221,7 +219,7 @@ Trade / Market / Scenario Data
            Result
 ```
 
-### III-1.6.1 現在価値計算のタスク化
+### III-1.4.1 現在価値計算のタスク化
 
 まず、単純な現在価値計算をTaskとして定義する。
 
@@ -256,7 +254,7 @@ tbl_calculation <- tribble(
 show_table_LFL(tbl_calculation)
 ```
 
-### III-1.6.2 逐次計算
+### III-1.4.2 逐次計算
 
 最初に`purrr::pmap()`で逐次実行する。
 
@@ -276,7 +274,7 @@ tbl_sequential_result <- tbl_calculation |>
 show_table_LFL(tbl_sequential_result)
 ```
 
-### III-1.6.3 マルチコアによる並列計算
+### III-1.4.3 マルチコアによる並列計算
 
 次に`future::multisession`を利用してWorkerを起動する。
 利用可能なCoreをすべて占有せず、この例では最大2 Workerに制限する。
@@ -367,7 +365,7 @@ stopifnot(
 future::plan(future::sequential)
 ```
 
-## III-1.7 並列化による処理時間の短縮
+## III-1.5 Rによる並列計算
 
 小さすぎるTaskではWorker生成やデータ転送のOverheadが支配的になり、
 並列化が必ずしも高速になるとは限らない。
@@ -438,7 +436,7 @@ show_table_LFL(tbl_benchmark)
 重要なのは、同じPricing Functionを多数の独立Taskへ適用する場合、
 Taskを複数Workerへ配分することで実行時間を短縮できるという構造である。
 
-## III-1.8 一台のPCにおける並列化の限界
+## III-1.6 並列化の効果と限界
 
 Multi-coreによる並列化には明確な限界がある。
 一台のコンピュータで利用できるCPU Core、Memory、GPUなどの計算資源には上限があるためである。
@@ -468,7 +466,7 @@ $$
 リスクファクターごとにPricingを繰り返す構造そのものは残る。
 この問題は、本部後半の自動微分で改めて扱う。
 
-## III-1.9 まとめ
+## III-1.7 自動微分
 
 本章では、金融工学の計算が解析解から数値計算、Monte Carloへ発展するにつれて計算量が増大し、
 その対応としてMulti-core CPUや並列処理が重要になったことを確認した。

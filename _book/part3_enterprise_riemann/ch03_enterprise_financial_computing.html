@@ -328,12 +328,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#iii-3.1-金利為替系デリバティブの取引市場計算条件" id="toc-iii-3.1-金利為替系デリバティブの取引市場計算条件" class="nav-link active" data-scroll-target="#iii-3.1-金利為替系デリバティブの取引市場計算条件">III-3.1 金利為替系デリバティブの取引・市場・計算条件</a></li>
-  <li><a href="#iii-3.2-シナリオプライシング関数" id="toc-iii-3.2-シナリオプライシング関数" class="nav-link" data-scroll-target="#iii-3.2-シナリオプライシング関数">III-3.2 シナリオ・プライシング関数</a></li>
-  <li><a href="#iii-3.3-シナリオグリッド" id="toc-iii-3.3-シナリオグリッド" class="nav-link" data-scroll-target="#iii-3.3-シナリオグリッド">III-3.3 シナリオ・グリッド</a></li>
-  <li><a href="#iii-3.4-並列シナリオ計算" id="toc-iii-3.4-並列シナリオ計算" class="nav-link" data-scroll-target="#iii-3.4-並列シナリオ計算">III-3.4 並列シナリオ計算</a></li>
-  <li><a href="#iii-3.5-リスク集計" id="toc-iii-3.5-リスク集計" class="nav-link" data-scroll-target="#iii-3.5-リスク集計">III-3.5 リスク集計</a></li>
-  <li><a href="#iii-3.6-計算資源の拡張と残る問題" id="toc-iii-3.6-計算資源の拡張と残る問題" class="nav-link" data-scroll-target="#iii-3.6-計算資源の拡張と残る問題">III-3.6 計算資源の拡張と残る問題</a></li>
+  <li><a href="#iii-3.1-金融取引とマーケットデータ" id="toc-iii-3.1-金融取引とマーケットデータ" class="nav-link active" data-scroll-target="#iii-3.1-金融取引とマーケットデータ">III-3.1 金融取引とマーケットデータ</a></li>
+  <li><a href="#iii-3.2-プライシングエンジン" id="toc-iii-3.2-プライシングエンジン" class="nav-link" data-scroll-target="#iii-3.2-プライシングエンジン">III-3.2 プライシング・エンジン</a></li>
+  <li><a href="#iii-3.3-リスクシミュレーションシナリオ" id="toc-iii-3.3-リスクシミュレーションシナリオ" class="nav-link" data-scroll-target="#iii-3.3-リスクシミュレーションシナリオ">III-3.3 リスク・シミュレーション・シナリオ</a></li>
+  <li><a href="#iii-3.4-計算エンジン" id="toc-iii-3.4-計算エンジン" class="nav-link" data-scroll-target="#iii-3.4-計算エンジン">III-3.4 計算エンジン</a></li>
+  <li><a href="#iii-3.5-リスクアグリゲーションレポート" id="toc-iii-3.5-リスクアグリゲーションレポート" class="nav-link" data-scroll-target="#iii-3.5-リスクアグリゲーションレポート">III-3.5 リスクアグリゲーション・レポート</a></li>
+  <li><a href="#iii-3.6-エンタープライズ金融計算" id="toc-iii-3.6-エンタープライズ金融計算" class="nav-link" data-scroll-target="#iii-3.6-エンタープライズ金融計算">III-3.6 エンタープライズ金融計算</a></li>
   </ul>
 </nav>
     </div>
@@ -380,8 +380,8 @@ Risk Table
         |
         v
 Aggregation / Report</code></pre>
-<section id="iii-3.1-金利為替系デリバティブの取引市場計算条件" class="level2">
-<h2 class="anchored" data-anchor-id="iii-3.1-金利為替系デリバティブの取引市場計算条件">III-3.1 金利為替系デリバティブの取引・市場・計算条件</h2>
+<section id="iii-3.1-金融取引とマーケットデータ" class="level2">
+<h2 class="anchored" data-anchor-id="iii-3.1-金融取引とマーケットデータ">III-3.1 金融取引とマーケットデータ</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tbl_prdc_trade <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>trade_ID, <span class="sc">~</span>notional, <span class="sc">~</span>maturity_years,</span>
@@ -427,8 +427,8 @@ Aggregation / Report</code></pre>
 <span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 CALC-BASE       500      123</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-3.2-シナリオプライシング関数" class="level2">
-<h2 class="anchored" data-anchor-id="iii-3.2-シナリオプライシング関数">III-3.2 シナリオ・プライシング関数</h2>
+<section id="iii-3.2-プライシングエンジン" class="level2">
+<h2 class="anchored" data-anchor-id="iii-3.2-プライシングエンジン">III-3.2 プライシング・エンジン</h2>
 <p>本章では計算基盤に焦点を当てるため、Scenario Pricing Functionは軽量な代理モデルとして表現する。第II部で構築したPRDC Pricing Functionへ置き換えても、Task生成と並列実行の構造は変わらない。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>price_prdc_scenario_LFL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -460,8 +460,8 @@ Aggregation / Report</code></pre>
 <span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-3.3-シナリオグリッド" class="level2">
-<h2 class="anchored" data-anchor-id="iii-3.3-シナリオグリッド">III-3.3 シナリオ・グリッド</h2>
+<section id="iii-3.3-リスクシミュレーションシナリオ" class="level2">
+<h2 class="anchored" data-anchor-id="iii-3.3-リスクシミュレーションシナリオ">III-3.3 リスク・シミュレーション・シナリオ</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>base_fx_spot <span class="ot">&lt;-</span> tbl_prdc_market<span class="sc">$</span>fx_spot[[<span class="dv">1</span>]]</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -496,8 +496,8 @@ Aggregation / Report</code></pre>
 <span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 125 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-3.4-並列シナリオ計算" class="level2">
-<h2 class="anchored" data-anchor-id="iii-3.4-並列シナリオ計算">III-3.4 並列シナリオ計算</h2>
+<section id="iii-3.4-計算エンジン" class="level2">
+<h2 class="anchored" data-anchor-id="iii-3.4-計算エンジン">III-3.4 計算エンジン</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>available_cores <span class="ot">&lt;-</span> future<span class="sc">::</span><span class="fu">availableCores</span>()</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>workers <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="dv">1</span>L, <span class="fu">min</span>(<span class="dv">2</span>L, available_cores <span class="sc">-</span> <span class="dv">1</span>L))</span>
@@ -555,8 +555,8 @@ Aggregation / Report</code></pre>
 <span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 125 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-3.5-リスク集計" class="level2">
-<h2 class="anchored" data-anchor-id="iii-3.5-リスク集計">III-3.5 リスク集計</h2>
+<section id="iii-3.5-リスクアグリゲーションレポート" class="level2">
+<h2 class="anchored" data-anchor-id="iii-3.5-リスクアグリゲーションレポート">III-3.5 リスクアグリゲーション・レポート</h2>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tbl_prdc_risk <span class="ot">&lt;-</span> tbl_prdc_scenario_result <span class="sc">|&gt;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(</span>
@@ -632,8 +632,8 @@ Aggregation / Report</code></pre>
 <span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 data/derived/risk_system/prdc_risk_table.parquet</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="iii-3.6-計算資源の拡張と残る問題" class="level2">
-<h2 class="anchored" data-anchor-id="iii-3.6-計算資源の拡張と残る問題">III-3.6 計算資源の拡張と残る問題</h2>
+<section id="iii-3.6-エンタープライズ金融計算" class="level2">
+<h2 class="anchored" data-anchor-id="iii-3.6-エンタープライズ金融計算">III-3.6 エンタープライズ金融計算</h2>
 <p>ここまでの並列・分散計算は、Pricingを多数回実行することでリスクを求める設計である。計算資源を増やせば処理時間を短縮できるが、Risk Factorが増えるほどBump &amp; RevalueのPricing回数が増えるという構造そのものは残る。</p>
 <pre class="text"><code>Hardware Acceleration
         |

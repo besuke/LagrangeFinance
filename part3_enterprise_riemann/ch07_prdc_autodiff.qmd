@@ -51,7 +51,7 @@ $$
 
 本章の目的は、単にPRDCのGreeksを計算することではない。**Monte Carlo PricingとRisk Calculationを別々の処理として繰り返すのではなく、PricingそのものからRiskを生成する**というDifferentiable Risk Engineの設計を示すことである。
 
-## III-7.1 多因子市場モデル
+## III-7.1 金利為替系デリバティブと多因子市場モデル
 
 ### III-7.1.1 市場リスクファクター
 PRDCは、為替と複数通貨の金利を同時に扱うハイブリッド商品である。
@@ -254,7 +254,7 @@ $$
 したがってPRDC価格を微分すると、
 CouponだけではなくFX Path生成まで連鎖律が伝播する。
 
-## III-7.2 多因子モンテカルロによる価格評価
+## III-7.2 多因子モンテカルロ法
 
 PRDCのMonte Carlo価格を、
 
@@ -565,7 +565,7 @@ $$
 
 という多変数関数になっている。
 
-## III-7.3 自動微分による多因子感応度
+## III-7.3 多因子リスク感応度と自動微分
 
 Forward計算で得られたScalar NPVを出発点として、複数の市場入力へGradientを逆伝播させる。PRDCのように「多数入力・少数出力」となるPricingでは、Reverse Modeの利点が最も現れやすい。
 
@@ -882,7 +882,7 @@ $$
 
 を取得したことになる。
 
-## III-7.4 有限差分法による検証
+### III-7.3.6 有限差分法による検証
 
 自動微分の結果を確認するため、
 FX DeltaをFinite Differenceで検算する。
@@ -965,7 +965,7 @@ tbl_fx_delta_check
 同じ乱数を用いることで、
 差分結果にMonte Carlo Noiseが混入することを抑えている。
 
-## III-7.5 微分不可なペイオフのケース
+## III-7.4 非線形ペイオフと自動微分
 
 本章のCouponでは、
 
@@ -1011,7 +1011,7 @@ Exercise Decisionなど不連続性の強い商品では、
 「あらゆる金融商品をそのまま微分すればよい」
 という意味ではないことを示している。
 
-### III-7.5.2 微分不可なペイオフの感応度
+### III-7.4.2 微分不可なペイオフの感応度
 
 PRDCのような商品では、
 
@@ -1059,7 +1059,7 @@ $$
 
 を結び付ける。
 
-## III-7.6 大規模市場リスク計測への展開
+## III-7.5 エンタープライズ・リスク計算
 
 第III-1章で確認したように、
 Monte CarloはGPUと相性が良い。
@@ -1098,7 +1098,7 @@ GPUによるHardware Accelerationと、
 Automatic DifferentiationによるAlgorithmic Accelerationが
 同じTensor計算基盤の上で共存できることである。
 
-### III-7.6.2 自動微分による多因子感応度の一括計算
+### III-7.5.2 自動微分による多因子感応度の一括計算
 
 PRDCのPricing Graphをもう一度整理する。
 
@@ -1141,7 +1141,7 @@ $$
 このForwardとReverseの組み合わせが、
 PRDCをDifferentiable Pricing Modelとして扱うという意味である。
 
-### III-7.6.3 エンタープライズ・リスク計算への展開
+### III-7.5.3 エンタープライズ・リスク計算への展開
 
 第III部で扱った商品を並べると、
 自動微分の役割が明確になる。
@@ -1227,7 +1227,6 @@ $$
 
 変わるのは、価格関数を構成するComputational Graphの規模である。
 
-## III-7.7 まとめ
 
 本章では、PRDCを題材として、FX Spot、JPY Curve、Foreign Curve、FX Volatilityを同時に持つ多因子Monte Carlo PricingをRの`torch`で構成した。Pricing FunctionをTensor演算だけで接続することで、Monte Carlo Path生成、Coupon計算、Discounting、NPVまでを一つのDifferentiable Computational Graphとして扱うことができた。
 

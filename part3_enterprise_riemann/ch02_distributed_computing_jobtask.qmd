@@ -41,7 +41,7 @@ Scheduler
 Result Aggregation
 ```
 
-## III-2.1 分散計算の基本構造
+## III-2.1 計算処理の分割
 
 ```{r}
 #| label: create-distributed-task-table
@@ -72,7 +72,7 @@ calculate_task_result_LFL <- function(task_ID, input_value, worker_group) {
 }
 ```
 
-## III-2.2 リモート関数とワーカー実行
+## III-2.2 計算資源への分配
 
 ```{r}
 #| label: create-remote-request-table
@@ -130,7 +130,7 @@ tbl_remote_result <- tbl_remote_request |>
 show_table_LFL(tbl_remote_result)
 ```
 
-## III-2.3 ジョブ・キューとスケジューラ
+## III-2.3 計算処理の制御
 
 ```{r}
 #| label: create-job-table
@@ -168,7 +168,7 @@ show_table_LFL(tbl_job_status)
 
 SlurmのようなSchedulerでは、TaskをJobとして登録し、利用可能なWorkerへ割り当てる。R側のPricing Functionは可能な限り変更せず、「どこで実行するか」を実行基盤側へ分離することが重要である。
 
-## III-2.4 分散システムのデータ設計
+## III-2.4 分散コンピューティング
 
 ```{r}
 #| label: create-distributed-data-model
@@ -251,7 +251,7 @@ tbl_distributed_paths <- tibble(
 show_table_LFL(tbl_distributed_paths)
 ```
 
-## III-2.5 まとめ
+## III-2.5 計算資源の統合
 
 本章では、一台のMachine内部の並列化から、複数の計算資源を前提とする分散処理へ考え方を拡張した。重要なのは、計算関数そのものよりも、TaskをJobとして管理し、Queueへ投入し、SchedulerがWorkerへ配布し、結果を再び集約するというControl Planeである。
 
