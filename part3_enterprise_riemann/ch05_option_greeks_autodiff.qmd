@@ -1,5 +1,5 @@
 ---
-title: "第III-5章 解析解とモンテカルロ自動微分による検証"
+title: "第III-5章 自動微分応用：オプション"
 execute:
   eval: true
   echo: true

@@ -1,5 +1,5 @@
 ---
-title: "第III-2章 分散コンピューティングとジョブ・タスク制御"
+title: "第III-2章 分散コンピューティング"
 execute:
   eval: true
   echo: true

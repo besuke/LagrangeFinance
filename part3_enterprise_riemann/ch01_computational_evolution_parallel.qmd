@@ -1,5 +1,5 @@
 ---
-title: "第III-1章 金融工学における計算技術の発展と並列コンピューティング"
+title: "第III-1章 金融計算技術の発展"
 execute:
   eval: true
   echo: true

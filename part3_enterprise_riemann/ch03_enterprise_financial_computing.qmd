@@ -1,5 +1,5 @@
 ---
-title: "第III-3章 エンタープライズ金融計算システムの構築"
+title: "第III-3章 金融計算アーキテクチャ"
 execute:
   eval: true
   echo: true

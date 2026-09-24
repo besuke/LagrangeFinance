@@ -1,5 +1,5 @@
 ---
-title: "第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測"
+title: "第III-7章 自動微分応用：多因子モデル"
 execute:
   eval: true
   echo: true

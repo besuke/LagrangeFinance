@@ -1,5 +1,5 @@
 ---
-title: "第III-4章 自動微分による市場リスク感応度計測"
+title: "第III-4章 自動微分計算"
 execute:
   eval: true
   echo: true
