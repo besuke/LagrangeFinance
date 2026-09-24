@@ -28,14 +28,14 @@ book:
 
     - part: "第II部 金融工学　無裁定モデル"
       chapters:
-        - part2_quantive_riemann/ch01_deterministic_cashflow_valuation.qmd
+        - part2_quantive_riemann/ch01_deterministic_cashflow.qmd
         - part2_quantive_riemann/ch02_interest_rate_curves.qmd
         - part2_quantive_riemann/ch03_ois_swaps_multicurve.qmd
         - part2_quantive_riemann/ch04_black_model.qmd
-        - part2_quantive_riemann/ch05_interest_rate_model_calibration.qmd
-        - part2_quantive_riemann/ch06_short_rate_and_forward_rate_models.qmd
-        - part2_quantive_riemann/ch07_early_redemption_interest_rate_models.qmd
-        - part2_quantive_riemann/ch08_credit_risk_cds.qmd
+        - part2_quantive_riemann/ch05_credit_risk_cds.qmd
+        - part2_quantive_riemann/ch06_irs_calibration.qmd
+        - part2_quantive_riemann/ch07_irs_rate_models.qmd
+        - part2_quantive_riemann/ch08_early_redemption_models.qmd
         - part2_quantive_riemann/ch09_exotic_derivatives_prdc.qmd
 
     - part: "第III部 並列・分散処理から自動微分へ"

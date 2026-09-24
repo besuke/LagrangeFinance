@@ -256,7 +256,7 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-1章 債券評価と金利リスクの基礎</span></a>
+  <a href="../part2_quantive_riemann/ch01_deterministic_cashflow.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-1章 債券評価と金利リスクの基礎</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -276,22 +276,22 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch05_interest_rate_model_calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 金利モデルのキャリブレーション</span></a>
+  <a href="../part2_quantive_riemann/ch05_credit_risk_cds.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 信用リスクとクレジットデリバティブ</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch06_short_rate_and_forward_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 ショートレートモデルとフォワード金利モデル</span></a>
+  <a href="../part2_quantive_riemann/ch06_irs_calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 金利モデルのキャリブレーション</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch07_early_redemption_interest_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 金利モデルによる早期償還評価</span></a>
+  <a href="../part2_quantive_riemann/ch07_irs_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 ショートレートモデルとフォワード金利モデル</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch08_credit_risk_cds.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-8章 信用リスクとクレジットデリバティブ</span></a>
+  <a href="../part2_quantive_riemann/ch08_early_redemption_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-8章 金利モデルによる早期償還評価</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -763,8 +763,8 @@ V
 <span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 3</span></span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method            ela_secon rel_seque</span></span>
 <span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 purrr::map             1.35   1      </span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 furrr::future_map      1      0.74074</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 purrr::map           1.31     1      </span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 furrr::future_map    1.0300   0.78626</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>この例の目的は特定の高速化率を保証することではない。 重要なのは、同じPricing Functionを多数の独立Taskへ適用する場合、 Taskを複数Workerへ配分することで実行時間を短縮できるという構造である。</p>
 </section>

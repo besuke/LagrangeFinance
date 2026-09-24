@@ -1,5 +1,5 @@
 ---
-title: "第II-7章 金利モデルによる早期償還評価"
+title: "第II-8章 金利モデルによる早期償還評価"
 execute:
   eval: true
   echo: true
@@ -8,9 +8,9 @@ execute:
   error: false
 ---
 
-固定利付債の発行体に期限前償還権があると、金利が低下した際に、高いクーポンの支払いを打ち切って借り換えることができる。第5章でモデルのパラメータを市場に合わせ、第6章で金利の動きを定義した。本章では、そのモデルを使い、**各行使日にどの価値を比較して債券価格が決まるか**を計算する。
+固定利付債の発行体に期限前償還権があると、金利が低下した際に、高いクーポンの支払いを打ち切って借り換えることができる。第6章でモデルのパラメータを市場に合わせ、第7章で金利の動きを定義した。本章では、そのモデルを使い、**各行使日にどの価値を比較して債券価格が決まるか**を計算する。
 
-中心例は発行体が指定日に額面で償還できる固定利付債（Callable Bond）である。最初に契約と行使の順序を定め、Hull–White 1因子モデルのもとでバックワードに価値を計算する。最後にBermudan Swaptionとの関係と、複数フォワード金利モデルへ進む場合の計算上の違いを整理する。以下の金利、クーポン、ボラティリティはすべて**教材用の架空の値**である。
+まず発行体が指定日に額面で償還できる固定利付債（Callable Bond）をHull–White 1因子モデルで評価する。次にMBSのプリペイメントをモデル化する。発行体のコールと住宅ローン債務者の繰上返済は、どちらも元本の早期返済だが、行動主体とキャッシュフローが異なる。以下の金利、クーポン、ボラティリティはすべて**教材用の架空の値**である。
 
 ```{r}
 #| label: early-redemption-setup
@@ -30,7 +30,7 @@ show_early_redemption_tbl_LRL <- function(tbl, title) {
 }
 ```
 
-## II-7.1 発行体条件と債券評価
+## II-8.1 発行体条件と債券評価
 
 額面100、年率3%の固定クーポン、半年払い、満期5年の債券を考える。各クーポンは Ｊは$100\times0.03\times0.5=1.5$。発行体は1年目から4年半目までの各クーポン日に、**その日のクーポンを支払った後**、残りの元本を100で償還できるとする。満期日には通常の元本償還があり、コール判断はない。
 
@@ -42,6 +42,8 @@ show_early_redemption_tbl_LRL <- function(tbl, title) {
 | コール価格         | クーポン支払い後の元本に対し100（ex-couponの額面価格） |
 | 金利曲線           | 連続複利2%のフラットな初期割引曲線                     |
 | 信用と費用         | デフォルト、スプレッド、税、取引費用は含めない         |
+
+ここまでの設定では信用リスクを除き、金利モデルが決める発行体コール権の評価を確認する。後半ではMBSの住宅ローン債務者によるプリペイメントを扱う。
 
 したがって、この例の値は評価時点の将来キャッシュフローの**モデル現在価値**である。経過利息のある取引日で表示するクリーン価格や決済価格ではない。実取引では発行日・決済日、営業日規則、日数計算、通知期間、コール価格の定義も別に指定する。
 
@@ -72,7 +74,7 @@ tbl_cashflows <- tibble::tibble(
 show_early_redemption_tbl_LRL(tbl_cashflows, "クーポンと発行体コール日")
 ```
 
-## II-7.2 満期債と発行体コール
+## II-8.2 満期債と発行体コール
 
 コールオプションないBullet Bondの時点0の価格は、支払額を $C_i$、満期元本を $N$、割引係数を $P(0,t_i)$ として
 
@@ -106,7 +108,7 @@ show_early_redemption_tbl_LRL(
 )
 ```
 
-## II-7.3 発行体の行使判断とバックワード・インダクション
+## II-8.3 発行体の行使判断とバックワード・インダクション
 
 クーポン支払日の直後に、将来の支払義務の価値を発行体が比較する。その時点から次の支払日までの**継続価値**を $H_i(x)$、コール時に支払う元本を $K_i$、当日のクーポンを $C_i$ とする。直前の投資家側の価格は
 
@@ -130,11 +132,11 @@ flowchart TD
   B -->|"継続価値が低い"| D["債券を継続"]
 ```
 
-## II-7.4 Hull–Whiteモデル
+## II-8.4 Hull–Whiteモデル
 
-### II-7.4.1 状態と割引の共同分布
+### II-8.4.1 状態と割引の共同分布
 
-第6章と同じく、$r_t=\phi(t)+x_t$、$dx_t=-a x_tdt+\sigma dW_t$ を使う。一定の $a>0,\sigma\geq0$ とフラットな初期曲線 $P(0,T)=e^{-\bar rT}$ について
+第7章と同じく、$r_t=\phi(t)+x_t$、$dx_t=-a x_tdt+\sigma dW_t$ を使う。一定の $a>0,\sigma\geq0$ とフラットな初期曲線 $P(0,T)=e^{-\bar rT}$ について
 
 $$\phi(t)=\bar r+
 \frac{\sigma^2}{2a^2}(1-e^{-at})^2.$$
@@ -252,7 +254,7 @@ compute_discounted_step_LRL <- function(
 }
 ```
 
-### II-7.4.2　行使日ごとのバックワード・インダクション
+### II-8.4.2 行使日ごとのバックワード・インダクション
 
 満期にクーポンと元本を置き、一つ前の支払日に条件付き割引期待値を求める。以後、コール可能日では $\min$ を取ってさかのぼる。比較のため、まったく同じ状態格子と割引演算子でBullet Bondも評価する。
 
@@ -404,7 +406,7 @@ stopifnot(
 
 最後の行は、同じモデルと同じ契約条件でBullet価格が初期曲線へ近いこと、発行体の権利価値が負にならないことを検査する。価格の差が0でない場合は、状態格子、境界、補間、求積点数を見直す。**格子上のコール可能な点の割合は、実際のコール確率ではない**。
 
-### II-7.4.3 発行体コール判定
+### II-8.4.3 発行体コール判定
 
 次の図は行使可能日のうち $t=2.0$ における、クーポン支払後の継続価値とコール価格を示す。短期金利の状態が低いほど、高いクーポンが続く債券を発行体が額面で償還する誘因が強い。
 
@@ -434,9 +436,9 @@ ggplot2::ggplot(
   )
 ```
 
-## II-7.5 金利変動とコールオプション価値
+## II-8.5 金利変動とコールオプション価値
 
-第5章で市場から推定したボラティリティを受け取れば、同じ手順で債券価格を求められる。次は初期割引曲線と平均回帰速度を固定し、金利ボラティリティを変えた**比較実験**である。$\sigma=0$ は確率変動のない決定論的な基準になる。
+第6章で説明した方法で推定したボラティリティを与えれば、同じ手順で債券価格を求められる。次は初期割引曲線と平均回帰速度を固定し、金利ボラティリティを変えた**比較実験**である。$\sigma=0$ は確率変動のない決定論的な基準になる。
 
 ```{r}
 #| label: callable-volatility-sensitivity
@@ -485,7 +487,7 @@ ggplot2::ggplot(
 
 ボラティリティが大きいほど、発行体に有利な低金利の状態を利用できるため、この例ではコールオプション価値が増える。一般の実取引では、各シナリオでキャリブレーションや他の市場入力も変わることがあり、この表だけをリスク量とは呼ばない。価格感応度を比べるときは、カーブ、スプレッド、ボラティリティなどのどれを固定するか明確にする。
 
-## II-7.6 数値計算検証
+## II-8.6 数値計算検証
 
 本章の評価は価格関数を有限の状態格子に補間する。格子幅と求積点数を変えて結果が安定するか確かめる。次は同じ契約を二つの格子で評価した例であり、価格差を表示する。
 
@@ -525,10 +527,281 @@ show_early_redemption_tbl_LRL(
 
 二つの数値設定を同時に変えているため、差が大きいときは状態格子と求積点数を**それぞれ独立に**増やして原因を調べる。初期Bullet価格との一致に加え、行使日をなくすとCallableがBulletに一致すること、行使日を追加した場合は投資家のCallable価格が上がらないことも、実装の検査になる。
 
-## II-7.7 Bermudan Swaptionへの拡張
+## II-8.7 Bermudan Swaptionへの拡張
 
 固定クーポン債を発行体が償還できる権利は、金利低下局面で価値が増える点で、固定を受け取るReceiver Swaptionと似る。複数行使日の権利はBermudan型である。ただし、Callable BondとBermudan Receiver Swaptionを**同額の権利**とみなすには、債券クーポンとスワップの固定・変動キャッシュフロー、元本、行使日、決済とコール価格の対応を厳密に合わせる必要がある。この章では価格を機械的に置き換えない。
 
 Hull–White 1因子では継続価値を一つの状態の関数として計算でき、Tree、有限差分、状態格子の積分などが候補になる。本章は状態格子と正規求積を用いた。一方、BGM/LMMやRFR向けFMMを使って多数のフォワード金利を動かす場合は、共通の測度のもとで経路を作り、行使日時点の情報に条件づけた継続価値を回帰などで推定する方法がある。**将来の経路ごとに実現した利益を直接比べ、過去の行使を決める方法は使わない**。
 
-実取引への拡張では、OIS割引と予測カーブの分離、発行体信用スプレッドの影響、約定上の通知日と利払い日のずれ、クリーン価格と経過利息の扱いを揃える。信用スプレッドを単一の確定値として上乗せしても、発行体の信用状況と行使判断の依存を十分に表現したことにはならない。
+実取引への拡張では、OIS割引と予測カーブの分離、約定上の通知日と利払い日のずれ、クリーン価格と経過利息の扱いを揃える。
+
+## II-8.8 MBSのプリペイメント
+
+住宅ローンを裏付けとするMBSでは、**債務者**が一部または全部を繰り上げて返済できる。プール全体では、各月の予定元本返済とは別にプリペイメントが生じ、投資家は元本を早く受け取る。発行体が契約日の一括償還を選ぶ前節のCallable Bondと異なり、キャッシュフローを月次のプール残高から組み立てる。ここでは元本と利息がそのまま投資家に支払われる簡略なパススルーを扱い、デフォルトと損失は含めない。
+
+米国の **100% PSA** をベンチマークとする月齢 $m$ の年率換算プリペイメント率（CPR）は、[Ginnie Mae の商品説明](https://www.ginniemae.gov/investors/multiclass_resources/BaseProspectuses/base_offering_circular.pdf) に沿って
+
+$$\mathrm{CPR}^{\mathrm{PSA}}_m
+=\min(0.002m,0.06),\qquad
+\mathrm{SMM}_m=1-(1-\mathrm{CPR}_m)^{1/12}.$$
+
+月次予定元本を $A_m$、月初元本を $B_{m-1}$ とすると、プリペイメント元本は $U_m=(B_{m-1}-A_m)\mathrm{SMM}_m$、月末元本は $B_m=B_{m-1}-A_m-U_m$。基準PSAだけでは借換えインセンティブを表せないため、以下の数値例では住宅ローンの約定金利 $c$、**月ごとに変化する**借換え金利 $f_m$、借換えに伴う金利換算費用 $k$ から、**教材用の仮定**
+
+$$\mathrm{CPR}_m=\min\{0.60,\alpha\,\mathrm{CPR}^{\mathrm{PSA}}_m
+\exp[\beta(c-f_m-k)]\}$$
+
+を置く。$\alpha=1$ はPSAベンチマークの速度、$\alpha=0$ はプリペイメントなしである。$\beta$ と上限は市場での推定値ではない。経過月数、借換え費用と金利シナリオが**将来の各月**のプリペイメントを変え、元本残高の減少は翌月以降の利息と予定元本に反映される。
+
+```{r}
+#| label: mbs-prepayment-cashflows
+
+compute_mbs_cashflows_LRL <- function(
+  original_balance, mortgage_rate, pass_through_rate,
+  refinance_rate, maturity_months = 360L, incentive_sensitivity = 20,
+  refinancing_cost_rate = 0, psa_multiplier = 1
+) {
+  stopifnot(
+    original_balance > 0, maturity_months > 0,
+    mortgage_rate >= 0, pass_through_rate >= 0,
+    all(is.finite(refinance_rate)), all(refinance_rate >= 0),
+    length(refinance_rate) %in% c(1L, maturity_months),
+    incentive_sensitivity >= 0, refinancing_cost_rate >= 0,
+    psa_multiplier >= 0,
+    pass_through_rate <= mortgage_rate
+  )
+  refinance_path <- rep(refinance_rate, length.out = maturity_months)
+  monthly_rate <- mortgage_rate / 12
+  monthly_payment <- if (monthly_rate == 0) {
+    original_balance / maturity_months
+  } else {
+    original_balance * monthly_rate /
+      (1 - (1 + monthly_rate)^(-maturity_months))
+  }
+  balance <- original_balance
+  rows <- vector("list", maturity_months)
+  for (m in seq_len(maturity_months)) {
+    begin_balance <- balance
+    loan_interest <- begin_balance * monthly_rate
+    scheduled_principal <- min(
+      begin_balance, max(0, monthly_payment - loan_interest)
+    )
+    if (m == maturity_months) scheduled_principal <- begin_balance
+    base_cpr <- min(0.002 * m, 0.06)
+    cpr <- min(
+      0.60, psa_multiplier * base_cpr * exp(
+        incentive_sensitivity * (
+          mortgage_rate - refinance_path[m] - refinancing_cost_rate
+        )
+      )
+    )
+    smm <- 1 - (1 - cpr)^(1 / 12)
+    prepaid_principal <- (begin_balance - scheduled_principal) * smm
+    balance <- max(0, begin_balance - scheduled_principal - prepaid_principal)
+    rows[[m]] <- tibble::tibble(
+      month = m, begin_balance = begin_balance,
+      refinance_rate = refinance_path[m],
+      cpr = cpr, smm = smm,
+      interest = begin_balance * pass_through_rate / 12,
+      scheduled_principal = scheduled_principal,
+      prepaid_principal = prepaid_principal,
+      end_balance = balance,
+      cashflow = begin_balance * pass_through_rate / 12 +
+        scheduled_principal + prepaid_principal
+    )
+  }
+  dplyr::bind_rows(rows)
+}
+
+mbs_months <- 360L
+tbl_mbs_scenarios <- tibble::tibble(
+  scenario = c("借換え金利低下", "金利一定", "借換え金利上昇"),
+  refinance_path = list(
+    c(rep(0.05, 24), rep(0.035, mbs_months - 24)),
+    rep(0.05, mbs_months),
+    c(rep(0.05, 24), rep(0.065, mbs_months - 24))
+  )
+) |>
+  dplyr::mutate(
+    cashflows = purrr::map(
+      refinance_path,
+      ~compute_mbs_cashflows_LRL(
+        original_balance = 100, mortgage_rate = 0.05,
+        pass_through_rate = 0.045, refinance_rate = .x,
+        refinancing_cost_rate = 0.005
+      )
+    ),
+    weighted_average_life = purrr::map_dbl(
+      cashflows,
+      ~sum(.x$month / 12 *
+        (.x$scheduled_principal + .x$prepaid_principal)) / 100
+    ),
+    price_fixed_discount = purrr::map_dbl(
+      cashflows,
+      ~sum(.x$cashflow * exp(-0.04 * .x$month / 12))
+    ),
+    price_path_discount = purrr::map2_dbl(
+      cashflows, refinance_path,
+      ~sum(.x$cashflow * exp(
+        -cumsum((.y - 0.01) / 12)
+      ))
+    ),
+    total_principal = purrr::map_dbl(
+      cashflows,
+      ~sum(.x$scheduled_principal + .x$prepaid_principal)
+    )
+  )
+
+show_early_redemption_tbl_LRL(
+  dplyr::select(tbl_mbs_scenarios, -cashflows, -refinance_path),
+  "借換え金利別のMBSプリペイメントと元本回収期間"
+)
+stopifnot(
+  all(abs(tbl_mbs_scenarios$total_principal - 100) < 1e-8),
+  all(purrr::map_lgl(
+    tbl_mbs_scenarios$cashflows,
+    ~all(.x$end_balance >= -1e-8) &&
+      abs(dplyr::last(.x$end_balance)) < 1e-8
+  )),
+  tbl_mbs_scenarios$weighted_average_life[1] <
+    tbl_mbs_scenarios$weighted_average_life[2],
+  tbl_mbs_scenarios$weighted_average_life[2] <
+    tbl_mbs_scenarios$weighted_average_life[3]
+)
+```
+
+`price_fixed_discount` は**割引率を4%に固定**し、借換え金利によるプリペイメントの変化だけを価格に反映する。`price_path_discount` は例として各月の短期金利を「借換え金利 − 1%」と仮定して累積割引した値である。二つの価格の差をそのままオプション価値や OAS とは呼べない。借換え金利と短期金利の差、プリペイメント反応、投資家に支払う金利を**それぞれ別の入力**として扱う。
+
+次は第7章の Hull–White モデルで月次金利経路を作り、各経路の借換え金利からプリペイメントを計算する例である。短期金利に一律3%を加えて借換え金利の**代理変数**とする。実際の住宅ローン金利は長期スワップ金利、貸出スプレッド、金融機関の提示条件などから推定する必要がある。このコードは月次格子の短期金利による割引近似を使い、入力パラメータは市場キャリブレーション値ではない。
+
+```{r}
+#| label: mbs-hull-white-paths
+
+simulate_mbs_rates_LRL <- function(
+  number_of_paths = 200L, maturity_months = 360L,
+  flat_rate = 0.02, mean_reversion = 0.15,
+  volatility = 0.012, seed = 48L
+) {
+  stopifnot(number_of_paths %% 2L == 0L, number_of_paths > 0,
+    maturity_months > 0, mean_reversion > 0, volatility >= 0)
+  set.seed(seed)
+  dt <- 1 / 12
+  b <- exp(-mean_reversion * dt)
+  step_sd <- volatility * sqrt(
+    (1 - b^2) / (2 * mean_reversion)
+  )
+  shocks <- matrix(
+    stats::rnorm(number_of_paths / 2L * maturity_months),
+    nrow = number_of_paths / 2L
+  )
+  shocks <- rbind(shocks, -shocks)
+  short_rates <- matrix(0, number_of_paths, maturity_months)
+  x <- rep(0, number_of_paths)
+  for (m in seq_len(maturity_months)) {
+    x <- b * x + step_sd * shocks[, m]
+    time <- m * dt
+    phi <- flat_rate + volatility^2 / (2 * mean_reversion^2) *
+      (1 - exp(-mean_reversion * time))^2
+    short_rates[, m] <- phi + x
+  }
+  short_rates
+}
+
+mbs_short_rates <- simulate_mbs_rates_LRL()
+tbl_mbs_mc <- purrr::map_dfr(
+  seq_len(nrow(mbs_short_rates)),
+  function(path_index) {
+    rate_path <- mbs_short_rates[path_index, ]
+    loan_cashflows <- compute_mbs_cashflows_LRL(
+      original_balance = 100, mortgage_rate = 0.05,
+      pass_through_rate = 0.045,
+      refinance_rate = pmax(0, rate_path + 0.03),
+      refinancing_cost_rate = 0.005
+    )
+    tibble::tibble(
+      path = path_index,
+      price = sum(loan_cashflows$cashflow *
+        exp(-cumsum(rate_path) / 12)),
+      weighted_average_life = sum(
+        loan_cashflows$month / 12 *
+          (loan_cashflows$scheduled_principal +
+            loan_cashflows$prepaid_principal)
+      ) / 100
+    )
+  }
+)
+
+show_early_redemption_tbl_LRL(
+  dplyr::summarise(
+    tbl_mbs_mc,
+    simulated_paths = dplyr::n(),
+    mean_price = mean(price),
+    mean_weighted_average_life = mean(weighted_average_life)
+  ),
+  "Hull–White金利経路で更新したMBSの月次キャッシュフロー"
+)
+```
+
+短期金利と借換え金利を各経路で同時に動かし、元本残高を**経路ごとに**更新した。実務の評価ではシミュレーション刻みと経路数、金利と借換え金利の対応、プリペイメント関数の過去データへの適合を検証する。月末の短期金利を使った割引をより精緻にするには、短期金利の期間積分を第II-8.4節と同じく扱う。
+
+OAS $z$ に対応する価格は、経路 $j$ の月 $m$ のキャッシュフロー $CF_m^{(j)}$ を使い、
+
+$$P(z)=\mathbb E^{\mathbb Q}\!\left[
+\sum_{m=1}^{360}CF_m
+\exp\!\left(-\int_0^{m/12}(r_s+z)\,ds\right)
+\right]$$
+
+と計算する。市場価格があれば $P(z)$ を一致させる $z$ を解く。金利経路で変化するキャッシュフローと割引係数には相関があるため、**経路ごとの現在価値を計算してから平均**する。平均キャッシュフローだけを固定曲線で割り引く場合は別の簡約法となる。
+
+### II-8.8.1 PSA別のOASと価格の関係
+
+MathWorks の [Computing Option-Adjusted Spread](https://www.mathworks.com/help/fininst/computing-option-adjusted-spread.html) は、0・50・100% PSA に対してゼロカーブと取引価格から OAS を解く例を示す。以下では同じ**比較の設計**を使う。架空の価格を95（ディスカウント）と105（プレミアム）に設定し、金利を4%で固定して PSA ごとに価格を一致させるスプレッドを求める。これはキャッシュフローをあらかじめ確定する**静的なOAS感応度**であり、前節の金利経路を使った OAS とは区別する。
+
+```{r}
+#| label: mbs-static-psa-oas
+
+compute_mbs_static_oas_LRL <- function(
+  tbl_cashflows, market_price, zero_rate = 0.04
+) {
+  stopifnot(market_price > 0, is.finite(zero_rate))
+  price_for_spread <- function(spread) {
+    sum(tbl_cashflows$cashflow * exp(
+      -(zero_rate + spread) * tbl_cashflows$month / 12
+    ))
+  }
+  stats::uniroot(
+    function(spread) price_for_spread(spread) - market_price,
+    interval = c(-0.10, 0.30),
+    extendInt = "yes"
+  )$root
+}
+
+tbl_psa_oas <- tidyr::crossing(
+  psa_percent = c(0, 50, 100),
+  assumed_price = c(95, 105)
+) |>
+  dplyr::mutate(
+    cashflows = purrr::map(
+      psa_percent,
+      ~compute_mbs_cashflows_LRL(
+        original_balance = 100, mortgage_rate = 0.05,
+        pass_through_rate = 0.045,
+        refinance_rate = 0.05,
+        incentive_sensitivity = 0,
+        psa_multiplier = .x / 100
+      )
+    ),
+    oas_bp = purrr::map2_dbl(
+      cashflows, assumed_price,
+      ~10000 * compute_mbs_static_oas_LRL(.x, .y)
+    )
+  ) |>
+  dplyr::select(-cashflows)
+
+show_early_redemption_tbl_LRL(
+  tbl_psa_oas, "PSAと架空の取引価格に対応する静的OAS（bp）"
+)
+```
+
+同一価格を説明する OAS は、プリペイメント仮定によって変わる。ディスカウント証券では元本が早く額面で戻るほど有利だが、プレミアム証券では額面での早期回収が不利になりやすい。結果の比較では約定価格を固定し、PSA と OAS のどちらを動かしたかを明記する。ここでの95と105は観測価格ではなく、関係を示すための仮定である。
+
+実務では借換え金利の反応ラグ、ローンの経過月数、地域差、借換えを済ませた借り手の選別（バーンアウト）、季節性、延滞・デフォルト、手数料、元利金の支払遅延も推定対象になる。PSAはプリペイメント速度のベンチマークであり、住宅ローン債務者の個別行動の推定モデルではない。日本のRMBSでは[日本証券業協会のPSJ](https://www.jsda.or.jp/shiryoshitsu/toukei/psj/)も検討する。CMOではさらにトランシェごとの元本配分規則が必要となる。MathWorks の [Prepayment Risk](https://www.mathworks.com/help/fininst/prepayment-risk.html) は、その具体例として Sequential、PAC、TAC の配分方法を整理している。本章のパススルー価格を、そのまま CMO の各トランシェ価格とはみなせない。

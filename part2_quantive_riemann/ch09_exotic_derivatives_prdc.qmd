@@ -1128,10 +1128,10 @@ part2_chapter_summary_tbl <- tibble::tribble(
   "II-2", "Treasury futures and CTD", "Basis, carry, implied repo, and futures BPV",
   "II-3", "OIS and multi-curve valuation", "Discount and forecast curve separation",
   "II-4", "Black model", "Lognormal forward-option pricing",
-  "II-5", "Normal model", "Bachelier pricing for zero and negative rates",
-  "II-6", "SABR model", "Volatility-smile calibration",
-  "II-7", "Callable Bond and Hull-White", "Short-rate tree and early exercise",
-  "II-8", "Credit risk and CDS", "Hazard curve, MidPoint, and ISDA valuation",
+  "II-5", "Credit risk and CDS", "Hazard rates and CDS valuation",
+  "II-6", "Interest-rate model calibration", "SABR, Hull-White, and BGM calibration",
+  "II-7", "Short-rate and forward-rate models", "Hull-White, HJM, BGM/LMM, and RFR FMM",
+  "II-8", "Callable bonds and MBS prepayment", "Issuer call valuation and mortgage prepayment cash flows",
   "II-9", "Exotic derivatives and PRDC", "FX-linked coupon Monte Carlo valuation"
 )
 

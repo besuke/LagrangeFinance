@@ -227,7 +227,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch01_deterministic_cashflow_valuation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-1章 債券評価と金利リスクの基礎</span></a>
+  <a href="../part2_quantive_riemann/ch01_deterministic_cashflow.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-1章 債券評価と金利リスクの基礎</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -247,22 +247,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch05_interest_rate_model_calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 金利モデルのキャリブレーション</span></a>
+  <a href="../part2_quantive_riemann/ch05_credit_risk_cds.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-5章 信用リスクとクレジットデリバティブ</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch06_short_rate_and_forward_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 ショートレートモデルとフォワード金利モデル</span></a>
+  <a href="../part2_quantive_riemann/ch06_irs_calibration.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-6章 金利モデルのキャリブレーション</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch07_early_redemption_interest_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 金利モデルによる早期償還評価</span></a>
+  <a href="../part2_quantive_riemann/ch07_irs_rate_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-7章 ショートレートモデルとフォワード金利モデル</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part2_quantive_riemann/ch08_credit_risk_cds.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-8章 信用リスクとクレジットデリバティブ</span></a>
+  <a href="../part2_quantive_riemann/ch08_early_redemption_models.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第II-8章 金利モデルによる早期償還評価</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -1755,8 +1755,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 5</span></span>
 <span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   chr_method           num_pi num_elapsed_seconds num_absolute_error num_speedup</span></span>
 <span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;               &lt;dbl&gt;              &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414              2.5800        0.00016693      1      </span></span>
-<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415              2.89          0.000094774     0.89273</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414              2.7200        0.00016693      1      </span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415              2.84          0.000094774     0.95775</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> tbl_pi_benchmark <span class="sc">|&gt;</span></span>
