@@ -304,7 +304,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">エンタープライゼーション</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -312,37 +312,37 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融工学における計算技術の発展と並列コンピューティング</span></a>
+  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融計算技術の発展</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a>
+  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティング</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 エンタープライズ金融計算システムの構築</span></a>
+  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 金融計算アーキテクチャ</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分計算</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 自動微分応用：オプション</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分応用：金利リスク</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 自動微分応用：多因子モデル</span></a>
   </div>
 </li>
       </ul>
@@ -357,69 +357,14 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#ii-1.1-イールドカーブの基本" id="toc-ii-1.1-イールドカーブの基本" class="nav-link active" data-scroll-target="#ii-1.1-イールドカーブの基本">II-1.1 イールドカーブの基本</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.1.1-イールドカーブとは何か" id="toc-ii-1.1.1-イールドカーブとは何か" class="nav-link" data-scroll-target="#ii-1.1.1-イールドカーブとは何か">II-1.1.1 イールドカーブとは何か</a></li>
-  <li><a href="#ii-1.1.2-パーレートスポットレートフォワードレート" id="toc-ii-1.1.2-パーレートスポットレートフォワードレート" class="nav-link" data-scroll-target="#ii-1.1.2-パーレートスポットレートフォワードレート">II-1.1.2 パーレート・スポットレート・フォワードレート</a></li>
-  <li><a href="#ii-1.1.3-tonar-oisのパーレート" id="toc-ii-1.1.3-tonar-oisのパーレート" class="nav-link" data-scroll-target="#ii-1.1.3-tonar-oisのパーレート">II-1.1.3 TONAR OISのパーレート</a></li>
-  <li><a href="#ii-1.1.4-パーレートからディスカウントファクターの導出" id="toc-ii-1.1.4-パーレートからディスカウントファクターの導出" class="nav-link" data-scroll-target="#ii-1.1.4-パーレートからディスカウントファクターの導出">II-1.1.4 パーレートからディスカウントファクターの導出</a></li>
-  <li><a href="#ii-1.1.5-ディスカウントファクターからスポットレート" id="toc-ii-1.1.5-ディスカウントファクターからスポットレート" class="nav-link" data-scroll-target="#ii-1.1.5-ディスカウントファクターからスポットレート">II-1.1.5 ディスカウントファクターからスポットレート</a></li>
-  <li><a href="#ii-1.1.6-スポットレートからフォワードレート" id="toc-ii-1.1.6-スポットレートからフォワードレート" class="nav-link" data-scroll-target="#ii-1.1.6-スポットレートからフォワードレート">II-1.1.6 スポットレートからフォワードレート</a></li>
-  </ul></li>
-  <li><a href="#ii-1.2-イールドカーブの形状と三つの金利" id="toc-ii-1.2-イールドカーブの形状と三つの金利" class="nav-link" data-scroll-target="#ii-1.2-イールドカーブの形状と三つの金利">II-1.2 イールドカーブの形状と三つの金利</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.2.1-順イールド" id="toc-ii-1.2.1-順イールド" class="nav-link" data-scroll-target="#ii-1.2.1-順イールド">II-1.2.1 順イールド</a></li>
-  <li><a href="#ii-1.2.2-逆イールド" id="toc-ii-1.2.2-逆イールド" class="nav-link" data-scroll-target="#ii-1.2.2-逆イールド">II-1.2.2 逆イールド</a></li>
-  <li><a href="#ii-1.2.3-フラットカーブ" id="toc-ii-1.2.3-フラットカーブ" class="nav-link" data-scroll-target="#ii-1.2.3-フラットカーブ">II-1.2.3 フラットカーブ</a></li>
-  <li><a href="#ii-1.2.4-tonarによる三曲線の比較" id="toc-ii-1.2.4-tonarによる三曲線の比較" class="nav-link" data-scroll-target="#ii-1.2.4-tonarによる三曲線の比較">II-1.2.4 TONARによる三曲線の比較</a></li>
-  <li><a href="#ii-1.2.5-順イールド逆イールドの模式図" id="toc-ii-1.2.5-順イールド逆イールドの模式図" class="nav-link" data-scroll-target="#ii-1.2.5-順イールド逆イールドの模式図">II-1.2.5 順イールド・逆イールドの模式図</a></li>
-  </ul></li>
-  <li><a href="#ii-1.3-債券とキャッシュフロー" id="toc-ii-1.3-債券とキャッシュフロー" class="nav-link" data-scroll-target="#ii-1.3-債券とキャッシュフロー">II-1.3 債券とキャッシュフロー</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.3.1-固定利付債の基本構造" id="toc-ii-1.3.1-固定利付債の基本構造" class="nav-link" data-scroll-target="#ii-1.3.1-固定利付債の基本構造">II-1.3.1 固定利付債の基本構造</a></li>
-  <li><a href="#ii-1.3.2-利払スケジュールとキャッシュフロー" id="toc-ii-1.3.2-利払スケジュールとキャッシュフロー" class="nav-link" data-scroll-target="#ii-1.3.2-利払スケジュールとキャッシュフロー">II-1.3.2 利払スケジュールとキャッシュフロー</a></li>
-  <li><a href="#ii-1.3.3-債券市場のマーケットコンベンション" id="toc-ii-1.3.3-債券市場のマーケットコンベンション" class="nav-link" data-scroll-target="#ii-1.3.3-債券市場のマーケットコンベンション">II-1.3.3 債券市場のマーケットコンベンション</a></li>
-  </ul></li>
-  <li><a href="#ii-1.4-債券単価と市場利回り" id="toc-ii-1.4-債券単価と市場利回り" class="nav-link" data-scroll-target="#ii-1.4-債券単価と市場利回り">II-1.4 債券単価と市場利回り</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.4.1-単利利回りと債券単価" id="toc-ii-1.4.1-単利利回りと債券単価" class="nav-link" data-scroll-target="#ii-1.4.1-単利利回りと債券単価">II-1.4.1 単利利回りと債券単価</a></li>
-  <li><a href="#ii-1.4.2-経過利子とクリーンプライス" id="toc-ii-1.4.2-経過利子とクリーンプライス" class="nav-link" data-scroll-target="#ii-1.4.2-経過利子とクリーンプライス">II-1.4.2 経過利子とクリーンプライス</a></li>
-  <li><a href="#ii-1.4.3-ダーティプライスと受渡金額" id="toc-ii-1.4.3-ダーティプライスと受渡金額" class="nav-link" data-scroll-target="#ii-1.4.3-ダーティプライスと受渡金額">II-1.4.3 ダーティプライスと受渡金額</a></li>
-  </ul></li>
-  <li><a href="#ii-1.5-利回りによる債券評価" id="toc-ii-1.5-利回りによる債券評価" class="nav-link" data-scroll-target="#ii-1.5-利回りによる債券評価">II-1.5 利回りによる債券評価</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.5.1-単利利回りによる評価" id="toc-ii-1.5.1-単利利回りによる評価" class="nav-link" data-scroll-target="#ii-1.5.1-単利利回りによる評価">II-1.5.1 単利利回りによる評価</a></li>
-  <li><a href="#ii-1.5.2-複利利回りによる評価" id="toc-ii-1.5.2-複利利回りによる評価" class="nav-link" data-scroll-target="#ii-1.5.2-複利利回りによる評価">II-1.5.2 複利利回りによる評価</a></li>
-  <li><a href="#ii-1.5.3-フラットイールドによる評価" id="toc-ii-1.5.3-フラットイールドによる評価" class="nav-link" data-scroll-target="#ii-1.5.3-フラットイールドによる評価">II-1.5.3 フラットイールドによる評価</a></li>
-  <li><a href="#ii-1.5.4-連続複利による再評価" id="toc-ii-1.5.4-連続複利による再評価" class="nav-link" data-scroll-target="#ii-1.5.4-連続複利による再評価">II-1.5.4 連続複利による再評価</a></li>
-  <li><a href="#ii-1.5.5-評価方式による債券価格の比較" id="toc-ii-1.5.5-評価方式による債券価格の比較" class="nav-link" data-scroll-target="#ii-1.5.5-評価方式による債券価格の比較">II-1.5.5 評価方式による債券価格の比較</a></li>
-  </ul></li>
-  <li><a href="#ii-1.6-債券の相対価値評価" id="toc-ii-1.6-債券の相対価値評価" class="nav-link" data-scroll-target="#ii-1.6-債券の相対価値評価">II-1.6 債券の相対価値評価</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.6.1-金利カーブによる債券評価" id="toc-ii-1.6.1-金利カーブによる債券評価" class="nav-link" data-scroll-target="#ii-1.6.1-金利カーブによる債券評価">II-1.6.1 金利カーブによる債券評価</a></li>
-  <li><a href="#ii-1.6.2-zスプレッド" id="toc-ii-1.6.2-zスプレッド" class="nav-link" data-scroll-target="#ii-1.6.2-zスプレッド">II-1.6.2 Zスプレッド</a></li>
-  <li><a href="#ii-1.6.3-アセットスワップ" id="toc-ii-1.6.3-アセットスワップ" class="nav-link" data-scroll-target="#ii-1.6.3-アセットスワップ">II-1.6.3 アセットスワップ</a></li>
-  <li><a href="#ii-1.6.4-債券利回りとスワップレートの比較" id="toc-ii-1.6.4-債券利回りとスワップレートの比較" class="nav-link" data-scroll-target="#ii-1.6.4-債券利回りとスワップレートの比較">II-1.6.4 債券利回りとスワップレートの比較</a></li>
-  </ul></li>
-  <li><a href="#ii-1.7-債券の金利感応度" id="toc-ii-1.7-債券の金利感応度" class="nav-link" data-scroll-target="#ii-1.7-債券の金利感応度">II-1.7 債券の金利感応度</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.7.1-デュレーション" id="toc-ii-1.7.1-デュレーション" class="nav-link" data-scroll-target="#ii-1.7.1-デュレーション">II-1.7.1 デュレーション</a></li>
-  <li><a href="#ii-1.7.2-修正デュレーション" id="toc-ii-1.7.2-修正デュレーション" class="nav-link" data-scroll-target="#ii-1.7.2-修正デュレーション">II-1.7.2 修正デュレーション</a></li>
-  <li><a href="#ii-1.7.3-コンベクシティ" id="toc-ii-1.7.3-コンベクシティ" class="nav-link" data-scroll-target="#ii-1.7.3-コンベクシティ">II-1.7.3 コンベクシティ</a></li>
-  <li><a href="#ii-1.7.4-bpvによる価格感応度" id="toc-ii-1.7.4-bpvによる価格感応度" class="nav-link" data-scroll-target="#ii-1.7.4-bpvによる価格感応度">II-1.7.4 BPVによる価格感応度</a></li>
-  </ul></li>
-  <li><a href="#ii-1.8-数値解法による複利利回りの計算" id="toc-ii-1.8-数値解法による複利利回りの計算" class="nav-link" data-scroll-target="#ii-1.8-数値解法による複利利回りの計算">II-1.8 数値解法による複利利回りの計算</a>
-  <ul class="collapse">
-  <li><a href="#ii-1.8.1-債券単価と利回りの逆問題" id="toc-ii-1.8.1-債券単価と利回りの逆問題" class="nav-link" data-scroll-target="#ii-1.8.1-債券単価と利回りの逆問題">II-1.8.1 債券単価と利回りの逆問題</a></li>
-  <li><a href="#ii-1.8.2-ニュートンラフソン法" id="toc-ii-1.8.2-ニュートンラフソン法" class="nav-link" data-scroll-target="#ii-1.8.2-ニュートンラフソン法">II-1.8.2 ニュートン・ラフソン法</a></li>
-  <li><a href="#y0-の場合" id="toc-y0-の場合" class="nav-link" data-scroll-target="#y0-の場合"><span class="math inline">\(Y=0\)</span> の場合</a></li>
-  <li><a href="#yneq0-の解析微分" id="toc-yneq0-の解析微分" class="nav-link" data-scroll-target="#yneq0-の解析微分"><span class="math inline">\(Y\neq0\)</span> の解析微分</a></li>
-  <li><a href="#ii-1.8.3-二分法" id="toc-ii-1.8.3-二分法" class="nav-link" data-scroll-target="#ii-1.8.3-二分法">II-1.8.3 二分法</a></li>
-  <li><a href="#ii-1.8.4-brent法" id="toc-ii-1.8.4-brent法" class="nav-link" data-scroll-target="#ii-1.8.4-brent法">II-1.8.4 Brent法</a></li>
-  <li><a href="#ii-1.8.5-多項式求根法" id="toc-ii-1.8.5-多項式求根法" class="nav-link" data-scroll-target="#ii-1.8.5-多項式求根法">II-1.8.5 多項式求根法</a></li>
-  <li><a href="#ii-1.8.6-gaussquantによる利回り計算" id="toc-ii-1.8.6-gaussquantによる利回り計算" class="nav-link" data-scroll-target="#ii-1.8.6-gaussquantによる利回り計算">II-1.8.6 GaussQuantによる利回り計算</a></li>
-  <li><a href="#ii-1.8.7-数値解法の精度と計算速度" id="toc-ii-1.8.7-数値解法の精度と計算速度" class="nav-link" data-scroll-target="#ii-1.8.7-数値解法の精度と計算速度">II-1.8.7 数値解法の精度と計算速度</a></li>
-  </ul></li>
+  <li><a href="#ii-1.1-イールドカーブの基本" id="toc-ii-1.1-イールドカーブの基本" class="nav-link active" data-scroll-target="#ii-1.1-イールドカーブの基本">II-1.1 イールドカーブの基本</a></li>
+  <li><a href="#ii-1.2-イールドカーブの形状と三つの金利" id="toc-ii-1.2-イールドカーブの形状と三つの金利" class="nav-link" data-scroll-target="#ii-1.2-イールドカーブの形状と三つの金利">II-1.2 イールドカーブの形状と三つの金利</a></li>
+  <li><a href="#ii-1.3-債券とキャッシュフロー" id="toc-ii-1.3-債券とキャッシュフロー" class="nav-link" data-scroll-target="#ii-1.3-債券とキャッシュフロー">II-1.3 債券とキャッシュフロー</a></li>
+  <li><a href="#ii-1.4-債券単価と市場利回り" id="toc-ii-1.4-債券単価と市場利回り" class="nav-link" data-scroll-target="#ii-1.4-債券単価と市場利回り">II-1.4 債券単価と市場利回り</a></li>
+  <li><a href="#ii-1.5-利回りによる債券評価" id="toc-ii-1.5-利回りによる債券評価" class="nav-link" data-scroll-target="#ii-1.5-利回りによる債券評価">II-1.5 利回りによる債券評価</a></li>
+  <li><a href="#ii-1.6-債券の相対価値評価" id="toc-ii-1.6-債券の相対価値評価" class="nav-link" data-scroll-target="#ii-1.6-債券の相対価値評価">II-1.6 債券の相対価値評価</a></li>
+  <li><a href="#ii-1.7-債券の金利感応度" id="toc-ii-1.7-債券の金利感応度" class="nav-link" data-scroll-target="#ii-1.7-債券の金利感応度">II-1.7 債券の金利感応度</a></li>
+  <li><a href="#ii-1.8-数値解法による複利利回りの計算" id="toc-ii-1.8-数値解法による複利利回りの計算" class="nav-link" data-scroll-target="#ii-1.8-数値解法による複利利回りの計算">II-1.8 数値解法による複利利回りの計算</a></li>
   </ul>
 </nav>
     </div>
@@ -452,19 +397,11 @@ window.Quarto = {
 <p>そこで本章では、まず <strong>パーレート → ディスカウントファクター → スポットレート → フォワードレート</strong> という導出関係を確認する。さらに、順イールド、逆イールドおよびフラットカーブについて、三つの金利の大小関係を直観と数式の両面から理解する。その後、同一の40年債を一貫して用い、<strong>単利利回り → 債券単価 → 複利利回り → フラットイールド評価 → 連続複利による再評価 → Zスプレッド → アセットスワップ → 金利感応度</strong>へと評価を展開する。最後に、クリーンプライスから複利利回りを逆算する問題を求根問題として捉え、複数の数値解法を比較する。</p>
 <section id="ii-1.1-イールドカーブの基本" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.1-イールドカーブの基本">II-1.1 イールドカーブの基本</h2>
-<section id="ii-1.1.1-イールドカーブとは何か" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.1.1-イールドカーブとは何か">II-1.1.1 イールドカーブとは何か</h3>
 <p>イールドカーブは、横軸に満期、縦軸に金利をとり、金利の期間構造を表したものである。金利は市場全体に一つだけ存在する数字ではなく、1年、5年、10年、30年といった期間ごとに異なる。長期金利が短期金利より高い右上がりの形状を順イールド、低い右下がりの形状を逆イールド、満期による差が小さい形状をフラットカーブという。</p>
 <p>同じ市場の金利期間構造にも、パーレート、スポットレート、フォワードレートという複数の表現がある。これらは別々の金利ではなく、同一のイールドカーブを異なる角度から見たものである。</p>
-</section>
-<section id="ii-1.1.2-パーレートスポットレートフォワードレート" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.1.2-パーレートスポットレートフォワードレート">II-1.1.2 パーレート・スポットレート・フォワードレート</h3>
 <p>パーレートは、債券であれば価格を額面と等しくし、スワップであれば契約時の価値をゼロにする固定金利である。市場で観測されるクーポン付き商品の金利を表す。</p>
 <p>スポットレートは、評価時点から特定の将来時点までのゼロクーポン金利である。満期まで途中の利払いがない一つのキャッシュフローを割り引くための金利であり、金融商品の各キャッシュフローを個別に評価する基礎となる。</p>
 <p>フォワードレートは、将来の特定期間に対応する金利である。スポットレートが評価時点から満期までの平均的な金利を表すのに対し、フォワードレートは将来の局所的な金利を表す。</p>
-</section>
-<section id="ii-1.1.3-tonar-oisのパーレート" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.1.3-tonar-oisのパーレート">II-1.1.3 TONAR OISのパーレート</h3>
 <p>満期 <span class="math inline">\(T_n\)</span> のTONAR OISパーレートを <span class="math inline">\(S_n\)</span>、固定レッグの各計算期間を <span class="math inline">\(\alpha_i\)</span>、ディスカウントファクターを <span class="math inline">\(DF(T_i)\)</span> とする。固定レッグの現在価値は、想定元本を1とすれば、</p>
 <p><span class="math display">\[PV_{\mathrm{fixed}}
 =
@@ -481,9 +418,6 @@ S_n
 {\displaystyle\sum_{i=1}^{n}\alpha_iDF(T_i)}
 }\]</span></p>
 <p>となる。TONAR OISの市場クォートは、この固定レッグと変動レッグを釣り合わせるパーレートである。</p>
-</section>
-<section id="ii-1.1.4-パーレートからディスカウントファクターの導出" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.1.4-パーレートからディスカウントファクターの導出">II-1.1.4 パーレートからディスカウントファクターの導出</h3>
 <p>上式を満期 <span class="math inline">\(T_n\)</span> のディスカウントファクターについて解くと、</p>
 <p><span class="math display">\[\boxed{
 DF(T_n)
@@ -493,9 +427,6 @@ DF(T_n)
 }{1+S_n\alpha_n}
 }\]</span></p>
 <p>となる。短い満期で求めたディスカウントファクターを使って、次の満期の値を順番に求めていく手続きがブートストラップである。本章では導出の意味を理解することに重点を置き、実際のマーケットコンベンションと補間を含むカーブ構築は第II-2章で扱う。</p>
-</section>
-<section id="ii-1.1.5-ディスカウントファクターからスポットレート" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.1.5-ディスカウントファクターからスポットレート">II-1.1.5 ディスカウントファクターからスポットレート</h3>
 <p>ディスカウントファクターは、将来の1単位の金額を評価時点の価値へ変換する倍率である。時点 <span class="math inline">\(t_i\)</span> のキャッシュフローを <span class="math inline">\(CF_i\)</span> とすれば、金融商品の現在価値は、</p>
 <p><span class="math display">\[PV=\sum_{i=1}^{n}CF_iDF(t_i)\]</span></p>
 <p>となる。連続複利のスポットレートを <span class="math inline">\(z(T)\)</span> とすると、</p>
@@ -505,9 +436,6 @@ DF(T_n)
 z(T)=-\frac{\log DF(T)}{T}
 }\]</span></p>
 <p>である。スポットレートは、評価時点から満期までの期間全体を表す平均的な金利と捉えることができる。</p>
-</section>
-<section id="ii-1.1.6-スポットレートからフォワードレート" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.1.6-スポットレートからフォワードレート">II-1.1.6 スポットレートからフォワードレート</h3>
 <p>インスタント・フォワードレートを <span class="math inline">\(f(T)\)</span> とすると、</p>
 <p><span class="math display">\[DF(T)
 =
@@ -526,11 +454,8 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 }\]</span></p>
 <p>である。この微分関係により、イールドカーブの傾きとスポットレート、フォワードレートの大小関係が結びつく。</p>
 </section>
-</section>
 <section id="ii-1.2-イールドカーブの形状と三つの金利" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.2-イールドカーブの形状と三つの金利">II-1.2 イールドカーブの形状と三つの金利</h2>
-<section id="ii-1.2.1-順イールド" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.2.1-順イールド">II-1.2.1 順イールド</h3>
 <p>スポットレートカーブが右上がりなら、<span class="math inline">\(z'(T)&gt;0\)</span> である。したがって、</p>
 <p><span class="math display">\[f(T)=z(T)+Tz'(T)&gt;z(T)\]</span></p>
 <p>となる。スポットレートが現在から満期までの平均勾配、フォワードレートが満期付近の局所的な勾配だと考えれば、上り坂が次第に急になるとき、局所的な勾配がそれまでの平均を上回ることは直観的にも明らかである。</p>
@@ -548,9 +473,6 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 \text{フォワードレート}
 }\]</span></p>
 <p>となる。</p>
-</section>
-<section id="ii-1.2.2-逆イールド" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.2.2-逆イールド">II-1.2.2 逆イールド</h3>
 <p>スポットレートカーブが右下がりなら、<span class="math inline">\(z'(T)&lt;0\)</span> であり、</p>
 <p><span class="math display">\[f(T)=z(T)+Tz'(T)&lt;z(T)\]</span></p>
 <p>となる。スポットレートには、それ以前の高い短期金利が平均として残るため、満期付近のフォワードレートはスポットレートより低い。</p>
@@ -563,9 +485,6 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 \text{フォワードレート}
 }\]</span></p>
 <p>となる。</p>
-</section>
-<section id="ii-1.2.3-フラットカーブ" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.2.3-フラットカーブ">II-1.2.3 フラットカーブ</h3>
 <p>スポットレートが満期によらず一定なら、<span class="math inline">\(z'(T)=0\)</span> なので、<span class="math inline">\(f(T)=z(T)\)</span> となる。複利方式と支払頻度をそろえた理想的な条件では、</p>
 <p><span class="math display">\[\boxed{
 \text{パーレート}
@@ -575,9 +494,6 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 \text{フォワードレート}
 }\]</span></p>
 <p>となる。</p>
-</section>
-<section id="ii-1.2.4-tonarによる三曲線の比較" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.2.4-tonarによる三曲線の比較">II-1.2.4 TONARによる三曲線の比較</h3>
 <p>以下では、TONAR OIS市場で観測されるパーレートと、そこから構築したスポットレートおよびインスタント・フォワードレートを一枚のグラフに重ねる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>tonar_benchmark <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">tonar_curve_benchmark_GQL</span>()</span>
@@ -664,9 +580,6 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 </div>
 </div>
 <p>パーレートは複数の期間金利を反映するため比較的滑らかであり、スポットレートは評価時点から各満期までの平均的な金利を表す。フォワードレートは満期付近の局所的な金利とカーブの傾きを反映するため、三曲線の中で最も変動しやすい。</p>
-</section>
-<section id="ii-1.2.5-順イールド逆イールドの模式図" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.2.5-順イールド逆イールドの模式図">II-1.2.5 順イールド・逆イールドの模式図</h3>
 <p>次の数値例では、年1回複利のスポットレートを滑らかに上昇または低下させ、対応するディスカウントファクター、パーレートおよび1年フォワードレートを計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tbl_curve_shapes <span class="ot">&lt;-</span> tidyr<span class="sc">::</span><span class="fu">crossing</span>(</span>
@@ -761,11 +674,8 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 </div>
 <p>この大小関係は、複利方式と支払頻度をそろえ、金利期間構造が滑らかかつ単調に上昇または下降する典型的な状況を想定している。複雑なカーブ形状や異なる市場慣行のもとですべての満期について機械的に成立する恒等式ではない。しかし、パーレートは途中キャッシュフローを含む金利、スポットレートは満期までの平均的な金利、フォワードレートは満期付近の局所的な金利であるという違いを理解すれば、三つのカーブの位置関係を直観的に読むことができる。</p>
 </section>
-</section>
 <section id="ii-1.3-債券とキャッシュフロー" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.3-債券とキャッシュフロー">II-1.3 債券とキャッシュフロー</h2>
-<section id="ii-1.3.1-固定利付債の基本構造" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.3.1-固定利付債の基本構造">II-1.3.1 固定利付債の基本構造</h3>
 <p>固定利付債は、あらかじめ定められた利払日にクーポンを支払い、満期日に最終クーポンと元本を償還する。したがって、債券評価の出発点は将来キャッシュフローの日付と金額を正確に確定することである。</p>
 <p>本章では、額面100、年率7.50%、半年払い、受渡日を2022年4月1日、償還日を2062年4月1日とする残存40年の固定利付債を一貫して用いて計算を確認する。</p>
 <div class="cell">
@@ -841,9 +751,6 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 <span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 coupon_rate_pct 7.5000    </span></span>
 <span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 frequency       Semiannual</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.3.2-利払スケジュールとキャッシュフロー" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.3.2-利払スケジュールとキャッシュフロー">II-1.3.2 利払スケジュールとキャッシュフロー</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tbl_bond_cashflow <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">bond_cashflow_table_GQL</span>(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">bond =</span> bond_obj</span>
@@ -870,17 +777,11 @@ z(T)+T\frac{\partial z(T)}{\partial T}
 <span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 20 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>各キャッシュフローを正確な支払日に配置することが、価格、利回り、デュレーションおよびスプレッド計算の共通基盤となる。</p>
-</section>
-<section id="ii-1.3.3-債券市場のマーケットコンベンション" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.3.3-債券市場のマーケットコンベンション">II-1.3.3 債券市場のマーケットコンベンション</h3>
 <p>債券計算では、日数計算規則、休日カレンダー、営業日調整、受渡日、利払頻度、価格表示、利回り表示および端数処理を一体として扱う必要がある。計算式だけが一致していても、マーケットコンベンションが異なれば市場で用いられる値とは一致しない。</p>
 <p>代表的な日数計算規則にはActual/365 Fixed、Actual/360、Actual/Actual ICMA、Actual/Actual ISDA、30/360 Bond Basisなどがある。債券のクーポン計算と金利カーブの時間軸では、同じ日数計算規則を用いるとは限らない。この区別は、後続章で金利カーブを構築するときにも重要となる。</p>
 </section>
-</section>
 <section id="ii-1.4-債券単価と市場利回り" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.4-債券単価と市場利回り">II-1.4 債券単価と市場利回り</h2>
-<section id="ii-1.4.1-単利利回りと債券単価" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.4.1-単利利回りと債券単価">II-1.4.1 単利利回りと債券単価</h3>
 <p>日本の公社債市場では単利利回りが広く用いられてきた。額面100円、年間クーポン額を <span class="math inline">\(C\)</span>、償還価格を <span class="math inline">\(R\)</span>、単価を <span class="math inline">\(P\)</span>、残存年数を <span class="math inline">\(T\)</span> とすると、単利の最終利回り <span class="math inline">\(Y\)</span> は</p>
 <p><span class="math display">\[Y=
 \frac{
@@ -944,29 +845,17 @@ y+\dfrac{1}{T}
 <span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 clean_price_from_simple_rate 110.93  </span></span>
 <span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 simple_rate_from_price_pct     6.5150</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.4.2-経過利子とクリーンプライス" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.4.2-経過利子とクリーンプライス">II-1.4.2 経過利子とクリーンプライス</h3>
 <p>債券市場で表示される単価は通常クリーンプライスである。受渡時には、直前利払日から受渡日までに発生した経過利子を加える。</p>
 <p><span class="math display">\[\text{Dirty Price}
 =
 \text{Clean Price}
 +
 \text{Accrued Interest}\]</span></p>
-</section>
-<section id="ii-1.4.3-ダーティプライスと受渡金額" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.4.3-ダーティプライスと受渡金額">II-1.4.3 ダーティプライスと受渡金額</h3>
 <p>クリーンプライスは市場での価格比較に適している一方、実際の受渡金額および将来キャッシュフローとの現在価値比較にはダーティプライスを用いる。したがって、利回りやスプレッドを逆算するときには、どの価格を入力としているかを明確にする必要がある。</p>
-</section>
 </section>
 <section id="ii-1.5-利回りによる債券評価" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.5-利回りによる債券評価">II-1.5 利回りによる債券評価</h2>
-<section id="ii-1.5.1-単利利回りによる評価" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.5.1-単利利回りによる評価">II-1.5.1 単利利回りによる評価</h3>
 <p>単利利回りは、クーポン収入と償還差損益を残存期間で年率化し、現在の単価に対する収益率として表す。計算が簡潔である一方、各キャッシュフローの発生時点を個別に割り引くものではない。</p>
-</section>
-<section id="ii-1.5.2-複利利回りによる評価" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.5.2-複利利回りによる評価">II-1.5.2 複利利回りによる評価</h3>
 <p>複利利回りでは、各キャッシュフローをその支払時点まで複利で割り引く。市場単価を <span class="math inline">\(P\)</span>、キャッシュフローを <span class="math inline">\(CF_i\)</span>、支払時点を <span class="math inline">\(t_i\)</span> とすると、複利利回り <span class="math inline">\(y\)</span> は概念的に</p>
 <p><span class="math display">\[P =
 \sum_{i=1}^{n}
@@ -1018,9 +907,6 @@ y+\dfrac{1}{T}
 <span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 compound_yield_pct           6.71047990  </span></span>
 <span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 price_from_compound_yield    110.92600000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.5.3-フラットイールドによる評価" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.5.3-フラットイールドによる評価">II-1.5.3 フラットイールドによる評価</h3>
 <p>フラットイールド評価では、満期ごとに異なるゼロレートを用いるのではなく、同一の利回りをすべての将来キャッシュフローに適用する。これはYTMによる債券評価を金利カーブの形式で表現したものと考えることができる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>flat_yield_handle <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">bond_flat_forward_handle_GQL</span>(</span>
@@ -1057,9 +943,6 @@ y+\dfrac{1}{T}
 <span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 flat_yield_pct 6.71047990  </span></span>
 <span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 dirty_price    110.92600032</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.5.4-連続複利による再評価" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.5.4-連続複利による再評価">II-1.5.4 連続複利による再評価</h3>
 <p>離散複利で表された利回りは、同じ経済価値を保ったまま連続複利へ変換できる。半年複利 <span class="math inline">\(y\)</span> と等価な連続複利 <span class="math inline">\(r_c\)</span> は、</p>
 <p><span class="math display">\[r_c
 =
@@ -1084,21 +967,12 @@ y+\dfrac{1}{T}
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 半年複利      6.7105</span></span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 連続複利      6.6004</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.5.5-評価方式による債券価格の比較" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.5.5-評価方式による債券価格の比較">II-1.5.5 評価方式による債券価格の比較</h3>
 <p>ここまでの計算は、単利利回り、複利利回り、フラットイールドおよび連続複利が同じ債券を異なる方法で表現していることを示している。特に、単利利回りから市場単価を得た後、その単価を複利評価体系へ変換することが、Zスプレッドやアセットスワップへ進むための接続点となる。</p>
-</section>
 </section>
 <section id="ii-1.6-債券の相対価値評価" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.6-債券の相対価値評価">II-1.6 債券の相対価値評価</h2>
-<section id="ii-1.6.1-金利カーブによる債券評価" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.6.1-金利カーブによる債券評価">II-1.6.1 金利カーブによる債券評価</h3>
 <p>単一のYTMは債券全体を一つの利回りで表現する。これに対して金利カーブによる評価では、各キャッシュフローをその支払時点に対応する割引係数で評価する。</p>
 <p>この考え方によって、債券固有の利回りを市場の基準金利カーブから分離し、スプレッドとして評価できる。</p>
-</section>
-<section id="ii-1.6.2-zスプレッド" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.6.2-zスプレッド">II-1.6.2 Zスプレッド</h3>
 <p>Zスプレッドは、基準となるゼロカーブの各年限へ一律に加算したときに、割引後キャッシュフローの合計が市場価格と一致する一定スプレッドである。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>z_spread <span class="ot">&lt;-</span> <span class="dv">50</span> <span class="sc">/</span> <span class="dv">10000</span></span>
@@ -1128,26 +1002,14 @@ y+\dfrac{1}{T}
 <span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 z_spread_bp      50.0000     </span></span>
 <span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 npv_with_zspread 103.77912413</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.6.3-アセットスワップ" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.6.3-アセットスワップ">II-1.6.3 アセットスワップ</h3>
 <p>アセットスワップでは、固定利付債のキャッシュフローを金利スワップの変動金利キャッシュフローへ変換し、債券をスワップ市場の基準金利と比較する。したがって、単純な「債券利回り－スワップレート」ではなく、債券価格、経過利子、固定クーポン、スワップの割引係数および変動金利レグの現在価値を同じ評価時点で整合させる必要がある。</p>
 <p>本章ではアセットスワップの位置づけと計算構造を確認し、実際のOIS・IRSカーブ構築およびマルチカーブ評価は第II-3章で扱う。第II-3章で構築したスワップカーブを用いることで、本節の債券評価を実際のIRS市場との相対価値評価へ接続できる。</p>
-</section>
-<section id="ii-1.6.4-債券利回りとスワップレートの比較" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.6.4-債券利回りとスワップレートの比較">II-1.6.4 債券利回りとスワップレートの比較</h3>
 <p>債券の複利利回りと同年限のスワップレートとの差は相対価値を見るための直感的な指標となるが、これはアセットスワップ・スプレッドそのものではない。アセットスワップではキャッシュフロー単位の現在価値を一致させる必要がある。</p>
 <p>この区別を明確にすることで、単利利回りから始まった債券評価を、金利スワップと共通の割引評価体系へ接続できる。</p>
 </section>
-</section>
 <section id="ii-1.7-債券の金利感応度" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.7-債券の金利感応度">II-1.7 債券の金利感応度</h2>
-<section id="ii-1.7.1-デュレーション" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.7.1-デュレーション">II-1.7.1 デュレーション</h3>
 <p>デュレーションは、債券キャッシュフローの回収時点を現在価値で加重平均した指標である。債券の残存期間だけではなく、クーポンと利回りにも依存する。</p>
-</section>
-<section id="ii-1.7.2-修正デュレーション" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.7.2-修正デュレーション">II-1.7.2 修正デュレーション</h3>
 <p>修正デュレーションは、利回り変化に対する価格の一次感応度を表す。</p>
 <p><span class="math display">\[\frac{\Delta P}{P}
 \approx
@@ -1418,13 +1280,7 @@ y+\dfrac{1}{T}
 <span id="cb10-263"><a href="#cb10-263" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 convexity_per_pct2          0.032117</span></span>
 <span id="cb10-264"><a href="#cb10-264" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 BPV_sen_per_bp             15.142</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.7.3-コンベクシティ" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.7.3-コンベクシティ">II-1.7.3 コンベクシティ</h3>
 <p>デュレーションが価格・利回り曲線の一次の傾きを表すのに対し、コンベクシティは二次の曲率を表す。利回り変化が大きくなるほど、一次近似だけでは価格変化を十分に説明できなくなる。</p>
-</section>
-<section id="ii-1.7.4-bpvによる価格感応度" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.7.4-bpvによる価格感応度">II-1.7.4 BPVによる価格感応度</h3>
 <p>本章ではVBAの定義に合わせ、複利利回り <span class="math inline">\(Y\)</span> を <strong>%単位</strong>で扱う。したがって、<span class="math inline">\(Y=6.71047990\)</span> は6.71047990%を意味する。</p>
 <p>単価 <span class="math inline">\(P\)</span> を「円／額面100円」で表すと、</p>
 <p><span class="math display">\[\mathrm{BPV}
@@ -1443,11 +1299,8 @@ y+\dfrac{1}{T}
 \frac{\partial P}{\partial Y}\]</span></p>
 <p>となる。VBAで%単位の微分値を扱う場合には、この100倍の換算を明示する必要がある。</p>
 </section>
-</section>
 <section id="ii-1.8-数値解法による複利利回りの計算" class="level2">
 <h2 class="anchored" data-anchor-id="ii-1.8-数値解法による複利利回りの計算">II-1.8 数値解法による複利利回りの計算</h2>
-<section id="ii-1.8.1-債券単価と利回りの逆問題" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.8.1-債券単価と利回りの逆問題">II-1.8.1 債券単価と利回りの逆問題</h3>
 <p>複利利回りから債券価格を求める計算は直接評価である。一方、市場で観測されたクリーンプライスから複利利回りを求めるには、</p>
 <p><span class="math display">\[f(y)
 =
@@ -1535,9 +1388,6 @@ P_{\mathrm{market}}
 <span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.8.2-ニュートンラフソン法" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.8.2-ニュートンラフソン法">II-1.8.2 ニュートン・ラフソン法</h3>
 <p>ニュートン・ラフソン法は、現在の推定値における関数値と微分値から次の推定値を求める。</p>
 <p><span class="math display">\[y_{k+1}
 =
@@ -1668,9 +1518,6 @@ y_k
 \frac{\partial^2 P}{\partial Y^2}
 }\]</span></p>
 <p>として扱う。</p>
-</section>
-<section id="y0-の場合" class="level3">
-<h3 class="anchored" data-anchor-id="y0-の場合"><span class="math inline">\(Y=0\)</span> の場合</h3>
 <p>VBAでは <span class="math inline">\(Y=0\)</span> を別ケースとして明示的に扱う。半年複利の割引係数は</p>
 <p><span class="math display">\[\alpha=
 \left(
@@ -1744,9 +1591,6 @@ D_{\mathrm{mod},Y=0}
 }\]</span></p>
 <p>となる。</p>
 <p>なお、受渡日が利払日で経過利子 <span class="math inline">\(\mathrm{Acc}=0\)</span> の場合は、上式の <span class="math inline">\(P+\mathrm{Acc}\)</span> は単に <span class="math inline">\(P\)</span> となる。</p>
-</section>
-<section id="yneq0-の解析微分" class="level3">
-<h3 class="anchored" data-anchor-id="yneq0-の解析微分"><span class="math inline">\(Y\neq0\)</span> の解析微分</h3>
 <p><span class="math inline">\(Y\neq0\)</span> では、</p>
 <p><span class="math display">\[P
 =
@@ -1885,9 +1729,6 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 BPV_sen_per_bp      15.142 </span></span>
 <span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 modified_duration   13.651</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.8.3-二分法" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.8.3-二分法">II-1.8.3 二分法</h3>
 <p>二分法は、根を挟む区間を半分ずつ狭めていく方法である。収束速度はニュートン・ラフソン法より遅いが、適切に根を挟む区間を設定すれば安定して解を求められる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_bisection_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -1949,9 +1790,6 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>yield_bisection_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_bisection_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.8.4-brent法" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.8.4-brent法">II-1.8.4 Brent法</h3>
 <p>Rの <code>uniroot()</code> はBrent法系の区間求根アルゴリズムを用いる。二分法の堅牢性と補間による高速な収束を組み合わせた実用的な方法である。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_brent_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
@@ -1964,9 +1802,6 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>yield_brent_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_brent_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.8.5-多項式求根法" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.8.5-多項式求根法">II-1.8.5 多項式求根法</h3>
 <p>規則的な固定利付債では、</p>
 <p><span class="math display">\[x=
 \frac{1}{1+Y/200}\]</span></p>
@@ -2008,9 +1843,6 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>yield_polyroot_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_polyroot_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.8.6-gaussquantによる利回り計算" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.8.6-gaussquantによる利回り計算">II-1.8.6 GaussQuantによる利回り計算</h3>
 <p>GaussQuantについても同じ40年債、同じクリーンプライスを用いる。比較対象をそろえるため、評価日を発行日とし、半年払い・30/360 Bond Basisで規則的な40年債を構築する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 第II-1章で使用している同一の40年債オブジェクトをそのまま利用する</span></span>
@@ -2028,9 +1860,6 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>yield_gaussquant_result <span class="ot">&lt;-</span> <span class="fu">compute_bond_yield_gaussquant_LRL</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="ii-1.8.7-数値解法の精度と計算速度" class="level3">
-<h3 class="anchored" data-anchor-id="ii-1.8.7-数値解法の精度と計算速度">II-1.8.7 数値解法の精度と計算速度</h3>
 <p>最後に、<strong>計算結果だけでなく計算時間も同時に比較する</strong>。一回だけの実行時間はOSや他プロセスの影響を受けやすいため、各解法を同じ回数だけ繰り返し、総経過時間と1回当たり平均時間を計測する。</p>
 <p>ここでは各解法を500回実行する。比較の目的は絶対的な速度ランキングではなく、同一PC・同一Rセッション・同一40年債という条件で、アルゴリズムごとの相対的な計算コストを確認することである。</p>
 <div class="cell">
@@ -2138,18 +1967,17 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb18-102"><a href="#cb18-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
 <span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                   compound_yield_pct calculation_time_ms</span></span>
 <span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                    &lt;chr&gt;              &lt;chr&gt;              </span></span>
-<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.02               </span></span>
-<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.10               </span></span>
-<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.28               </span></span>
-<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           0.66               </span></span>
-<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           0.96</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.14               </span></span>
+<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.22               </span></span>
+<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.76               </span></span>
+<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           1.48               </span></span>
+<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           4.72</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>以上の結果から、本例では Brent法 → ニュートン・ラフソン法 → 二分法 → polyroot の順に高速な結果となった。Brent法は二分法の安定性と補間法の高速性を組み合わせた手法であり、本例のように価格関数が利回りに対して滑らかで単調な問題では特に有効である。一方、ニュートン・ラフソン法は解析微分を必要とするものの高い収束性能を持ち、二分法は計算速度では劣るものの安定性に優れる。polyrootは規則的なキャッシュフローでは利用できるが、本例の40年債では80次多項式となるため計算負荷が大きくなる。</p>
 <p>GaussQuantも同じ40年債、同じクリーンプライスを入力としている。ただし、単純な価格式だけを解く自作アルゴリズムとは異なり、債券オブジェクト、利払スケジュール、日数計算規則、価格種別などのマーケットコンベンションを含めて処理する。そのため、速度差には求根法そのものの差だけでなく、実務的な債券評価処理のオーバーヘッドも含まれる。</p>
 <p>したがって、数値解法の選択では単純な計算速度だけでなく、収束速度、安定性、微分計算の可否、マーケットコンベンションへの対応を含めて評価することが重要である。この考え方は、後続章で扱う金利カーブのブートストラップ、インプライド・ボラティリティ、モデル・キャリブレーションにも共通する。</p>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

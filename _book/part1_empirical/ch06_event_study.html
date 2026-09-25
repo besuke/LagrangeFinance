@@ -304,7 +304,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">エンタープライゼーション</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -312,37 +312,37 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融工学における計算技術の発展と並列コンピューティング</span></a>
+  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融計算技術の発展</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a>
+  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティング</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 エンタープライズ金融計算システムの構築</span></a>
+  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 金融計算アーキテクチャ</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分計算</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 自動微分応用：オプション</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分応用：金利リスク</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 自動微分応用：多因子モデル</span></a>
   </div>
 </li>
       </ul>
@@ -357,82 +357,15 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#i-6.1-イベントスタディの基本設計" id="toc-i-6.1-イベントスタディの基本設計" class="nav-link active" data-scroll-target="#i-6.1-イベントスタディの基本設計">I-6.1 イベントスタディの基本設計</a>
-  <ul class="collapse">
-  <li><a href="#i-6.1.1-マーケットモデル" id="toc-i-6.1.1-マーケットモデル" class="nav-link" data-scroll-target="#i-6.1.1-マーケットモデル">I-6.1.1 マーケット・モデル</a></li>
-  <li><a href="#i-6.1.2-分析期間" id="toc-i-6.1.2-分析期間" class="nav-link" data-scroll-target="#i-6.1.2-分析期間">I-6.1.2 分析期間</a></li>
-  <li><a href="#i-6.1.3-分析環境" id="toc-i-6.1.3-分析環境" class="nav-link" data-scroll-target="#i-6.1.3-分析環境">I-6.1.3 分析環境</a></li>
-  </ul></li>
-  <li><a href="#i-6.2-入力データの読み込みと検証" id="toc-i-6.2-入力データの読み込みと検証" class="nav-link" data-scroll-target="#i-6.2-入力データの読み込みと検証">I-6.2 入力データの読み込みと検証</a>
-  <ul class="collapse">
-  <li><a href="#i-6.2.1-入力ファイル" id="toc-i-6.2.1-入力ファイル" class="nav-link" data-scroll-target="#i-6.2.1-入力ファイル">I-6.2.1 入力ファイル</a></li>
-  <li><a href="#i-6.2.2-データの読み込み" id="toc-i-6.2.2-データの読み込み" class="nav-link" data-scroll-target="#i-6.2.2-データの読み込み">I-6.2.2 データの読み込み</a></li>
-  <li><a href="#i-6.2.3-必須列の確認" id="toc-i-6.2.3-必須列の確認" class="nav-link" data-scroll-target="#i-6.2.3-必須列の確認">I-6.2.3 必須列の確認</a></li>
-  <li><a href="#i-6.2.4-データ型の整理" id="toc-i-6.2.4-データ型の整理" class="nav-link" data-scroll-target="#i-6.2.4-データ型の整理">I-6.2.4 データ型の整理</a></li>
-  <li><a href="#i-6.2.5-キーと欠損値の検証" id="toc-i-6.2.5-キーと欠損値の検証" class="nav-link" data-scroll-target="#i-6.2.5-キーと欠損値の検証">I-6.2.5 キーと欠損値の検証</a></li>
-  <li><a href="#i-6.2.6-入力データの概要" id="toc-i-6.2.6-入力データの概要" class="nav-link" data-scroll-target="#i-6.2.6-入力データの概要">I-6.2.6 入力データの概要</a></li>
-  <li><a href="#i-6.2.7-個別株リターンの分布" id="toc-i-6.2.7-個別株リターンの分布" class="nav-link" data-scroll-target="#i-6.2.7-個別株リターンの分布">I-6.2.7 個別株リターンの分布</a></li>
-  <li><a href="#i-6.2.8-市場リターンの時系列" id="toc-i-6.2.8-市場リターンの時系列" class="nav-link" data-scroll-target="#i-6.2.8-市場リターンの時系列">I-6.2.8 市場リターンの時系列</a></li>
-  </ul></li>
-  <li><a href="#i-6.3-決算サプライズとイベント分類" id="toc-i-6.3-決算サプライズとイベント分類" class="nav-link" data-scroll-target="#i-6.3-決算サプライズとイベント分類">I-6.3 決算サプライズとイベント分類</a>
-  <ul class="collapse">
-  <li><a href="#i-6.3.1-決算サプライズ" id="toc-i-6.3.1-決算サプライズ" class="nav-link" data-scroll-target="#i-6.3.1-決算サプライズ">I-6.3.1 決算サプライズ</a></li>
-  <li><a href="#i-6.3.2-イベント強度別の概要" id="toc-i-6.3.2-イベント強度別の概要" class="nav-link" data-scroll-target="#i-6.3.2-イベント強度別の概要">I-6.3.2 イベント強度別の概要</a></li>
-  <li><a href="#i-6.3.3-決算サプライズの分布" id="toc-i-6.3.3-決算サプライズの分布" class="nav-link" data-scroll-target="#i-6.3.3-決算サプライズの分布">I-6.3.3 決算サプライズの分布</a></li>
-  <li><a href="#i-6.3.4-イベント強度別の箱ひげ図" id="toc-i-6.3.4-イベント強度別の箱ひげ図" class="nav-link" data-scroll-target="#i-6.3.4-イベント強度別の箱ひげ図">I-6.3.4 イベント強度別の箱ひげ図</a></li>
-  <li><a href="#i-6.3.5-年度別イベント件数" id="toc-i-6.3.5-年度別イベント件数" class="nav-link" data-scroll-target="#i-6.3.5-年度別イベント件数">I-6.3.5 年度別イベント件数</a></li>
-  </ul></li>
-  <li><a href="#i-6.4-イベント日とイベントパネル" id="toc-i-6.4-イベント日とイベントパネル" class="nav-link" data-scroll-target="#i-6.4-イベント日とイベントパネル">I-6.4 イベント日とイベント・パネル</a>
-  <ul class="collapse">
-  <li><a href="#i-6.4.1-取引日カレンダー" id="toc-i-6.4.1-取引日カレンダー" class="nav-link" data-scroll-target="#i-6.4.1-取引日カレンダー">I-6.4.1 取引日カレンダー</a></li>
-  <li><a href="#i-6.4.2-イベント日0" id="toc-i-6.4.2-イベント日0" class="nav-link" data-scroll-target="#i-6.4.2-イベント日0">I-6.4.2 イベント日0</a></li>
-  <li><a href="#i-6.4.3-発表日からイベント日0までの日数" id="toc-i-6.4.3-発表日からイベント日0までの日数" class="nav-link" data-scroll-target="#i-6.4.3-発表日からイベント日0までの日数">I-6.4.3 発表日からイベント日0までの日数</a></li>
-  <li><a href="#i-6.4.4-イベントパネル" id="toc-i-6.4.4-イベントパネル" class="nav-link" data-scroll-target="#i-6.4.4-イベントパネル">I-6.4.4 イベント・パネル</a></li>
-  <li><a href="#i-6.4.5-データ利用可能性" id="toc-i-6.4.5-データ利用可能性" class="nav-link" data-scroll-target="#i-6.4.5-データ利用可能性">I-6.4.5 データ利用可能性</a></li>
-  <li><a href="#i-6.4.6-推定期間の利用可能日数" id="toc-i-6.4.6-推定期間の利用可能日数" class="nav-link" data-scroll-target="#i-6.4.6-推定期間の利用可能日数">I-6.4.6 推定期間の利用可能日数</a></li>
-  </ul></li>
-  <li><a href="#i-6.5-マーケットモデルの推定" id="toc-i-6.5-マーケットモデルの推定" class="nav-link" data-scroll-target="#i-6.5-マーケットモデルの推定">I-6.5 マーケット・モデルの推定</a>
-  <ul class="collapse">
-  <li><a href="#i-6.5.1-イベント別回帰" id="toc-i-6.5.1-イベント別回帰" class="nav-link" data-scroll-target="#i-6.5.1-イベント別回帰">I-6.5.1 イベント別回帰</a></li>
-  <li><a href="#i-6.5.2-推定結果の概要" id="toc-i-6.5.2-推定結果の概要" class="nav-link" data-scroll-target="#i-6.5.2-推定結果の概要">I-6.5.2 推定結果の概要</a></li>
-  <li><a href="#i-6.5.3-ベータの分布" id="toc-i-6.5.3-ベータの分布" class="nav-link" data-scroll-target="#i-6.5.3-ベータの分布">I-6.5.3 ベータの分布</a></li>
-  <li><a href="#i-6.5.4-アルファの分布" id="toc-i-6.5.4-アルファの分布" class="nav-link" data-scroll-target="#i-6.5.4-アルファの分布">I-6.5.4 アルファの分布</a></li>
-  <li><a href="#i-6.5.5-決定係数の分布" id="toc-i-6.5.5-決定係数の分布" class="nav-link" data-scroll-target="#i-6.5.5-決定係数の分布">I-6.5.5 決定係数の分布</a></li>
-  <li><a href="#i-6.5.6-ベータと決定係数" id="toc-i-6.5.6-ベータと決定係数" class="nav-link" data-scroll-target="#i-6.5.6-ベータと決定係数">I-6.5.6 ベータと決定係数</a></li>
-  </ul></li>
-  <li><a href="#i-6.6-異常リターンと累積異常リターン" id="toc-i-6.6-異常リターンと累積異常リターン" class="nav-link" data-scroll-target="#i-6.6-異常リターンと累積異常リターン">I-6.6 異常リターンと累積異常リターン</a>
-  <ul class="collapse">
-  <li><a href="#i-6.6.1-arとcar" id="toc-i-6.6.1-arとcar" class="nav-link" data-scroll-target="#i-6.6.1-arとcar">I-6.6.1 ARとCAR</a></li>
-  <li><a href="#i-6.6.2-aarとcaar" id="toc-i-6.6.2-aarとcaar" class="nav-link" data-scroll-target="#i-6.6.2-aarとcaar">I-6.6.2 AARとCAAR</a></li>
-  <li><a href="#i-6.6.3-イベント強度別caar" id="toc-i-6.6.3-イベント強度別caar" class="nav-link" data-scroll-target="#i-6.6.3-イベント強度別caar">I-6.6.3 イベント強度別CAAR</a></li>
-  <li><a href="#i-6.6.4-イベント日前後のaar" id="toc-i-6.6.4-イベント日前後のaar" class="nav-link" data-scroll-target="#i-6.6.4-イベント日前後のaar">I-6.6.4 イベント日前後のAAR</a></li>
-  <li><a href="#i-6.6.5-イベント日0のaar" id="toc-i-6.6.5-イベント日0のaar" class="nav-link" data-scroll-target="#i-6.6.5-イベント日0のaar">I-6.6.5 イベント日0のAAR</a></li>
-  <li><a href="#i-6.6.6-イベント日後のcaar" id="toc-i-6.6.6-イベント日後のcaar" class="nav-link" data-scroll-target="#i-6.6.6-イベント日後のcaar">I-6.6.6 イベント日後のCAAR</a></li>
-  <li><a href="#i-6.6.7-イベント強度別ar分布" id="toc-i-6.6.7-イベント強度別ar分布" class="nav-link" data-scroll-target="#i-6.6.7-イベント強度別ar分布">I-6.6.7 イベント強度別AR分布</a></li>
-  </ul></li>
-  <li><a href="#i-6.7-イベントウィンドウ分析" id="toc-i-6.7-イベントウィンドウ分析" class="nav-link" data-scroll-target="#i-6.7-イベントウィンドウ分析">I-6.7 イベント・ウィンドウ分析</a>
-  <ul class="collapse">
-  <li><a href="#i-6.7.1-ウィンドウ定義" id="toc-i-6.7.1-ウィンドウ定義" class="nav-link" data-scroll-target="#i-6.7.1-ウィンドウ定義">I-6.7.1 ウィンドウ定義</a></li>
-  <li><a href="#i-6.7.2-イベント別car" id="toc-i-6.7.2-イベント別car" class="nav-link" data-scroll-target="#i-6.7.2-イベント別car">I-6.7.2 イベント別CAR</a></li>
-  <li><a href="#i-6.7.3-イベント強度別の平均car" id="toc-i-6.7.3-イベント強度別の平均car" class="nav-link" data-scroll-target="#i-6.7.3-イベント強度別の平均car">I-6.7.3 イベント強度別の平均CAR</a></li>
-  <li><a href="#i-6.7.4-短期carの分布" id="toc-i-6.7.4-短期carの分布" class="nav-link" data-scroll-target="#i-6.7.4-短期carの分布">I-6.7.4 短期CARの分布</a></li>
-  <li><a href="#i-6.7.5-ウィンドウ別平均car" id="toc-i-6.7.5-ウィンドウ別平均car" class="nav-link" data-scroll-target="#i-6.7.5-ウィンドウ別平均car">I-6.7.5 ウィンドウ別平均CAR</a></li>
-  <li><a href="#i-6.7.6-正のcarとなったイベントの割合" id="toc-i-6.7.6-正のcarとなったイベントの割合" class="nav-link" data-scroll-target="#i-6.7.6-正のcarとなったイベントの割合">I-6.7.6 正のCARとなったイベントの割合</a></li>
-  <li><a href="#i-6.7.7-平均carのヒートマップ" id="toc-i-6.7.7-平均carのヒートマップ" class="nav-link" data-scroll-target="#i-6.7.7-平均carのヒートマップ">I-6.7.7 平均CARのヒートマップ</a></li>
-  </ul></li>
-  <li><a href="#i-6.8-決算サプライズと短期car" id="toc-i-6.8-決算サプライズと短期car" class="nav-link" data-scroll-target="#i-6.8-決算サプライズと短期car">I-6.8 決算サプライズと短期CAR</a>
-  <ul class="collapse">
-  <li><a href="#i-6.8.1-回帰分析" id="toc-i-6.8.1-回帰分析" class="nav-link" data-scroll-target="#i-6.8.1-回帰分析">I-6.8.1 回帰分析</a></li>
-  <li><a href="#i-6.8.2-決算サプライズと短期car" id="toc-i-6.8.2-決算サプライズと短期car" class="nav-link" data-scroll-target="#i-6.8.2-決算サプライズと短期car">I-6.8.2 決算サプライズと短期CAR</a></li>
-  <li><a href="#i-6.8.3-年度別の関係" id="toc-i-6.8.3-年度別の関係" class="nav-link" data-scroll-target="#i-6.8.3-年度別の関係">I-6.8.3 年度別の関係</a></li>
-  </ul></li>
-  <li><a href="#i-6.9-分析結果の保存" id="toc-i-6.9-分析結果の保存" class="nav-link" data-scroll-target="#i-6.9-分析結果の保存">I-6.9 分析結果の保存</a>
-  <ul class="collapse">
-  <li><a href="#i-6.9.1-イベント単位の結果" id="toc-i-6.9.1-イベント単位の結果" class="nav-link" data-scroll-target="#i-6.9.1-イベント単位の結果">I-6.9.1 イベント単位の結果</a></li>
-  <li><a href="#i-6.9.2-日次結果" id="toc-i-6.9.2-日次結果" class="nav-link" data-scroll-target="#i-6.9.2-日次結果">I-6.9.2 日次結果</a></li>
-  <li><a href="#i-6.9.3-parquet保存" id="toc-i-6.9.3-parquet保存" class="nav-link" data-scroll-target="#i-6.9.3-parquet保存">I-6.9.3 Parquet保存</a></li>
-  <li><a href="#i-6.9.4-保存結果の検証" id="toc-i-6.9.4-保存結果の検証" class="nav-link" data-scroll-target="#i-6.9.4-保存結果の検証">I-6.9.4 保存結果の検証</a></li>
-  </ul></li>
+  <li><a href="#i-6.1-イベントスタディの基本設計" id="toc-i-6.1-イベントスタディの基本設計" class="nav-link active" data-scroll-target="#i-6.1-イベントスタディの基本設計">I-6.1 イベントスタディの基本設計</a></li>
+  <li><a href="#i-6.2-入力データの読み込みと検証" id="toc-i-6.2-入力データの読み込みと検証" class="nav-link" data-scroll-target="#i-6.2-入力データの読み込みと検証">I-6.2 入力データの読み込みと検証</a></li>
+  <li><a href="#i-6.3-決算サプライズとイベント分類" id="toc-i-6.3-決算サプライズとイベント分類" class="nav-link" data-scroll-target="#i-6.3-決算サプライズとイベント分類">I-6.3 決算サプライズとイベント分類</a></li>
+  <li><a href="#i-6.4-イベント日とイベントパネル" id="toc-i-6.4-イベント日とイベントパネル" class="nav-link" data-scroll-target="#i-6.4-イベント日とイベントパネル">I-6.4 イベント日とイベント・パネル</a></li>
+  <li><a href="#i-6.5-マーケットモデルの推定" id="toc-i-6.5-マーケットモデルの推定" class="nav-link" data-scroll-target="#i-6.5-マーケットモデルの推定">I-6.5 マーケット・モデルの推定</a></li>
+  <li><a href="#i-6.6-異常リターンと累積異常リターン" id="toc-i-6.6-異常リターンと累積異常リターン" class="nav-link" data-scroll-target="#i-6.6-異常リターンと累積異常リターン">I-6.6 異常リターンと累積異常リターン</a></li>
+  <li><a href="#i-6.7-イベントウィンドウ分析" id="toc-i-6.7-イベントウィンドウ分析" class="nav-link" data-scroll-target="#i-6.7-イベントウィンドウ分析">I-6.7 イベント・ウィンドウ分析</a></li>
+  <li><a href="#i-6.8-決算サプライズと短期car" id="toc-i-6.8-決算サプライズと短期car" class="nav-link" data-scroll-target="#i-6.8-決算サプライズと短期car">I-6.8 決算サプライズと短期CAR</a></li>
+  <li><a href="#i-6.9-分析結果の保存" id="toc-i-6.9-分析結果の保存" class="nav-link" data-scroll-target="#i-6.9-分析結果の保存">I-6.9 分析結果の保存</a></li>
   <li><a href="#i-6.10-まとめ" id="toc-i-6.10-まとめ" class="nav-link" data-scroll-target="#i-6.10-まとめ">I-6.10 まとめ</a></li>
   </ul>
 </nav>
@@ -473,8 +406,6 @@ window.Quarto = {
 </ol>
 <section id="i-6.1-イベントスタディの基本設計" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.1-イベントスタディの基本設計">I-6.1 イベントスタディの基本設計</h2>
-<section id="i-6.1.1-マーケットモデル" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.1.1-マーケットモデル">I-6.1.1 マーケット・モデル</h3>
 <p>企業 <span class="math inline">\(i\)</span> の日 <span class="math inline">\(t\)</span> における実現リターンを <span class="math inline">\(R_{i,t}\)</span>、市場リターンを <span class="math inline">\(R_{M,t}\)</span> とする。推定期間では、次のマーケット・モデルを推定する。</p>
 <p><span class="math display">\[
 R_{i,t}
@@ -507,9 +438,6 @@ CAR_{i,t}
 =
 \sum_{\tau=T_1}^{t} AR_{i,\tau}
 \]</span></p>
-</section>
-<section id="i-6.1.2-分析期間" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.1.2-分析期間">I-6.1.2 分析期間</h3>
 <p>本章では、イベント日0を基準として次の期間を使用する。</p>
 <table class="caption-top table">
 <thead>
@@ -543,9 +471,6 @@ CAR_{i,t}
 </tbody>
 </table>
 <p>推定期間は100取引日、イベント期間は61取引日である。マーケット・モデルの推定には、最低80観測を必要とする。</p>
-</section>
-<section id="i-6.1.3-分析環境" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.1.3-分析環境">I-6.1.3 分析環境</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>estimation_start <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">130</span>L</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>estimation_end <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">31</span>L</span>
@@ -638,11 +563,8 @@ CAR_{i,t}
 <span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 derived_events data/derived/events</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-</section>
 <section id="i-6.2-入力データの読み込みと検証" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.2-入力データの読み込みと検証">I-6.2 入力データの読み込みと検証</h2>
-<section id="i-6.2.1-入力ファイル" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.1-入力ファイル">I-6.2.1 入力ファイル</h3>
 <p>本章では次の3ファイルを使用する。</p>
 <pre class="text"><code>data/raw/events/firm_returns.parquet
 data/raw/events/market_returns.parquet
@@ -684,9 +606,6 @@ data/raw/events/earnings_events.parquet</code></pre>
 <span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 market    market_returns.parquet  data/raw/events/market_returns.parquet </span></span>
 <span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 event     earnings_events.parquet data/raw/events/earnings_events.parquet</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.2.2-データの読み込み" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.2-データの読み込み">I-6.2.2 データの読み込み</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>tbl_return_raw <span class="ot">&lt;-</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_parquet_file_LFL</span>(</span>
@@ -703,9 +622,6 @@ data/raw/events/earnings_events.parquet</code></pre>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    vec_input_file[[<span class="st">"event"</span>]]</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.2.3-必須列の確認" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.3-必須列の確認">I-6.2.3 必須列の確認</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">validate_required_columns_LFL</span>(</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  tbl_return_raw,</span>
@@ -731,9 +647,6 @@ data/raw/events/earnings_events.parquet</code></pre>
 <span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="st">"tbl_event_raw"</span></span>
 <span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.2.4-データ型の整理" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.4-データ型の整理">I-6.2.4 データ型の整理</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tbl_return <span class="ot">&lt;-</span> tbl_return_raw <span class="sc">|&gt;</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
@@ -770,9 +683,6 @@ data/raw/events/earnings_events.parquet</code></pre>
 <span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    firm_ID</span>
 <span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.2.5-キーと欠損値の検証" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.5-キーと欠損値の検証">I-6.2.5 キーと欠損値の検証</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">validate_unique_keys_LFL</span>(</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  tbl_return,</span>
@@ -823,9 +733,6 @@ data/raw/events/earnings_events.parquet</code></pre>
 <span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 event             3960             0 realized_earnings              0</span></span>
 <span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 event             3960             0 lagged_ME                      0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.2.6-入力データの概要" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.6-入力データの概要">I-6.2.6 入力データの概要</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tbl_input_overview <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>data_name, <span class="sc">~</span>observations, <span class="sc">~</span>firms, <span class="sc">~</span>first_date, <span class="sc">~</span>last_date,</span>
@@ -854,9 +761,6 @@ data/raw/events/earnings_events.parquet</code></pre>
 <span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 market returns             1220    NA 2016-01-04 2020-12-30</span></span>
 <span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 events                     3960  1320 2017-01-04 2020-04-07</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.2.7-個別株リターンの分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.7-個別株リターンの分布">I-6.2.7 個別株リターンの分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>plot_return_distribution <span class="ot">&lt;-</span> tbl_return <span class="sc">|&gt;</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">is.finite</span>(R)) <span class="sc">|&gt;</span></span>
@@ -885,9 +789,6 @@ data/raw/events/earnings_events.parquet</code></pre>
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.2.8-市場リターンの時系列" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.2.8-市場リターンの時系列">I-6.2.8 市場リターンの時系列</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>plot_market_return_series <span class="ot">&lt;-</span> tbl_market <span class="sc">|&gt;</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> R_M)) <span class="sc">+</span></span>
@@ -916,11 +817,8 @@ data/raw/events/earnings_events.parquet</code></pre>
 </div>
 </div>
 </section>
-</section>
 <section id="i-6.3-決算サプライズとイベント分類" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.3-決算サプライズとイベント分類">I-6.3 決算サプライズとイベント分類</h2>
-<section id="i-6.3.1-決算サプライズ" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.3.1-決算サプライズ">I-6.3.1 決算サプライズ</h3>
 <p>決算サプライズは、実現利益と予想利益の差を期首時価総額で標準化して計算する。</p>
 <p><span class="math display">\[
 Surprise_i
@@ -974,9 +872,6 @@ ME_{i,-1}
 <span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 19       19    1050 2017-01-11       2017       -0.0024991  4             </span></span>
 <span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20       20     426 2017-01-12       2017       -0.0010089  5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.3.2-イベント強度別の概要" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.3.2-イベント強度別の概要">I-6.3.2 イベント強度別の概要</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>tbl_event_strength_summary <span class="ot">&lt;-</span> tbl_event <span class="sc">|&gt;</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(</span>
@@ -1025,9 +920,6 @@ ME_{i,-1}
 <span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 19       2020 4                  54   -0.0026712      -0.0026349 </span></span>
 <span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20       2020 5                  54   -0.00051141     -0.00069626</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.3.3-決算サプライズの分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.3.3-決算サプライズの分布">I-6.3.3 決算サプライズの分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>plot_earnings_surprise_distribution <span class="ot">&lt;-</span> tbl_event <span class="sc">|&gt;</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">is.finite</span>(earnings_surprise)) <span class="sc">|&gt;</span></span>
@@ -1059,9 +951,6 @@ ME_{i,-1}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.3.4-イベント強度別の箱ひげ図" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.3.4-イベント強度別の箱ひげ図">I-6.3.4 イベント強度別の箱ひげ図</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>plot_surprise_by_strength <span class="ot">&lt;-</span> tbl_event <span class="sc">|&gt;</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">is.finite</span>(earnings_surprise)) <span class="sc">|&gt;</span></span>
@@ -1094,9 +983,6 @@ ME_{i,-1}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.3.5-年度別イベント件数" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.3.5-年度別イベント件数">I-6.3.5 年度別イベント件数</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>plot_events_by_year <span class="ot">&lt;-</span> tbl_event <span class="sc">|&gt;</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(</span>
@@ -1132,11 +1018,8 @@ ME_{i,-1}
 </div>
 </div>
 </section>
-</section>
 <section id="i-6.4-イベント日とイベントパネル" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.4-イベント日とイベントパネル">I-6.4 イベント日とイベント・パネル</h2>
-<section id="i-6.4.1-取引日カレンダー" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.4.1-取引日カレンダー">I-6.4.1 取引日カレンダー</h3>
 <p>市場リターンの日付を取引日カレンダーとして使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>tbl_trading_calendar <span class="ot">&lt;-</span> tbl_market <span class="sc">|&gt;</span></span>
@@ -1177,9 +1060,6 @@ ME_{i,-1}
 <span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>    date_ID</span>
 <span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.4.2-イベント日0" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.4.2-イベント日0">I-6.4.2 イベント日0</h3>
 <p>決算発表は取引終了後に行われると仮定する。そのため、発表日が取引日であっても、その次の取引日をイベント日0とする。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>tbl_event <span class="ot">&lt;-</span> <span class="fu">assign_event_day_zero_LFL</span>(</span>
@@ -1223,9 +1103,6 @@ ME_{i,-1}
 <span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20       20     426 2017-01-12 2017-01-13                       252</span></span>
 <span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 2 more variables: event_strength &lt;ord&gt;, earnings_surprise &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.4.3-発表日からイベント日0までの日数" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.4.3-発表日からイベント日0までの日数">I-6.4.3 発表日からイベント日0までの日数</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>tbl_event_gap <span class="ot">&lt;-</span> tbl_event <span class="sc">|&gt;</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -1262,9 +1139,6 @@ ME_{i,-1}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.4.4-イベントパネル" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.4.4-イベントパネル">I-6.4.4 イベント・パネル</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>tbl_event_panel <span class="ot">&lt;-</span> <span class="fu">create_event_study_panel_LFL</span>(</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">tbl_event =</span> tbl_event,</span>
@@ -1308,9 +1182,6 @@ ME_{i,-1}
 <span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 19        1      39         -112 2016-07-20  0.024173    0.031602  </span></span>
 <span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20        1      39         -111 2016-07-21 -0.00044361 -0.00024792</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.4.5-データ利用可能性" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.4.5-データ利用可能性">I-6.4.5 データ利用可能性</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>estimation_window_length <span class="ot">&lt;-</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  estimation_end <span class="sc">-</span></span>
@@ -1370,9 +1241,6 @@ ME_{i,-1}
 <span id="cb22-56"><a href="#cb22-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1   3960                       3960                   3960                  3960</span></span>
 <span id="cb22-57"><a href="#cb22-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ abbreviated name: ¹​usable_estimation_window</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.4.6-推定期間の利用可能日数" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.4.6-推定期間の利用可能日数">I-6.4.6 推定期間の利用可能日数</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>plot_estimation_coverage <span class="ot">&lt;-</span> tbl_event_coverage <span class="sc">|&gt;</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -1406,11 +1274,8 @@ ME_{i,-1}
 </div>
 </div>
 </section>
-</section>
 <section id="i-6.5-マーケットモデルの推定" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.5-マーケットモデルの推定">I-6.5 マーケット・モデルの推定</h2>
-<section id="i-6.5.1-イベント別回帰" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.5.1-イベント別回帰">I-6.5.1 イベント別回帰</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>tbl_market_model <span class="ot">&lt;-</span> <span class="fu">estimate_market_models_LFL</span>(</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">tbl_event_panel =</span> tbl_event_panel,</span>
@@ -1449,9 +1314,6 @@ ME_{i,-1}
 <span id="cb24-35"><a href="#cb24-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   sigma_AR &lt;dbl&gt;, r_squared &lt;dbl&gt;, adjusted_r_squared &lt;dbl&gt;,</span></span>
 <span id="cb24-36"><a href="#cb24-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   estimation_observations &lt;int&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.5.2-推定結果の概要" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.5.2-推定結果の概要">I-6.5.2 推定結果の概要</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>tbl_market_model_summary <span class="ot">&lt;-</span> tbl_market_model <span class="sc">|&gt;</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
@@ -1478,9 +1340,6 @@ ME_{i,-1}
 <span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 5 more variables: mean_r_squared &lt;dbl&gt;, median_r_squared &lt;dbl&gt;,</span></span>
 <span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   mean_sigma_AR &lt;dbl&gt;, minimum_observations &lt;int&gt;, maximum_observations &lt;int&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.5.3-ベータの分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.5.3-ベータの分布">I-6.5.3 ベータの分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>plot_market_beta <span class="ot">&lt;-</span> tbl_market_model <span class="sc">|&gt;</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> beta)) <span class="sc">+</span></span>
@@ -1505,9 +1364,6 @@ ME_{i,-1}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.5.4-アルファの分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.5.4-アルファの分布">I-6.5.4 アルファの分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>plot_market_alpha <span class="ot">&lt;-</span> tbl_market_model <span class="sc">|&gt;</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> alpha)) <span class="sc">+</span></span>
@@ -1535,9 +1391,6 @@ ME_{i,-1}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.5.5-決定係数の分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.5.5-決定係数の分布">I-6.5.5 決定係数の分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>plot_market_model_r_squared <span class="ot">&lt;-</span> tbl_market_model <span class="sc">|&gt;</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> r_squared)) <span class="sc">+</span></span>
@@ -1558,9 +1411,6 @@ ME_{i,-1}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.5.6-ベータと決定係数" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.5.6-ベータと決定係数">I-6.5.6 ベータと決定係数</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>plot_beta_r_squared <span class="ot">&lt;-</span> tbl_market_model <span class="sc">|&gt;</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -1593,11 +1443,8 @@ ME_{i,-1}
 </div>
 </div>
 </section>
-</section>
 <section id="i-6.6-異常リターンと累積異常リターン" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.6-異常リターンと累積異常リターン">I-6.6 異常リターンと累積異常リターン</h2>
-<section id="i-6.6.1-arとcar" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.6.1-arとcar">I-6.6.1 ARとCAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>tbl_abnormal_return <span class="ot">&lt;-</span> <span class="fu">compute_abnormal_returns_LFL</span>(</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">tbl_event_panel =</span> tbl_event_panel,</span>
@@ -1646,9 +1493,6 @@ ME_{i,-1}
 <span id="cb30-45"><a href="#cb30-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20        1      39 1                       -11 2016-12-16 -0.0066719 -3.4403e-3</span></span>
 <span id="cb30-46"><a href="#cb30-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 3 more variables: normal_return &lt;dbl&gt;, AR &lt;dbl&gt;, CAR &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.6.2-aarとcaar" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.6.2-aarとcaar">I-6.6.2 AARとCAAR</h3>
 <p>イベント強度 <span class="math inline">\(g\)</span> に属するイベント数を <span class="math inline">\(N_g\)</span> とすると、平均異常リターンは次式で表される。</p>
 <p><span class="math display">\[
 AAR_{g,t}
@@ -1755,9 +1599,6 @@ CAR_{i,t}
 <span id="cb32-76"><a href="#cb32-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   standard_error_CAAR &lt;dbl&gt;, t_AAR &lt;dbl&gt;, t_CAAR &lt;dbl&gt;, p_AAR &lt;dbl&gt;,</span></span>
 <span id="cb32-77"><a href="#cb32-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   p_CAAR &lt;dbl&gt;, significance_AAR &lt;chr&gt;, significance_CAAR &lt;chr&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.6.3-イベント強度別caar" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.6.3-イベント強度別caar">I-6.6.3 イベント強度別CAAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>plot_caar_by_strength <span class="ot">&lt;-</span> tbl_daily_statistics <span class="sc">|&gt;</span></span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -1804,9 +1645,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.6.4-イベント日前後のaar" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.6.4-イベント日前後のaar">I-6.6.4 イベント日前後のAAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>plot_aar_around_event <span class="ot">&lt;-</span> tbl_daily_statistics <span class="sc">|&gt;</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
@@ -1856,9 +1694,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.6.5-イベント日0のaar" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.6.5-イベント日0のaar">I-6.6.5 イベント日0のAAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>plot_event_day_aar <span class="ot">&lt;-</span> tbl_daily_statistics <span class="sc">|&gt;</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(relative_day <span class="sc">==</span> <span class="dv">0</span>L) <span class="sc">|&gt;</span></span>
@@ -1892,9 +1727,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.6.6-イベント日後のcaar" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.6.6-イベント日後のcaar">I-6.6.6 イベント日後のCAAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>plot_post_event_caar <span class="ot">&lt;-</span> tbl_daily_statistics <span class="sc">|&gt;</span></span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
@@ -1936,9 +1768,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.6.7-イベント強度別ar分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.6.7-イベント強度別ar分布">I-6.6.7 イベント強度別AR分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>plot_ar_distribution_by_strength <span class="ot">&lt;-</span> tbl_abnormal_return <span class="sc">|&gt;</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
@@ -1980,11 +1809,8 @@ CAR_{i,t}
 </div>
 </div>
 </section>
-</section>
 <section id="i-6.7-イベントウィンドウ分析" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.7-イベントウィンドウ分析">I-6.7 イベント・ウィンドウ分析</h2>
-<section id="i-6.7.1-ウィンドウ定義" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.7.1-ウィンドウ定義">I-6.7.1 ウィンドウ定義</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>tbl_summary_window <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>window_ID, <span class="sc">~</span>window_label, <span class="sc">~</span>start_day, <span class="sc">~</span>end_day,</span>
@@ -2005,9 +1831,6 @@ CAR_{i,t}
 <span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 m10_p10   [-10, +10]         -10      10</span></span>
 <span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 m30_p30   [-30, +30]         -30      30</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.7.2-イベント別car" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.7.2-イベント別car">I-6.7.2 イベント別CAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>tbl_event_window_return <span class="ot">&lt;-</span></span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">compute_event_window_returns_LFL</span>(</span>
@@ -2044,9 +1867,6 @@ CAR_{i,t}
 <span id="cb39-33"><a href="#cb39-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   window_label &lt;chr&gt;, start_day &lt;int&gt;, end_day &lt;int&gt;, expected_days &lt;int&gt;,</span></span>
 <span id="cb39-34"><a href="#cb39-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   CAR_window &lt;dbl&gt;, observed_days &lt;int&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.7.3-イベント強度別の平均car" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.7.3-イベント強度別の平均car">I-6.7.3 イベント強度別の平均CAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>tbl_event_window_summary <span class="ot">&lt;-</span> tbl_event_window_return <span class="sc">|&gt;</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(</span>
@@ -2112,9 +1932,6 @@ CAR_{i,t}
 <span id="cb40-62"><a href="#cb40-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   positive_CAR_ratio &lt;dbl&gt;, standard_error_CAR &lt;dbl&gt;, t_value &lt;dbl&gt;,</span></span>
 <span id="cb40-63"><a href="#cb40-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   p_value &lt;dbl&gt;, significance &lt;chr&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.7.4-短期carの分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.7.4-短期carの分布">I-6.7.4 短期CARの分布</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>plot_short_window_car <span class="ot">&lt;-</span> tbl_event_window_return <span class="sc">|&gt;</span></span>
 <span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(window_ID <span class="sc">==</span> <span class="st">"m1_p1"</span>) <span class="sc">|&gt;</span></span>
@@ -2150,9 +1967,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.7.5-ウィンドウ別平均car" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.7.5-ウィンドウ別平均car">I-6.7.5 ウィンドウ別平均CAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>plot_window_mean_car <span class="ot">&lt;-</span> tbl_event_window_summary <span class="sc">|&gt;</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -2189,9 +2003,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.7.6-正のcarとなったイベントの割合" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.7.6-正のcarとなったイベントの割合">I-6.7.6 正のCARとなったイベントの割合</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>plot_positive_car_ratio <span class="ot">&lt;-</span> tbl_event_window_summary <span class="sc">|&gt;</span></span>
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -2229,9 +2040,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.7.7-平均carのヒートマップ" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.7.7-平均carのヒートマップ">I-6.7.7 平均CARのヒートマップ</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>plot_window_car_heatmap <span class="ot">&lt;-</span> tbl_event_window_summary <span class="sc">|&gt;</span></span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -2268,11 +2076,8 @@ CAR_{i,t}
 </div>
 </div>
 </section>
-</section>
 <section id="i-6.8-決算サプライズと短期car" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.8-決算サプライズと短期car">I-6.8 決算サプライズと短期CAR</h2>
-<section id="i-6.8.1-回帰分析" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.8.1-回帰分析">I-6.8.1 回帰分析</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>tbl_surprise_regression <span class="ot">&lt;-</span> tbl_event_window_return <span class="sc">|&gt;</span></span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
@@ -2299,9 +2104,6 @@ CAR_{i,t}
 <span id="cb45-23"><a href="#cb45-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1  0.090519      0.090289 0.014511    393.93 1.1933e-83     1 11144. -22282.</span></span>
 <span id="cb45-24"><a href="#cb45-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 4 more variables: BIC &lt;dbl&gt;, deviance &lt;dbl&gt;, df.residual &lt;int&gt;, nobs &lt;int&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.8.2-決算サプライズと短期car" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.8.2-決算サプライズと短期car">I-6.8.2 決算サプライズと短期CAR</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>plot_surprise_car <span class="ot">&lt;-</span> tbl_surprise_regression <span class="sc">|&gt;</span></span>
 <span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -2340,9 +2142,6 @@ CAR_{i,t}
 </div>
 </div>
 </div>
-</section>
-<section id="i-6.8.3-年度別の関係" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.8.3-年度別の関係">I-6.8.3 年度別の関係</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>plot_surprise_car_by_year <span class="ot">&lt;-</span> tbl_surprise_regression <span class="sc">|&gt;</span></span>
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(</span>
@@ -2384,11 +2183,8 @@ CAR_{i,t}
 </div>
 </div>
 </section>
-</section>
 <section id="i-6.9-分析結果の保存" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.9-分析結果の保存">I-6.9 分析結果の保存</h2>
-<section id="i-6.9.1-イベント単位の結果" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.9.1-イベント単位の結果">I-6.9.1 イベント単位の結果</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>tbl_event_window_wide <span class="ot">&lt;-</span> tbl_event_window_return <span class="sc">|&gt;</span></span>
 <span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
@@ -2414,9 +2210,6 @@ CAR_{i,t}
 <span id="cb48-22"><a href="#cb48-22" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
 <span id="cb48-23"><a href="#cb48-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(event_ID)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.9.2-日次結果" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.9.2-日次結果">I-6.9.2 日次結果</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>tbl_event_daily_output <span class="ot">&lt;-</span> tbl_abnormal_return <span class="sc">|&gt;</span></span>
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
@@ -2447,9 +2240,6 @@ CAR_{i,t}
 <span id="cb49-27"><a href="#cb49-27" aria-hidden="true" tabindex="-1"></a>    relative_day</span>
 <span id="cb49-28"><a href="#cb49-28" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.9.3-parquet保存" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.9.3-parquet保存">I-6.9.3 Parquet保存</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>list_output <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
 <span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">event_results =</span> tbl_event_output,</span>
@@ -2492,9 +2282,6 @@ CAR_{i,t}
 <span id="cb50-39"><a href="#cb50-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 event_daily   data/derived/events/event_study_daily.parquet  </span></span>
 <span id="cb50-40"><a href="#cb50-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 event_summary data/derived/events/event_study_summary.parquet</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-6.9.4-保存結果の検証" class="level3">
-<h3 class="anchored" data-anchor-id="i-6.9.4-保存結果の検証">I-6.9.4 保存結果の検証</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>tbl_output_verification <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">imap_dfr</span>(</span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>  list_output,</span>
@@ -2538,7 +2325,6 @@ CAR_{i,t}
 <span id="cb51-40"><a href="#cb51-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 event_daily   C:/AnalyticFin/Projects/LagrangeFinan… 241560      19    9222492</span></span>
 <span id="cb51-41"><a href="#cb51-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 event_summary C:/AnalyticFin/Projects/LagrangeFinan…    305      15      33564</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
 </section>
 <section id="i-6.10-まとめ" class="level2">
 <h2 class="anchored" data-anchor-id="i-6.10-まとめ">I-6.10 まとめ</h2>

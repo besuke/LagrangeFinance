@@ -304,7 +304,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">第III部 並列・分散処理から自動微分へ</span></a>
+ <span class="menu-text">エンタープライゼーション</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -312,37 +312,37 @@ window.Quarto = {
       <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融工学における計算技術の発展と並列コンピューティング</span></a>
+  <a href="../part3_enterprise_riemann/ch01_computational_evolution_parallel.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-1章 金融計算技術の発展</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティングとジョブ・タスク制御</span></a>
+  <a href="../part3_enterprise_riemann/ch02_distributed_computing_jobtask.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-2章 分散コンピューティング</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 エンタープライズ金融計算システムの構築</span></a>
+  <a href="../part3_enterprise_riemann/ch03_enterprise_financial_computing.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-3章 金融計算アーキテクチャ</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分による市場リスク感応度計測</span></a>
+  <a href="../part3_enterprise_riemann/ch04_automatic_differentiation.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-4章 自動微分計算</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 解析解とモンテカルロ自動微分による検証</span></a>
+  <a href="../part3_enterprise_riemann/ch05_option_greeks_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-5章 自動微分応用：オプション</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分による多変数金利感応度の計測</span></a>
+  <a href="../part3_enterprise_riemann/ch06_interest_rate_risk_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-6章 自動微分応用：金利リスク</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 多因子モンテカルロの自動微分による市場リスク感応度計測</span></a>
+  <a href="../part3_enterprise_riemann/ch07_prdc_autodiff.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第III-7章 自動微分応用：多因子モデル</span></a>
   </div>
 </li>
       </ul>
@@ -358,34 +358,11 @@ window.Quarto = {
    
   <ul>
   <li><a href="#i-2.1-分析環境" id="toc-i-2.1-分析環境" class="nav-link active" data-scroll-target="#i-2.1-分析環境">I-2.1 分析環境</a></li>
-  <li><a href="#i-2.2-財務データの読込みと整備" id="toc-i-2.2-財務データの読込みと整備" class="nav-link" data-scroll-target="#i-2.2-財務データの読込みと整備">I-2.2 財務データの読込みと整備</a>
-  <ul class="collapse">
-  <li><a href="#i-2.2.1-財務データの読込み" id="toc-i-2.2.1-財務データの読込み" class="nav-link" data-scroll-target="#i-2.2.1-財務データの読込み">I-2.2.1 財務データの読込み</a></li>
-  <li><a href="#i-2.2.2-データ構造の確認" id="toc-i-2.2.2-データ構造の確認" class="nav-link" data-scroll-target="#i-2.2.2-データ構造の確認">I-2.2.2 データ構造の確認</a></li>
-  <li><a href="#i-2.2.3-データ型と並び順の整理" id="toc-i-2.2.3-データ型と並び順の整理" class="nav-link" data-scroll-target="#i-2.2.3-データ型と並び順の整理">I-2.2.3 データ型と並び順の整理</a></li>
-  </ul></li>
-  <li><a href="#i-2.3-標本構成と売上高分布" id="toc-i-2.3-標本構成と売上高分布" class="nav-link" data-scroll-target="#i-2.3-標本構成と売上高分布">I-2.3 標本構成と売上高分布</a>
-  <ul class="collapse">
-  <li><a href="#i-2.3.1-年度別の企業数" id="toc-i-2.3.1-年度別の企業数" class="nav-link" data-scroll-target="#i-2.3.1-年度別の企業数">I-2.3.1 年度別の企業数</a></li>
-  <li><a href="#i-2.3.2-産業別の企業数" id="toc-i-2.3.2-産業別の企業数" class="nav-link" data-scroll-target="#i-2.3.2-産業別の企業数">I-2.3.2 産業別の企業数</a></li>
-  <li><a href="#i-2.3.3-売上高の分布" id="toc-i-2.3.3-売上高の分布" class="nav-link" data-scroll-target="#i-2.3.3-売上高の分布">I-2.3.3 売上高の分布</a></li>
-  </ul></li>
-  <li><a href="#i-2.4-株主資本とroe分析" id="toc-i-2.4-株主資本とroe分析" class="nav-link" data-scroll-target="#i-2.4-株主資本とroe分析">I-2.4 株主資本とROE分析</a>
-  <ul class="collapse">
-  <li><a href="#i-2.4.1-株主資本とroe" id="toc-i-2.4.1-株主資本とroe" class="nav-link" data-scroll-target="#i-2.4.1-株主資本とroe">I-2.4.1 株主資本とROE</a></li>
-  <li><a href="#i-2.4.2-産業別のroe" id="toc-i-2.4.2-産業別のroe" class="nav-link" data-scroll-target="#i-2.4.2-産業別のroe">I-2.4.2 産業別のROE</a></li>
-  <li><a href="#i-2.4.3-企業の順位付け" id="toc-i-2.4.3-企業の順位付け" class="nav-link" data-scroll-target="#i-2.4.3-企業の順位付け">I-2.4.3 企業の順位付け</a></li>
-  </ul></li>
-  <li><a href="#i-2.5-上級デュポンモデル" id="toc-i-2.5-上級デュポンモデル" class="nav-link" data-scroll-target="#i-2.5-上級デュポンモデル">I-2.5 上級デュポン・モデル</a>
-  <ul class="collapse">
-  <li><a href="#i-2.5.1-roeのデュポン分解" id="toc-i-2.5.1-roeのデュポン分解" class="nav-link" data-scroll-target="#i-2.5.1-roeのデュポン分解">I-2.5.1 ROEのデュポン分解</a></li>
-  <li><a href="#i-2.5.2-pmとatoの関係" id="toc-i-2.5.2-pmとatoの関係" class="nav-link" data-scroll-target="#i-2.5.2-pmとatoの関係">I-2.5.2 PMとATOの関係</a></li>
-  </ul></li>
-  <li><a href="#i-2.6-財務指標の要約と中間データ" id="toc-i-2.6-財務指標の要約と中間データ" class="nav-link" data-scroll-target="#i-2.6-財務指標の要約と中間データ">I-2.6 財務指標の要約と中間データ</a>
-  <ul class="collapse">
-  <li><a href="#i-2.6.1-複数の財務指標の要約" id="toc-i-2.6.1-複数の財務指標の要約" class="nav-link" data-scroll-target="#i-2.6.1-複数の財務指標の要約">I-2.6.1 複数の財務指標の要約</a></li>
-  <li><a href="#i-2.6.2-中間データの保存" id="toc-i-2.6.2-中間データの保存" class="nav-link" data-scroll-target="#i-2.6.2-中間データの保存">I-2.6.2 中間データの保存</a></li>
-  </ul></li>
+  <li><a href="#i-2.2-財務データの読込みと整備" id="toc-i-2.2-財務データの読込みと整備" class="nav-link" data-scroll-target="#i-2.2-財務データの読込みと整備">I-2.2 財務データの読込みと整備</a></li>
+  <li><a href="#i-2.3-標本構成と売上高分布" id="toc-i-2.3-標本構成と売上高分布" class="nav-link" data-scroll-target="#i-2.3-標本構成と売上高分布">I-2.3 標本構成と売上高分布</a></li>
+  <li><a href="#i-2.4-株主資本とroe分析" id="toc-i-2.4-株主資本とroe分析" class="nav-link" data-scroll-target="#i-2.4-株主資本とroe分析">I-2.4 株主資本とROE分析</a></li>
+  <li><a href="#i-2.5-上級デュポンモデル" id="toc-i-2.5-上級デュポンモデル" class="nav-link" data-scroll-target="#i-2.5-上級デュポンモデル">I-2.5 上級デュポン・モデル</a></li>
+  <li><a href="#i-2.6-財務指標の要約と中間データ" id="toc-i-2.6-財務指標の要約と中間データ" class="nav-link" data-scroll-target="#i-2.6-財務指標の要約と中間データ">I-2.6 財務指標の要約と中間データ</a></li>
   <li><a href="#i-2.7-まとめ" id="toc-i-2.7-まとめ" class="nav-link" data-scroll-target="#i-2.7-まとめ">I-2.7 まとめ</a></li>
   </ul>
 </nav>
@@ -418,8 +395,6 @@ window.Quarto = {
 </section>
 <section id="i-2.2-財務データの読込みと整備" class="level2">
 <h2 class="anchored" data-anchor-id="i-2.2-財務データの読込みと整備">I-2.2 財務データの読込みと整備</h2>
-<section id="i-2.2.1-財務データの読込み" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.2.1-財務データの読込み">I-2.2.1 財務データの読込み</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>financial_data_raw <span class="ot">&lt;-</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_parquet_file_LFL</span>(</span>
@@ -447,9 +422,6 @@ window.Quarto = {
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 7,910 more rows</span></span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: FO &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-2.2.2-データ構造の確認" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.2.2-データ構造の確認">I-2.2.2 データ構造の確認</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">show_data_structure_LFL</span>(financial_data_raw)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Rows: 7,920</span></span>
@@ -518,9 +490,6 @@ window.Quarto = {
 <span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 sales             0 0         </span></span>
 <span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more row</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-2.2.3-データ型と並び順の整理" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.2.3-データ型と並び順の整理">I-2.2.3 データ型と並び順の整理</h3>
 <p>企業IDと産業IDは分類変数であるためファクター型へ変換する。年度は整数型へ変換し、前年度の値を正しく取得できるように企業IDと年度の順に並べる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>financial_data <span class="ot">&lt;-</span> financial_data_raw <span class="sc">|&gt;</span></span>
@@ -569,11 +538,8 @@ window.Quarto = {
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-</section>
 <section id="i-2.3-標本構成と売上高分布" class="level2">
 <h2 class="anchored" data-anchor-id="i-2.3-標本構成と売上高分布">I-2.3 標本構成と売上高分布</h2>
-<section id="i-2.3.1-年度別の企業数" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.3.1-年度別の企業数">I-2.3.1 年度別の企業数</h3>
 <p>年度ごとの企業数と観測数を集計する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>firms_by_year <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
@@ -618,9 +584,6 @@ window.Quarto = {
 </div>
 </div>
 </div>
-</section>
-<section id="i-2.3.2-産業別の企業数" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.3.2-産業別の企業数">I-2.3.2 産業別の企業数</h3>
 <p>最新年度について、産業ごとの企業数を集計する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>latest_year <span class="ot">&lt;-</span></span>
@@ -676,9 +639,6 @@ window.Quarto = {
 </div>
 </div>
 </div>
-</section>
-<section id="i-2.3.3-売上高の分布" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.3.3-売上高の分布">I-2.3.3 売上高の分布</h3>
 <p>売上高は企業規模によって大きく異なるため、元の値と自然対数の両方を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>sales_summary <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
@@ -756,11 +716,8 @@ window.Quarto = {
 </div>
 </div>
 </section>
-</section>
 <section id="i-2.4-株主資本とroe分析" class="level2">
 <h2 class="anchored" data-anchor-id="i-2.4-株主資本とroe分析">I-2.4 株主資本とROE分析</h2>
-<section id="i-2.4.1-株主資本とroe" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.4.1-株主資本とroe">I-2.4.1 株主資本とROE</h3>
 <p>本章では、営業資産から営業負債を控除した純営業資産と、金融負債から金融資産を控除した純金融負債の差として株主資本を計算する。</p>
 <p><span class="math display">\[
 BE_t = (OA_t - OL_t) - (FO_t - FA_t)
@@ -870,9 +827,6 @@ ROE_t = \frac{X_t}{BE_{t-1}}
 </div>
 </div>
 </div>
-</section>
-<section id="i-2.4.2-産業別のroe" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.4.2-産業別のroe">I-2.4.2 産業別のROE</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>industry_roe_summary <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(industry_ID) <span class="sc">|&gt;</span></span>
@@ -939,9 +893,6 @@ ROE_t = \frac{X_t}{BE_{t-1}}
 </div>
 </div>
 </div>
-</section>
-<section id="i-2.4.3-企業の順位付け" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.4.3-企業の順位付け">I-2.4.3 企業の順位付け</h3>
 <p>最新年度について、産業内でROEが高い企業から順に順位を付ける。<code>dense_rank()</code>を使うと、同順位がある場合でも次の順位を飛ばさない。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>latest_roe_ranking <span class="ot">&lt;-</span> financial_data <span class="sc">|&gt;</span></span>
@@ -1021,11 +972,8 @@ ROE_t = \frac{X_t}{BE_{t-1}}
 <span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 10     1380   0.24979</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-</section>
 <section id="i-2.5-上級デュポンモデル" class="level2">
 <h2 class="anchored" data-anchor-id="i-2.5-上級デュポンモデル">I-2.5 上級デュポン・モデル</h2>
-<section id="i-2.5.1-roeのデュポン分解" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.5.1-roeのデュポン分解">I-2.5.1 ROEのデュポン分解</h3>
 <p>上級デュポン・モデルでは、ROEを純営業資産利益率と財務レバレッジの効果へ分解する。</p>
 <p><span class="math display">\[
 ROE_t = RNOA_t + FLEV_{t-1}(RNOA_t - NBC_t)
@@ -1108,9 +1056,6 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 <span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       &lt;int&gt;         &lt;dbl&gt;       &lt;dbl&gt;</span></span>
 <span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1      6405 0.00000036675 0.000020751</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-2.5.2-pmとatoの関係" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.5.2-pmとatoの関係">I-2.5.2 PMとATOの関係</h3>
 <p>営業利益率PMと純営業資産回転率ATOは、企業の事業モデルを異なる側面から表す。産業別中央値を使って両者の関係を確認する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>industry_pm_ato <span class="ot">&lt;-</span> financial_data_dupont <span class="sc">|&gt;</span></span>
@@ -1226,11 +1171,8 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 </div>
 </div>
 </section>
-</section>
 <section id="i-2.6-財務指標の要約と中間データ" class="level2">
 <h2 class="anchored" data-anchor-id="i-2.6-財務指標の要約と中間データ">I-2.6 財務指標の要約と中間データ</h2>
-<section id="i-2.6.1-複数の財務指標の要約" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.6.1-複数の財務指標の要約">I-2.6.1 複数の財務指標の要約</h3>
 <p>複数列に同じ集計を適用する場合は、列名のベクトルと<code>purrr::map_dfr()</code>を組み合わせる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>financial_metrics <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
@@ -1271,9 +1213,6 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 <span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 PM             7920      0.045534     0.040555   4.2223e-2  -0.20079 3.8289e-1</span></span>
 <span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 ATO            6405      2.7051       2.1024     1.8684e+0   0.25825 9.8170e+0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-2.6.2-中間データの保存" class="level3">
-<h3 class="anchored" data-anchor-id="i-2.6.2-中間データの保存">I-2.6.2 中間データの保存</h3>
 <p>第3章では、本章で計算した株主資本、前年度株主資本およびROEなどを株式データと結合する。そのため、上級デュポン・モデルの計算結果を含む整理済みデータを<code>data/derived/fundamentals/financial_characteristics.parquet</code>へ保存する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>financial_output_path <span class="ot">&lt;-</span></span>
@@ -1295,7 +1234,7 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 <span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   out_file                                              size modified           </span></span>
 <span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                &lt;dbl&gt; &lt;dttm&gt;             </span></span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 data/derived/fundamentals/financial_characteristi… 1357543 2026-09-25 01:06:01</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 data/derived/fundamentals/financial_characteristi… 1357543 2026-09-25 09:06:03</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>保存したParquetファイルを読み直し、行数と列名が一致することを確認する。</p>
 <div class="cell">
@@ -1331,7 +1270,6 @@ NBC_t = \frac{NFE_t}{NFO_{t-1}}
 <span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                                       &lt;int&gt;   &lt;int&gt;</span></span>
 <span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 data/derived/fundamentals/financial_characteristics.parquet  7920      25</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
 </section>
 <section id="i-2.7-まとめ" class="level2">
 <h2 class="anchored" data-anchor-id="i-2.7-まとめ">I-2.7 まとめ</h2>
