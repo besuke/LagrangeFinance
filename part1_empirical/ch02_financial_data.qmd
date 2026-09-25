@@ -721,7 +721,6 @@ metric_summary <- financial_metrics |>
 show_table_LFL(metric_summary)
 ```
 
-### I-2.6.2 中間データの保存
 
 第3章では、本章で計算した株主資本、前年度株主資本およびROEなどを株式データと結合する。そのため、上級デュポン・モデルの計算結果を含む整理済みデータを`data/derived/fundamentals/financial_characteristics.parquet`へ保存する。
 

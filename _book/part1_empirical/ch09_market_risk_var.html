@@ -304,7 +304,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">エンタープライゼーション</span></a>
+ <span class="menu-text">第III部　エンタープライゼーション</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -357,7 +357,10 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#i-9.1-frtbとは何か" id="toc-i-9.1-frtbとは何か" class="nav-link active" data-scroll-target="#i-9.1-frtbとは何か">I-9.1 FRTBとは何か</a></li>
+  <li><a href="#i-9.1-frtbとは何か" id="toc-i-9.1-frtbとは何か" class="nav-link active" data-scroll-target="#i-9.1-frtbとは何か">I-9.1 FRTBとは何か</a>
+  <ul class="collapse">
+  <li><a href="#varからfrtbへ" id="toc-varからfrtbへ" class="nav-link" data-scroll-target="#varからfrtbへ">VaRからFRTBへ</a></li>
+  </ul></li>
   <li><a href="#i-9.2-市場varとは何か" id="toc-i-9.2-市場varとは何か" class="nav-link" data-scroll-target="#i-9.2-市場varとは何か">I-9.2 市場VaRとは何か</a></li>
   <li><a href="#i-9.3-市場データとポートフォリオ損益" id="toc-i-9.3-市場データとポートフォリオ損益" class="nav-link" data-scroll-target="#i-9.3-市場データとポートフォリオ損益">I-9.3 市場データとポートフォリオ損益</a></li>
   <li><a href="#i-9.4-分散共分散法による市場var" id="toc-i-9.4-分散共分散法による市場var" class="nav-link" data-scroll-target="#i-9.4-分散共分散法による市場var">I-9.4 分散共分散法による市場VaR</a></li>
@@ -397,6 +400,8 @@ window.Quarto = {
 <p>本章の目的はFRTBの標準的方式を再現することではない。FRTBを市場リスク管理の歴史的背景として位置づけ、市場VaRとESの考え方を、Rによるデータ処理とシミュレーションを通して理解することにある。</p>
 <section id="i-9.1-frtbとは何か" class="level2">
 <h2 class="anchored" data-anchor-id="i-9.1-frtbとは何か">I-9.1 FRTBとは何か</h2>
+<section id="varからfrtbへ" class="level3">
+<h3 class="anchored" data-anchor-id="varからfrtbへ">VaRからFRTBへ</h3>
 <p>1990年代以降、金融機関の市場リスク管理では市場VaRが広く利用されるようになった。市場VaRは、一定の保有期間と信頼水準のもとで、ポートフォリオに生じ得る損失を一つの数値として表現する。この簡潔さから、市場VaRは内部リスク管理だけでなく、規制上の市場リスク計測にも組み込まれていった。</p>
 <p>しかし、2007年から2008年にかけて進行した世界金融危機は、従来の市場リスク管理の限界を明らかにした。特にトレーディング勘定では、危機前に想定されていた水準を大きく上回る損失が発生した。市場流動性の急激な低下、信用スプレッドの拡大、証券化商品の価格下落、複数のリスク要因の同時変動などが重なり、平常時の過去データを中心に推定されたリスク尺度だけでは、危機時の損失を十分に捉えられない場合があることが認識された。</p>
 <p>さらに、大規模金融機関の経営危機は金融システム全体へ波及し得るため、各国では金融システム安定化のための公的支援が実施された。この経験は「Too Big To Fail」をめぐる議論を強め、個別金融機関の内部管理だけではなく、金融システム全体の安定性を意識した規制改革を促すことになった。</p>
@@ -416,6 +421,7 @@ FRTB
 期待ショートフォール</code></pre>
 <p>日本ではバーゼルIII最終化に伴う市場リスク規制が段階的に導入され、国際統一基準金融機関および内部モデルを採用する国内基準金融機関には2024年3月31日から、内部モデルを採用しない国内基準金融機関等には2025年3月31日から適用されている。</p>
 <p>本章ではFRTBの標準的方式の詳細な資本計算には立ち入らない。ここからは、FRTBに至る市場リスク管理の基礎となった市場VaRそのものを理解する。</p>
+</section>
 </section>
 <section id="i-9.2-市場varとは何か" class="level2">
 <h2 class="anchored" data-anchor-id="i-9.2-市場varとは何か">I-9.2 市場VaRとは何か</h2>

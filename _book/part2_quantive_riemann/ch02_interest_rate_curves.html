@@ -304,7 +304,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">エンタープライゼーション</span></a>
+ <span class="menu-text">第III部　エンタープライゼーション</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -357,13 +357,48 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#ii-2.1-イールドカーブおよび補間" id="toc-ii-2.1-イールドカーブおよび補間" class="nav-link active" data-scroll-target="#ii-2.1-イールドカーブおよび補間">II-2.1 イールドカーブおよび補間</a></li>
-  <li><a href="#ii-2.2-金利カーブの基礎" id="toc-ii-2.2-金利カーブの基礎" class="nav-link" data-scroll-target="#ii-2.2-金利カーブの基礎">II-2.2 金利カーブの基礎</a></li>
-  <li><a href="#ii-2.3-補間と参照日" id="toc-ii-2.3-補間と参照日" class="nav-link" data-scroll-target="#ii-2.3-補間と参照日">II-2.3 補間と参照日</a></li>
-  <li><a href="#ii-2.4-ブートストラップ" id="toc-ii-2.4-ブートストラップ" class="nav-link" data-scroll-target="#ii-2.4-ブートストラップ">II-2.4 ブートストラップ</a></li>
-  <li><a href="#ii-2.5-カーブ操作と検証" id="toc-ii-2.5-カーブ操作と検証" class="nav-link" data-scroll-target="#ii-2.5-カーブ操作と検証">II-2.5 カーブ操作と検証</a></li>
-  <li><a href="#ii-2.6-日本国債先物とctd" id="toc-ii-2.6-日本国債先物とctd" class="nav-link" data-scroll-target="#ii-2.6-日本国債先物とctd">II-2.6 日本国債先物とCTD</a></li>
-  <li><a href="#ii-2.7-イールドカーブ変動と最割安銘柄影響" id="toc-ii-2.7-イールドカーブ変動と最割安銘柄影響" class="nav-link" data-scroll-target="#ii-2.7-イールドカーブ変動と最割安銘柄影響">II-2.7 イールドカーブ変動と最割安銘柄影響</a></li>
+  <li><a href="#ii-2.1-イールドカーブおよび補間" id="toc-ii-2.1-イールドカーブおよび補間" class="nav-link active" data-scroll-target="#ii-2.1-イールドカーブおよび補間">II-2.1 イールドカーブおよび補間</a>
+  <ul class="collapse">
+  <li><a href="#ii-2.1.1-日本国債利回りデータの取得と整形" id="toc-ii-2.1.1-日本国債利回りデータの取得と整形" class="nav-link" data-scroll-target="#ii-2.1.1-日本国債利回りデータの取得と整形">II-2.1.1 日本国債利回りデータの取得と整形</a></li>
+  <li><a href="#ii-2.1.2-スプライン補間によるイールドカーブ" id="toc-ii-2.1.2-スプライン補間によるイールドカーブ" class="nav-link" data-scroll-target="#ii-2.1.2-スプライン補間によるイールドカーブ">II-2.1.2 スプライン補間によるイールドカーブ</a></li>
+  <li><a href="#ii-2.1.3-年限方向と時間方向の変化" id="toc-ii-2.1.3-年限方向と時間方向の変化" class="nav-link" data-scroll-target="#ii-2.1.3-年限方向と時間方向の変化">II-2.1.3 年限方向と時間方向の変化</a></li>
+  </ul></li>
+  <li><a href="#ii-2.2-金利カーブの基礎" id="toc-ii-2.2-金利カーブの基礎" class="nav-link" data-scroll-target="#ii-2.2-金利カーブの基礎">II-2.2 金利カーブの基礎</a>
+  <ul class="collapse">
+  <li><a href="#ii-2.2.1-ゼロ金利ノード" id="toc-ii-2.2.1-ゼロ金利ノード" class="nav-link" data-scroll-target="#ii-2.2.1-ゼロ金利ノード">II-2.2.1 ゼロ金利ノード</a></li>
+  <li><a href="#ii-2.2.2-ゼロカーブ" id="toc-ii-2.2.2-ゼロカーブ" class="nav-link" data-scroll-target="#ii-2.2.2-ゼロカーブ">II-2.2.2 ゼロカーブ</a></li>
+  <li><a href="#ii-2.2.3-カーブの表現" id="toc-ii-2.2.3-カーブの表現" class="nav-link" data-scroll-target="#ii-2.2.3-カーブの表現">II-2.2.3 カーブの表現</a></li>
+  </ul></li>
+  <li><a href="#ii-2.3-補間と参照日" id="toc-ii-2.3-補間と参照日" class="nav-link" data-scroll-target="#ii-2.3-補間と参照日">II-2.3 補間と参照日</a>
+  <ul class="collapse">
+  <li><a href="#ii-2.3.1-補間方式とフォワード金利" id="toc-ii-2.3.1-補間方式とフォワード金利" class="nav-link" data-scroll-target="#ii-2.3.1-補間方式とフォワード金利">II-2.3.1 補間方式とフォワード金利</a></li>
+  <li><a href="#ii-2.3.2-参照日と評価日" id="toc-ii-2.3.2-参照日と評価日" class="nav-link" data-scroll-target="#ii-2.3.2-参照日と評価日">II-2.3.2 参照日と評価日</a></li>
+  </ul></li>
+  <li><a href="#ii-2.4-ブートストラップ" id="toc-ii-2.4-ブートストラップ" class="nav-link" data-scroll-target="#ii-2.4-ブートストラップ">II-2.4 ブートストラップ</a>
+  <ul class="collapse">
+  <li><a href="#ii-2.4.1-預金と債券" id="toc-ii-2.4.1-預金と債券" class="nav-link" data-scroll-target="#ii-2.4.1-預金と債券">II-2.4.1 預金と債券</a></li>
+  <li><a href="#ii-2.4.2-預金とスワップ" id="toc-ii-2.4.2-預金とスワップ" class="nav-link" data-scroll-target="#ii-2.4.2-預金とスワップ">II-2.4.2 預金とスワップ</a></li>
+  </ul></li>
+  <li><a href="#ii-2.5-カーブ操作と検証" id="toc-ii-2.5-カーブ操作と検証" class="nav-link" data-scroll-target="#ii-2.5-カーブ操作と検証">II-2.5 カーブ操作と検証</a>
+  <ul class="collapse">
+  <li><a href="#ii-2.5.1-implied-term-structure" id="toc-ii-2.5.1-implied-term-structure" class="nav-link" data-scroll-target="#ii-2.5.1-implied-term-structure">II-2.5.1 Implied Term Structure</a></li>
+  <li><a href="#ii-2.5.2-カーブの平行シフト" id="toc-ii-2.5.2-カーブの平行シフト" class="nav-link" data-scroll-target="#ii-2.5.2-カーブの平行シフト">II-2.5.2 カーブの平行シフト</a></li>
+  <li><a href="#ii-2.5.3-カーブの検証" id="toc-ii-2.5.3-カーブの検証" class="nav-link" data-scroll-target="#ii-2.5.3-カーブの検証">II-2.5.3 カーブの検証</a></li>
+  </ul></li>
+  <li><a href="#ii-2.6-日本国債先物とctd" id="toc-ii-2.6-日本国債先物とctd" class="nav-link" data-scroll-target="#ii-2.6-日本国債先物とctd">II-2.6 日本国債先物とCTD</a>
+  <ul class="collapse">
+  <li><a href="#ii-2.6.1-受渡適格銘柄" id="toc-ii-2.6.1-受渡適格銘柄" class="nav-link" data-scroll-target="#ii-2.6.1-受渡適格銘柄">II-2.6.1 受渡適格銘柄</a></li>
+  <li><a href="#ii-2.6.2-gaussquantによる複利利回りとduration" id="toc-ii-2.6.2-gaussquantによる複利利回りとduration" class="nav-link" data-scroll-target="#ii-2.6.2-gaussquantによる複利利回りとduration">II-2.6.2 GaussQuantによる複利利回りとDuration</a></li>
+  <li><a href="#ii-2.6.3-gross-basiscarrynet-basis" id="toc-ii-2.6.3-gross-basiscarrynet-basis" class="nav-link" data-scroll-target="#ii-2.6.3-gross-basiscarrynet-basis">II-2.6.3 Gross Basis、Carry、Net Basis</a></li>
+  </ul></li>
+  <li><a href="#ii-2.7-イールドカーブ変動と最割安銘柄影響" id="toc-ii-2.7-イールドカーブ変動と最割安銘柄影響" class="nav-link" data-scroll-target="#ii-2.7-イールドカーブ変動と最割安銘柄影響">II-2.7 イールドカーブ変動と最割安銘柄影響</a>
+  <ul class="collapse">
+  <li><a href="#ii-2.7.1-6標準物と金利水準" id="toc-ii-2.7.1-6標準物と金利水準" class="nav-link" data-scroll-target="#ii-2.7.1-6標準物と金利水準">II-2.7.1 6%標準物と金利水準</a></li>
+  <li><a href="#ii-2.7.2-イールドカーブ反転シナリオ" id="toc-ii-2.7.2-イールドカーブ反転シナリオ" class="nav-link" data-scroll-target="#ii-2.7.2-イールドカーブ反転シナリオ">II-2.7.2 イールドカーブ反転シナリオ</a></li>
+  <li><a href="#ii-2.7.3-6標準物の先物価格" id="toc-ii-2.7.3-6標準物の先物価格" class="nav-link" data-scroll-target="#ii-2.7.3-6標準物の先物価格">II-2.7.3 6%標準物の先物価格</a></li>
+  <li><a href="#ii-2.7.4-8複利で受渡適格銘柄を再評価" id="toc-ii-2.7.4-8複利で受渡適格銘柄を再評価" class="nav-link" data-scroll-target="#ii-2.7.4-8複利で受渡適格銘柄を再評価">II-2.7.4 8%複利で受渡適格銘柄を再評価</a></li>
+  <li><a href="#ii-2.7.5-ctd-switchingの解釈" id="toc-ii-2.7.5-ctd-switchingの解釈" class="nav-link" data-scroll-target="#ii-2.7.5-ctd-switchingの解釈">II-2.7.5 CTD Switchingの解釈</a></li>
+  </ul></li>
   <li><a href="#ii-2.8-まとめ" id="toc-ii-2.8-まとめ" class="nav-link" data-scroll-target="#ii-2.8-まとめ">II-2.8 まとめ</a></li>
   </ul>
 </nav>
@@ -399,6 +434,8 @@ window.Quarto = {
 <p>しかし、スポットレートやフォワードレートを市場から直接観測することはできない。実際に観測されるのは、国債価格、国債の複利利回り、預金金利、OISレートおよびスワップレートなど、取引可能な金融商品の価格またはレートである。したがって、これらの市場データから期間構造を構築する際には、異常値を適切に処理するとともに、限られた年限（tenor）の観測値をどのように補間し、安定したイールドカーブを構築するかが重要となる。</p>
 <p>補間方法の選択は、単にグラフの見た目を滑らかにするためのものではない。補間されたカーブから割引係数、ゼロ金利およびフォワード金利が導出されるため、補間アルゴリズムの違いは金融商品の価格評価とリスク計測にも影響する。</p>
 <p>そこで、まず実際の市場金利が年限方向と時間方向にどのように変化するかを確認する。以下では、<a href="https://www.mof.go.jp/english/policy/jgbs/reference/interest_rate/historical/jgbcme_all.csv">財務省「Interest Rate Historical Data」</a>の日本国債複利利回りを用いる。各観測日の離散的な年限データを自然スプラインで補間し、イールドカーブの長期的な変化を可視化する。また、同じデータを年限ごとの時系列へ組み替え、各tenorの金利水準が時間とともにどのように推移したかを確認する。</p>
+<section id="ii-2.1.1-日本国債利回りデータの取得と整形" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.1.1-日本国債利回りデータの取得と整形">II-2.1.1 日本国債利回りデータの取得と整形</h3>
 <p>財務省のCSVは、観測日を行、年限を列とするwide形式で提供される。ここでは、すべての列をいったん文字列として読み込み、<code>pivot_longer()</code>によって観測日、年限および複利利回りからなるlong形式へ変換する。年限を一つの変数へまとめることで、年限方向のイールドカーブと時間方向の金利時系列を同じデータから描画できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>jgb_yield_url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(</span>
@@ -482,6 +519,9 @@ window.Quarto = {
 <span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 19 1984-01-06 1Y              1              6.307</span></span>
 <span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 20 1984-01-06 2Y              2              6.457</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="ii-2.1.2-スプライン補間によるイールドカーブ" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.1.2-スプライン補間によるイールドカーブ">II-2.1.2 スプライン補間によるイールドカーブ</h3>
 <p>市場で観測される国債利回りは、1年、2年、5年、10年などの離散的な年限に限られる。そこで、観測日ごとに年限方向の自然スプライン補間を行い、0.1年刻みの連続的なカーブへ変換する。元の観測値を点、補間値を線として描くことで、観測された情報と補間によって推定された情報を区別する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>tbl_jgb_yield_spline <span class="ot">&lt;-</span> tbl_jgb_yield <span class="sc">|&gt;</span></span>
@@ -557,6 +597,9 @@ window.Quarto = {
 </div>
 </div>
 </div>
+</section>
+<section id="ii-2.1.3-年限方向と時間方向の変化" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.1.3-年限方向と時間方向の変化">II-2.1.3 年限方向と時間方向の変化</h3>
 <p>日次データをそのままアニメーション化するとフレーム数が過大になるため、各四半期の最終観測日を抽出する。これにより、市場の長期的な局面変化を保ちながら、再現可能な計算量に抑える。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>tbl_jgb_animation_dates <span class="ot">&lt;-</span> tbl_jgb_yield <span class="sc">|&gt;</span></span>
@@ -822,6 +865,7 @@ window.Quarto = {
 </div>
 <p>二つの図は、同じ市場データを異なる方向から観察したものである。イールドカーブは一時点における年限間の相対関係を示し、金利時系列は各年限の水準が金融政策、景気および市場環境の変化を受けて推移する様子を示す。この二つの視点を区別することが、補間、ブートストラップおよび金利リスクを理解する出発点となる。</p>
 </section>
+</section>
 <section id="ii-2.2-金利カーブの基礎" class="level2">
 <h2 class="anchored" data-anchor-id="ii-2.2-金利カーブの基礎">II-2.2 金利カーブの基礎</h2>
 <p>評価日を0、将来時点を <span class="math inline">\(t\)</span> とし、時点 <span class="math inline">\(t\)</span> に1を受け取るキャッシュフローの現在価値を <span class="math inline">\(D(0,t)\)</span> とする。<span class="math inline">\(D(0,t)\)</span> は割引係数である。連続複利のゼロ金利を <span class="math inline">\(z(0,t)\)</span> とすると、両者の関係は次式で表される。</p>
@@ -841,6 +885,8 @@ window.Quarto = {
 t_2-t_1
 }\]</span></p>
 <p>割引係数、ゼロ金利およびフォワード金利は同じ期間構造を異なる方法で表している。ただし、補間方法の違いは、とくにフォワード金利の形状に強く表れる。</p>
+<section id="ii-2.2.1-ゼロ金利ノード" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.2.1-ゼロ金利ノード">II-2.2.1 ゼロ金利ノード</h3>
 <p>最初に、評価日と複数の将来日について連続複利のゼロ金利を設定する。ここで用いる数値は、カーブの構造を確認するための例示値である。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>evaluation_date_chr <span class="ot">&lt;-</span> <span class="st">"2022-08-19"</span></span>
@@ -878,6 +924,9 @@ t_2-t_1
 <span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 5Y    2027-08-19    0.0075</span></span>
 <span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 9 10Y   2032-08-19    0.0115</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="ii-2.2.2-ゼロカーブ" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.2.2-ゼロカーブ">II-2.2.2 ゼロカーブ</h3>
 <p><code>build_zero_curve_GQL()</code>は、日付とゼロ金利の組からQuantLibのZeroCurveを構築する。ここではカーブの時間軸にActual/365 Fixedを用いる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>zero_curve <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">build_zero_curve_GQL</span>(</span>
@@ -919,6 +968,9 @@ t_2-t_1
 <span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 10Y   2032-08-19  0.89128 0.0115</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>カーブから取得したゼロ金利は連続複利表示である。入力ノードの間ではQuantLibの補間規則に従って金利が補間される。</p>
+</section>
+<section id="ii-2.2.3-カーブの表現" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.2.3-カーブの表現">II-2.2.3 カーブの表現</h3>
 <p>カーブを細かい時間間隔へ展開し、割引係数、ゼロ金利および隣接区間のフォワード金利を計算する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>tbl_zero_curve_grid <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">curve_grid_tbl_GQL</span>(</span>
@@ -1049,8 +1101,11 @@ t_2-t_1
 </div>
 <p>割引係数は将来の1単位を現在価値へ換算する倍率である。正の金利環境では、満期が長くなるほど一般に小さくなる。ゼロ金利は評価日から各満期までの平均的な金利水準を示す。一方、フォワード金利は隣接する二時点間の金利を表すため、補間方法やノード配置の影響を強く受ける。</p>
 </section>
+</section>
 <section id="ii-2.3-補間と参照日" class="level2">
 <h2 class="anchored" data-anchor-id="ii-2.3-補間と参照日">II-2.3 補間と参照日</h2>
+<section id="ii-2.3.1-補間方式とフォワード金利" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.3.1-補間方式とフォワード金利">II-2.3.1 補間方式とフォワード金利</h3>
 <p>市場では限られた満期の金利または価格しか観測できないため、ノード間の値を補間する必要がある。補間対象には、ゼロ金利、割引係数、対数割引係数またはフォワード金利などがある。</p>
 <p>ここでは、同じゼロ金利ノードから次の二つのカーブを構築する。</p>
 <ul>
@@ -1219,6 +1274,9 @@ t_2-t_1
 </div>
 </div>
 <p>両カーブは入力ノードでほぼ同じ情報を再現するが、ノード間では異なる形状を示す。ゼロ金利のグラフでは差が小さく見えても、フォワード金利へ変換すると差が拡大することがある。したがって、カーブの妥当性はゼロ金利だけでなく、フォワード金利も確認する必要がある。</p>
+</section>
+<section id="ii-2.3.2-参照日と評価日" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.3.2-参照日と評価日">II-2.3.2 参照日と評価日</h3>
 <p>カーブの参照日は、割引係数が1となる時点であり、時間軸の起点である。日付ノードから構築したカーブでは、通常、最初のノード日が固定参照日となる。</p>
 <p>次の確認では、QuantLibの評価日を変更した後も、すでに構築済みのZeroCurveの参照日が変わらないことを確認する。</p>
 <div class="cell">
@@ -1262,8 +1320,11 @@ t_2-t_1
 </div>
 <p>固定参照日のカーブは、評価日を変更しても参照日が変化しない。一方、決済日数と休日カレンダーから参照日を決定するMoving Reference Date型のカーブでは、評価日の変更に応じて参照日も移動する。評価日を進めるシナリオ分析では、既存カーブを固定したまま使うのか、市場データから新しいカーブを再構築するのかを区別する必要がある。</p>
 </section>
+</section>
 <section id="ii-2.4-ブートストラップ" class="level2">
 <h2 class="anchored" data-anchor-id="ii-2.4-ブートストラップ">II-2.4 ブートストラップ</h2>
+<section id="ii-2.4.1-預金と債券" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.4.1-預金と債券">II-2.4.1 預金と債券</h3>
 <p>市場ではゼロ金利を直接観測できる満期は限られている。そのため、短期預金、国債価格およびスワップレートなどから、割引係数を順次推定するブートストラップを行う。</p>
 <p>短期部分では預金金利から最初の割引係数を求め、その先では固定利付債の市場価格と理論価格が一致するようにカーブを延長する。GaussQuantの<code>build_bond_discount_curve_GQL()</code>は、短期預金と複数の固定利付債を用いてPiecewiseFlatForwardカーブを構築する。</p>
 <div class="cell">
@@ -1336,6 +1397,9 @@ t_2-t_1
 </div>
 </div>
 <p>債券価格を用いるブートストラップでは、各債券のクーポン日、満期日、経過利子および日数計算規則がカーブ構築に影響する。債券のクーポン計算には商品固有の日数計算規則を用いる一方、期間構造の時間軸には単純で加法的な日数計算規則を用いる必要がある。</p>
+</section>
+<section id="ii-2.4.2-預金とスワップ" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.4.2-預金とスワップ">II-2.4.2 預金とスワップ</h3>
 <p>次に、短期部分を預金金利、中長期部分を固定対変動金利スワップの市場レートから構築する。スワップの市場レートは、固定レグと変動レグの現在価値を等しくするパー・スワップレートである。</p>
 <p>GaussQuantの<code>build_swap_curve_GQL()</code>は、短期預金と複数満期のスワップレートを用いてPiecewiseFlatForwardカーブを構築する。</p>
 <div class="cell">
@@ -1458,8 +1522,11 @@ t_2-t_1
 <p>債券カーブとスワップカーブは、異なる市場商品から構築されるため一致するとは限らない。両者の差には、市場の流動性、商品固有の信用・担保条件、日数計算規則および観測時点の違いが含まれる。</p>
 <p>FRAは、将来の一定期間に適用される金利を直接観測する商品として、預金とスワップの間を接続するために用いられる。本章の実装では預金とスワップを用いるが、FRAを追加する場合も、各市場商品の理論価格が市場価格と一致するように同じブートストラップの枠組みへ組み込む。</p>
 </section>
+</section>
 <section id="ii-2.5-カーブ操作と検証" class="level2">
 <h2 class="anchored" data-anchor-id="ii-2.5-カーブ操作と検証">II-2.5 カーブ操作と検証</h2>
+<section id="ii-2.5.1-implied-term-structure" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.5.1-implied-term-structure">II-2.5.1 Implied Term Structure</h3>
 <p>Implied Term Structureは、既存カーブが示す将来の割引関係を保ったまま、参照日を将来へ移した期間構造である。元のカーブの参照日を <span class="math inline">\(t_0\)</span>、新しい参照日を <span class="math inline">\(t_1\)</span>、将来日を <span class="math inline">\(t_2\)</span> とすると、Implied Term Structureの割引係数は概念的に次式で表される。</p>
 <p><span class="math display">\[D_{t_1}(t_2)
 =
@@ -1523,6 +1590,9 @@ D_{t_0}(t_1)
 <span id="cb22-52"><a href="#cb22-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 8 10Y   2019-09-18  0.65344  0.042551</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Implied Term Structureは、将来時点から見た割引係数を現在のカーブから機械的に導くものであり、将来の市場カーブを予測したものではない。評価日を将来へ進めたシナリオで市場リスクを評価する場合には、カーブの単純な時間経過と市場金利の変動を区別する必要がある。</p>
+</section>
+<section id="ii-2.5.2-カーブの平行シフト" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.5.2-カーブの平行シフト">II-2.5.2 カーブの平行シフト</h3>
 <p>金利リスク分析では、基準カーブに一定のスプレッドを加えたカーブを用いる。すべての満期へ同じスプレッドを加える変化を平行シフトという。</p>
 <p>ここでは、預金・スワップカーブへ50ベーシスポイントを加え、ゼロ金利と割引係数の変化を確認する。</p>
 <div class="cell">
@@ -1626,6 +1696,9 @@ D_{t_0}(t_1)
 </div>
 <p>正の平行シフトでは割引率が上昇し、将来キャッシュフローの割引係数は低下する。そのため、通常の固定キャッシュフロー商品の現在価値も低下する。</p>
 <p>実際の市場変動は完全な平行移動とは限らない。短期だけが動く変化、長期だけが動く変化、曲線の傾きが変化するスティープニングまたはフラットニングも生じる。年限別のKey Rate Shiftでは、特定年限のノードを動かし、周辺年限へ補間しながら再評価する。これらは平行シフトより細かなリスク分解である。</p>
+</section>
+<section id="ii-2.5.3-カーブの検証" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.5.3-カーブの検証">II-2.5.3 カーブの検証</h3>
 <p>構築したカーブについて、少なくとも次の点を確認する必要がある。</p>
 <ul>
 <li>参照日と最終日が想定どおりであること</li>
@@ -1802,6 +1875,7 @@ D_{t_0}(t_1)
 </div>
 <p>割引係数が正であることは、裁定のない期間構造を確認するための基本条件である。ただし、正の割引係数だけでは十分ではない。入力商品の再評価、補間区間のフォワード金利、外挿方法、日数計算規則および参照日の設定も確認する必要がある。</p>
 </section>
+</section>
 <section id="ii-2.6-日本国債先物とctd" class="level2">
 <h2 class="anchored" data-anchor-id="ii-2.6-日本国債先物とctd">II-2.6 日本国債先物とCTD</h2>
 <p>日本の長期国債先物は、実在する特定銘柄ではなく、クーポン6%、償還期限10年の標準物を取引対象とする。満期時には、取引所が定めた受渡適格銘柄の中から売方が実際に受け渡す銘柄を選択する。各銘柄ではクーポンと残存期間が異なるため、標準物との価値の差をConversion Factor（CF）で調整する。</p>
@@ -1811,6 +1885,8 @@ D_{t_0}(t_1)
 F\times CF\]</span></p>
 <p>ここで <span class="math inline">\(F\)</span> は国債先物価格、<span class="math inline">\(CF\)</span> はConversion Factorである。実際の受渡金額では、さらに受渡日の経過利子が加わる。</p>
 <p>CTD（Cheapest-to-Deliver）は、単に現物価格が最も安い銘柄ではない。現物価格、Conversion Factor、保有期間中のクーポン、経過利子、資金調達費用を合わせて比較する必要がある。本節では、2026年9月10日を評価日、2026年12月20日を受渡日として、長期国債先物2026年12月限の受渡適格銘柄を比較する。</p>
+<section id="ii-2.6.1-受渡適格銘柄" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.6.1-受渡適格銘柄">II-2.6.1 受渡適格銘柄</h3>
 <p>以下では373回債から383回債までを比較する。BB価格は本章の計算確認用に置いた2026年9月10日時点の値であり、最終稿では日本相互証券の確認値へ差し替える。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>valuation_date_chr <span class="ot">&lt;-</span> <span class="st">"2026-09-10"</span></span>
@@ -1862,6 +1938,9 @@ F\times CF\]</span></p>
 <span id="cb27-47"><a href="#cb27-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10   382 2026-03-20        2.4 2036-03-20              0.74722   96.808</span></span>
 <span id="cb27-48"><a href="#cb27-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11   383 2026-06-20        2.7 2036-06-20              0.76366   98.966</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="ii-2.6.2-gaussquantによる複利利回りとduration" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.6.2-gaussquantによる複利利回りとduration">II-2.6.2 GaussQuantによる複利利回りとDuration</h3>
 <p>各受渡適格銘柄をGaussQuantの<code>fixed_rate_bond_GQL()</code>で構築する。BB価格から半年複利利回りを逆算し、その利回りを用いてModified Durationを計算する。本章では以後、単にDurationと記す場合もModified Durationを意味する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>tbl_jgb_market <span class="ot">&lt;-</span> tbl_jgb_deliverable <span class="sc">|&gt;</span></span>
@@ -1947,6 +2026,9 @@ F\times CF\]</span></p>
 <span id="cb28-81"><a href="#cb28-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: conversion_factor &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>クーポンが高いほど、同一償還であればキャッシュフローを早く回収するためDurationは短くなる。一方、償還が遠いほどDurationは長くなる。実際の受渡適格銘柄では、この二つの効果が同時に働く。</p>
+</section>
+<section id="ii-2.6.3-gross-basiscarrynet-basis" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.6.3-gross-basiscarrynet-basis">II-2.6.3 Gross Basis、Carry、Net Basis</h3>
 <p>Gross Basisは、現物クリーン価格とCFで調整した先物価格との差である。</p>
 <p><span class="math display">\[\text{Gross Basis}_i
 =
@@ -2044,10 +2126,16 @@ P_i-F\times CF_i\]</span></p>
 <p>Net Basisが最小となる銘柄は、同じ前提で比較したときに売方が最も安く受け渡せる銘柄である。Implied Repo Rateで比較すれば、最も高い収益率を与える銘柄が同じCTDとなることを確認できる。</p>
 <p>ここで重要なのは、CTDが単純に「価格が低い銘柄」や「Durationが短い銘柄」と定義されているわけではないことである。Conversion Factorは6%標準物を基準にしているため、市場金利の水準とイールドカーブの形状が変わると、受渡適格銘柄間の相対価値も変化する。</p>
 </section>
+</section>
 <section id="ii-2.7-イールドカーブ変動と最割安銘柄影響" class="level2">
 <h2 class="anchored" data-anchor-id="ii-2.7-イールドカーブ変動と最割安銘柄影響">II-2.7 イールドカーブ変動と最割安銘柄影響</h2>
+<section id="ii-2.7.1-6標準物と金利水準" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.7.1-6標準物と金利水準">II-2.7.1 6%標準物と金利水準</h3>
 <p>長期国債先物の標準物は、クーポン6%、償還期限10年である。市場金利が6%を下回り、かつイールドカーブが右上がりである場合、短いDuration側の銘柄が相対的に受渡しやすくなる傾向がある。</p>
 <p>一方、標準物の6%を上回る高金利環境で、短期金利が長期金利を上回る逆イールドを作ると、相対価値は反対方向へ動き得る。ここでは、そのCTD Switchingを同じ受渡適格銘柄で確認する。</p>
+</section>
+<section id="ii-2.7.2-イールドカーブ反転シナリオ" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.7.2-イールドカーブ反転シナリオ">II-2.7.2 イールドカーブ反転シナリオ</h3>
 <p>シナリオでは、長期金利を8%、短期Funding Rateを9%とする。</p>
 <p><span class="math display">\[9\%_{\text{short}}
 &gt;
@@ -2108,6 +2196,9 @@ P_i-F\times CF_i\]</span></p>
 </div>
 </div>
 </div>
+</section>
+<section id="ii-2.7.3-6標準物の先物価格" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.7.3-6標準物の先物価格">II-2.7.3 6%標準物の先物価格</h3>
 <p>先物価格を任意の <span class="math inline">\(X\)</span> と置くのではなく、6%クーポン・10年の標準物を8%複利で評価した価格をシナリオの先物価格とする。これにより、現物債と先物を同じ金利環境で比較できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>stress_yield <span class="ot">&lt;-</span> <span class="fl">0.08</span></span>
@@ -2161,6 +2252,9 @@ P_i-F\times CF_i\]</span></p>
 <span id="cb31-49"><a href="#cb31-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 short_funding_rate_pct   9</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>6%クーポンの10年標準物を8%複利で評価すると、価格はおおむね86円台となる。単純な近似 <span class="math inline">\((6-8)\times10\)</span> でも100円から大きく低下する方向を確認できるが、実際の価格は各クーポンと元本を割り引いて求める。</p>
+</section>
+<section id="ii-2.7.4-8複利で受渡適格銘柄を再評価" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.7.4-8複利で受渡適格銘柄を再評価">II-2.7.4 8%複利で受渡適格銘柄を再評価</h3>
 <p>同じ373回債から383回債について、複利利回りを一律8%へ変更し、GaussQuantで時価とModified Durationを再計算する。Conversion Factorは変更しない。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>tbl_jgb_stress <span class="ot">&lt;-</span> tbl_jgb_market <span class="sc">|&gt;</span></span>
@@ -2260,6 +2354,9 @@ P_i-F\times CF_i\]</span></p>
 <span id="cb32-95"><a href="#cb32-95" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 5 more variables: conversion_factor &lt;dbl&gt;, gross_basis &lt;dbl&gt;,</span></span>
 <span id="cb32-96"><a href="#cb32-96" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   net_basis &lt;dbl&gt;, implied_repo_pct &lt;dbl&gt;, ctd &lt;lgl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="ii-2.7.5-ctd-switchingの解釈" class="level3">
+<h3 class="anchored" data-anchor-id="ii-2.7.5-ctd-switchingの解釈">II-2.7.5 CTD Switchingの解釈</h3>
 <p>二つの市場環境を比較する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>tbl_ctd_switch <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">bind_rows</span>(</span>
@@ -2303,6 +2400,7 @@ P_i-F\times CF_i\]</span></p>
 </div>
 <p>現在のように標準物6%より市場金利が低く、イールドカーブが右上がりである環境では、短いDuration側が相対的に受渡しやすくなる。一方、長期金利8%、短期金利9%という逆イールドでは、標準物6%を上回る金利水準とカーブの傾きが同時に反転し、長いDuration側へCTDが移る可能性がある。</p>
 <p>重要なのは、CTDを「Durationが最小の銘柄」または「Durationが最大の銘柄」と機械的に決めるのではないことである。最終判定はNet Basis最小、またはImplied Repo Rate最大で行う。Durationは、金利水準とConversion Factorの関係から相対価値がどちら側へ偏りやすいかを理解するための重要な手掛かりである。</p>
+</section>
 </section>
 <section id="ii-2.8-まとめ" class="level2">
 <h2 class="anchored" data-anchor-id="ii-2.8-まとめ">II-2.8 まとめ</h2>

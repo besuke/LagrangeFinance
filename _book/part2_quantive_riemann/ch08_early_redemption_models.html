@@ -304,7 +304,7 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">エンタープライゼーション</span></a>
+ <span class="menu-text">第III部　エンタープライゼーション</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -360,11 +360,19 @@ window.Quarto = {
   <li><a href="#ii-8.1-発行体条件と債券評価" id="toc-ii-8.1-発行体条件と債券評価" class="nav-link active" data-scroll-target="#ii-8.1-発行体条件と債券評価">II-8.1 発行体条件と債券評価</a></li>
   <li><a href="#ii-8.2-満期債と発行体コール" id="toc-ii-8.2-満期債と発行体コール" class="nav-link" data-scroll-target="#ii-8.2-満期債と発行体コール">II-8.2 満期債と発行体コール</a></li>
   <li><a href="#ii-8.3-発行体の行使判断とバックワードインダクション" id="toc-ii-8.3-発行体の行使判断とバックワードインダクション" class="nav-link" data-scroll-target="#ii-8.3-発行体の行使判断とバックワードインダクション">II-8.3 発行体の行使判断とバックワード・インダクション</a></li>
-  <li><a href="#ii-8.4-hullwhiteモデル" id="toc-ii-8.4-hullwhiteモデル" class="nav-link" data-scroll-target="#ii-8.4-hullwhiteモデル">II-8.4 Hull–Whiteモデル</a></li>
+  <li><a href="#ii-8.4-hullwhiteモデル" id="toc-ii-8.4-hullwhiteモデル" class="nav-link" data-scroll-target="#ii-8.4-hullwhiteモデル">II-8.4 Hull–Whiteモデル</a>
+  <ul class="collapse">
+  <li><a href="#ii-8.4.1-状態と割引の共同分布" id="toc-ii-8.4.1-状態と割引の共同分布" class="nav-link" data-scroll-target="#ii-8.4.1-状態と割引の共同分布">II-8.4.1 状態と割引の共同分布</a></li>
+  <li><a href="#ii-8.4.2-行使日ごとのバックワードインダクション" id="toc-ii-8.4.2-行使日ごとのバックワードインダクション" class="nav-link" data-scroll-target="#ii-8.4.2-行使日ごとのバックワードインダクション">II-8.4.2 行使日ごとのバックワード・インダクション</a></li>
+  <li><a href="#ii-8.4.3-発行体コール判定" id="toc-ii-8.4.3-発行体コール判定" class="nav-link" data-scroll-target="#ii-8.4.3-発行体コール判定">II-8.4.3 発行体コール判定</a></li>
+  </ul></li>
   <li><a href="#ii-8.5-金利変動とコールオプション価値" id="toc-ii-8.5-金利変動とコールオプション価値" class="nav-link" data-scroll-target="#ii-8.5-金利変動とコールオプション価値">II-8.5 金利変動とコールオプション価値</a></li>
   <li><a href="#ii-8.6-数値計算検証" id="toc-ii-8.6-数値計算検証" class="nav-link" data-scroll-target="#ii-8.6-数値計算検証">II-8.6 数値計算検証</a></li>
   <li><a href="#ii-8.7-bermudan-swaptionへの拡張" id="toc-ii-8.7-bermudan-swaptionへの拡張" class="nav-link" data-scroll-target="#ii-8.7-bermudan-swaptionへの拡張">II-8.7 Bermudan Swaptionへの拡張</a></li>
-  <li><a href="#ii-8.8-mbsのプリペイメント" id="toc-ii-8.8-mbsのプリペイメント" class="nav-link" data-scroll-target="#ii-8.8-mbsのプリペイメント">II-8.8 MBSのプリペイメント</a></li>
+  <li><a href="#ii-8.8-mbsのプリペイメント" id="toc-ii-8.8-mbsのプリペイメント" class="nav-link" data-scroll-target="#ii-8.8-mbsのプリペイメント">II-8.8 MBSのプリペイメント</a>
+  <ul class="collapse">
+  <li><a href="#ii-8.8.1-psa別のoasと価格の関係" id="toc-ii-8.8.1-psa別のoasと価格の関係" class="nav-link" data-scroll-target="#ii-8.8.1-psa別のoasと価格の関係">II-8.8.1 PSA別のOASと価格の関係</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -537,6 +545,8 @@ V_{i+1}(x_{t_{i+1}})\mid x_{t_i}=x\right].\]</span></p>
 </section>
 <section id="ii-8.4-hullwhiteモデル" class="level2">
 <h2 class="anchored" data-anchor-id="ii-8.4-hullwhiteモデル">II-8.4 Hull–Whiteモデル</h2>
+<section id="ii-8.4.1-状態と割引の共同分布" class="level3">
+<h3 class="anchored" data-anchor-id="ii-8.4.1-状態と割引の共同分布">II-8.4.1 状態と割引の共同分布</h3>
 <p>第7章と同じく、<span class="math inline">\(r_t=\phi(t)+x_t\)</span>、<span class="math inline">\(dx_t=-a x_tdt+\sigma dW_t\)</span> を使う。一定の <span class="math inline">\(a&gt;0,\sigma\geq0\)</span> とフラットな初期曲線 <span class="math inline">\(P(0,T)=e^{-\bar rT}\)</span> について</p>
 <p><span class="math display">\[\phi(t)=\bar r+
 \frac{\sigma^2}{2a^2}(1-e^{-at})^2.\]</span></p>
@@ -643,6 +653,9 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 <span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="ii-8.4.2-行使日ごとのバックワードインダクション" class="level3">
+<h3 class="anchored" data-anchor-id="ii-8.4.2-行使日ごとのバックワードインダクション">II-8.4.2 行使日ごとのバックワード・インダクション</h3>
 <p>満期にクーポンと元本を置き、一つ前の支払日に条件付き割引期待値を求める。以後、コール可能日では <span class="math inline">\(\min\)</span> を取ってさかのぼる。比較のため、まったく同じ状態格子と割引演算子でBullet Bondも評価する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>compute_callable_bond_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -794,6 +807,9 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 <span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>最後の行は、同じモデルと同じ契約条件でBullet価格が初期曲線へ近いこと、発行体の権利価値が負にならないことを検査する。価格の差が0でない場合は、状態格子、境界、補間、求積点数を見直す。<strong>格子上のコール可能な点の割合は、実際のコール確率ではない</strong>。</p>
+</section>
+<section id="ii-8.4.3-発行体コール判定" class="level3">
+<h3 class="anchored" data-anchor-id="ii-8.4.3-発行体コール判定">II-8.4.3 発行体コール判定</h3>
 <p>次の図は行使可能日のうち <span class="math inline">\(t=2.0\)</span> における、クーポン支払後の継続価値とコール価格を示す。短期金利の状態が低いほど、高いクーポンが続く債券を発行体が額面で償還する誘因が強い。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>tbl_decision_at_year_2 <span class="ot">&lt;-</span> model_result<span class="sc">$</span>decisions <span class="sc">|&gt;</span></span>
@@ -825,6 +841,7 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 </div>
 </div>
 </div>
+</section>
 </section>
 <section id="ii-8.5-金利変動とコールオプション価値" class="level2">
 <h2 class="anchored" data-anchor-id="ii-8.5-金利変動とコールオプション価値">II-8.5 金利変動とコールオプション価値</h2>
@@ -1146,6 +1163,8 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 \exp\!\left(-\int_0^{m/12}(r_s+z)\,ds\right)
 \right]\]</span></p>
 <p>と計算する。市場価格があれば <span class="math inline">\(P(z)\)</span> を一致させる <span class="math inline">\(z\)</span> を解く。金利経路で変化するキャッシュフローと割引係数には相関があるため、<strong>経路ごとの現在価値を計算してから平均</strong>する。平均キャッシュフローだけを固定曲線で割り引く場合は別の簡約法となる。</p>
+<section id="ii-8.8.1-psa別のoasと価格の関係" class="level3">
+<h3 class="anchored" data-anchor-id="ii-8.8.1-psa別のoasと価格の関係">II-8.8.1 PSA別のOASと価格の関係</h3>
 <p>MathWorks の <a href="https://www.mathworks.com/help/fininst/computing-option-adjusted-spread.html">Computing Option-Adjusted Spread</a> は、0・50・100% PSA に対してゼロカーブと取引価格から OAS を解く例を示す。以下では同じ<strong>比較の設計</strong>を使う。架空の価格を95（ディスカウント）と105（プレミアム）に設定し、金利を4%で固定して PSA ごとに価格を一致させるスプレッドを求める。これはキャッシュフローをあらかじめ確定する<strong>静的なOAS感応度</strong>であり、前節の金利経路を使った OAS とは区別する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>compute_mbs_static_oas_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
@@ -1203,6 +1222,7 @@ V_{i+1}(bx+\sqrt{v_X}Z)\right].
 <p>実務では借換え金利の反応ラグ、ローンの経過月数、地域差、借換えを済ませた借り手の選別（バーンアウト）、季節性、延滞・デフォルト、手数料、元利金の支払遅延も推定対象になる。PSAはプリペイメント速度のベンチマークであり、住宅ローン債務者の個別行動の推定モデルではない。日本のRMBSでは<a href="https://www.jsda.or.jp/shiryoshitsu/toukei/psj/">日本証券業協会のPSJ</a>も検討する。CMOではさらにトランシェごとの元本配分規則が必要となる。MathWorks の <a href="https://www.mathworks.com/help/fininst/prepayment-risk.html">Prepayment Risk</a> は、その具体例として Sequential、PAC、TAC の配分方法を整理している。本章のパススルー価格を、そのまま CMO の各トランシェ価格とはみなせない。</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

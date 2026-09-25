@@ -275,7 +275,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
- <span class="menu-text">エンタープライゼーション</span></a>
+ <span class="menu-text">第III部　エンタープライゼーション</span></a>
           <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
@@ -328,11 +328,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#i-1.1-rの基礎" id="toc-i-1.1-rの基礎" class="nav-link active" data-scroll-target="#i-1.1-rの基礎">I-1.1 Rの基礎</a></li>
-  <li><a href="#i-1.2-tidyverseによるデータ整形" id="toc-i-1.2-tidyverseによるデータ整形" class="nav-link" data-scroll-target="#i-1.2-tidyverseによるデータ整形">I-1.2 tidyverseによるデータ整形</a></li>
-  <li><a href="#i-1.3-関数型プログラミングと並列計算" id="toc-i-1.3-関数型プログラミングと並列計算" class="nav-link" data-scroll-target="#i-1.3-関数型プログラミングと並列計算">I-1.3 関数型プログラミングと並列計算</a></li>
-  <li><a href="#i-1.4-データベースと大規模データ処理" id="toc-i-1.4-データベースと大規模データ処理" class="nav-link" data-scroll-target="#i-1.4-データベースと大規模データ処理">I-1.4 データベースと大規模データ処理</a></li>
-  <li><a href="#i-1.6-まとめ" id="toc-i-1.6-まとめ" class="nav-link" data-scroll-target="#i-1.6-まとめ">I-1.6 まとめ</a></li>
+  <li><a href="#i-1.1-rの基礎" id="toc-i-1.1-rの基礎" class="nav-link active" data-scroll-target="#i-1.1-rの基礎">I-1.1 Rの基礎</a>
+  <ul class="collapse">
+  <li><a href="#i-1.1.1-rの基本操作" id="toc-i-1.1.1-rの基本操作" class="nav-link" data-scroll-target="#i-1.1.1-rの基本操作">I-1.1.1 Rの基本操作</a></li>
+  <li><a href="#i-1.1.2-ベクトル" id="toc-i-1.1.2-ベクトル" class="nav-link" data-scroll-target="#i-1.1.2-ベクトル">I-1.1.2 ベクトル</a></li>
+  <li><a href="#i-1.1.3-行列リストデータフレーム" id="toc-i-1.1.3-行列リストデータフレーム" class="nav-link" data-scroll-target="#i-1.1.3-行列リストデータフレーム">I-1.1.3 行列、リスト、データフレーム</a></li>
+  <li><a href="#i-1.1.4-条件判定と独自関数" id="toc-i-1.1.4-条件判定と独自関数" class="nav-link" data-scroll-target="#i-1.1.4-条件判定と独自関数">I-1.1.4 条件判定と独自関数</a></li>
+  <li><a href="#i-1.1.5-記述統計" id="toc-i-1.1.5-記述統計" class="nav-link" data-scroll-target="#i-1.1.5-記述統計">I-1.1.5 記述統計</a></li>
+  <li><a href="#i-1.1.6-確率分布" id="toc-i-1.1.6-確率分布" class="nav-link" data-scroll-target="#i-1.1.6-確率分布">I-1.1.6 確率分布</a></li>
+  </ul></li>
+  <li><a href="#i-1.2-tidyverseによるデータ整形" id="toc-i-1.2-tidyverseによるデータ整形" class="nav-link" data-scroll-target="#i-1.2-tidyverseによるデータ整形">I-1.2 tidyverseによるデータ整形</a>
+  <ul class="collapse">
+  <li><a href="#i-1.2.1-プロジェクト内のデータを読み込む" id="toc-i-1.2.1-プロジェクト内のデータを読み込む" class="nav-link" data-scroll-target="#i-1.2.1-プロジェクト内のデータを読み込む">I-1.2.1 プロジェクト内のデータを読み込む</a></li>
+  <li><a href="#i-1.2.2-dplyrによるデータ操作" id="toc-i-1.2.2-dplyrによるデータ操作" class="nav-link" data-scroll-target="#i-1.2.2-dplyrによるデータ操作">I-1.2.2 dplyrによるデータ操作</a></li>
+  <li><a href="#i-1.2.3-stringrによる文字列処理" id="toc-i-1.2.3-stringrによる文字列処理" class="nav-link" data-scroll-target="#i-1.2.3-stringrによる文字列処理">I-1.2.3 stringrによる文字列処理</a></li>
+  <li><a href="#i-1.2.4-tidyrによるデータ整形" id="toc-i-1.2.4-tidyrによるデータ整形" class="nav-link" data-scroll-target="#i-1.2.4-tidyrによるデータ整形">I-1.2.4 tidyrによるデータ整形</a></li>
+  <li><a href="#i-1.2.5-ggplot2による可視化" id="toc-i-1.2.5-ggplot2による可視化" class="nav-link" data-scroll-target="#i-1.2.5-ggplot2による可視化">I-1.2.5 ggplot2による可視化</a></li>
+  </ul></li>
+  <li><a href="#i-1.3-関数型プログラミングと並列計算" id="toc-i-1.3-関数型プログラミングと並列計算" class="nav-link" data-scroll-target="#i-1.3-関数型プログラミングと並列計算">I-1.3 関数型プログラミングと並列計算</a>
+  <ul class="collapse">
+  <li><a href="#i-1.3.1-purrrによる反復処理" id="toc-i-1.3.1-purrrによる反復処理" class="nav-link" data-scroll-target="#i-1.3.1-purrrによる反復処理">I-1.3.1 purrrによる反復処理</a></li>
+  <li><a href="#i-1.3.2-nestによるグループ別データ管理" id="toc-i-1.3.2-nestによるグループ別データ管理" class="nav-link" data-scroll-target="#i-1.3.2-nestによるグループ別データ管理">I-1.3.2 nestによるグループ別データ管理</a></li>
+  <li><a href="#i-1.3.3-futureとfurrrによる並列計算" id="toc-i-1.3.3-futureとfurrrによる並列計算" class="nav-link" data-scroll-target="#i-1.3.3-futureとfurrrによる並列計算">I-1.3.3 futureとfurrrによる並列計算</a></li>
+  </ul></li>
+  <li><a href="#i-1.4-データベースと大規模データ処理" id="toc-i-1.4-データベースと大規模データ処理" class="nav-link" data-scroll-target="#i-1.4-データベースと大規模データ処理">I-1.4 データベースと大規模データ処理</a>
+  <ul class="collapse">
+  <li><a href="#i-1.4.1-dbplyrによるデータベース操作" id="toc-i-1.4.1-dbplyrによるデータベース操作" class="nav-link" data-scroll-target="#i-1.4.1-dbplyrによるデータベース操作">I-1.4.1 dbplyrによるデータベース操作</a></li>
+  <li><a href="#i-1.4.2-arrowによるparquetデータ処理" id="toc-i-1.4.2-arrowによるparquetデータ処理" class="nav-link" data-scroll-target="#i-1.4.2-arrowによるparquetデータ処理">I-1.4.2 ArrowによるParquetデータ処理</a></li>
+  <li><a href="#i-1.4.3-arrow-dataset" id="toc-i-1.4.3-arrow-dataset" class="nav-link" data-scroll-target="#i-1.4.3-arrow-dataset">I-1.4.3 Arrow Dataset</a></li>
+  <li><a href="#i-1.4.4-sparkとの関係" id="toc-i-1.4.4-sparkとの関係" class="nav-link" data-scroll-target="#i-1.4.4-sparkとの関係">I-1.4.4 Sparkとの関係</a></li>
+  <li><a href="#i-1.5.1-分析用データを作る" id="toc-i-1.5.1-分析用データを作る" class="nav-link" data-scroll-target="#i-1.5.1-分析用データを作る">I-1.5.1 分析用データを作る</a></li>
+  <li><a href="#i-1.5.2-企業別の要約統計量を計算する" id="toc-i-1.5.2-企業別の要約統計量を計算する" class="nav-link" data-scroll-target="#i-1.5.2-企業別の要約統計量を計算する">I-1.5.2 企業別の要約統計量を計算する</a></li>
+  <li><a href="#i-1.5.3-累積リターンを計算する" id="toc-i-1.5.3-累積リターンを計算する" class="nav-link" data-scroll-target="#i-1.5.3-累積リターンを計算する">I-1.5.3 累積リターンを計算する</a></li>
+  <li><a href="#i-1.5.4-purrrで企業別の統計量を再計算する" id="toc-i-1.5.4-purrrで企業別の統計量を再計算する" class="nav-link" data-scroll-target="#i-1.5.4-purrrで企業別の統計量を再計算する">I-1.5.4 purrrで企業別の統計量を再計算する</a></li>
+  <li><a href="#i-1.5.5-累積リターンを可視化する" id="toc-i-1.5.5-累積リターンを可視化する" class="nav-link" data-scroll-target="#i-1.5.5-累積リターンを可視化する">I-1.5.5 累積リターンを可視化する</a></li>
+  </ul></li>
+  <li><a href="#i-1.6-まとめ" id="toc-i-1.6-まとめ" class="nav-link" data-scroll-target="#i-1.6-まとめ">I-1.6 まとめ</a>
+  <ul class="collapse">
+  <li><a href="#i-1.6.1-金融データ分析パイプライン" id="toc-i-1.6.1-金融データ分析パイプライン" class="nav-link" data-scroll-target="#i-1.6.1-金融データ分析パイプライン">I-1.6.1 金融データ分析パイプライン</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -362,6 +396,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Base Rの項目構成は、Positが公開している<a href="https://github.com/rstudio/cheatsheets/blob/main/base-r.pdf">Base R Cheatsheet</a>を参考にしている。本章のコードでは、反復処理に明示的なループを使わず、ベクトル化または<code>purrr::map()</code>系関数を用いる。また、パイプ演算子はすべて<code>|&gt;</code>に統一する。</p>
 <section id="i-1.1-rの基礎" class="level2">
 <h2 class="anchored" data-anchor-id="i-1.1-rの基礎">I-1.1 Rの基礎</h2>
+<section id="i-1.1.1-rの基本操作" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.1.1-rの基本操作">I-1.1.1 Rの基本操作</h3>
 <p>Rでは、計算結果やデータをオブジェクトとして保存する。代入には<code>&lt;-</code>を用いる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>risk_free_rate <span class="ot">&lt;-</span> <span class="fl">0.01</span></span>
@@ -428,6 +464,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(returns_with_na, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 0.01333333</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.1.2-ベクトル" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.1.2-ベクトル">I-1.1.2 ベクトル</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>interest_rates <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.015</span>, <span class="fl">0.02</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>year_sequence <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span></span>
@@ -484,6 +523,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4           0.04         96.154</span></span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5           0.05         95.238</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.1.3-行列リストデータフレーム" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.1.3-行列リストデータフレーム">I-1.1.3 行列、リスト、データフレーム</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>return_matrix <span class="ot">&lt;-</span> <span class="fu">matrix</span>(</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="sc">-</span><span class="fl">0.01</span>, <span class="fl">0.03</span>, <span class="fl">0.00</span>, <span class="fl">0.01</span>),</span>
@@ -575,6 +617,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 B                150       175</span></span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 C                200       215</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.1.4-条件判定と独自関数" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.1.4-条件判定と独自関数">I-1.1.4 条件判定と独自関数</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>npv <span class="ot">&lt;-</span> <span class="fl">5.2</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -624,6 +669,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 98.03922 96.11688 94.23223</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.1.5-記述統計" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.1.5-記述統計">I-1.1.5 記述統計</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>sample_returns <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.03</span>, <span class="sc">-</span><span class="fl">0.02</span>, <span class="fl">0.00</span>, <span class="fl">0.04</span>, <span class="fl">0.02</span>)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -664,6 +712,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a><span class="fu">order</span>(firm_returns, <span class="at">decreasing =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 2 1 4 3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.1.6-確率分布" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.1.6-確率分布">I-1.1.6 確率分布</h3>
 <p>Rの確率分布関数には共通した命名規則がある。</p>
 <table class="caption-top table">
 <thead>
@@ -779,8 +830,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: quantile_function &lt;chr&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
+</section>
 <section id="i-1.2-tidyverseによるデータ整形" class="level2">
 <h2 class="anchored" data-anchor-id="i-1.2-tidyverseによるデータ整形">I-1.2 tidyverseによるデータ整形</h2>
+<section id="i-1.2.1-プロジェクト内のデータを読み込む" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.2.1-プロジェクト内のデータを読み込む">I-1.2.1 プロジェクト内のデータを読み込む</h3>
 <p>本書で使用するデータは、プロジェクトルートの<code>data</code>ディレクトリに置き、外部入力に近いデータを<code>raw</code>、分析によって作成したデータを<code>derived</code>に分ける。プロジェクトルートの探索やファイル検索は<code>R/utility_LFL.R</code>へ集約し、各章では分析対象となる相対パスだけを指定する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>tbl_daily_stock_return <span class="ot">&lt;-</span></span>
@@ -833,6 +887,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(tbl_daily_stock_return)</span>
 <span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "date"  "firm1" "firm2"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.2.2-dplyrによるデータ操作" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.2.2-dplyrによるデータ操作">I-1.2.2 dplyrによるデータ操作</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>tbl_daily_stock_return <span class="sc">|&gt;</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(date, firm1)</span>
@@ -1020,6 +1077,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 firm1   0.014161  Firm A    Machinery</span></span>
 <span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 firm2   0.0080253 Firm B    Chemicals</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.2.3-stringrによる文字列処理" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.2.3-stringrによる文字列処理">I-1.2.3 stringrによる文字列処理</h3>
 <p>文字列処理では、関数名が<code>str_</code>で始まる<code>stringr</code>を使用する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>company_names <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
@@ -1061,6 +1121,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 Beta Financial Group     Beta Financial Group Beta / 20 characters </span></span>
 <span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 Gamma Industries         Gamma Industries     Gamma / 16 characters</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.2.4-tidyrによるデータ整形" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.2.4-tidyrによるデータ整形">I-1.2.4 tidyrによるデータ整形</h3>
 <p>元のデータでは、<code>firm1</code>と<code>firm2</code>が別々の列に格納されている。<code>pivot_longer()</code>を使うと、企業名とリターンをそれぞれ一つの列へまとめられる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>return_long <span class="ot">&lt;-</span> tbl_daily_stock_return <span class="sc">|&gt;</span></span>
@@ -1148,6 +1211,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb43-20"><a href="#cb43-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 A       0.02</span></span>
 <span id="cb43-21"><a href="#cb43-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 C      -0.01</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.2.5-ggplot2による可視化" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.2.5-ggplot2による可視化">I-1.2.5 ggplot2による可視化</h3>
 <p><code>ggplot2</code>では、データを<code>ggplot()</code>へ渡し、<code>aes()</code>で変数と視覚要素の対応を指定し、<code>geom_*()</code>で図形を追加する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>(return_long <span class="sc">|&gt;</span></span>
@@ -1257,8 +1323,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
+</section>
 <section id="i-1.3-関数型プログラミングと並列計算" class="level2">
 <h2 class="anchored" data-anchor-id="i-1.3-関数型プログラミングと並列計算">I-1.3 関数型プログラミングと並列計算</h2>
+<section id="i-1.3.1-purrrによる反復処理" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.3.1-purrrによる反復処理">I-1.3.1 purrrによる反復処理</h3>
 <p><code>map()</code>は結果をリストとして返す。数値ベクトルが必要な場合は<code>map_dbl()</code>を用いる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>discount_rates <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.03</span>, <span class="fl">0.04</span>)</span>
@@ -1390,6 +1459,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "集計対象: firm1"</span></span>
 <span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] "集計対象: firm2"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.3.2-nestによるグループ別データ管理" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.3.2-nestによるグループ別データ管理">I-1.3.2 nestによるグループ別データ管理</h3>
 <p><code>tidyr::nest()</code>は、グループごとのデータを一つのリスト列へ格納する。<code>group_by()</code>が主に集計単位を指定するのに対し、<code>nest()</code>は銘柄別、業種別、ポートフォリオ別などのデータそのものを保持する。これにより、各グループへ同じ回帰分析、リスク計算、バックテストを適用しやすくなる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>tbl_return_long <span class="ot">&lt;-</span> tbl_daily_stock_return <span class="sc">|&gt;</span></span>
@@ -1449,6 +1521,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb58-18"><a href="#cb58-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 firm1       0.014161        0.053840</span></span>
 <span id="cb58-19"><a href="#cb58-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 firm2       0.0080253       0.054390</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.3.3-futureとfurrrによる並列計算" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.3.3-futureとfurrrによる並列計算">I-1.3.3 futureとfurrrによる並列計算</h3>
 <p><code>purrr::map()</code>は要素を順番に処理する。互いに独立した計算が多数ある場合、<code>future</code>と<code>furrr</code>を使うと、<code>map()</code>に近い記法のまま複数のRセッションへ処理を分配できる。Windowsでは<code>plan(multisession)</code>を使用する。</p>
 <p>ここでは、モンテカルロ法による円周率の推定を1000回繰り返し、逐次処理と並列処理の実行時間を比較する。各試行では、正方形内に発生させた点のうち単位円内に入った割合を4倍する。</p>
 <div class="cell">
@@ -1542,8 +1617,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 5</span></span>
 <span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   chr_method           num_pi num_elapsed_seconds num_absolute_error num_speedup</span></span>
 <span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;               &lt;dbl&gt;              &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414                6.39        0.00016693       1     </span></span>
-<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415                3.39        0.000094774      1.8850</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414                3.87        0.00016693       1     </span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415                2.72        0.000094774      1.4228</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> tbl_pi_benchmark <span class="sc">|&gt;</span></span>
@@ -1563,13 +1638,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>並列計算には、ワーカーの起動、データ転送、結果回収のオーバーヘッドがある。そのため、処理が軽い場合は<code>map()</code>の方が速いこともある。計算量が大きいモンテカルロ・シミュレーション、銘柄別モデル推定、シナリオ分析では、<code>future_map()</code>の効果が現れやすい。</p>
 </section>
+</section>
 <section id="i-1.4-データベースと大規模データ処理" class="level2">
 <h2 class="anchored" data-anchor-id="i-1.4-データベースと大規模データ処理">I-1.4 データベースと大規模データ処理</h2>
 <p>金融データが大きくなると、すべての行と列をRのメモリへ読み込んでから処理する方法には限界がある。本節では、データベースを<code>dplyr</code>の文法で操作する<code>dbplyr</code>と、ParquetファイルやDatasetを効率よく扱うArrowを確認する。</p>
+<section id="i-1.4.1-dbplyrによるデータベース操作" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.4.1-dbplyrによるデータベース操作">I-1.4.1 dbplyrによるデータベース操作</h3>
 <p><code>dbplyr</code>は、<code>dplyr</code>の処理をSQLへ変換する。データベース上で<code>filter()</code>、<code>select()</code>、<code>mutate()</code>、<code>summarise()</code>などを実行し、必要な結果だけを<code>collect()</code>でRへ取り込める。</p>
 <p>ここでは、再現可能な例として一時的なSQLiteデータベースを使用する。</p>
 <p><code>dbplyr</code>では、処理は直ちにR上で実行されず、SQLクエリとして組み立てられる。<code>show_query()</code>を使うと、生成されたSQLを確認できる。</p>
 <p>重要なのは、<code>collect()</code>を最後まで遅らせることである。先にデータベース側で行と列を絞り込めば、Rへ転送するデータ量を小さくできる。</p>
+</section>
+<section id="i-1.4.2-arrowによるparquetデータ処理" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.4.2-arrowによるparquetデータ処理">I-1.4.2 ArrowによるParquetデータ処理</h3>
 <p>Apache Arrowは、列指向データを効率よく扱うための仕組みである。Rでは、Parquetファイルの読書き、複数ファイルから成るDatasetの検索、PythonやC++など他言語との効率的なデータ交換に利用できる。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set_random_seed_LFL</span>(<span class="dv">20260726</span>)</span>
@@ -1632,6 +1713,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb68-14"><a href="#cb68-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 2025-01-09 STOCK_01    0.0033907    106.80 </span></span>
 <span id="cb68-15"><a href="#cb68-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2025-01-10 STOCK_01   -0.0078836    105.96</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.4.3-arrow-dataset" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.4.3-arrow-dataset">I-1.4.3 Arrow Dataset</h3>
 <p>複数のParquetファイルをまとめて扱う場合はDatasetを使用する。ここでは銘柄をパーティションとして保存する。</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>path_dataset <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="fu">tempdir</span>(), <span class="st">"financial_dataset"</span>)</span>
@@ -1680,9 +1764,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb70-22"><a href="#cb70-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2025-07-10 STOCK_01      99.207 -0.010806 </span></span>
 <span id="cb70-23"><a href="#cb70-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 174 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.4.4-sparkとの関係" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.4.4-sparkとの関係">I-1.4.4 Sparkとの関係</h3>
 <p>ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Dataset、異なる言語間の高速なデータ交換を中心とし、1台のPCでも利用しやすい。Sparkは、複数のコンピュータから成るクラスタへデータと計算を分散するための処理基盤である。</p>
 <p>データが1台のPCで扱える範囲では、Arrowと<code>dbplyr</code>が導入しやすい。データ量や計算量が1台のメモリとCPUを大きく超える場合にはSparkが候補になる。本書では、実行環境を複雑にしないため、Arrowと<code>dbplyr</code>を実装対象とし、Sparkは位置づけの説明にとどめる。 ## I-1.5 総合演習</p>
 <p>最後に、<code>data/raw/market/daily_stock_returns.parquet</code>から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。</p>
+</section>
+<section id="i-1.5.1-分析用データを作る" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.5.1-分析用データを作る">I-1.5.1 分析用データを作る</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>analysis_data <span class="ot">&lt;-</span> tbl_daily_stock_return <span class="sc">|&gt;</span></span>
 <span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
@@ -1716,6 +1806,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb71-30"><a href="#cb71-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2020-04-14 firm1 -0.037663       0.96234 negative </span></span>
 <span id="cb71-31"><a href="#cb71-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 32 more rows</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.5.2-企業別の要約統計量を計算する" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.5.2-企業別の要約統計量を計算する">I-1.5.2 企業別の要約統計量を計算する</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>firm_summary <span class="ot">&lt;-</span> analysis_data <span class="sc">|&gt;</span></span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(firm) <span class="sc">|&gt;</span></span>
@@ -1737,6 +1830,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb72-18"><a href="#cb72-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 firm2           21   0.0080253           0.054390      -0.096212</span></span>
 <span id="cb72-19"><a href="#cb72-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 2 more variables: maximum_return &lt;dbl&gt;, positive_ratio &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.5.3-累積リターンを計算する" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.5.3-累積リターンを計算する">I-1.5.3 累積リターンを計算する</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>cumulative_return_data <span class="ot">&lt;-</span> analysis_data <span class="sc">|&gt;</span></span>
 <span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(firm) <span class="sc">|&gt;</span></span>
@@ -1763,6 +1859,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb73-23"><a href="#cb73-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 32 more rows</span></span>
 <span id="cb73-24"><a href="#cb73-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: cumulative_return &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.5.4-purrrで企業別の統計量を再計算する" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.5.4-purrrで企業別の統計量を再計算する">I-1.5.4 purrrで企業別の統計量を再計算する</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>firm_names <span class="ot">&lt;-</span> <span class="fu">unique</span>(analysis_data<span class="sc">$</span>firm)</span>
 <span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -1788,6 +1887,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb74-22"><a href="#cb74-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 firm1   0.014161    0.053840       -0.041378         0.081707</span></span>
 <span id="cb74-23"><a href="#cb74-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 firm2   0.0080253   0.054390       -0.053818         0.078843</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+</section>
+<section id="i-1.5.5-累積リターンを可視化する" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.5.5-累積リターンを可視化する">I-1.5.5 累積リターンを可視化する</h3>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> cumulative_return_data <span class="sc">|&gt;</span></span>
 <span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> date, <span class="at">y =</span> cumulative_return, <span class="at">linetype =</span> firm)) <span class="sc">+</span></span>
@@ -1808,6 +1910,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </section>
+</section>
 <section id="i-1.6-まとめ" class="level2">
 <h2 class="anchored" data-anchor-id="i-1.6-まとめ">I-1.6 まとめ</h2>
 <p>本章では、Base Rの基本的なデータ構造と関数から出発し、記述統計、確率分布、tidyverseによるデータ分析までを一通り確認した。重要な点は次のとおりである。</p>
@@ -1820,6 +1923,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>グラフは<code>ggplot2</code>でデータ、変数、図形を分けて組み立てる。</li>
 <li>データファイルは絶対パスではなく、プロジェクトルートを基準に読み込む。</li>
 </ul>
+<section id="i-1.6.1-金融データ分析パイプライン" class="level3">
+<h3 class="anchored" data-anchor-id="i-1.6.1-金融データ分析パイプライン">I-1.6.1 金融データ分析パイプライン</h3>
 <p>本章で扱った技術は、次の流れとしてつながる。</p>
 <pre class="text"><code>CSV・データベース・Parquet
             ↓
@@ -1842,6 +1947,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>次章以降では、本章で学んだ操作を用いて、財務データと株式データの分析を進める。</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
