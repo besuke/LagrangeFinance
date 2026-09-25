@@ -48,7 +48,7 @@ LIBORに代わる主要な指標として、日本円ではTONA、米ドルで�
 したがって、本章ではEONIAを「金融危機後にOIS discountingが定着した時代を理解するための歴史的ベンチマーク」、€STRを「現在のユーロOIS市場を表す基準金利」として位置づける。後半のケーススタディでは2012年のEONIA市場データを用いて当時のOISカーブ構築を再現し、ここでは最新版GaussQuantを用いて現在の€STRカーブを確認する。
 
 ```{r}
-#| label: chapter03-estr-current-curve
+#| label: estr-current-curve
 #| fig-width: 9
 #| fig-height: 5.5
 
@@ -144,7 +144,7 @@ $$
 
 以下では、カーブを表形式で確認するための補助関数を定義する。これは計算ロジックを新たに実装するものではなく、QuantLibのカーブから割引係数と連続複利ゼロ金利を取り出す表示用関数である。
 
-```{r chapter03-curve-helper}
+```{r curve-helper}
 curve_tbl_local <- function(curve_obj, n = 200, extrapolate = TRUE) {
   if (extrapolate) {
     QuantLib::TermStructure_enableExtrapolation(curve_obj)
@@ -190,7 +190,7 @@ TONAは、日本の無担保コール市場における翌日物金利を基礎�
 
 ### II-3.2.1 TONA市場レート
 
-```{r chapter03-tona-quotes}
+```{r tona-quotes}
 trade_date_tona <- "2022-08-19"
 
 GaussQuant::set_eval_date_GQL(trade_date_tona)
@@ -222,7 +222,7 @@ GaussQuant::show_tbl_GQH(
 
 ### II-3.2.2 TONA OISカーブの構築
 
-```{r chapter03-build-tona-curve}
+```{r build-tona-curve}
 tona_curve_envs <- GaussQuant::ir_build_ois_curve_envs_GQH(
   quotes = tona_quotes,
   trade_date = trade_date_tona,
@@ -267,7 +267,7 @@ GaussQuant::show_tbl_GQH(
 
 OISの固定レグと翌日物レグを確認し、NPVとフェアレートを表示する。
 
-```{r chapter03-jpy-short-ois}
+```{r jpy-short-ois}
 jpy_ois_short <- GaussQuant::trade_ois_swap_py_GQH(
   curve_env = tona_curve_env,
   effective = "2022-08-23",
@@ -318,7 +318,7 @@ P(0,T_0)-P(0,T_1)
 }
 $$
 
-```{r chapter03-jpy-fair-rate-check}
+```{r jpy-fair-rate-check}
 jpy_effective_df <- tona_curve$discount(
   GaussQuant::date_GQL("2022-08-23")
 )
@@ -360,7 +360,7 @@ OISの変動レグでは、計算期間中の翌日物金利を日ごとに複�
 
 次のコードでは、変動レグを日次単位に分解し、割引係数から日次フォワード金利を求める。
 
-```{r chapter03-jpy-daily-forward}
+```{r jpy-daily-forward}
 jpy_ois_daily <- GaussQuant::trade_ois_swap_py_GQH(
   curve_env = tona_curve_env,
   effective = "2022-08-23",
@@ -405,7 +405,7 @@ $$
 
 日次フォワード金利を用いて複利収益率と利息額を確認する。
 
-```{r chapter03-jpy-daily-compounding}
+```{r jpy-daily-compounding}
 daily_compounding_result <- if (
   nrow(jpy_daily_float_cf_tbl) >= 2 &&
   all(c("days", "rate") %in% names(jpy_daily_float_cf_tbl))
@@ -452,7 +452,7 @@ GaussQuant::show_tbl_GQH(
 
 次の例では、2022年8月23日および24日のTONA Fixingを登録し、2022年8月25日時点で再評価する。
 
-```{r chapter03-jpy-fixings}
+```{r jpy-fixings}
 jpy_fixings_tbl <- tibble::tribble(
   ~date, ~currency, ~instrument, ~fixing,
   "2022-08-23", "JPY", "TONA", -0.000090,
@@ -511,7 +511,7 @@ OIS評価の基本構造はTONAと同じであり、通貨、休日カレンダ�
 
 ### II-3.4.1 SOFR市場レートとOISカーブ
 
-```{r chapter03-sofr-curve}
+```{r sofr-curve}
 trade_date_sofr <- "2023-09-26"
 
 GaussQuant::set_eval_date_GQL(trade_date_sofr)
@@ -545,7 +545,7 @@ GaussQuant::show_tbl_GQH(
 
 ### II-3.4.2 SOFR OISの評価
 
-```{r chapter03-sofr-ois-swap}
+```{r sofr-ois-swap}
 sofr_ois_trade <- GaussQuant::trade_ois_swap_py_GQH(
   curve_env = sofr_curve_env,
   effective = "2023-09-28",
@@ -599,7 +599,7 @@ $$
 以下では、マルチカーブの効果だけを明確にするため、EURIBOR 6か月物を参照する一般的なバニラスワップを用いる。同じフォワードカーブを使用しながら、割引カーブを同一にした場合と分離した場合のNPVを比較する。
 
 
-```{r chapter03-multicurve-build}
+```{r multicurve-build}
 GaussQuant::set_eval_date_GQL("2023-09-26")
 
 multi_curve_dates <- c(
@@ -680,7 +680,7 @@ GaussQuant::show_tbl_GQH(
 
 ### II-3.4.4 シングルカーブ評価との比較
 
-```{r chapter03-multicurve-swap}
+```{r multicurve-swap}
 single_curve_swap <- GaussQuant::make_vanilla_swap_GQL(
   effective_date = "2023-09-28",
   maturity_date = "2025-09-28",
@@ -744,7 +744,7 @@ GaussQuant::show_tbl_GQH(
 
 評価日は2012年12月11日とする。市場データには、翌日物預金、短期OIS、日付指定OISおよび長期OISを使用する。
 
-```{r chapter03-case-study-eonia-market}
+```{r eonia-market}
 case_evaluation_date <- "2012-12-11"
 
 GaussQuant::set_eval_date_GQL(
@@ -770,7 +770,7 @@ GaussQuant::show_tbl_GQH(
 
 最初に対数割引係数を3次補間するカーブと、区分的に一定のフォワード金利を用いるカーブを構築する。後者を用いて年末部分のフォワード金利を確認し、年末ジャンプを推定する。
 
-```{r chapter03-case-study-eonia-bootstrap}
+```{r eonia-bootstrap}
 case_eonia_benchmark <- GaussQuant::eonia_curve_benchmark_GQL(
   quotes = case_eonia_quotes,
   evaluation_date = case_evaluation_date
@@ -796,7 +796,7 @@ GaussQuant::show_tbl_GQH(
 
 年末ジャンプを推定する過程で得られたフォワード金利を確認する。
 
-```{r chapter03-case-study-eonia-benchmark-check}
+```{r eonia-benchmark-check}
 case_benchmark_check_tbl <- tibble::tribble(
   ~metric, ~reference_value_pct, ~r_value_pct,
   "Original two-week forward", 0.082,
@@ -831,7 +831,7 @@ stopifnot(
 
 構築した最終カーブを用いて、各Rate Helperのインプライド・レートを求める。
 
-```{r chapter03-case-study-eonia-validation}
+```{r eonia-validation}
 case_eonia_validation <- case_eonia_benchmark$final_validation
 
 case_eonia_repricing_tbl <- case_eonia_validation$quote_repricing |>
@@ -859,7 +859,7 @@ stopifnot(
 
 市場データに含まれる5年OISを取り上げる。契約固定金利には、カーブ構築に用いた5年OISの市場レートを使用する。
 
-```{r chapter03-case-study-ois-contract}
+```{r ois-contract}
 case_ois_tenor <- QuantLib::Period(
   5,
   "Years"
@@ -896,7 +896,7 @@ GaussQuant::show_tbl_GQH(
 
 最初に、QuantLibの`MakeOIS`を直接使用してOISを構築する。
 
-```{r chapter03-case-study-ois-quantlib}
+```{r ois-quantlib}
 case_ois_builder_quantlib <- QuantLib::MakeOIS(
   swapTenor = case_ois_tenor,
   overnightIndex = case_eonia_index,
@@ -910,7 +910,7 @@ case_ois_quantlib <- QuantLib::MakeOIS_makeOIS(
 
 次に、同じ期間、同じEONIAインデックスおよび同じ固定金利を用いてOISを構築する。
 
-```{r chapter03-case-study-ois-gaussquant}
+```{r ois-gaussquant}
 case_ois_gaussquant <- GaussQuant::build_ois_GQL(
   swap_tenor = case_ois_tenor,
   overnight_index = case_eonia_index,
@@ -920,7 +920,7 @@ case_ois_gaussquant <- GaussQuant::build_ois_GQL(
 
 両方のOISについて、NPV、固定レグの現在価値、翌日物レグの現在価値、フェアレートおよびフェアスプレッドを確認する。
 
-```{r chapter03-case-study-ois-comparison}
+```{r ois-comparison}
 case_ois_quantlib_summary <- GaussQuant::swap_summary_GQL(
   case_ois_quantlib
 )
@@ -988,7 +988,7 @@ stopifnot(
 
 カーブ構築に使用した5年OISの市場レートと、構築後のカーブから求めたフェアレートを比較する。
 
-```{r chapter03-case-study-ois-fair-rate}
+```{r ois-fair-rate}
 case_ois_rate_check_tbl <- tibble::tibble(
   market_fixed_rate = case_ois_fixed_rate,
   calculated_fair_rate =
@@ -1020,7 +1020,7 @@ stopifnot(
 
 最後に、5年OISの固定レグと翌日物レグのキャッシュフローを確認する。
 
-```{r chapter03-case-study-ois-cashflows}
+```{r ois-cashflows}
 case_ois_fixed_leg_tbl <- GaussQuant::leg_to_cashflow_tbl_GQL(
   case_ois_gaussquant$fixedLeg()
 )
@@ -1064,7 +1064,7 @@ GaussQuant::show_tbl_GQH(
 
 ここでは構築済みのゼロカーブを直接動かすのではなく、預金、短期OIS、日付指定OISおよび長期OISの市場レートを変化させる。その後、それぞれの市場データからEONIAカーブを改めて構築する。
 
-```{r chapter03-case-study-eonia-rate-scenarios}
+```{r eonia-rate-scenarios}
 case_rate_scenario_tbl <- tibble::tribble(
   ~scenario, ~shift_bp,
   "10bp低下", -10,
@@ -1089,7 +1089,7 @@ case_rate_scenario_tbl <- tibble::tribble(
 
 市場レートの変化を確認するため、翌日物預金、1か月OIS、5年OISおよび30年OISを取り出す。
 
-```{r chapter03-case-study-eonia-rate-scenario-quotes}
+```{r eonia-rate-scenario-quotes}
 case_rate_scenario_quote_tbl <- purrr::map2_dfr(
   case_rate_scenario_tbl$scenario,
   case_rate_scenario_tbl$quotes,
@@ -1126,7 +1126,7 @@ GaussQuant::show_tbl_GQH(
 
 各シナリオの市場データから、年末ジャンプを含むEONIAカーブを再構築する。
 
-```{r chapter03-case-study-eonia-scenario-curves}
+```{r eonia-scenario-curves}
 case_rate_scenario_tbl <- case_rate_scenario_tbl |>
   dplyr::mutate(
     benchmark = purrr::map(
@@ -1189,7 +1189,7 @@ stopifnot(
 
 契約期間は5年、契約固定金利は0.456%のままとし、市場カーブだけを変更する。
 
-```{r chapter03-case-study-eonia-scenario-ois}
+```{r eonia-scenario-ois}
 case_rate_scenario_tbl <- case_rate_scenario_tbl |>
   dplyr::mutate(
     eonia_index = purrr::map(
@@ -1215,7 +1215,7 @@ case_rate_scenario_tbl <- case_rate_scenario_tbl |>
 
 各シナリオの評価結果を一つの表へまとめる。
 
-```{r chapter03-case-study-eonia-scenario-results}
+```{r eonia-scenario-results}
 case_ois_scenario_result_tbl <- case_rate_scenario_tbl |>
   dplyr::select(
     scenario,
@@ -1286,7 +1286,7 @@ GaussQuant::show_tbl_GQH(
 
 基準シナリオは、第9節で使用した市場データと約定条件をそのまま使用している。そのため、基準シナリオのNPVとフェアレートは、第9節の計算結果と一致する。
 
-```{r chapter03-case-study-eonia-base-check}
+```{r eonia-base-check}
 case_base_scenario_tbl <- case_ois_scenario_result_tbl |>
   dplyr::filter(
     scenario == "基準"
@@ -1343,7 +1343,7 @@ stopifnot(
 
 上下10ベーシスポイントの結果から、固定金利支払側について、1ベーシスポイント当たりの平均的なNPV変化を求める。
 
-```{r chapter03-case-study-eonia-bpv}
+```{r eonia-bpv}
 case_npv_down <- case_ois_scenario_result_tbl |>
   dplyr::filter(
     scenario == "10bp低下"

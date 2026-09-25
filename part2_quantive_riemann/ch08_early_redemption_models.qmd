@@ -677,12 +677,14 @@ stopifnot(
 #| label: mbs-hull-white-paths
 
 simulate_mbs_rates_LRL <- function(
-  number_of_paths = 200L, maturity_months = 360L,
+  number_of_paths = 20L, maturity_months = 360L,
   flat_rate = 0.02, mean_reversion = 0.15,
   volatility = 0.012, seed = 48L
 ) {
-  stopifnot(number_of_paths %% 2L == 0L, number_of_paths > 0,
-    maturity_months > 0, mean_reversion > 0, volatility >= 0)
+  stopifnot(
+    number_of_paths %% 2L == 0L, number_of_paths > 0,
+    maturity_months > 0, mean_reversion > 0, volatility >= 0
+  )
   set.seed(seed)
   dt <- 1 / 12
   b <- exp(-mean_reversion * dt)
@@ -696,6 +698,7 @@ simulate_mbs_rates_LRL <- function(
   shocks <- rbind(shocks, -shocks)
   short_rates <- matrix(0, number_of_paths, maturity_months)
   x <- rep(0, number_of_paths)
+
   for (m in seq_len(maturity_months)) {
     x <- b * x + step_sd * shocks[, m]
     time <- m * dt
@@ -703,33 +706,41 @@ simulate_mbs_rates_LRL <- function(
       (1 - exp(-mean_reversion * time))^2
     short_rates[, m] <- phi + x
   }
+
   short_rates
 }
 
-mbs_short_rates <- simulate_mbs_rates_LRL()
+# 20経路の短期金利を生成
+mbs_short_rates <- simulate_mbs_rates_LRL(number_of_paths = 20L)
+
+# 各経路のMBS価格と加重平均残存年数を計算
 tbl_mbs_mc <- purrr::map_dfr(
   seq_len(nrow(mbs_short_rates)),
   function(path_index) {
     rate_path <- mbs_short_rates[path_index, ]
     loan_cashflows <- compute_mbs_cashflows_LRL(
-      original_balance = 100, mortgage_rate = 0.05,
+      original_balance = 100,
+      mortgage_rate = 0.05,
       pass_through_rate = 0.045,
       refinance_rate = pmax(0, rate_path + 0.03),
       refinancing_cost_rate = 0.005
     )
+
     tibble::tibble(
       path = path_index,
-      price = sum(loan_cashflows$cashflow *
-        exp(-cumsum(rate_path) / 12)),
+      price = sum(
+        loan_cashflows$cashflow * exp(-cumsum(rate_path) / 12)
+      ),
       weighted_average_life = sum(
         loan_cashflows$month / 12 *
           (loan_cashflows$scheduled_principal +
-            loan_cashflows$prepaid_principal)
+             loan_cashflows$prepaid_principal)
       ) / 100
     )
   }
 )
 
+# 既存の計算結果の表
 show_early_redemption_tbl_LRL(
   dplyr::summarise(
     tbl_mbs_mc,
@@ -738,6 +749,46 @@ show_early_redemption_tbl_LRL(
     mean_weighted_average_life = mean(weighted_average_life)
   ),
   "Hull–White金利経路で更新したMBSの月次キャッシュフロー"
+)
+
+# 同じ20経路をグラフ用の縦長データに変換
+tbl_mbs_rate_paths <- tibble::tibble(
+  year = rep(
+    seq_len(ncol(mbs_short_rates)) / 12,
+    times = nrow(mbs_short_rates)
+  ),
+  path = rep(
+    seq_len(nrow(mbs_short_rates)),
+    each = ncol(mbs_short_rates)
+  ),
+  short_rate = as.vector(t(mbs_short_rates))
+)
+
+# LagrangeFinance共通テーマで金利パスを表示
+plot_mbs_rate_paths <- ggplot2::ggplot(
+  tbl_mbs_rate_paths,
+  ggplot2::aes(
+    x = year,
+    y = short_rate,
+    group = path,
+    colour = factor(path)
+  )
+) +
+  ggplot2::geom_line(linewidth = 0.4, alpha = 0.7) +
+  ggplot2::scale_y_continuous(
+    labels = scales::label_percent(accuracy = 0.1)
+  ) +
+  ggplot2::labs(
+    title = "Hull–Whiteモデルによる短期金利の20経路",
+    x = "経過年数",
+    y = "短期金利"
+  )
+
+print(
+  add_lagrange_theme_LFL(
+    plot_mbs_rate_paths,
+    legend_position = "none"
+  )
 )
 ```
 

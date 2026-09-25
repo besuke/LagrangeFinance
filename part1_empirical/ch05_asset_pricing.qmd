@@ -394,7 +394,9 @@ tbl_implied_dividend_growth <- tbl_dividend_yield_2020 |>
 
 show_table_head_LFL(tbl_implied_dividend_growth)
 ```
+
 ## I-5.4 ファクターモデルによるリスク推定
+
 ### I-5.4.1 ファクターの分散共分散
 
 ```{r}

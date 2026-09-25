@@ -357,6 +357,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#i-1.4.2-arrowによるparquetデータ処理" id="toc-i-1.4.2-arrowによるparquetデータ処理" class="nav-link" data-scroll-target="#i-1.4.2-arrowによるparquetデータ処理">I-1.4.2 ArrowによるParquetデータ処理</a></li>
   <li><a href="#i-1.4.3-arrow-dataset" id="toc-i-1.4.3-arrow-dataset" class="nav-link" data-scroll-target="#i-1.4.3-arrow-dataset">I-1.4.3 Arrow Dataset</a></li>
   <li><a href="#i-1.4.4-sparkとの関係" id="toc-i-1.4.4-sparkとの関係" class="nav-link" data-scroll-target="#i-1.4.4-sparkとの関係">I-1.4.4 Sparkとの関係</a></li>
+  </ul></li>
+  <li><a href="#i-1.5-総合演習" id="toc-i-1.5-総合演習" class="nav-link" data-scroll-target="#i-1.5-総合演習">I-1.5 総合演習</a>
+  <ul class="collapse">
   <li><a href="#i-1.5.1-分析用データを作る" id="toc-i-1.5.1-分析用データを作る" class="nav-link" data-scroll-target="#i-1.5.1-分析用データを作る">I-1.5.1 分析用データを作る</a></li>
   <li><a href="#i-1.5.2-企業別の要約統計量を計算する" id="toc-i-1.5.2-企業別の要約統計量を計算する" class="nav-link" data-scroll-target="#i-1.5.2-企業別の要約統計量を計算する">I-1.5.2 企業別の要約統計量を計算する</a></li>
   <li><a href="#i-1.5.3-累積リターンを計算する" id="toc-i-1.5.3-累積リターンを計算する" class="nav-link" data-scroll-target="#i-1.5.3-累積リターンを計算する">I-1.5.3 累積リターンを計算する</a></li>
@@ -1614,8 +1617,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 5</span></span>
 <span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   chr_method           num_pi num_elapsed_seconds num_absolute_error num_speedup</span></span>
 <span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;               &lt;dbl&gt;              &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414              2.34          0.00016693       1     </span></span>
-<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415              2.2600        0.000094774      1.0354</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414                3.5         0.00016693       1     </span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415                2.28        0.000094774      1.5351</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> tbl_pi_benchmark <span class="sc">|&gt;</span></span>
@@ -1765,9 +1768,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="i-1.4.4-sparkとの関係" class="level3">
 <h3 class="anchored" data-anchor-id="i-1.4.4-sparkとの関係">I-1.4.4 Sparkとの関係</h3>
 <p>ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Dataset、異なる言語間の高速なデータ交換を中心とし、1台のPCでも利用しやすい。Sparkは、複数のコンピュータから成るクラスタへデータと計算を分散するための処理基盤である。</p>
-<p>データが1台のPCで扱える範囲では、Arrowと<code>dbplyr</code>が導入しやすい。データ量や計算量が1台のメモリとCPUを大きく超える場合にはSparkが候補になる。本書では、実行環境を複雑にしないため、Arrowと<code>dbplyr</code>を実装対象とし、Sparkは位置づけの説明にとどめる。 ## I-1.5 総合演習</p>
-<p>最後に、<code>data/raw/market/daily_stock_returns.parquet</code>から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。</p>
+<p>データが1台のPCで扱える範囲では、Arrowと<code>dbplyr</code>が導入しやすい。データ量や計算量が1台のメモリとCPUを大きく超える場合にはSparkが候補になる。本書では、実行環境を複雑にしないため、Arrowと<code>dbplyr</code>を実装対象とし、Sparkは位置づけの説明にとどめる。</p>
 </section>
+</section>
+<section id="i-1.5-総合演習" class="level2">
+<h2 class="anchored" data-anchor-id="i-1.5-総合演習">I-1.5 総合演習</h2>
+<p>最後に、<code>data/raw/market/daily_stock_returns.parquet</code>から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。</p>
 <section id="i-1.5.1-分析用データを作る" class="level3">
 <h3 class="anchored" data-anchor-id="i-1.5.1-分析用データを作る">I-1.5.1 分析用データを作る</h3>
 <div class="cell">

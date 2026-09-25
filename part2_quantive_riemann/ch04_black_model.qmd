@@ -109,7 +109,7 @@ $$
 
 Black-76では、現物価格ではなく、オプション満期に対応するフォワード価格または先物価格を原資産として使用する。
 
-```{r chapter04-black-inputs}
+```{r black-inputs}
 black_input_tbl <- tibble::tribble(
   ~input,           ~value,
   "trade_date",     "2023-07-21",
@@ -170,7 +170,7 @@ $$
 
 Black-76のDeltaはフォワード価格に対するDeltaであり、株式オプションのSpot Deltaとは区別する必要がある。
 
-```{r chapter04-black-calculator}
+```{r black-calculator}
 black_bundle <- GaussQuant::black_process_bundle_GQL(
   valuation_date = trade_date,
   forward = forward_price,
@@ -204,7 +204,7 @@ GaussQuant::show_tbl_GQH(
 
 数式を直接評価する方法と、確率過程およびPricing Engineを通じて評価する方法が、同一の理論価格を与えることを確認する。
 
-```{r chapter04-analytic-european}
+```{r analytic-european}
 european_call <- QuantLib::VanillaOption(
   call_payoff,
   QuantLib::EuropeanExercise(maturity_date)
@@ -242,7 +242,7 @@ GaussQuant::show_tbl_GQH(
 
 Black–Scholes–Merton processでは、現物価格に加えて、無リスク金利カーブ、配当利回りカーブおよびボラティリティカーブを設定する。
 
-```{r chapter04-bsm-inputs}
+```{r bsm-inputs}
 bsm_input_tbl <- tibble::tribble(
   ~input,           ~value,
   "trade_date",     "2024-03-01",
@@ -298,7 +298,7 @@ Europeanオプションは満期時にのみ行使できるため、Black–Scho
 
 ここでは、25、100および500ステップのCox–Ross–Rubinstein Treeを解析解と比較する。
 
-```{r chapter04-european-put}
+```{r european-put}
 european_put <- GaussQuant::make_european_option_GQL(
   spot = spot_price_bsm,
   strike = strike_price_bsm,
@@ -378,7 +378,7 @@ Monte Carlo法では、多数の将来パスを生成し、各パスの満期Pay
 
 European callには解析解があるため、ここでMonte Carlo法を使う目的は、解析解に代わる高度な方法を示すことではない。確率過程から生成したパスの期待値がBlack公式の価格へ近づくことを確認し、後に解析解を持たない商品へ応用する準備をすることにある。
 
-```{r chapter04-pseudo-monte-carlo}
+```{r pseudo-monte-carlo}
 mc_setting_tbl <- tibble::tribble(
   ~setting, ~value,
   "steps",  12,
@@ -432,7 +432,7 @@ Black processでは、フォワード価格は対数正規分布に従う。し�
 
 次のグラフでは、前節と同じオプション満期までの120本のパスと、その満期価格分布を表示する。
 
-```{r chapter04-path-plot}
+```{r path-plot}
 path_plot_tbl <- GaussQuant::generate_path_table_GQL(
   process = black_bundle$process,
   maturity = maturity,
@@ -505,7 +505,7 @@ $$
 
 QuantLibのPathGeneratorが使用するGaussian incrementを取り出し、同じ乱数から手計算したパスと比較する。
 
-```{r chapter04-one-path-check}
+```{r one-path-check}
 n_steps_check <- 3L
 seed_check <- 1L
 
@@ -584,7 +584,7 @@ American putには一般的な閉形式の解析解がないため、二項Tree�
 
 500ステップCRR Treeを比較基準とする。
 
-```{r chapter04-american-put}
+```{r american-put}
 american_put <- GaussQuant::make_american_option_GQL(
   spot = spot_price_bsm,
   strike = strike_price_bsm,
@@ -654,7 +654,7 @@ Sobol系列を用いる準Monte Carlo法では、通常の擬似乱数より少�
 
 次のコードでは、Black–Scholes–Merton processから64本のSobolパスを生成する。
 
-```{r chapter04-sobol-paths}
+```{r sobol-paths}
 maturity_bsm <- day_counter$yearFraction(
   trade_date_bsm,
   maturity_date_bsm
@@ -723,7 +723,7 @@ $$
 
 本節では、2,048本のSobolパスからAmerican putを評価し、500ステップCRR Treeと比較する。
 
-```{r chapter04-longstaff-schwartz}
+```{r longstaff-schwartz}
 lsm_path_tbl <- GaussQuant::generate_path_table_GQL(
   process = bsm_bundle$process,
   maturity = maturity_bsm,
@@ -798,7 +798,7 @@ Black–Scholes–Mertonモデルでは、European putの解析解とCRR Treeを
 
 Blackモデルの対数正規仮定は、価格が正である市場では扱いやすい。一方、金利がゼロまたはマイナスとなる場合には直接適用できない。この問題が、NormalモデルやShifted Blackモデルを用いる理由となる。
 
-```{r chapter04-summary}
+```{r summary}
 chapter04_summary_tbl <- tibble::tribble(
   ~section,                    ~main_result,
   "Black-76",                  "Black calculator and analytic European pricing",

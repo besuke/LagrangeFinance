@@ -62,7 +62,7 @@ $$
 
 本章では、計算時間を抑えながらMonte Carlo評価を確認するため、基準評価のパス数を3,000本、感応度評価を1,000本とする。
 
-```{r chapter09-product-inputs}
+```{r product-inputs}
 valuation_date_prdc <- as.Date("2023-04-11")
 effective_date_prdc <- as.Date("2015-09-03")
 termination_date_prdc <- as.Date("2041-09-03")
@@ -128,7 +128,7 @@ GaussQuant::show_tbl_GQH(
 
 契約開始日から満期までの全Coupon Scheduleと、固定Intro Coupon期間のScheduleを作成する。
 
-```{r chapter09-coupon-schedules}
+```{r coupon-schedules}
 valuation_date_ql_prdc <- GaussQuant::date_GQL(
   valuation_date_prdc
 )
@@ -240,7 +240,7 @@ $$
 
 Couponと元本の現在価値には、担保またはファンディング条件を表す外生的な割引率0.5%を使用する。これは簡略化した設定であり、本格的な評価ではDomestic OIS CurveとCollateral条件を整合させる必要がある。
 
-```{r chapter09-market-curves}
+```{r market-curves}
 fx_day_counter_prdc <- QuantLib::Actual360()
 
 domestic_curve_prdc <- GaussQuant::flat_curve_GQL(
@@ -298,7 +298,7 @@ GaussQuant::show_tbl_GQH(
 
 FX volatilityを10%とし、Garman–Kohlhagen Processを作成する。
 
-```{r chapter09-fx-process}
+```{r fx-process}
 fx_volatility_curve_prdc <- QuantLib::BlackConstantVol(
   valuation_date_ql_prdc,
   QuantLib::NullCalendar(),
@@ -385,7 +385,7 @@ $$
 
 である。
 
-```{r chapter09-coupon-payoff}
+```{r coupon-payoff}
 fx_floor_threshold_prdc <- coupon_fx_base_prdc *
   (
     coupon_subtraction_prdc +
@@ -481,7 +481,7 @@ show_plot_LFL(prdc_payoff_plot)
 
 PRDC評価に必要なのは、評価日より後に到来するCoupon日である。GaussQuantの`fx_path_generator_GQL()`は、実際のCoupon日を用いて不均一な時間間隔を保持する。
 
-```{r chapter09-time-grid}
+```{r time-grid}
 fx_path_generator_prdc <- GaussQuant::fx_path_generator_GQL(
   valuation_date = valuation_date_prdc,
   coupon_schedule = coupon_schedule_prdc,
@@ -531,7 +531,7 @@ QuantLibの`StochasticProcess1D$evolve()`へは標準正規変量を渡す。Bro
 
 Monte Carlo評価へ進む前に、20本のFXパスを生成し、将来のFX分布とCouponの動きを確認する。
 
-```{r chapter09-sample-paths}
+```{r sample-paths}
 sample_path_count_prdc <- 20L
 
 sample_fx_path_matrix_prdc <- GaussQuant::prdc_path_matrix_GQL(
@@ -631,7 +631,7 @@ $$
 
 となる。
 
-```{r chapter09-prdc-valuation}
+```{r prdc-valuation}
 prdc_result <- GaussQuant::prdc_npv_GQL(
   valuation_date = valuation_date_prdc,
   coupon_schedule = coupon_schedule_prdc,
@@ -698,7 +698,7 @@ GaussQuant::show_tbl_GQH(
 
 ### II-9.3.4 期待Couponとキャッシュフロー
 
-```{r chapter09-expected-coupons}
+```{r expected-coupons}
 expected_coupon_display_tbl <- expected_coupon_tbl |>
   dplyr::select(
     coupon_number,
@@ -743,7 +743,7 @@ GaussQuant::show_tbl_GQH(
 
 ### II-9.4.1 期待Couponの期間構造
 
-```{r chapter09-expected-coupon-plot}
+```{r expected-coupon-plot}
 expected_coupon_plot <- ggplot2::ggplot(
   expected_coupon_tbl,
   ggplot2::aes(
@@ -785,7 +785,7 @@ CapとFloorを含む非線形Payoffでは、FX分布全体を考慮する必要�
 
 各Coupon日について、シミュレーションされたCouponがFloorまたはCapに到達する確率を計算する。
 
-```{r chapter09-cap-floor-probability}
+```{r cap-floor-probability}
 coupon_cap_floor_probability_tbl <- GaussQuant::prdc_cap_floor_probability_GQL(
   path_matrix = fx_path_matrix_prdc,
   fx_base = coupon_fx_base_prdc,
@@ -810,7 +810,7 @@ Cap確率、Linear領域の確率およびFloor確率は、長期的なCouponの
 
 短期、中期、長期の代表的なCoupon日について、Coupon rateの分布を比較する。
 
-```{r chapter09-coupon-distribution}
+```{r coupon-distribution}
 coupon_path_matrix_prdc <- GaussQuant::prdc_coupon_GQL(
   fx_rate = fx_path_matrix_prdc,
   fx_base = coupon_fx_base_prdc,
@@ -896,7 +896,7 @@ PRDC CouponはFX Spotへ直接依存する。Spotを上下させたシナリオ�
 
 各シナリオで同じ乱数Seedを使用することにより、Monte Carloノイズを抑えたCommon Random Numbers型の比較となる。
 
-```{r chapter09-spot-sensitivity}
+```{r spot-sensitivity}
 spot_scenario_input_tbl <- tibble::tribble(
   ~scenario, ~fx_spot,
   "spot_minus_10", fx_spot_prdc * 0.90,
@@ -962,7 +962,7 @@ Spot上昇はCouponを上昇させる方向に働くが、Capへ到達した後�
 
 PRDC Couponは、FloorとCapを持つ非線形Payoffである。そのため、FX volatilityの変化は将来のFX分布だけでなく、Floor、Linear領域およびCapへ入る確率を変化させる。
 
-```{r chapter09-volatility-sensitivity}
+```{r volatility-sensitivity}
 volatility_scenario_input_tbl <- tibble::tribble(
   ~scenario, ~fx_volatility,
   "vol_5pct", 0.05,
@@ -1048,7 +1048,7 @@ $$
 
 である。
 
-```{r chapter09-monte-carlo-error}
+```{r monte-carlo-error}
 monte_carlo_error_result <- GaussQuant::prdc_monte_carlo_error_GQL(
   path_matrix = fx_path_matrix_prdc,
   cashflow_tbl = prdc_cashflow_tbl,
@@ -1121,7 +1121,7 @@ $$
 
 第II部では、金融商品のキャッシュフロー、マーケットコンベンション、確率モデルおよび数値計算を段階的に扱った。
 
-```{r chapter09-part2-summary}
+```{r part2-summary}
 part2_chapter_summary_tbl <- tibble::tribble(
   ~chapter, ~subject, ~main_method,
   "II-1", "Bonds and market conventions", "Yield, price, duration, and convexity",
@@ -1193,7 +1193,7 @@ FX SpotとFX volatilityの感応度は、FloorとCapによって非線形とな�
 
 本章は非Callable PRDCを対象とした。実際のCallable PRDCには、Domestic金利、Foreign金利、FX、Volatility Surface、相関および発行体の早期行使判断を同時に扱う、より高度なモデルが必要となる。
 
-```{r chapter09-completion}
+```{r completion}
 chapter09_summary_tbl <- tibble::tribble(
   ~section, ~main_result,
   "Coupon payoff", "Floored and capped FX-linked coupon",

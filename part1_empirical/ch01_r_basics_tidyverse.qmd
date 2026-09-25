@@ -1174,6 +1174,7 @@ tbl_arrow_selected
 ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Dataset、異なる言語間の高速なデータ交換を中心とし、1台のPCでも利用しやすい。Sparkは、複数のコンピュータから成るクラスタへデータと計算を分散するための処理基盤である。
 
 データが1台のPCで扱える範囲では、Arrowと`dbplyr`が導入しやすい。データ量や計算量が1台のメモリとCPUを大きく超える場合にはSparkが候補になる。本書では、実行環境を複雑にしないため、Arrowと`dbplyr`を実装対象とし、Sparkは位置づけの説明にとどめる。
+
 ## I-1.5 総合演習
 
 最後に、`data/raw/market/daily_stock_returns.parquet`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
