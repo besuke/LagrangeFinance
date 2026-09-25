@@ -24,6 +24,7 @@ Base Rの項目構成は、Positが公開している[Base R Cheatsheet](https:/
 
 ## I-1.1 Rの基礎
 
+### I-1.1.1 Rの基本操作
 
 
 Rでは、計算結果やデータをオブジェクトとして保存する。代入には`<-`を用いる。
@@ -90,6 +91,7 @@ sum(is.na(returns_with_na))
 mean(returns_with_na, na.rm = TRUE)
 ```
 
+### I-1.1.2 ベクトル
 
 
 ```{r}
@@ -144,6 +146,7 @@ present_values <- cash_flow / (1 + discount_rates)
 tibble(discount_rates, present_values)
 ```
 
+### I-1.1.3 行列、リスト、データフレーム
 
 
 ```{r}
@@ -225,6 +228,7 @@ project_data <- tribble(
 project_data
 ```
 
+### I-1.1.4 条件判定と独自関数
 
 
 ```{r}
@@ -281,6 +285,7 @@ calculate_present_value(
 )
 ```
 
+### I-1.1.5 記述統計
 
 
 ```{r}
@@ -320,6 +325,7 @@ rank(-firm_returns)
 order(firm_returns, decreasing = TRUE)
 ```
 
+### I-1.1.6 確率分布
 
 Rの確率分布関数には共通した命名規則がある。
 
@@ -416,6 +422,7 @@ distribution_functions
 
 ## I-1.2 tidyverseによるデータ整形
 
+### I-1.2.1 プロジェクト内のデータを読み込む
 
 本書で使用するデータは、プロジェクトルートの`data`ディレクトリに置き、外部入力に近いデータを`raw`、分析によって作成したデータを`derived`に分ける。プロジェクトルートの探索やファイル検索は`R/utility_LFL.R`へ集約し、各章では分析対象となる相対パスだけを指定する。
 
@@ -448,6 +455,7 @@ ncol(tbl_daily_stock_return)
 names(tbl_daily_stock_return)
 ```
 
+### I-1.2.2 dplyrによるデータ操作
 
 
 ```{r}
@@ -567,6 +575,7 @@ return_summary |>
   left_join(firm_master, by = "firm")
 ```
 
+### I-1.2.3 stringrによる文字列処理
 
 文字列処理では、関数名が`str_`で始まる`stringr`を使用する。
 
@@ -605,6 +614,7 @@ company_names |>
   select(clean_name, short_name, display_name)
 ```
 
+### I-1.2.4 tidyrによるデータ整形
 
 
 元のデータでは、`firm1`と`firm2`が別々の列に格納されている。`pivot_longer()`を使うと、企業名とリターンをそれぞれ一つの列へまとめられる。
@@ -665,6 +675,7 @@ missing_data |>
   drop_na()
 ```
 
+### I-1.2.5 ggplot2による可視化
 
 `ggplot2`では、データを`ggplot()`へ渡し、`aes()`で変数と視覚要素の対応を指定し、`geom_*()`で図形を追加する。
 
@@ -772,6 +783,7 @@ add_lagrange_theme_LFL(p)
 
 ## I-1.3 関数型プログラミングと並列計算
 
+### I-1.3.1 purrrによる反復処理
 
 
 `map()`は結果をリストとして返す。数値ベクトルが必要な場合は`map_dbl()`を用いる。
@@ -888,6 +900,7 @@ c("firm1", "firm2") |>
 ```
 
 
+### I-1.3.2 nestによるグループ別データ管理
 
 `tidyr::nest()`は、グループごとのデータを一つのリスト列へ格納する。`group_by()`が主に集計単位を指定するのに対し、`nest()`は銘柄別、業種別、ポートフォリオ別などのデータそのものを保持する。これにより、各グループへ同じ回帰分析、リスク計算、バックテストを適用しやすくなる。
 
@@ -936,6 +949,7 @@ tbl_nested_summary <- tbl_nested |>
 tbl_nested_summary
 ```
 
+### I-1.3.3 futureとfurrrによる並列計算
 
 `purrr::map()`は要素を順番に処理する。互いに独立した計算が多数ある場合、`future`と`furrr`を使うと、`map()`に近い記法のまま複数のRセッションへ処理を分配できる。Windowsでは`plan(multisession)`を使用する。
 
@@ -1061,6 +1075,7 @@ p <- tbl_pi_benchmark |>
 
 金融データが大きくなると、すべての行と列をRのメモリへ読み込んでから処理する方法には限界がある。本節では、データベースを`dplyr`の文法で操作する`dbplyr`と、ParquetファイルやDatasetを効率よく扱うArrowを確認する。
 
+### I-1.4.1 dbplyrによるデータベース操作
 
 `dbplyr`は、`dplyr`の処理をSQLへ変換する。データベース上で`filter()`、`select()`、`mutate()`、`summarise()`などを実行し、必要な結果だけを`collect()`でRへ取り込める。
 
@@ -1070,6 +1085,7 @@ p <- tbl_pi_benchmark |>
 
 重要なのは、`collect()`を最後まで遅らせることである。先にデータベース側で行と列を絞り込めば、Rへ転送するデータ量を小さくできる。
 
+### I-1.4.2 ArrowによるParquetデータ処理
 
 Apache Arrowは、列指向データを効率よく扱うための仕組みである。Rでは、Parquetファイルの読書き、複数ファイルから成るDatasetの検索、PythonやC++など他言語との効率的なデータ交換に利用できる。
 
@@ -1115,6 +1131,7 @@ arrow::read_parquet(path_parquet) |>
   slice_head(n = 10)
 ```
 
+### I-1.4.3 Arrow Dataset
 
 複数のParquetファイルをまとめて扱う場合はDatasetを使用する。ここでは銘柄をパーティションとして保存する。
 
@@ -1152,6 +1169,7 @@ tbl_arrow_selected <- dataset_finance |>
 tbl_arrow_selected
 ```
 
+### I-1.4.4 Sparkとの関係
 
 ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Dataset、異なる言語間の高速なデータ交換を中心とし、1台のPCでも利用しやすい。Sparkは、複数のコンピュータから成るクラスタへデータと計算を分散するための処理基盤である。
 
@@ -1160,6 +1178,7 @@ ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Data
 
 最後に、`data/raw/market/daily_stock_returns.parquet`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
 
+### I-1.5.1 分析用データを作る
 
 ```{r}
 #| label: integrated-analysis-data
@@ -1183,6 +1202,7 @@ analysis_data <- tbl_daily_stock_return |>
 analysis_data
 ```
 
+### I-1.5.2 企業別の要約統計量を計算する
 
 ```{r}
 #| label: integrated-analysis-summary
@@ -1202,6 +1222,7 @@ firm_summary <- analysis_data |>
 firm_summary
 ```
 
+### I-1.5.3 累積リターンを計算する
 
 ```{r}
 #| label: integrated-analysis-cumulative
@@ -1217,6 +1238,7 @@ cumulative_return_data <- analysis_data |>
 cumulative_return_data
 ```
 
+### I-1.5.4 purrrで企業別の統計量を再計算する
 
 ```{r}
 #| label: integrated-analysis-purrr
@@ -1241,6 +1263,7 @@ firm_names |>
   )
 ```
 
+### I-1.5.5 累積リターンを可視化する
 
 ```{r}
 #| label: integrated-analysis-plot
@@ -1272,6 +1295,7 @@ p |> add_lagrange_theme_LFL()
 
 
 
+### I-1.6.1 金融データ分析パイプライン
 
 本章で扱った技術は、次の流れとしてつながる。
 

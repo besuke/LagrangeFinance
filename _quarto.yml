@@ -38,7 +38,7 @@ book:
         - part2_quantive_riemann/ch08_early_redemption_models.qmd
         - part2_quantive_riemann/ch09_exotic_derivatives_prdc.qmd
 
-    - part: "エンタープライゼーション"
+    - part: "第III部　エンタープライゼーション"
       chapters:
         - part3_enterprise_riemann/ch01_computational_evolution_parallel.qmd
         - part3_enterprise_riemann/ch02_distributed_computing_jobtask.qmd

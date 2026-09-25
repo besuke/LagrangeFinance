@@ -60,6 +60,7 @@ $$
 
 ## I-7.2 分析データの作成
 
+### I-7.2.1 既存データの読込み
 
 ```{r}
 #| label: read-chapter-07-data
@@ -105,6 +106,7 @@ tbl_input_overview <- tribble(
 show_table_LFL(tbl_input_overview)
 ```
 
+### I-7.2.2 目的変数
 
 年度$t$の情報から、年度$t+1$の超過リターンを予測する。
 
@@ -131,6 +133,7 @@ tbl_target <- tbl_financial |>
   ungroup()
 ```
 
+### I-7.2.3 価格特徴量
 
 ```{r}
 #| label: create-price-features
@@ -151,6 +154,7 @@ tbl_price_features <- tbl_monthly |>
   )
 ```
 
+### I-7.2.4 市場環境特徴量
 
 ```{r}
 #| label: create-market-features
@@ -166,6 +170,7 @@ tbl_market_features <- tbl_factor |>
   )
 ```
 
+### I-7.2.5 学習データ
 
 ```{r}
 #| label: create-machine-learning-data
@@ -235,6 +240,7 @@ tuning
 prediction
 ```
 
+### I-7.3.1 前処理
 
 ```{r}
 #| label: define-machine-learning-recipe
@@ -269,6 +275,7 @@ factor_recipe <- recipes::recipe(
   )
 ```
 
+### I-7.3.2 時系列分割
 
 ランダム分割ではなく、年度の順序を維持して学習期間と評価期間を分ける。
 
@@ -403,6 +410,7 @@ show_table_LFL(tbl_selected_factors, n = 30)
 
 ## I-7.5 期待リターンの推定
 
+### I-7.5.1 テスト期間の予測
 
 ```{r}
 #| label: predict-testing-data
@@ -442,6 +450,7 @@ tbl_prediction_metrics <- yardstick::metric_set(
 show_table_LFL(tbl_prediction_metrics)
 ```
 
+### I-7.5.2 全データによる最終モデル
 
 ```{r}
 #| label: fit-final-factor-model

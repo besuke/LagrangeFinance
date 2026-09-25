@@ -22,6 +22,7 @@ source(file.path("R", "utility_LFL.R"))
 
 ## I-2.2 財務データの読込みと整備
 
+### I-2.2.1 財務データの読込み
 
 ```{r}
 #| label: read-financial-data
@@ -39,6 +40,7 @@ show_table_LFL(financial_data_raw, n = 10)
 ```
 
 
+### I-2.2.2 データ構造の確認
 
 ```{r}
 #| label: inspect-financial-data
@@ -84,6 +86,7 @@ missing_summary <- financial_data_raw |>
 show_table_LFL(missing_summary)
 ```
 
+### I-2.2.3 データ型と並び順の整理
 
 企業IDと産業IDは分類変数であるためファクター型へ変換する。年度は整数型へ変換し、前年度の値を正しく取得できるように企業IDと年度の順に並べる。
 
@@ -130,6 +133,7 @@ if (nrow(panel_key_duplicates) > 0) {
 
 ## I-2.3 標本構成と売上高分布
 
+### I-2.3.1 年度別の企業数
 
 年度ごとの企業数と観測数を集計する。
 
@@ -166,6 +170,7 @@ p_firms_by_year <- firms_by_year |>
 add_lagrange_theme_LFL(p_firms_by_year)
 ```
 
+### I-2.3.2 産業別の企業数
 
 最新年度について、産業ごとの企業数を集計する。
 
@@ -209,6 +214,7 @@ p_firms_by_industry <- firms_by_industry |>
 add_lagrange_theme_LFL(p_firms_by_industry)
 ```
 
+### I-2.3.3 売上高の分布
 
 売上高は企業規模によって大きく異なるため、元の値と自然対数の両方を確認する。
 
@@ -280,6 +286,7 @@ add_lagrange_theme_LFL(p_log_sales_distribution)
 
 ## I-2.4 株主資本とROE分析
 
+### I-2.4.1 株主資本とROE
 
 本章では、営業資産から営業負債を控除した純営業資産と、金融負債から金融資産を控除した純金融負債の差として株主資本を計算する。
 
@@ -385,6 +392,7 @@ p_roe_distribution <- financial_data |>
 add_lagrange_theme_LFL(p_roe_distribution)
 ```
 
+### I-2.4.2 産業別のROE
 
 ```{r}
 #| label: industry-roe-summary
@@ -439,6 +447,7 @@ add_lagrange_theme_LFL(p_industry_roe) +
   )
 ```
 
+### I-2.4.3 企業の順位付け
 
 最新年度について、産業内でROEが高い企業から順に順位を付ける。`dense_rank()`を使うと、同順位がある場合でも次の順位を飛ばさない。
 
@@ -492,6 +501,7 @@ show_table_LFL(top_firm_by_industry, n = 20)
 
 ## I-2.5 上級デュポン・モデル
 
+### I-2.5.1 ROEのデュポン分解
 
 上級デュポン・モデルでは、ROEを純営業資産利益率と財務レバレッジの効果へ分解する。
 
@@ -572,6 +582,7 @@ dupont_validation <- financial_data_dupont |>
 show_table_LFL(dupont_validation)
 ```
 
+### I-2.5.2 PMとATOの関係
 
 営業利益率PMと純営業資産回転率ATOは、企業の事業モデルを異なる側面から表す。産業別中央値を使って両者の関係を確認する。
 
@@ -673,6 +684,7 @@ add_lagrange_theme_LFL(p_pm_by_industry) +
 
 ## I-2.6 財務指標の要約と中間データ
 
+### I-2.6.1 複数の財務指標の要約
 
 複数列に同じ集計を適用する場合は、列名のベクトルと`purrr::map_dfr()`を組み合わせる。
 
@@ -709,6 +721,7 @@ metric_summary <- financial_metrics |>
 show_table_LFL(metric_summary)
 ```
 
+### I-2.6.2 中間データの保存
 
 第3章では、本章で計算した株主資本、前年度株主資本およびROEなどを株式データと結合する。そのため、上級デュポン・モデルの計算結果を含む整理済みデータを`data/derived/fundamentals/financial_characteristics.parquet`へ保存する。
 

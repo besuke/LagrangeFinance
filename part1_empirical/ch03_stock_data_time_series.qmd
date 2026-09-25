@@ -21,6 +21,7 @@ source(file.path("R", "utility_LFL.R"))
 
 ## I-3.2 株式データの読込みと整備
 
+### I-3.2.1 株式データの読込み
 
 
 ```{r}
@@ -67,6 +68,7 @@ if (length(missing_stock_columns) > 0) {
 }
 ```
 
+### I-3.2.2 データ構造と欠損値
 
 ```{r}
 #| label: inspect-stock-data
@@ -114,6 +116,7 @@ show_table_LFL(
 )
 ```
 
+### I-3.2.3 データ型とパネルキー
 
 企業ごとの時系列計算を正しく行うため、企業IDと月IDの順に並べる。
 
@@ -212,6 +215,7 @@ show_table_LFL(
 
 ## I-3.3 月次リターンと時価総額
 
+### I-3.3.1 配当と調整係数
 
 配当が支払われた観測と、調整係数が1と異なる観測を確認する。
 
@@ -267,6 +271,7 @@ show_table_LFL(adjustment_observations, n = 20)
 show_table_LFL(corporate_action_summary)
 ```
 
+### I-3.3.2 時価総額
 
 企業$i$の月$t$における時価総額$ME_{i,t}$は、株価$P_{i,t}$と発行済株式数$N_{i,t}$の積である。
 
@@ -325,6 +330,7 @@ p_market_equity <- stock_data |>
 add_lagrange_theme_LFL(p_market_equity)
 ```
 
+### I-3.3.3 月次株式リターン
 
 企業ごとに前月株価を作成し、月IDが連続している場合だけ利用する。
 
@@ -399,6 +405,7 @@ stock_data |>
   show_table_LFL(n = 15)
 ```
 
+### I-3.3.4 無リスク金利と超過リターン
 
 同じ月の無リスク金利はすべての企業に共通であることを確認し、月ごとの中央値で統一する。
 
@@ -484,6 +491,7 @@ stock_data <- stock_data |>
 
 ## I-3.4 月次リターンの分析
 
+### I-3.4.1 要約統計量
 
 ```{r}
 #| label: define-return-moments
@@ -550,6 +558,7 @@ monthly_return_summary <- stock_data |>
 show_table_LFL(monthly_return_summary)
 ```
 
+### I-3.4.2 リターン分布
 
 極端値の影響を抑えるため、1パーセンタイルから99パーセンタイルまでを表示する。
 
@@ -591,6 +600,7 @@ add_lagrange_theme_LFL(
 )
 ```
 
+### I-3.4.3 企業別の累積リターン
 
 観測数が多い企業から6社を選び、月次リターンを複利で累積する。
 
@@ -645,6 +655,7 @@ add_lagrange_theme_LFL(p_cumulative_return) +
   ggthemes::scale_colour_economist()
 ```
 
+### I-3.4.4 企業別の要約統計量
 
 ```{r}
 #| label: firm-return-summary
@@ -675,6 +686,7 @@ show_table_LFL(firm_return_summary)
 
 ## I-3.5 年次データと財務データの結合
 
+### I-3.5.1 月次リターンの年次集約
 
 企業$i$の年$t$における年次リターンは、月次リターンを複利で集約する。
 
@@ -725,6 +737,7 @@ annual_stock_data <- stock_data |>
 show_table_LFL(annual_stock_data, n = 20)
 ```
 
+### I-3.5.2 年次財務データの読込み
 
 第2章で作成した`data/derived/fundamentals/financial_characteristics.parquet`を読み込む。
 
@@ -769,6 +782,7 @@ if (nrow(financial_key_duplicates) > 0) {
 }
 ```
 
+### I-3.5.3 年次データの結合
 
 ```{r}
 #| label: join-annual-data
@@ -798,6 +812,7 @@ annual_data_overview <- annual_data |>
 show_table_LFL(annual_data_overview)
 ```
 
+### I-3.5.4 月次データへの財務情報の付加
 
 ```{r}
 #| label: join-monthly-data
@@ -823,6 +838,7 @@ row_count_check <- tibble(
 show_table_LFL(row_count_check)
 ```
 
+### I-3.5.5 売上高・利益・時価総額
 
 最新年度について、売上高、当期純利益および時価総額の関係を確認する。
 
@@ -887,6 +903,7 @@ add_lagrange_theme_LFL(
 
 ## I-3.6 統計分析
 
+### I-3.6.1 月次超過リターンの一標本t検定
 
 観測数が最も多い企業を選び、月次超過リターンの平均が0と異なるかを検定する。
 
@@ -930,6 +947,7 @@ t_test_summary <- broom::tidy(t_test_result) |>
 show_table_LFL(t_test_summary)
 ```
 
+### I-3.6.2 簿価時価比率と年次超過リターン
 
 前年度末の時価総額を作成し、期首株主資本を前年度末時価総額で割って簿価時価比率を計算する。
 
@@ -1064,6 +1082,7 @@ show_table_LFL(
 )
 ```
 
+### I-3.6.3 年度別回帰
 
 年度ごとの回帰を`nest()`と`purrr::map()`で実行する。
 
