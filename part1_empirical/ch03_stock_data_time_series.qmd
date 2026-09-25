@@ -1232,7 +1232,6 @@ output_verification <- output_data |>
 show_table_LFL(output_verification)
 ```
 
-## I-3.8 まとめ
 
 本章では、株価、配当および調整係数から月次リターンを作成し、無リスク金利を差し引いて超過リターンを計算した。さらに、月次リターンを年次リターンへ集約し、第2章で作成した財務データと結合した。最後に、簿価時価比率と年次超過リターンの関係を回帰分析で確認し、月次データを`data/derived/returns/monthly_stock_returns.parquet`、年次データを`data/derived/fundamentals/annual_firm_characteristics.parquet`として保存した。
 

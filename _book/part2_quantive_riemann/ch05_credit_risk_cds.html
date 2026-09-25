@@ -398,7 +398,6 @@ window.Quarto = {
   <li><a href="#ii-5.6.5-midpoint型近似とisda-engine" id="toc-ii-5.6.5-midpoint型近似とisda-engine" class="nav-link" data-scroll-target="#ii-5.6.5-midpoint型近似とisda-engine">II-5.6.5 MidPoint型近似とISDA Engine</a></li>
   <li><a href="#ii-5.6.6-midpoint-engineとisda-engineの比較" id="toc-ii-5.6.6-midpoint-engineとisda-engineの比較" class="nav-link" data-scroll-target="#ii-5.6.6-midpoint-engineとisda-engineの比較">II-5.6.6 MidPoint EngineとISDA Engineの比較</a></li>
   </ul></li>
-  <li><a href="#ii-5.7-まとめ" id="toc-ii-5.7-まとめ" class="nav-link" data-scroll-target="#ii-5.7-まとめ">II-5.7 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -1775,10 +1774,6 @@ V_{\mathrm{accrual\ rebate}}
 <span id="cb20-60"><a href="#cb20-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 default_leg_npv  1.4649e+5  1.4649e+5                     -1.9448e-1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>MidPoint法は、各Premium期間内のデフォルト時点を期間中点へ集約する。ISDA Engineは標準市場規約に合わせて、より詳細な日付処理と積分を行う。そのため、同じカーブを用いてもLeg NPVとFair Spreadに差が生じる。</p>
-</section>
-</section>
-<section id="ii-5.7-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="ii-5.7-まとめ">II-5.7 まとめ</h2>
 <p>CDSは、Premium LegとProtection Legから構成される。プロテクション買い手はPremiumを支払い、信用事由が発生した場合に損失補償を受け取る。</p>
 <p>Hazard Rateは、企業がその時点まで存続しているという条件の下での瞬間的なデフォルト強度である。フラットHazard Rateでは、生存確率は次式で表される。</p>
 <p><span class="math display">\[
@@ -1830,6 +1825,7 @@ e^{-\lambda t}
 </div>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

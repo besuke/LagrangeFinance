@@ -779,7 +779,6 @@ output_summary <- tibble(
 show_table_LFL(output_summary)
 ```
 
-## I-2.7 まとめ
 
 本章では、財務データの構造、欠損値およびパネルデータのキーを確認した。次に、年度別・産業別の企業構成、売上高の分布、株主資本、ROEおよび産業内順位を計算した。最後に、ROEをRNOA、財務レバレッジおよび純借入コストへ分解し、第3章で利用する整理済みデータを`data/derived/fundamentals/financial_characteristics.parquet`へ保存した。
 

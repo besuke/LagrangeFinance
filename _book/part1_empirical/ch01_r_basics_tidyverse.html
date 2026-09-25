@@ -362,9 +362,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#i-1.5.3-累積リターンを計算する" id="toc-i-1.5.3-累積リターンを計算する" class="nav-link" data-scroll-target="#i-1.5.3-累積リターンを計算する">I-1.5.3 累積リターンを計算する</a></li>
   <li><a href="#i-1.5.4-purrrで企業別の統計量を再計算する" id="toc-i-1.5.4-purrrで企業別の統計量を再計算する" class="nav-link" data-scroll-target="#i-1.5.4-purrrで企業別の統計量を再計算する">I-1.5.4 purrrで企業別の統計量を再計算する</a></li>
   <li><a href="#i-1.5.5-累積リターンを可視化する" id="toc-i-1.5.5-累積リターンを可視化する" class="nav-link" data-scroll-target="#i-1.5.5-累積リターンを可視化する">I-1.5.5 累積リターンを可視化する</a></li>
-  </ul></li>
-  <li><a href="#i-1.6-まとめ" id="toc-i-1.6-まとめ" class="nav-link" data-scroll-target="#i-1.6-まとめ">I-1.6 まとめ</a>
-  <ul class="collapse">
   <li><a href="#i-1.6.1-金融データ分析パイプライン" id="toc-i-1.6.1-金融データ分析パイプライン" class="nav-link" data-scroll-target="#i-1.6.1-金融データ分析パイプライン">I-1.6.1 金融データ分析パイプライン</a></li>
   </ul></li>
   </ul>
@@ -1617,8 +1614,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 2 × 5</span></span>
 <span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   chr_method           num_pi num_elapsed_seconds num_absolute_error num_speedup</span></span>
 <span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                 &lt;dbl&gt;               &lt;dbl&gt;              &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414                3.87        0.00016693       1     </span></span>
-<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415                2.72        0.000094774      1.4228</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 map                  3.1414              2.34          0.00016693       1     </span></span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 future_map (8 worke… 3.1415              2.2600        0.000094774      1.0354</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>p <span class="ot">&lt;-</span> tbl_pi_benchmark <span class="sc">|&gt;</span></span>
@@ -1909,10 +1906,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-</section>
-</section>
-<section id="i-1.6-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="i-1.6-まとめ">I-1.6 まとめ</h2>
 <p>本章では、Base Rの基本的なデータ構造と関数から出発し、記述統計、確率分布、tidyverseによるデータ分析までを一通り確認した。重要な点は次のとおりである。</p>
 <ul>
 <li>オブジェクト名には内容を表すsnake_caseを用いる。</li>
@@ -1923,6 +1916,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>グラフは<code>ggplot2</code>でデータ、変数、図形を分けて組み立てる。</li>
 <li>データファイルは絶対パスではなく、プロジェクトルートを基準に読み込む。</li>
 </ul>
+</section>
 <section id="i-1.6.1-金融データ分析パイプライン" class="level3">
 <h3 class="anchored" data-anchor-id="i-1.6.1-金融データ分析パイプライン">I-1.6.1 金融データ分析パイプライン</h3>
 <p>本章で扱った技術は、次の流れとしてつながる。</p>

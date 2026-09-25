@@ -399,7 +399,6 @@ window.Quarto = {
   <li><a href="#ii-2.7.4-8複利で受渡適格銘柄を再評価" id="toc-ii-2.7.4-8複利で受渡適格銘柄を再評価" class="nav-link" data-scroll-target="#ii-2.7.4-8複利で受渡適格銘柄を再評価">II-2.7.4 8%複利で受渡適格銘柄を再評価</a></li>
   <li><a href="#ii-2.7.5-ctd-switchingの解釈" id="toc-ii-2.7.5-ctd-switchingの解釈" class="nav-link" data-scroll-target="#ii-2.7.5-ctd-switchingの解釈">II-2.7.5 CTD Switchingの解釈</a></li>
   </ul></li>
-  <li><a href="#ii-2.8-まとめ" id="toc-ii-2.8-まとめ" class="nav-link" data-scroll-target="#ii-2.8-まとめ">II-2.8 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -2400,10 +2399,6 @@ P_i-F\times CF_i\]</span></p>
 </div>
 <p>現在のように標準物6%より市場金利が低く、イールドカーブが右上がりである環境では、短いDuration側が相対的に受渡しやすくなる。一方、長期金利8%、短期金利9%という逆イールドでは、標準物6%を上回る金利水準とカーブの傾きが同時に反転し、長いDuration側へCTDが移る可能性がある。</p>
 <p>重要なのは、CTDを「Durationが最小の銘柄」または「Durationが最大の銘柄」と機械的に決めるのではないことである。最終判定はNet Basis最小、またはImplied Repo Rate最大で行う。Durationは、金利水準とConversion Factorの関係から相対価値がどちら側へ偏りやすいかを理解するための重要な手掛かりである。</p>
-</section>
-</section>
-<section id="ii-2.8-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="ii-2.8-まとめ">II-2.8 まとめ</h2>
 <p>本章では、財務省の日本国債複利利回りを<code>pivot_longer()</code>でlong形式へ変換し、年限方向のイールドカーブと時間方向の金利時系列を可視化した。離散的な観測点へ自然スプライン補間を適用することで、補間値は市場で直接観測された値ではなく、選択したアルゴリズムから推定された値であることを確認した。</p>
 <p>続いて、割引係数、ゼロ金利およびフォワード金利を通じて金利期間構造を整理し、補間対象の違い、ブートストラップ、Implied Term Structure、カーブシフトおよび検証を扱った。とくにフォワード金利は、ゼロ金利では目立たない補間差を拡大して示すことがある。このため、カーブの妥当性は単一の表現だけで判断せず、入力商品の再現性と複数のカーブ表現を組み合わせて評価する必要がある。</p>
 <p>後半では、日本の長期国債先物を対象として、6%クーポン・10年の標準物、Conversion Factor、Gross Basis、Carry、Net Basis、Implied Repo RateおよびCTDの関係を確認した。現物債の価格から複利利回りを逆算し、GaussQuantを用いてModified Durationを求めることで、クーポンと償還期限が金利感応度へ与える影響も同時に確認した。</p>
@@ -2411,6 +2406,7 @@ P_i-F\times CF_i\]</span></p>
 <p>この結果は、国債先物のCTDが単なる銘柄属性ではなく、標準物の設計、市場のイールドカーブ、現物価格、資金調達コストおよび受渡条件の相対関係から決まることを示している。</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

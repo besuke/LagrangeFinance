@@ -392,7 +392,6 @@ window.Quarto = {
   <li><a href="#i-4.7.2-アルファとモデル適合度の比較" id="toc-i-4.7.2-アルファとモデル適合度の比較" class="nav-link" data-scroll-target="#i-4.7.2-アルファとモデル適合度の比較">I-4.7.2 アルファとモデル適合度の比較</a></li>
   </ul></li>
   <li><a href="#i-4.8-ファクターデータの保存" id="toc-i-4.8-ファクターデータの保存" class="nav-link" data-scroll-target="#i-4.8-ファクターデータの保存">I-4.8 ファクター・データの保存</a></li>
-  <li><a href="#i-4.9-まとめ" id="toc-i-4.9-まとめ" class="nav-link" data-scroll-target="#i-4.9-まとめ">I-4.9 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -1964,9 +1963,6 @@ R^e_{p,t}
 <span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                                        &lt;int&gt;   &lt;int&gt;     &lt;int&gt;     &lt;int&gt;</span></span>
 <span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 data/derived/factors/fama_french_factors.pa…    60      16        13        72</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-4.9-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="i-4.9-まとめ">I-4.9 まとめ</h2>
 <p>本章では、前年度末時価総額を用いて市場ポートフォリオと企業規模ポートフォリオを構築した。また、企業規模と簿価時価比率による独立2×3ソートから6ポートフォリオを作成し、SMBとHMLを計算した。</p>
 <p>企業規模10分位ポートフォリオに対してCAPMとFF3モデルを推定し、アルファと調整済み決定係数を比較した。回帰の反復処理には<code>nest()</code>と<code>purrr::map()</code>を使用しており、明示的なループは使用していない。</p>
 <p>作成したファクター・データは次の場所に保存される。</p>

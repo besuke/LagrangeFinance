@@ -433,7 +433,6 @@ window.Quarto = {
   <li><a href="#i-6.9.3-parquet保存" id="toc-i-6.9.3-parquet保存" class="nav-link" data-scroll-target="#i-6.9.3-parquet保存">I-6.9.3 Parquet保存</a></li>
   <li><a href="#i-6.9.4-保存結果の検証" id="toc-i-6.9.4-保存結果の検証" class="nav-link" data-scroll-target="#i-6.9.4-保存結果の検証">I-6.9.4 保存結果の検証</a></li>
   </ul></li>
-  <li><a href="#i-6.10-まとめ" id="toc-i-6.10-まとめ" class="nav-link" data-scroll-target="#i-6.10-まとめ">I-6.10 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -2538,10 +2537,6 @@ CAR_{i,t}
 <span id="cb51-40"><a href="#cb51-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 event_daily   C:/AnalyticFin/Projects/LagrangeFinan… 241560      19    9222492</span></span>
 <span id="cb51-41"><a href="#cb51-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 event_summary C:/AnalyticFin/Projects/LagrangeFinan…    305      15      33564</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-</section>
-<section id="i-6.10-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="i-6.10-まとめ">I-6.10 まとめ</h2>
 <p>本章では、決算発表の翌取引日をイベント日0として、マーケット・モデルによるイベントスタディを実施した。推定期間にはイベント日の130取引日前から31取引日前までの100日を使用し、イベント期間には30取引日前から30取引日後までの61日を使用した。</p>
 <p>決算サプライズは、実現利益と予想利益の差を期首時価総額で標準化し、年度ごとに5群へ分類した。イベント別にマーケット・モデルを推定し、通常リターン、異常リターン、累積異常リターンを計算した。さらに、日次のAARとCAAR、複数イベント・ウィンドウのCAR、正のCARとなったイベントの割合、決算サプライズと短期CARの回帰関係を確認した。</p>
 <p>反復処理には<code>purrr</code>を利用し、明示的なループは使用していない。データ探索、入力検証、イベント日0の設定、イベント・パネルの作成、マーケット・モデルの推定、AR・CARの計算、イベント・ウィンドウ集計は、<code>utility_LFL.R</code>の共通関数へ分離した。</p>
@@ -2551,6 +2546,7 @@ data/derived/events/event_study_daily.parquet
 data/derived/events/event_study_summary.parquet</code></pre>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

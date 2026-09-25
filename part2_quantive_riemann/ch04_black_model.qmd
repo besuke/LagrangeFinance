@@ -787,7 +787,6 @@ GaussQuant::show_tbl_GQH(
 
 Longstaff–Schwartz法の価格は、パス数、時間ステップ、基底関数および回帰誤差に依存する。したがって、二項Treeとの差が完全にゼロになることを目的とするのではなく、早期行使判断をMonte Carloパス上でどのように近似するかを確認する。
 
-## II-4.7 まとめ
 
 Black-76とBlack–Scholes–Mertonは、原資産が対数正規分布に従うという共通の仮定を持つ。Black–Scholes–Mertonは現物価格から出発し、Black-76はフォワード価格または先物価格を直接入力する。
 

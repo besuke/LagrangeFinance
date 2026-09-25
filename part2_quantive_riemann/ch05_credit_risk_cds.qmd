@@ -1226,7 +1226,6 @@ GaussQuant::show_tbl_GQH(
 
 MidPoint法は、各Premium期間内のデフォルト時点を期間中点へ集約する。ISDA Engineは標準市場規約に合わせて、より詳細な日付処理と積分を行う。そのため、同じカーブを用いてもLeg NPVとFair Spreadに差が生じる。
 
-## II-5.7 まとめ
 
 CDSは、Premium LegとProtection Legから構成される。プロテクション買い手はPremiumを支払い、信用事由が発生した場合に損失補償を受け取る。
 

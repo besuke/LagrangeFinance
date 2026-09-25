@@ -1270,7 +1270,6 @@ tbl_factor_output_summary <- tibble(
 show_table_LFL(tbl_factor_output_summary)
 ```
 
-## I-4.9 まとめ
 
 本章では、前年度末時価総額を用いて市場ポートフォリオと企業規模ポートフォリオを構築した。また、企業規模と簿価時価比率による独立2×3ソートから6ポートフォリオを作成し、SMBとHMLを計算した。
 

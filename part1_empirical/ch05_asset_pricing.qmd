@@ -709,7 +709,6 @@ plot_efficient_frontier <- add_lagrange_theme_LFL(
 show_plot_LFL(plot_efficient_frontier)
 ```
 
-## I-5.7 まとめ
 
 本章では、Fama--Frenchの3ファクター・モデルを企業別に推定し、市場、企業規模、簿価時価比率に対するファクター・ローディングを求めた。ファクター・リスクプレミアムとの積和から株式資本コストを計算し、配当利回りと組み合わせることで潜在配当成長率を推定した。
 

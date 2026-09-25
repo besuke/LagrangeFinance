@@ -1281,7 +1281,6 @@ p <- cumulative_return_data |>
   )
 p |> add_lagrange_theme_LFL()
 ```
-## I-1.6 まとめ
 
 本章では、Base Rの基本的なデータ構造と関数から出発し、記述統計、確率分布、tidyverseによるデータ分析までを一通り確認した。重要な点は次のとおりである。
 

@@ -627,7 +627,6 @@ tbl_backtest_summary <- tbl_backtest |>
 show_table_LFL(tbl_backtest_summary)
 ```
 
-## I-8.11 本章のまとめ
 
 本章では、ポートフォリオ最適化をGaussQuantの統一APIで実装した。最適化ロジックを章内に直接記述する方法から、ポートフォリオ仕様、制約条件、最適化手法を分離する構成へ変更した。
 

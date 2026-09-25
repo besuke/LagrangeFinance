@@ -393,7 +393,6 @@ window.Quarto = {
   <li><a href="#i-3.6.3-年度別回帰" id="toc-i-3.6.3-年度別回帰" class="nav-link" data-scroll-target="#i-3.6.3-年度別回帰">I-3.6.3 年度別回帰</a></li>
   </ul></li>
   <li><a href="#i-3.7-分析用データの保存" id="toc-i-3.7-分析用データの保存" class="nav-link" data-scroll-target="#i-3.7-分析用データの保存">I-3.7 分析用データの保存</a></li>
-  <li><a href="#i-3.8-まとめ" id="toc-i-3.8-まとめ" class="nav-link" data-scroll-target="#i-3.8-まとめ">I-3.8 まとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -1894,9 +1893,6 @@ R_{i,t}^{annual}
 <span id="cb39-38"><a href="#cb39-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 monthly data/derived/returns/monthly_stock_returns.pa… 95040      39   4761273</span></span>
 <span id="cb39-39"><a href="#cb39-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 annual  data/derived/fundamentals/annual_firm_charact…  7920      31   1698508</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-3.8-まとめ" class="level2">
-<h2 class="anchored" data-anchor-id="i-3.8-まとめ">I-3.8 まとめ</h2>
 <p>本章では、株価、配当および調整係数から月次リターンを作成し、無リスク金利を差し引いて超過リターンを計算した。さらに、月次リターンを年次リターンへ集約し、第2章で作成した財務データと結合した。最後に、簿価時価比率と年次超過リターンの関係を回帰分析で確認し、月次データを<code>data/derived/returns/monthly_stock_returns.parquet</code>、年次データを<code>data/derived/fundamentals/annual_firm_characteristics.parquet</code>として保存した。</p>
 <p>第4章では、本章で作成した分析用データを利用して、ポートフォリオ分析へ進む。</p>
 

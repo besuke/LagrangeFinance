@@ -382,7 +382,6 @@ window.Quarto = {
   <li><a href="#i-8.8-efficient-frontier" id="toc-i-8.8-efficient-frontier" class="nav-link" data-scroll-target="#i-8.8-efficient-frontier">I-8.8 Efficient Frontier</a></li>
   <li><a href="#i-8.9-最適ウェイトの比較" id="toc-i-8.9-最適ウェイトの比較" class="nav-link" data-scroll-target="#i-8.9-最適ウェイトの比較">I-8.9 最適ウェイトの比較</a></li>
   <li><a href="#i-8.10-アウトオブサンプル評価" id="toc-i-8.10-アウトオブサンプル評価" class="nav-link" data-scroll-target="#i-8.10-アウトオブサンプル評価">I-8.10 アウト・オブ・サンプル評価</a></li>
-  <li><a href="#i-8.11-本章のまとめ" id="toc-i-8.11-本章のまとめ" class="nav-link" data-scroll-target="#i-8.11-本章のまとめ">I-8.11 本章のまとめ</a></li>
   </ul>
 </nav>
     </div>
@@ -997,9 +996,6 @@ RC_i=w_i(\boldsymbol{\Sigma}\boldsymbol{w})_i
 <span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;          &lt;int&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;</span></span>
 <span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1           12   0.26165  0.020890   0.054658 -0.070265   0.13034</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-</section>
-<section id="i-8.11-本章のまとめ" class="level2">
-<h2 class="anchored" data-anchor-id="i-8.11-本章のまとめ">I-8.11 本章のまとめ</h2>
 <p>本章では、ポートフォリオ最適化をGaussQuantの統一APIで実装した。最適化ロジックを章内に直接記述する方法から、ポートフォリオ仕様、制約条件、最適化手法を分離する構成へ変更した。</p>
 <p>最小分散、平均分散、最大リターン、最大シャープレシオに加えて、期待ショートフォール、リスク・バジェッティング、目標リターン、目標リスクを同じAPIで扱うことで、ポートフォリオ最適化を一般的なリスク配分問題として捉えることができる。</p>
 <p>また、目標リターンを連続的に変化させることでEfficient Frontierを構成し、最小分散点と最大シャープレシオ点を同一平面上で確認した。</p>

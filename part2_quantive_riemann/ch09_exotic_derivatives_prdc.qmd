@@ -1156,7 +1156,6 @@ Part IIを通じた共通原則は、商品ごとに異なる数式を暗記す�
 
 GaussQuantは、QuantLib SWIGの低水準オブジェクトを金融商品の計算層へまとめる。LagrangeFinanceの章側は、商品構造、数式、入力条件、表、グラフおよび金融的解釈に集中する。
 
-## II-9.7 まとめ
 
 PRDCは、将来のFX Rateに連動するCouponを持つ長期の仕組債である。
 
