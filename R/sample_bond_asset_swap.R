@@ -1,3 +1,6 @@
+source("tonar_asset_swap_GQL.R")
+
+
 tonar <- instance_swap_curve_TONAR("2022-08-19")
 bond <- fixed_rate_bond_GQL(
   issue_date = "2022-07-28",
