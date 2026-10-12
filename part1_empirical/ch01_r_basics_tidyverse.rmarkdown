@@ -1,0 +1,1325 @@
+---
+title: "第I-1章 Rによるデータ分析の基礎"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+---
+
+```{r}
+#| label: load-utility
+#| include: false
+getwd()
+source(file.path("R", "utility_LFL.R"))
+```
+
+
+
+本章では、Rによるデータ分析に必要な基本操作を、Base Rからtidyverseへ段階的に学ぶ。前半では、オブジェクト、ベクトル、行列、リスト、データフレーム、関数、条件判定、記述統計および確率分布を扱う。後半では、`dplyr`、`stringr`、`tidyr`、`purrr`、`ggplot2`を用いて、データの読込み、整形、集計、反復処理、可視化を一つの流れとして組み立てる。さらに、`nest()`によるリスト列、`future`と`furrr`による並列計算、`dbplyr`とArrowによるデータベース・大規模データ処理へ進む。
+
+Base Rの項目構成は、Positが公開している[Base R Cheatsheet](https://github.com/rstudio/cheatsheets/blob/main/base-r.pdf)を参考にしている。本章のコードでは、反復処理に明示的なループを使わず、ベクトル化または`purrr::map()`系関数を用いる。また、パイプ演算子はすべて`|>`に統一する。
+
+
+## I-1.1 Rの基礎
+
+### I-1.1.1 Rの基本操作
+
+
+Rでは、計算結果やデータをオブジェクトとして保存する。代入には`<-`を用いる。
+
+```{r}
+#| label: object-assignment
+
+risk_free_rate <- 0.01
+future_cash_flow <- 100
+
+present_value <- future_cash_flow / (1 + risk_free_rate)
+
+present_value
+```
+
+オブジェクト名には、内容が分かる英単語を用いる。本書では複数の単語をアンダースコアで結ぶsnake_caseを基本とする。
+
+
+```{r}
+#| label: arithmetic-functions
+
+2 + 3
+10 - 4
+6 * 7
+100 / 4
+2^5
+
+sqrt(16)
+log(exp(1))
+abs(-3)
+round(pi, digits = 3)
+signif(pi, digits = 4)
+```
+
+
+```{r}
+#| label: object-types
+
+numeric_value <- 10.5
+integer_value <- 10L
+character_value <- "Finance"
+logical_value <- TRUE
+
+class(numeric_value)
+class(integer_value)
+class(character_value)
+class(logical_value)
+
+typeof(numeric_value)
+str(numeric_value)
+```
+
+
+欠損値は`NA`で表す。欠損値の有無は`is.na()`で確認する。
+
+```{r}
+#| label: missing-values
+
+returns_with_na <- c(0.02, NA, -0.01, 0.03)
+
+is.na(returns_with_na)
+sum(is.na(returns_with_na))
+
+mean(returns_with_na, na.rm = TRUE)
+```
+
+### I-1.1.2 ベクトル
+
+
+```{r}
+#| label: vector-creation
+
+interest_rates <- c(0.01, 0.015, 0.02)
+year_sequence <- 1:5
+fine_grid <- seq(from = 0, to = 1, by = 0.25)
+repeated_values <- rep(100, times = 5)
+
+interest_rates
+year_sequence
+fine_grid
+repeated_values
+```
+
+
+Rの添字は1から始まる。
+
+```{r}
+#| label: vector-indexing
+
+interest_rates[1]
+interest_rates[2:3]
+interest_rates[-1]
+
+interest_rates[interest_rates >= 0.015]
+```
+
+
+```{r}
+#| label: named-vector
+
+portfolio_weights <- c(stock = 0.6, bond = 0.3, cash = 0.1)
+
+portfolio_weights
+portfolio_weights["bond"]
+sum(portfolio_weights)
+```
+
+
+Rでは、多くの計算をベクトル全体に一度に適用できる。
+
+```{r}
+#| label: vectorization
+
+discount_rates <- seq(0.01, 0.05, by = 0.01)
+cash_flow <- 100
+
+present_values <- cash_flow / (1 + discount_rates)
+
+tibble(discount_rates, present_values)
+```
+
+### I-1.1.3 行列、リスト、データフレーム
+
+
+```{r}
+#| label: matrix-basics
+
+return_matrix <- matrix(
+  c(0.01, 0.02, -0.01, 0.03, 0.00, 0.01),
+  nrow = 3,
+  ncol = 2,
+  byrow = TRUE
+)
+
+colnames(return_matrix) <- c("stock_a", "stock_b")
+rownames(return_matrix) <- c("month_1", "month_2", "month_3")
+
+return_matrix
+return_matrix[, "stock_a"]
+colMeans(return_matrix)
+```
+
+
+リストには、型や長さの異なるオブジェクトをまとめて保存できる。
+
+```{r}
+#| label: list-basics
+
+analysis_result <- list(
+  model_name = "simple return model",
+  coefficients = c(alpha = 0.001, beta = 1.05),
+  observations = 60L,
+  converged = TRUE
+)
+
+analysis_result$model_name
+analysis_result$coefficients
+analysis_result[["observations"]]
+```
+
+
+```{r}
+#| label: data-frame-basics
+
+firm_data_base <- data.frame(
+  firm_id = 1:3,
+  firm_name = c("Firm A", "Firm B", "Firm C"),
+  roe = c(0.08, 0.12, 0.15)
+)
+
+firm_data_base
+str(firm_data_base)
+```
+
+tidyverseでは、データフレームを拡張した`tibble`を用いる。
+
+```{r}
+#| label: tibble-basics
+
+firm_data <- tibble(
+  firm_id = 1:3,
+  firm_name = c("Firm A", "Firm B", "Firm C"),
+  roe = c(0.08, 0.12, 0.15)
+)
+
+firm_data
+```
+
+少量のデータを行単位で記述する場合は`tribble()`が便利である。
+
+```{r}
+#| label: tribble-basics
+
+project_data <- tribble(
+  ~project, ~initial_cost, ~cash_flow,
+  "A",             100,         120,
+  "B",             150,         175,
+  "C",             200,         215
+)
+
+project_data
+```
+
+### I-1.1.4 条件判定と独自関数
+
+
+```{r}
+#| label: conditional-logic
+
+npv <- 5.2
+
+investment_decision <- if (npv >= 0) {
+  "投資を実行する"
+} else {
+  "投資を見送る"
+}
+
+investment_decision
+```
+
+ベクトルに対する複数の条件分岐には`case_when()`を用いる。
+
+```{r}
+#| label: case-when-introduction
+
+credit_scores <- tibble(score = c(85, 72, 58, 91))
+
+credit_scores |>
+  mutate(
+    rating = case_when(
+      score >= 80 ~ "A",
+      score >= 65 ~ "B",
+      TRUE ~ "C"
+    )
+  )
+```
+
+
+```{r}
+#| label: custom-function
+
+calculate_present_value <- function(cash_flow, discount_rate, years = 1) {
+  cash_flow / (1 + discount_rate)^years
+}
+
+calculate_present_value(cash_flow = 100, discount_rate = 0.02, years = 3)
+```
+
+関数はベクトルをそのまま受け取れるように設計すると再利用しやすい。
+
+```{r}
+#| label: vectorized-function
+
+calculate_present_value(
+  cash_flow = c(100, 100, 100),
+  discount_rate = 0.02,
+  years = 1:3
+)
+```
+
+### I-1.1.5 記述統計
+
+
+```{r}
+#| label: descriptive-statistics
+
+sample_returns <- c(0.01, 0.03, -0.02, 0.00, 0.04, 0.02)
+
+mean(sample_returns)
+median(sample_returns)
+min(sample_returns)
+max(sample_returns)
+range(sample_returns)
+var(sample_returns)
+sd(sample_returns)
+quantile(sample_returns)
+```
+
+
+```{r}
+#| label: covariance-correlation
+
+stock_a <- c(0.01, 0.03, -0.02, 0.02, 0.04)
+stock_b <- c(0.00, 0.02, -0.01, 0.01, 0.03)
+
+cov(stock_a, stock_b)
+cor(stock_a, stock_b)
+```
+
+
+```{r}
+#| label: ranking
+
+firm_returns <- c(0.08, 0.12, -0.03, 0.05)
+
+rank(firm_returns)
+rank(-firm_returns)
+order(firm_returns, decreasing = TRUE)
+```
+
+### I-1.1.6 確率分布
+
+Rの確率分布関数には共通した命名規則がある。
+
+| 接頭辞 | 内容 |
+|---|---|
+| `r` | 乱数を生成する |
+| `d` | 確率密度または確率質量を求める |
+| `p` | 累積確率を求める |
+| `q` | 累積確率に対応する分位点を求める |
+
+
+```{r}
+#| label: uniform-distribution
+
+set_random_seed_LFL(1234)
+
+uniform_random <- runif(n = 10, min = 0, max = 1)
+
+uniform_random
+dunif(0.5, min = 0, max = 1)
+punif(0.5, min = 0, max = 1)
+qunif(0.95, min = 0, max = 1)
+```
+
+
+```{r}
+#| label: normal-distribution
+
+set_random_seed_LFL(1234)
+
+normal_random <- rnorm(n = 10, mean = 0, sd = 1)
+
+normal_random
+dnorm(0, mean = 0, sd = 1)
+pnorm(1.96, mean = 0, sd = 1)
+qnorm(0.975, mean = 0, sd = 1)
+```
+
+`dnorm()`は正規分布の密度、`pnorm()`は指定した値以下となる確率、`qnorm()`は指定した累積確率に対応する分位点を返す。
+
+```{r}
+#| label: normal-probability-example
+
+probability_below <- pnorm(-0.02, mean = 0.01, sd = 0.03)
+value_at_risk_95 <- qnorm(0.05, mean = 0.01, sd = 0.03)
+
+probability_below
+value_at_risk_95
+```
+
+
+```{r}
+#| label: binomial-distribution
+
+set_random_seed_LFL(1234)
+
+binomial_random <- rbinom(n = 10, size = 20, prob = 0.6)
+
+binomial_random
+dbinom(12, size = 20, prob = 0.6)
+pbinom(12, size = 20, prob = 0.6)
+qbinom(0.95, size = 20, prob = 0.6)
+```
+
+
+```{r}
+#| label: poisson-distribution
+
+set_random_seed_LFL(1234)
+
+poisson_random <- rpois(n = 10, lambda = 3)
+
+poisson_random
+dpois(2, lambda = 3)
+ppois(2, lambda = 3)
+qpois(0.95, lambda = 3)
+```
+
+
+```{r}
+#| label: distribution-function-table
+
+distribution_functions <- tribble(
+  ~distribution, ~random_function, ~density_function, ~cumulative_function, ~quantile_function,
+  "一様分布",    "runif()",        "dunif()",         "punif()",            "qunif()",
+  "正規分布",    "rnorm()",        "dnorm()",         "pnorm()",            "qnorm()",
+  "二項分布",    "rbinom()",       "dbinom()",        "pbinom()",           "qbinom()",
+  "ポアソン分布","rpois()",        "dpois()",         "ppois()",            "qpois()"
+)
+
+distribution_functions
+```
+
+
+## I-1.2 tidyverseによるデータ整形
+
+### I-1.2.1 プロジェクト内のデータを読み込む
+
+本書で使用するデータは、プロジェクトルートの`data`ディレクトリに置き、外部入力に近いデータを`raw`、分析によって作成したデータを`derived`に分ける。プロジェクトルートの探索やファイル検索は`R/utility_LFL.R`へ集約し、各章では分析対象となる相対パスだけを指定する。
+
+```{r}
+#| label: read-daily-stock-return
+
+tbl_daily_stock_return <-
+  read_parquet_file_LFL(
+    file.path("raw", "market", "daily_stock_returns.parquet")
+  )
+
+vec_required_columns <- c("date", "firm1", "firm2")
+vec_missing_columns <- setdiff(vec_required_columns, names(tbl_daily_stock_return))
+
+if (length(vec_missing_columns) > 0) {
+  stop("必要な列が不足しています: ", paste(vec_missing_columns, collapse = ", "))
+}
+
+show_table_LFL(tbl_daily_stock_return)
+```
+
+
+```{r}
+#| label: inspect-daily-stock-return
+
+show_data_structure_LFL(tbl_daily_stock_return)
+summary(tbl_daily_stock_return)
+nrow(tbl_daily_stock_return)
+ncol(tbl_daily_stock_return)
+names(tbl_daily_stock_return)
+```
+
+### I-1.2.2 dplyrによるデータ操作
+
+
+```{r}
+#| label: dplyr-select
+
+tbl_daily_stock_return |>
+  select(date, firm1)
+```
+
+
+```{r}
+#| label: dplyr-filter
+
+tbl_daily_stock_return |>
+  filter(firm1 > 0)
+```
+
+複数の条件を同時に指定できる。
+
+```{r}
+#| label: dplyr-filter-multiple
+
+tbl_daily_stock_return |>
+  filter(firm1 > 0, firm2 > 0)
+```
+
+
+```{r}
+#| label: dplyr-mutate
+
+return_data <- tbl_daily_stock_return |>
+  mutate(
+    spread = firm1 - firm2,
+    firm1_gross_return = 1 + firm1,
+    firm2_gross_return = 1 + firm2,
+    market_direction = case_when(
+      firm1 > 0 & firm2 > 0 ~ "both_positive",
+      firm1 < 0 & firm2 < 0 ~ "both_negative",
+      TRUE ~ "mixed"
+    )
+  )
+
+return_data
+```
+
+
+```{r}
+#| label: dplyr-arrange
+
+return_data |>
+  arrange(firm1)
+
+return_data |>
+  arrange(desc(firm1))
+```
+
+
+```{r}
+#| label: dplyr-summarise
+
+return_data |>
+  summarise(
+    observations = n(),
+    mean_firm1 = mean(firm1),
+    sd_firm1 = sd(firm1),
+    mean_firm2 = mean(firm2),
+    sd_firm2 = sd(firm2),
+    correlation = cor(firm1, firm2)
+  )
+```
+
+
+```{r}
+#| label: dplyr-group-by
+
+return_data |>
+  group_by(market_direction) |>
+  summarise(
+    observations = n(),
+    mean_firm1 = mean(firm1),
+    mean_firm2 = mean(firm2),
+    .groups = "drop"
+  ) |>
+  arrange(desc(observations))
+```
+
+
+```{r}
+#| label: dplyr-count
+
+return_data |>
+  count(market_direction, sort = TRUE)
+```
+
+
+```{r}
+#| label: dplyr-join
+
+firm_master <- tribble(
+  ~firm,  ~firm_name, ~industry,
+  "firm1", "Firm A",  "Machinery",
+  "firm2", "Firm B",  "Chemicals"
+)
+
+return_summary <- return_data |>
+  summarise(
+    firm1 = mean(firm1),
+    firm2 = mean(firm2)
+  ) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "firm",
+    values_to = "mean_return"
+  )
+
+return_summary |>
+  left_join(firm_master, by = "firm")
+```
+
+### I-1.2.3 stringrによる文字列処理
+
+文字列処理では、関数名が`str_`で始まる`stringr`を使用する。
+
+```{r}
+#| label: stringr-basics
+
+company_names <- tibble(
+  raw_name = c(
+    "  Alpha Holdings Co., Ltd. ",
+    "Beta Financial Group",
+    "Gamma Industries"
+  )
+)
+
+company_names <- company_names |>
+  mutate(
+    clean_name = str_squish(raw_name),
+    lower_name = str_to_lower(clean_name),
+    name_length = str_length(clean_name),
+    contains_group = str_detect(clean_name, regex("group", ignore_case = TRUE)),
+    first_word = str_extract(clean_name, "^[A-Za-z]+")
+  )
+
+company_names
+```
+
+
+```{r}
+#| label: stringr-replace-combine
+
+company_names |>
+  mutate(
+    short_name = str_remove(clean_name, regex(" co\\., ltd\\.$", ignore_case = TRUE)),
+    display_name = str_c(first_word, " / ", name_length, " characters")
+  ) |>
+  select(clean_name, short_name, display_name)
+```
+
+### I-1.2.4 tidyrによるデータ整形
+
+
+元のデータでは、`firm1`と`firm2`が別々の列に格納されている。`pivot_longer()`を使うと、企業名とリターンをそれぞれ一つの列へまとめられる。
+
+```{r}
+#| label: pivot-longer
+
+return_long <- tbl_daily_stock_return |>
+  pivot_longer(
+    cols = c(firm1, firm2),
+    names_to = "firm",
+    values_to = "return"
+  )
+
+return_long
+```
+
+
+```{r}
+#| label: pivot-wider
+
+return_long |>
+  pivot_wider(
+    names_from = firm,
+    values_from = return
+  )
+```
+
+
+```{r}
+#| label: separate-wider-delim
+
+security_codes <- tibble(
+  security_id = c("JP-1001", "JP-1002", "US-2001")
+)
+
+security_codes |>
+  separate_wider_delim(
+    security_id,
+    delim = "-",
+    names = c("country", "code")
+  )
+```
+
+
+```{r}
+#| label: tidyr-missing-values
+
+missing_data <- tibble(
+  firm = c("A", "B", "C"),
+  return = c(0.02, NA, -0.01)
+)
+
+missing_data |>
+  replace_na(list(return = 0))
+
+missing_data |>
+  drop_na()
+```
+
+### I-1.2.5 ggplot2による可視化
+
+`ggplot2`では、データを`ggplot()`へ渡し、`aes()`で変数と視覚要素の対応を指定し、`geom_*()`で図形を追加する。
+
+
+```{r}
+#| label: ggplot-line
+#| fig-width: 8
+#| fig-height: 5
+
+(return_long |>
+  ggplot(aes(x = date, y = return, linetype = firm)) +
+  geom_line(linewidth = 0.7) +
+  labs(
+    x = "Date",
+    y = "Daily Return",
+    linetype = "Firm"
+  )) |> add_lagrange_theme_LFL()
+```
+
+
+```{r}
+#| label: ggplot-histogram
+#| fig-width: 8
+#| fig-height: 5
+
+(return_long |>
+  ggplot(aes(x = return)) +
+  geom_histogram(bins = 10, boundary = 0) +
+  facet_wrap(vars(firm), ncol = 1) +
+  labs(
+    x = "Daily Return",
+    y = "Count"
+  )) |>
+  add_lagrange_theme_LFL()
+```
+
+
+```{r}
+#| label: ggplot-density
+#| fig-width: 8
+#| fig-height: 5
+
+(return_long |>
+  ggplot(aes(x = return, linetype = firm)) +
+  geom_density(linewidth = 0.8) +
+  labs(
+    x = "Daily Return",
+    y = "Density",
+    linetype = "Firm"
+  )) |>
+  add_lagrange_theme_LFL()
+```
+
+
+```{r}
+#| label: ggplot-normal-functions
+#| fig-width: 8
+#| fig-height: 5
+
+normal_curve <- tibble(
+  x = seq(-4, 4, length.out = 401),
+  density = dnorm(x),
+  cumulative_probability = pnorm(x)
+)
+
+(normal_curve |>
+  pivot_longer(
+    cols = c(density, cumulative_probability),
+    names_to = "function_type",
+    values_to = "value"
+  ) |>
+  ggplot(aes(x = x, y = value)) +
+  geom_line(linewidth = 0.8) +
+  facet_wrap(vars(function_type), scales = "free_y", ncol = 1) +
+  labs(
+    x = "x",
+    y = NULL
+  )) |>
+  add_lagrange_theme_LFL()
+```
+
+
+```{r}
+#| label: ggplot-simulated-distributions
+#| fig-width: 8
+#| fig-height: 5
+#| 
+simulated_distributions <- tibble(
+  distribution = c("normal", "uniform", "exponential"),
+  values = list(rnorm(10000), runif(10000), rexp(10000))
+) |>
+  tidyr::unnest(values) 
+
+p <- simulated_distributions |>
+  ggplot(aes(x = values)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(vars(distribution), scales = "free") +
+  labs(
+    x = "Simulated Value",
+    y = "Count"
+  )
+
+add_lagrange_theme_LFL(p)
+```
+
+## I-1.3 関数型プログラミングと並列計算
+
+### I-1.3.1 purrrによる反復処理
+
+
+`map()`は結果をリストとして返す。数値ベクトルが必要な場合は`map_dbl()`を用いる。
+
+```{r}
+#| label: purrr-map
+
+discount_rates <- c(0.01, 0.02, 0.03, 0.04)
+
+discount_rates |>
+  map(\(rate) calculate_present_value(100, rate))
+```
+
+```{r}
+#| label: purrr-map-dbl
+
+present_value_table <- tibble(
+  discount_rate = discount_rates,
+  present_value = discount_rates |>
+    map_dbl(\(rate) calculate_present_value(100, rate))
+)
+
+present_value_table
+```
+
+
+```{r}
+#| label: purrr-map2
+
+cash_flows <- c(100, 120, 150)
+years <- c(1, 2, 3)
+
+map2_dbl(
+  cash_flows,
+  years,
+  \(cash_flow, year) calculate_present_value(cash_flow, 0.02, year)
+)
+```
+
+
+```{r}
+#| label: purrr-pmap
+
+cash_flow_scenarios <- tribble(
+  ~cash_flow, ~discount_rate, ~years,
+         100,           0.01,      1,
+         120,           0.02,      2,
+         150,           0.03,      3
+)
+
+cash_flow_scenarios |>
+  mutate(
+    present_value = pmap_dbl(
+      list(cash_flow, discount_rate, years),
+      \(cash_flow, discount_rate, years) {
+        calculate_present_value(cash_flow, discount_rate, years)
+      }
+    )
+  )
+```
+
+
+```{r}
+#| label: purrr-column-summary
+
+return_columns <- c("firm1", "firm2")
+
+return_columns |>
+  map_dfr(
+    \(column_name) {
+      values <- tbl_daily_stock_return[[column_name]]
+
+      tibble(
+        firm = column_name,
+        observations = length(values),
+        mean = mean(values),
+        standard_deviation = sd(values),
+        minimum = min(values),
+        maximum = max(values)
+      )
+    }
+  )
+```
+
+
+```{r}
+#| label: purrr-distribution-simulation
+
+set_random_seed_LFL(1234)
+
+distribution_specs <- tribble(
+  ~distribution, ~generator,
+  "uniform",      \(n) runif(n, min = -1, max = 1),
+  "normal",       \(n) rnorm(n, mean = 0, sd = 1),
+  "poisson",      \(n) rpois(n, lambda = 3)
+)
+
+simulated_distributions <- distribution_specs |>
+  mutate(values = map(generator, \(generator) generator(1000))) |>
+  select(-generator) |>
+  unnest_longer(values)
+
+simulated_distributions
+```
+
+
+`walk()`は、返り値を保存するのではなく、表示などの副作用もしくはファイル出力などに実行するときに使う。
+
+```{r}
+#| label: purrr-walk
+
+c("firm1", "firm2") |>
+  walk(\(firm) print(str_c("集計対象: ", firm)))
+```
+
+
+### I-1.3.2 nestによるグループ別データ管理
+
+`tidyr::nest()`は、グループごとのデータを一つのリスト列へ格納する。`group_by()`が主に集計単位を指定するのに対し、`nest()`は銘柄別、業種別、ポートフォリオ別などのデータそのものを保持する。これにより、各グループへ同じ回帰分析、リスク計算、バックテストを適用しやすくなる。
+
+```{r}
+#| label: nest-grouped-data
+
+tbl_return_long <- tbl_daily_stock_return |>
+  pivot_longer(
+    cols = c(firm1, firm2),
+    names_to = "firm",
+    values_to = "return"
+  )
+
+tbl_nested <- tbl_return_long |>
+  nest(tbl_data = c(date, return), .by = firm)
+
+tbl_nested
+```
+
+リスト列`tbl_data`の各要素はtibbleである。最初の企業のデータは次のように確認できる。
+
+```{r}
+#| label: nest-inspect-data
+
+tbl_nested$tbl_data[[1]]
+```
+
+`nest()`と`map()`を組み合わせると、グループ別の処理を一つのパイプラインとして記述できる。
+
+```{r}
+#| label: nest-map-summary
+
+tbl_nested_summary <- tbl_nested |>
+  mutate(
+    tbl_summary = map(
+      tbl_data,
+      \(tbl_data) tibble(
+        num_mean_return = mean(tbl_data$return),
+        num_volatility = sd(tbl_data$return)
+      )
+    )
+  ) |>
+  select(firm, tbl_summary) |>
+  unnest(tbl_summary)
+
+tbl_nested_summary
+```
+
+### I-1.3.3 futureとfurrrによる並列計算
+
+`purrr::map()`は要素を順番に処理する。互いに独立した計算が多数ある場合、`future`と`furrr`を使うと、`map()`に近い記法のまま複数のRセッションへ処理を分配できる。Windowsでは`plan(multisession)`を使用する。
+
+ここでは、モンテカルロ法による円周率の推定を1000回繰り返し、逐次処理と並列処理の実行時間を比較する。各試行では、正方形内に発生させた点のうち単位円内に入った割合を4倍する。
+
+```{r}
+#| label: compute-pi-path
+
+compute_pi_path <- function(int_path_id, int_points = 100000L) {
+  set_random_seed_LFL(100000L + int_path_id)
+
+  vec_x <- runif(int_points, min = -1, max = 1)
+  vec_y <- runif(int_points, min = -1, max = 1)
+
+  tibble(
+    int_path_id = int_path_id,
+    num_pi = 4 * mean(vec_x^2 + vec_y^2 <= 1)
+  )
+}
+```
+
+1000本の試行を、利用可能なCPU数を上限として最大8個のチャンクへ分割する。
+
+```{r}
+#| label: build-pi-chunks
+
+int_paths <- 1000L
+int_workers <- min(8L, future::availableCores())
+
+tbl_chunks <- tibble(int_path_id = seq_len(int_paths)) |>
+  mutate(
+    int_chunk_id = rep(seq_len(int_workers), length.out = int_paths)
+  ) |>
+  nest(tbl_path_ids = int_path_id, .by = int_chunk_id)
+
+tbl_chunks
+```
+
+```{r}
+#| label: compute-pi-chunk
+
+compute_pi_chunk <- function(tbl_path_ids, int_points = 100000L) {
+  tbl_path_ids$int_path_id |>
+    map_dfr(compute_pi_path, int_points = int_points)
+}
+```
+
+まず`map()`による逐次処理を実行する。
+
+```{r}
+#| label: pi-map-sequential
+#| cache: false
+
+future::plan(future::sequential)
+
+num_time_map <- system.time({
+  tbl_result_map <- tbl_chunks |>
+    mutate(
+      tbl_result = map(tbl_path_ids, compute_pi_chunk)
+    ) |>
+    select(int_chunk_id, tbl_result) |>
+    unnest(tbl_result)
+})[["elapsed"]]
+```
+
+次に`future_map()`による並列処理を実行する。
+
+```{r}
+#| label: pi-future-map-parallel
+#| cache: false
+
+future::plan(future::multisession, workers = int_workers)
+
+num_time_future_map <- system.time({
+  tbl_result_future <- tbl_chunks |>
+    mutate(
+      tbl_result = future_map(
+        tbl_path_ids,
+        compute_pi_chunk,
+        .options = furrr::furrr_options(seed = TRUE)
+      )
+    ) |>
+    select(int_chunk_id, tbl_result) |>
+    unnest(tbl_result)
+})[["elapsed"]]
+
+future::plan(future::sequential)
+```
+
+推定値と実行時間を比較する。
+
+```{r}
+#| label: pi-benchmark-summary
+
+tbl_pi_benchmark <- tribble(
+  ~chr_method, ~num_pi, ~num_elapsed_seconds,
+  "map", mean(tbl_result_map$num_pi), num_time_map,
+  str_c("future_map (", int_workers, " workers)"), mean(tbl_result_future$num_pi), num_time_future_map
+) |>
+  mutate(
+    num_absolute_error = abs(num_pi - pi),
+    num_speedup = first(num_elapsed_seconds) / num_elapsed_seconds
+  )
+
+tbl_pi_benchmark
+```
+
+```{r}
+#| label: pi-benchmark-plot
+#| fig-cap: "mapとfuture_mapの実行時間比較"
+
+p <- tbl_pi_benchmark |>
+  ggplot(aes(x = reorder(chr_method, num_elapsed_seconds), y = num_elapsed_seconds)) +
+  geom_col() +
+  coord_flip() +
+  labs(x = NULL, y = "Elapsed time (seconds)") 
+  add_lagrange_theme_LFL(p)
+```
+
+並列計算には、ワーカーの起動、データ転送、結果回収のオーバーヘッドがある。そのため、処理が軽い場合は`map()`の方が速いこともある。計算量が大きいモンテカルロ・シミュレーション、銘柄別モデル推定、シナリオ分析では、`future_map()`の効果が現れやすい。
+
+## I-1.4 データベースと大規模データ処理
+
+金融データが大きくなると、すべての行と列をRのメモリへ読み込んでから処理する方法には限界がある。本節では、データベースを`dplyr`の文法で操作する`dbplyr`と、ParquetファイルやDatasetを効率よく扱うArrowを確認する。
+
+### I-1.4.1 dbplyrによるデータベース操作
+
+`dbplyr`は、`dplyr`の処理をSQLへ変換する。データベース上で`filter()`、`select()`、`mutate()`、`summarise()`などを実行し、必要な結果だけを`collect()`でRへ取り込める。
+
+ここでは、再現可能な例として一時的なSQLiteデータベースを使用する。
+
+`dbplyr`では、処理は直ちにR上で実行されず、SQLクエリとして組み立てられる。`show_query()`を使うと、生成されたSQLを確認できる。
+
+重要なのは、`collect()`を最後まで遅らせることである。先にデータベース側で行と列を絞り込めば、Rへ転送するデータ量を小さくできる。
+
+### I-1.4.2 ArrowによるParquetデータ処理
+
+Apache Arrowは、列指向データを効率よく扱うための仕組みである。Rでは、Parquetファイルの読書き、複数ファイルから成るDatasetの検索、PythonやC++など他言語との効率的なデータ交換に利用できる。
+
+```{r}
+#| label: arrow-build-data
+
+set_random_seed_LFL(20260726)
+
+tbl_arrow_price <- crossing(
+  date = seq.Date(as.Date("2025-01-01"), by = "day", length.out = 365),
+  chr_symbol = str_c("STOCK_", str_pad(1:20, width = 2, pad = "0"))
+) |>
+  arrange(chr_symbol, date) |>
+  mutate(
+    num_return = rnorm(n(), mean = 0.0002, sd = 0.015),
+    num_price = 100 * exp(cumsum(num_return)),
+    .by = chr_symbol
+  )
+
+tbl_arrow_price
+```
+
+```{r}
+#| label: arrow-write-parquet
+
+path_parquet <- base::file.path(
+  base::tempdir(),
+  "financial_prices.parquet"
+)
+
+arrow::write_parquet(
+  tbl_arrow_price,
+  sink = path_parquet
+)
+
+base::basename(path_parquet)
+```
+
+```{r}
+#| label: arrow-read-parquet
+
+arrow::read_parquet(path_parquet) |>
+  slice_head(n = 10)
+```
+
+### I-1.4.3 Arrow Dataset
+
+複数のParquetファイルをまとめて扱う場合はDatasetを使用する。ここでは銘柄をパーティションとして保存する。
+
+```{r}
+#| label: arrow-write-dataset
+
+path_dataset <- file.path(tempdir(), "financial_dataset")
+
+arrow::write_dataset(
+  tbl_arrow_price,
+  path = path_dataset,
+  format = "parquet",
+  partitioning = "chr_symbol",
+  existing_data_behavior = "overwrite"
+)
+
+dataset_finance <- arrow::open_dataset(path_dataset)
+
+dataset_finance
+```
+
+Datasetに対しても`dplyr`に近い文法を使用できる。必要な銘柄、期間、列を指定してから`collect()`する。
+
+```{r}
+#| label: arrow-query-dataset
+
+tbl_arrow_selected <- dataset_finance |>
+  filter(
+    chr_symbol == "STOCK_01",
+    date >= as.Date("2025-07-01")
+  ) |>
+  select(date, chr_symbol, num_price, num_return) |>
+  collect()
+
+tbl_arrow_selected
+```
+
+### I-1.4.4 Sparkとの関係
+
+ArrowとSparkは役割が異なる。Arrowは、列指向形式、Parquet、Dataset、異なる言語間の高速なデータ交換を中心とし、1台のPCでも利用しやすい。Sparkは、複数のコンピュータから成るクラスタへデータと計算を分散するための処理基盤である。
+
+データが1台のPCで扱える範囲では、Arrowと`dbplyr`が導入しやすい。データ量や計算量が1台のメモリとCPUを大きく超える場合にはSparkが候補になる。本書では、実行環境を複雑にしないため、Arrowと`dbplyr`を実装対象とし、Sparkは位置づけの説明にとどめる。
+
+## I-1.5 総合演習
+
+最後に、`data/raw/market/daily_stock_returns.parquet`から読み込んだ日次リターンを、読込み、整形、集計、反復処理、可視化の順に分析する。
+
+### I-1.5.1 分析用データを作る
+
+```{r}
+#| label: integrated-analysis-data
+
+analysis_data <- tbl_daily_stock_return |>
+  pivot_longer(
+    cols = c(firm1, firm2),
+    names_to = "firm",
+    values_to = "return"
+  ) |>
+  mutate(
+    gross_return = 1 + return,
+    direction = case_when(
+      return > 0 ~ "positive",
+      return < 0 ~ "negative",
+      TRUE ~ "zero"
+    )
+  ) |>
+  arrange(firm, date)
+
+analysis_data
+```
+
+### I-1.5.2 企業別の要約統計量を計算する
+
+```{r}
+#| label: integrated-analysis-summary
+
+firm_summary <- analysis_data |>
+  group_by(firm) |>
+  summarise(
+    observations = n(),
+    mean_return = mean(return),
+    standard_deviation = sd(return),
+    minimum_return = min(return),
+    maximum_return = max(return),
+    positive_ratio = mean(return > 0),
+    .groups = "drop"
+  )
+
+firm_summary
+```
+
+### I-1.5.3 累積リターンを計算する
+
+```{r}
+#| label: integrated-analysis-cumulative
+
+cumulative_return_data <- analysis_data |>
+  group_by(firm) |>
+  mutate(
+    cumulative_gross_return = cumprod(gross_return),
+    cumulative_return = cumulative_gross_return - 1
+  ) |>
+  ungroup()
+
+cumulative_return_data
+```
+
+### I-1.5.4 purrrで企業別の統計量を再計算する
+
+```{r}
+#| label: integrated-analysis-purrr
+
+firm_names <- unique(analysis_data$firm)
+
+firm_names |>
+  map_dfr(
+    \(firm_name) {
+      firm_returns <- analysis_data |>
+        filter(firm == firm_name) |>
+        pull(return)
+
+      tibble(
+        firm = firm_name,
+        mean_return = mean(firm_returns),
+        volatility = sd(firm_returns),
+        lower_5_percent = quantile(firm_returns, 0.05),
+        upper_95_percent = quantile(firm_returns, 0.95)
+      )
+    }
+  )
+```
+
+### I-1.5.5 累積リターンを可視化する
+
+```{r}
+#| label: integrated-analysis-plot
+#| fig-width: 8
+#| fig-height: 5
+
+p <- cumulative_return_data |>
+  ggplot(aes(x = date, y = cumulative_return, linetype = firm)) +
+  geom_line(linewidth = 0.8) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  labs(
+    x = "Date",
+    y = "Cumulative Return",
+    linetype = "Firm"
+  )
+p |> add_lagrange_theme_LFL()
+```
+
+本章では、Base Rの基本的なデータ構造と関数から出発し、記述統計、確率分布、tidyverseによるデータ分析までを一通り確認した。重要な点は次のとおりである。
+
+- オブジェクト名には内容を表すsnake_caseを用いる。
+- 同じ計算を複数の値へ適用するときは、まずベクトル化を検討する。
+- 反復処理が必要な場合は`purrr::map()`系関数を用いる。
+- データ操作は`dplyr`、文字列処理は`stringr`、整形は`tidyr`を用いる。
+- パイプ演算子は`|>`に統一する。
+- グラフは`ggplot2`でデータ、変数、図形を分けて組み立てる。
+- データファイルは絶対パスではなく、プロジェクトルートを基準に読み込む。
+
+
+
+### I-1.6.1 金融データ分析パイプライン
+
+本章で扱った技術は、次の流れとしてつながる。
+
+```text
+CSV・データベース・Parquet
+            ↓
+      dbplyr・Arrow
+            ↓
+     filter・select
+            ↓
+         collect
+            ↓
+   tibble・stringr・tidyr
+            ↓
+          nest
+            ↓
+           map
+            ↓
+       future_map
+            ↓
+   集計・モデル推定・可視化
+```
+
+`dbplyr`とArrowは、必要なデータを絞り込む入口を担う。`collect()`後は、tibbleとして文字列処理、整形、集計を行い、`nest()`で銘柄別・業種別・シナリオ別のデータを保持する。同じ分析は`map()`で反復し、計算量が大きい場合は`future_map()`へ置き換える。可視化には`ggplot2`を用い、本書では`add_lagrange_theme_LFL()`を標準テーマとする。
+
+次章以降では、本章で学んだ操作を用いて、財務データと株式データの分析を進める。
+
