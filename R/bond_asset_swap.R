@@ -1,4 +1,3 @@
-
 .tasw_ql_GQH <- function(name, ...) {
   ns <- asNamespace("QuantLib")
   if (!exists(name, ns, inherits = FALSE)) {
@@ -161,10 +160,10 @@ tonar_asset_swap_summary_GQL <- function(asset_swap) {
   asset_swap$valuation
 }
 
-compute_asset_swap_TONAR  <- function(bond, clean_price, swap_curve, spread_bp = 0,
-                               payment_frequency = "Semiannual",
-                               index = swap_curve$overnight_index,
-                               discount_curve = swap_curve$curve) {
+compute_asset_swap_TONAR <- function(bond, clean_price, swap_curve, spread_bp = 0,
+                                     payment_frequency = "Semiannual",
+                                     index = swap_curve$overnight_index,
+                                     discount_curve = swap_curve$curve) {
   if (length(spread_bp) != 1L || !is.numeric(spread_bp) || !is.finite(spread_bp)) {
     stop("spread_bp must be one finite number.")
   }
