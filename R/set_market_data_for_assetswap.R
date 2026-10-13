@@ -102,7 +102,6 @@ instance_swap_curve_TONAR <- function(date = "2026-10-09") {
   bundle
 }
 
-
 instance_swap_curve_TONAR_20220819 <- function() {
   .tasw_gq_GQH("set_eval_date_GQL", .tasw_date_GQH("2022-08-19"))
   cal <- .tasw_ql_GQH("Japan")

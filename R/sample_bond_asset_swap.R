@@ -28,12 +28,11 @@ tbl_bond_cashflow <- bond_cashflow_table_GQL(bond) |>
     present_value = amount * discount_factor
   )
 print(tbl_bond_cashflow, n = Inf)
-asw <- compute_asset_swap_TONAR(
+asw <- compute_asset_swap(
   bond = bond,
   clean_price = 97,
   swap_curve = tonar,
-  spread_bp = 130,
-  payment_frequency = "Annual"
+  spread_bp = 130
 )
 fair_clean_price <- asset_swap_fair_price(asw)
 
@@ -78,9 +77,8 @@ tbl_bond_cashflow <- bond_cashflow_table_GQL(bond) |>
     present_value = amount * discount_factor
   )
 print(tbl_bond_cashflow, n = Inf)
-asw <- compute_asset_swap_TONAR(
-  bond, 99.5, curve,
-  payment_frequency = "Annual"
+asw <- compute_asset_swap(
+  bond, 99.5, curve
 )
 print(asw$valuation)
 
