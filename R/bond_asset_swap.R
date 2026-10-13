@@ -1,4 +1,3 @@
-source("tonar_asset_swap_GQL.R")
 
 .tasw_ql_GQH <- function(name, ...) {
   ns <- asNamespace("QuantLib")
@@ -44,12 +43,12 @@ make_tonar_asset_swap_GQL <- function(
   index = NULL, spread_day_counter = NULL
 ) {
   if (length(clean_price) != 1L || !is.numeric(clean_price) ||
-      !is.finite(clean_price) || clean_price <= 0 || length(spread) != 1L ||
-      !is.numeric(spread) || !is.finite(spread)) {
+    !is.finite(clean_price) || clean_price <= 0 || length(spread) != 1L ||
+    !is.numeric(spread) || !is.finite(spread)) {
     stop("clean_price must be positive and spread must be finite.", call. = FALSE)
   }
   if (length(payment_lag) != 1L || !is.numeric(payment_lag) ||
-      is.na(payment_lag) || payment_lag < 0 || payment_lag != as.integer(payment_lag)) {
+    is.na(payment_lag) || payment_lag < 0 || payment_lag != as.integer(payment_lag)) {
     stop("payment_lag must be a non-negative integer.", call. = FALSE)
   }
   start <- as.Date(effective_date)
@@ -89,13 +88,17 @@ make_tonar_asset_swap_GQL <- function(
   if (is.null(spread_day_counter)) spread_day_counter <- index$dayCounter()
   frequency <- if (is.character(payment_frequency)) {
     if (length(payment_frequency) != 1L ||
-        !payment_frequency %in% c("Annual", "Semiannual", "Quarterly", "Monthly")) {
+      !payment_frequency %in% c("Annual", "Semiannual", "Quarterly", "Monthly")) {
       stop("Unsupported payment_frequency.", call. = FALSE)
     }
     .tasw_ql_GQH(paste0("Frequency_", payment_frequency, "_get"))
-  } else payment_frequency
-  builder <- .tasw_ql_GQH("MakeOIS",
-    .tasw_ql_GQH("Period", 1L, "Years"), index, 1)
+  } else {
+    payment_frequency
+  }
+  builder <- .tasw_ql_GQH(
+    "MakeOIS",
+    .tasw_ql_GQH("Period", 1L, "Years"), index, 1
+  )
   settings <- list(
     withEffectiveDate = start_ql,
     withTerminationDate = .tasw_date_GQH(maturity),
@@ -126,13 +129,17 @@ make_tonar_asset_swap_GQL <- function(
   fair_spread <- -npv_zero / annuity
   signed_cf <- dplyr::bind_rows(
     tibble::tibble(leg = "pay_bond", payment_date = cf$payment_date, amount = -cf$amount),
-    tibble::tibble(leg = "receive_tona", payment_date = float$payment_date,
-                  amount = float$amount + spread * unit$amount),
+    tibble::tibble(
+      leg = "receive_tona", payment_date = float$payment_date,
+      amount = float$amount + spread * unit$amount
+    ),
     tibble::tibble(leg = "receive_principal", payment_date = principal_date, amount = nominal),
     tibble::tibble(leg = "upfront", payment_date = start, amount = upfront)
   ) |>
-    dplyr::mutate(discount_factor = .tasw_discount_GQH(discount_curve, payment_date),
-                  present_value = amount * discount_factor)
+    dplyr::mutate(
+      discount_factor = .tasw_discount_GQH(discount_curve, payment_date),
+      present_value = amount * discount_factor
+    )
   structure(list(
     cashflows = signed_cf, bond = bond, ois = ois, index = index,
     forecast_handle = forecast_handle, discount_curve = discount_curve,
@@ -142,7 +149,8 @@ make_tonar_asset_swap_GQL <- function(
       fair_spread_bp = fair_spread * 1e4, spread_annuity = annuity,
       npv = npv_zero + spread * annuity,
       bond_leg_pv = -bond_pv, tona_leg_pv = float_pv + spread * annuity,
-      principal_pv = principal_pv, upfront_pv = upfront_pv),
+      principal_pv = principal_pv, upfront_pv = upfront_pv
+    ),
     effective_date = start, maturity_date = maturity,
     payment_frequency = payment_frequency, payment_lag = payment_lag
   ), class = "tonar_asset_swap_GQL")
@@ -152,22 +160,24 @@ tonar_asset_swap_summary_GQL <- function(asset_swap) {
   stopifnot(inherits(asset_swap, "tonar_asset_swap_GQL"))
   asset_swap$valuation
 }
-compute_asset_swap <- function(bond, clean_price, swap_curve, spread_bp = 0,
-                              payment_frequency = "Semiannual",
-                              index = swap_curve$overnight_index,
-                              discount_curve = swap_curve$curve) {
-  if (length(spread_bp)!=1L || !is.numeric(spread_bp) || !is.finite(spread_bp))
+
+compute_asset_swap_TONAR  <- function(bond, clean_price, swap_curve, spread_bp = 0,
+                               payment_frequency = "Semiannual",
+                               index = swap_curve$overnight_index,
+                               discount_curve = swap_curve$curve) {
+  if (length(spread_bp) != 1L || !is.numeric(spread_bp) || !is.finite(spread_bp)) {
     stop("spread_bp must be one finite number.")
+  }
   if (is.null(index)) stop("Supply a linked overnight index, e.g. TONAR or SOFR.")
-  .tasw_gq_GQH("set_eval_date_GQL",.tasw_date_GQH(swap_curve$evaluation_date))
-  settlement <- .tasw_ql_GQH("Bond_settlementDate",bond)
-  effective <- as.Date(.tasw_gq_GQH("safe_iso_GQH",settlement))
+  .tasw_gq_GQH("set_eval_date_GQL", .tasw_date_GQH(swap_curve$evaluation_date))
+  settlement <- .tasw_ql_GQH("Bond_settlementDate", bond)
+  effective <- as.Date(.tasw_gq_GQH("safe_iso_GQH", settlement))
   out <- make_tonar_asset_swap_GQL(
-    bond=bond,clean_price=clean_price,
-    forecast_handle=swap_curve$curve_handle,discount_curve=discount_curve,
-    effective_date=effective,spread=spread_bp/10000,
-    payment_frequency=payment_frequency,index=index)
-  class(out) <- c("asset_swap_valuation",class(out))
+    bond = bond, clean_price = clean_price,
+    forecast_handle = swap_curve$curve_handle, discount_curve = discount_curve,
+    effective_date = effective, spread = spread_bp / 10000,
+    payment_frequency = payment_frequency, index = index
+  )
+  class(out) <- c("asset_swap_valuation", class(out))
   out
 }
-
