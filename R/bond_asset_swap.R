@@ -150,6 +150,7 @@ make_tonar_asset_swap_GQL <- function(
       bond_leg_pv = -bond_pv, tona_leg_pv = float_pv + spread * annuity,
       principal_pv = principal_pv, upfront_pv = upfront_pv
     ),
+    price_sensitivity = nominal * .tasw_discount_GQH(discount_curve, start) / 100,
     effective_date = start, maturity_date = maturity,
     payment_frequency = payment_frequency, payment_lag = payment_lag
   ), class = "tonar_asset_swap_GQL")
@@ -161,9 +162,9 @@ tonar_asset_swap_summary_GQL <- function(asset_swap) {
 }
 
 compute_asset_swap_TONAR <- function(bond, clean_price, swap_curve, spread_bp = 0,
-                                     payment_frequency = "Semiannual",
-                                     index = swap_curve$overnight_index,
-                                     discount_curve = swap_curve$curve) {
+                               payment_frequency = "Semiannual",
+                               index = swap_curve$overnight_index,
+                               discount_curve = swap_curve$curve) {
   if (length(spread_bp) != 1L || !is.numeric(spread_bp) || !is.finite(spread_bp)) {
     stop("spread_bp must be one finite number.")
   }
@@ -179,4 +180,23 @@ compute_asset_swap_TONAR <- function(bond, clean_price, swap_curve, spread_bp = 
   )
   class(out) <- c("asset_swap_valuation", class(out))
   out
+}
+
+asset_swap_fair_price <- function(asset_swap) {
+  v <- asset_swap$valuation
+  v$clean_price - v$npv / asset_swap$price_sensitivity
+}
+
+asset_swap_price_table <- function(asset_swap, prices) {
+  if (!is.numeric(prices) || any(!is.finite(prices)) || any(prices <= 0)) {
+    stop("prices must contain positive finite numbers.")
+  }
+  v <- asset_swap$valuation
+  spread <- v$fair_spread -
+    (prices - v$clean_price) * asset_swap$price_sensitivity / v$spread_annuity
+  tibble::tibble(
+    clean_price = prices,
+    AS_spread_bp = spread * 10000,
+    AS_spread_pct = spread * 100
+  )
 }

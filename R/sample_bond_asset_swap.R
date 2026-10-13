@@ -4,7 +4,6 @@ source("R/set_market_data_for_assetswap.R")
 library(GaussQuant)
 
 tonar <- instance_swap_curve_TONAR("2022-08-19")
-tonar$overnight_index <- QuantLib::Tonar(tonar$curve_handle)
 
 bond <- GaussQuant::fixed_rate_bond_GQL(
   issue_date = "2022-07-28",
@@ -20,7 +19,6 @@ bond <- GaussQuant::fixed_rate_bond_GQL(
   schedule_convention = "Unadjusted",
   maturity_convention = "Unadjusted"
 )
-invisible(set_bond_pricing_engine_GQL(bond, tonar$curve))
 tbl_bond_cashflow <- bond_cashflow_table_GQL(bond) |>
   dplyr::mutate(
     discount_factor = purrr::map_dbl(
@@ -37,13 +35,7 @@ asw <- compute_asset_swap_TONAR(
   spread_bp = 130,
   payment_frequency = "Annual"
 )
-fair_clean_price <- uniroot(function(price) {
-  compute_asset_swap_TONAR(
-    bond, price, tonar,
-    spread_bp = 130,
-    payment_frequency = "Annual"
-  )$valuation$npv
-}, interval = c(1, 200), tol = 1e-10)$root
+fair_clean_price <- asset_swap_fair_price(asw)
 
 tbl_res_asset <- tibble::tibble(
   clean_price = 97,
@@ -52,17 +44,7 @@ tbl_res_asset <- tibble::tibble(
   fair_clean_price = fair_clean_price
 )
 print(tbl_res_asset)
-tbl_asset_swap <- purrr::map_dfr(seq(96, 98, by = 0.05), function(price) {
-  result <- compute_asset_swap_TONAR(
-    bond, price, tonar,
-    payment_frequency = "Annual"
-  )
-  tibble::tibble(
-    clean_price = price,
-    AS_spread_bp = result$valuation$fair_spread_bp,
-    AS_spread_pct = result$valuation$fair_spread * 100
-  )
-})
+tbl_asset_swap <- asset_swap_price_table(asw, seq(96, 98, by = 0.05))
 print(tbl_asset_swap, n = Inf)
 
 result_2022 <- list(
@@ -96,21 +78,13 @@ tbl_bond_cashflow <- bond_cashflow_table_GQL(bond) |>
     present_value = amount * discount_factor
   )
 print(tbl_bond_cashflow, n = Inf)
-curve$overnight_index <- QuantLib::Tonar(curve$curve_handle)
 asw <- compute_asset_swap_TONAR(
   bond, 99.5, curve,
   payment_frequency = "Annual"
 )
 print(asw$valuation)
 
-tbl_asset_swap <- purrr::map_dfr(seq(95, 105, by = 0.50), function(price) {
-  a <- compute_asset_swap_TONAR(bond, price, curve, payment_frequency = "Annual")
-  tibble::tibble(
-    clean_price = price,
-    AS_spread_bp = a$valuation$fair_spread_bp,
-    AS_spread_pct = a$valuation$fair_spread * 100
-  )
-})
+tbl_asset_swap <- asset_swap_price_table(asw, seq(95, 105, by = 0.50))
 print(tbl_asset_swap, n = Inf)
 result_2026 <- list(
   valuation = asw$valuation, cashflows = asw$cashflows,
