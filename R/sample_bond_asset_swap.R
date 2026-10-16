@@ -139,6 +139,7 @@ usd_ois_quotes <- Glumgamma |>
 print(usd_ois_quotes, n = Inf)
 
 # テスト用SOFRカーブ
+
 usd_curve <- instance_swap_curve(
   currency = "USD",
   date = evaluation_date,
