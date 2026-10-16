@@ -1,5 +1,5 @@
 # JPY-collateral, constant-notional cross-currency asset swap.
-# Source R/bond_asset_swap.R first. Basis is quoted on the JPY receiving leg:
+# Source R/compute_asset_swap_ISO.R first. Basis is quoted on the JPY receiving leg:
 # pay foreign overnight flat / receive TONAR + basis_bp.
 # fx_spot is JPY per foreign unit for exchange on effective_date.
 # Version 1 calibrates ONE constant discount spread to the maturity CCS quote.
@@ -123,7 +123,7 @@ asset_swap_jpy_from_legs <- function(
   ), class = "jpy_asset_swap_valuation")
 }
 
-compute_asset_swap_jpy <- function(
+compute_asset_swap_basis_JPY <- function(
   bond, clean_price, foreign_curve, jpy_curve, fx_spot, basis_bp,
   currency = foreign_curve$currency,
   foreign_payment_frequency = "Semiannual",
@@ -138,11 +138,11 @@ compute_asset_swap_jpy <- function(
   }
   if (!is.null(foreign_curve$currency) &&
       toupper(currency) != foreign_curve$currency) stop("Foreign currency mismatch.")
-  native <- compute_asset_swap(
+  native <- compute_asset_swap_ISO(
     bond, clean_price, foreign_curve, spread_bp = 0,
     payment_frequency = foreign_payment_frequency, payment_lag = foreign_payment_lag
   )
-  yen <- compute_asset_swap(
+  yen <- compute_asset_swap_ISO(
     bond, clean_price, jpy_curve, spread_bp = 0,
     payment_frequency = jpy_payment_frequency, payment_lag = jpy_payment_lag
   )
@@ -150,5 +150,6 @@ compute_asset_swap_jpy <- function(
     native, yen, foreign_curve, jpy_curve, fx_spot, basis_bp, currency, spread_bp
   )
 }
+
 
 

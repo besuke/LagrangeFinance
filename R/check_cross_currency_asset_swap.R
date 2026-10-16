@@ -1,4 +1,4 @@
-source("R/cross_currency_asset_swap.R")
+source("R/compute_asset_swap_basis_JPY.R")
 # Deterministic fixtures test PV identities independently of GaussQuant.
 start <- as.Date("2026-10-14")
 dates <- start + 365 * 1:10
@@ -59,5 +59,6 @@ invisible(Map(function(b) {
 }, c(-50, -30, 0, 30, 50)))
 print(rbind(negative$valuation, zero$valuation, positive$valuation))
 cat("PASS: zero basis, basis direction, FX scale invariance, price sensitivity, par floater, CCS and ASW repricing.\n")
+
 
 

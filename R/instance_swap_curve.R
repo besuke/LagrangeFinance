@@ -1,7 +1,7 @@
-# Currency-dispatched OIS curves for compute_asset_swap().
+# Currency-dispatched OIS curves for compute_asset_swap_ISO().
 # Input: observed spot OIS par quotes, NOT overnight fixings or IBOR swap rates.
 # rate_pct is in percent (4.25 means 4.25%). No market data is fabricated.
-# Source alongside R/bond_asset_swap.R and R/set_market_data_for_assetswap.R.
+# Source alongside R/compute_asset_swap_ISO.R and R/set_market_data_for_assetswap.R.
 
 ois_currency_spec <- function(currency) {
   if (!is.character(currency) || length(currency) != 1L || is.na(currency)) {
@@ -164,4 +164,5 @@ instance_swap_curve <- function(
     payment_frequency = payment_frequency
   )
 }
+
 

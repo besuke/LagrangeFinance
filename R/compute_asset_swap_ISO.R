@@ -36,7 +36,7 @@
   })
 }
 
-compute_asset_swap <- function(
+compute_asset_swap_ISO <- function(
   bond, clean_price, swap_curve, spread_bp = 0,
   payment_frequency = "Semiannual", payment_lag = 0L,
   index = swap_curve$overnight_index,
@@ -173,3 +173,4 @@ asset_swap_price_table <- function(asset_swap, prices) {
     ) |>
     dplyr::select(clean_price, AS_spread_bp, AS_spread_pct)
 }
+

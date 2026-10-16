@@ -7,8 +7,8 @@ library(purrr)
 
 purrr::walk(c(
   "import_ois_curves.R", "instance_swap_curve.R",
-  "set_market_data_for_assetswap.R", "bond_asset_swap.R",
-  "cross_currency_asset_swap.R"
+  "set_market_data_for_assetswap.R", "compute_asset_swap_ISO.R",
+  "compute_asset_swap_basis_JPY.R"
 ), function(f) source(file.path("R", f)))
 
 marketdate <- as.Date("2026-10-06")
@@ -81,7 +81,7 @@ bonds <- tbl_bonds$currency |> purrr::set_names() |>
 native_asw <- tbl_bonds$currency |> purrr::set_names() |>
   purrr::map(function(ccy) {
     row <- tbl_bonds |> filter(currency == ccy)
-    compute_asset_swap(bonds[[ccy]], row$clean_price, curves[[ccy]])
+    compute_asset_swap_ISO(bonds[[ccy]], row$clean_price, curves[[ccy]])
   })
 tbl_native_asw <- purrr::imap_dfr(native_asw, function(x, ccy) {
   x$valuation |> mutate(currency = ccy, .before = 1)
@@ -93,7 +93,7 @@ foreign_ccys <- setdiff(tbl_bonds$currency, "JPY")
 jpy_asw <- foreign_ccys |> purrr::set_names() |>
   purrr::map(function(ccy) {
     row <- tbl_bonds |> filter(currency == ccy)
-    compute_asset_swap_jpy(
+    compute_asset_swap_basis_JPY(
       bond = bonds[[ccy]], clean_price = row$clean_price,
       foreign_curve = curves[[ccy]], jpy_curve = curves$JPY,
       fx_spot = row$fx_spot, basis_bp = row$basis_bp, currency = ccy
@@ -117,7 +117,7 @@ tbl_native_prices <- purrr::imap_dfr(native_asw, function(x, ccy) {
 tbl_jpy_prices <- purrr::map_dfr(foreign_ccys, function(ccy) {
   row <- tbl_bonds |> filter(currency == ccy)
   purrr::map_dfr(seq(95, 105, .5), function(price) {
-    compute_asset_swap_jpy(
+    compute_asset_swap_basis_JPY(
       bonds[[ccy]], price, curves[[ccy]], curves$JPY,
       row$fx_spot, row$basis_bp, currency = ccy
     )$valuation |> mutate(clean_price = price, .before = 1)
@@ -142,7 +142,7 @@ if (run_historical) {
       payment_convention = "Following", schedule_convention = "Unadjusted",
       maturity_convention = "Unadjusted"
     )
-    x <- compute_asset_swap(bond, 97, cb, spread_bp = 130)
+    x <- compute_asset_swap_ISO(bond, 97, cb, spread_bp = 130)
     list(curve = cb, bond = bond, asw = x,
          prices = asset_swap_price_table(x, seq(96, 98, .05)))
   })
@@ -158,4 +158,5 @@ results <- list(
   native_prices = tbl_native_prices, jpy_prices = tbl_jpy_prices,
   historical = historical
 )
+
 
