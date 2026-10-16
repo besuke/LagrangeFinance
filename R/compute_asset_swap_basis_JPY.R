@@ -6,11 +6,11 @@
 # It is a single-quote model, not a market term-structure bootstrap or MtM CCS.
 
 .xasw_df <- function(curve, dates) {
-  vapply(as.character(dates), function(d) {
+  purrr::map_dbl(as.character(dates), function(d) {
     x <- as.numeric(curve$discount(QuantLib::DateParser_parseISO(d)))
     if (length(x) != 1L || !is.finite(x) || x <= 0) stop("Invalid discount factor.")
     x
-  }, numeric(1), USE.NAMES = FALSE)
+  }) 
 }
 
 # Core also accepts independently constructed zero-spread ASW templates.
@@ -90,7 +90,7 @@ asset_swap_jpy_from_legs <- function(
   fair <- (bond_pv - base_jpy_pv - upfront_pv) / jpy_annuity
   npv <- base_jpy_pv + upfront_pv + spread_bp / 1e4 * jpy_annuity - bond_pv
   structure(list(
-    valuation = data.frame(
+    valuation = tibble::tibble(
       currency = toupper(currency),
       native_asw_bp = nv$fair_spread_bp,
       basis_on_jpy_bp = basis_bp,
@@ -150,4 +150,5 @@ compute_asset_swap_jpy <- function(
     native, yen, foreign_curve, jpy_curve, fx_spot, basis_bp, currency, spread_bp
   )
 }
+
 

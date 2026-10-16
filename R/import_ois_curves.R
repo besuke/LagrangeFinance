@@ -7,7 +7,7 @@ import_ois_curves <- function(
   quote <- match.arg(quote)
   currency <- match.arg(
     toupper(currency),
-    c("USD", "EUR", "GBP", "AUD")
+    c("JPY", "USD", "EUR", "GBP", "AUD")
   )
   
   # Excel日付番号、YYYY-MM-DD、YYYY/MM/DD、ISO日時に対応
@@ -52,11 +52,25 @@ import_ois_curves <- function(
       marketdate = parse_marketdate(.data$marketdate),
       currency = .env$currency,
       rate_pct = .data[[quote]],
-      rate = .data$rate_pct / 100
+      rate = .data$rate_pct / 100,
+      instrument = dplyr::case_when(
+        .data$ticker == "SONIO/N Index" ~ "SONIA_FIXING",
+        .env$currency == "AUD" & !grepl("^ADSO", .data$ticker) ~ "AUD_SWAP_UNCONFIRMED",
+        TRUE ~ paste0(c(JPY = "TONAR", USD = "SOFR", EUR = "ESTR",
+                       GBP = "SONIA", AUD = "AONIA")[[.env$currency]], "_OIS")
+      ),
+      instrument_type = dplyr::case_when(
+        .data$instrument == "SONIA_FIXING" ~ "overnight_fixing",
+        .data$instrument == "AUD_SWAP_UNCONFIRMED" ~ "unconfirmed_swap",
+        TRUE ~ "spot_ois"
+      ),
+      tenordate = as.Date(NA),
+      source = "Bloomberg Excel (image transcription)"
     ) |>
     dplyr::select(
       marketdate, currency, tenor, ticker,
-      ask, mid, bid, rate_pct, rate
+      instrument, instrument_type, tenordate,
+      ask, mid, bid, rate_pct, rate, source
     )
   
   if (anyNA(tbl[c("marketdate", "tenor", "ticker")]) ||

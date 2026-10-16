@@ -34,107 +34,134 @@ instance_overnight_index <- function(currency, curve_handle = NULL) {
   if (is.null(curve_handle)) constructor() else constructor(curve_handle)
 }
 
-# Quote conventions must match the supplied market source.
-# settlement_days is the OIS spot lag, distinct from the index fixing lag.
-# payment_lag and payment_frequency apply to curve helpers, independently of ASW.
+
+# One builder for JPY/USD/EUR/GBP/AUD.
+# Canonical date column/argument: marketdate. date is a compatibility alias.
+# Input must contain genuine OIS par quotes or an explicitly typed deposit.
 instance_swap_curve <- function(
-  currency, date, quotes = NULL,
+  currency, marketdate = NULL, quotes = NULL,
   curve_type = c("log_cubic_discount", "flat_forward"),
   settlement_days = NULL, payment_lag = 0L,
-  payment_frequency = "Annual", extrapolate = FALSE
+  payment_frequency = "Annual", extrapolate = FALSE, date = NULL
 ) {
   spec <- ois_currency_spec(currency)
   curve_type <- match.arg(curve_type)
-  date <- as.Date(date)
-  if (length(date) != 1L || is.na(date)) stop("Choose one evaluation date.")
+  if (!is.null(date)) {
+    if (!is.null(marketdate) &&
+        !identical(as.Date(date), as.Date(marketdate))) stop("Conflicting dates.")
+    marketdate <- date
+  }
+  if (is.null(marketdate)) stop("Supply marketdate.")
+  marketdate <- as.Date(marketdate)
+  if (length(marketdate) != 1L || is.na(marketdate)) stop("Choose one marketdate.")
   if (is.null(quotes)) {
-    if (spec$currency != "JPY") {
-      stop("Supply dated OIS quotes for ", spec$currency, "; no default data.")
+    if (spec$currency != "JPY" || !exists("tonar_market_quotes", mode = "function")) {
+      stop("Supply quotes for the requested currency and marketdate.")
     }
-    if (!exists("instance_swap_curve_TONAR", mode = "function")) {
-      stop("Source R/set_market_data_for_assetswap.R first.")
-    }
-    if (!missing(settlement_days) || !missing(payment_lag) ||
-        !missing(payment_frequency) || !missing(curve_type) ||
-        !missing(extrapolate)) {
-      stop("For custom curve conventions, supply quotes explicitly.")
-    }
-    bundle <- instance_swap_curve_TONAR(as.character(date))
-    bundle$currency <- spec$currency
-    bundle$index_name <- spec$index_name
-    return(bundle)
+    quotes <- tonar_market_quotes(marketdate)
   }
-  if (!is.data.frame(quotes) || !nrow(quotes) ||
-      !all(c("date", "tenor", "rate_pct") %in% names(quotes))) {
-    stop("quotes must have date, tenor and rate_pct columns.")
+  if (!is.data.frame(quotes) || !nrow(quotes)) stop("Supply nonempty quote data.")
+  if (!"marketdate" %in% names(quotes) && "date" %in% names(quotes)) {
+    quotes$marketdate <- as.Date(quotes$date)
   }
-  if (anyNA(quotes$date)) stop("Missing quote dates.")
-  if (anyNA(as.Date(quotes$date))) stop("Invalid quote dates.")
-  quotes <- quotes[as.Date(quotes$date) == date, , drop = FALSE]
-  if (!nrow(quotes)) stop("No OIS quotes for the evaluation date.")
-  if ("currency" %in% names(quotes) &&
-      any(is.na(quotes$currency) | toupper(trimws(quotes$currency)) != spec$currency)) {
-    stop("Quote currency does not match requested currency.")
+  if (!all(c("marketdate", "tenor", "rate_pct") %in% names(quotes))) {
+    stop("quotes requires marketdate, tenor and rate_pct.")
   }
-  tenor <- toupper(trimws(as.character(quotes$tenor)))
-  if (anyNA(tenor) || any(!grepl("^[1-9][0-9]*[DWMY]$", tenor)) ||
-      anyDuplicated(tenor)) stop("Invalid or duplicate OIS tenors.")
-  if (!is.numeric(quotes$rate_pct) || any(!is.finite(quotes$rate_pct))) {
-    stop("rate_pct must contain finite numeric percentage rates.")
+  if (!"currency" %in% names(quotes)) quotes$currency <- spec$currency
+  if (anyNA(quotes$marketdate) || anyNA(quotes$currency)) stop("Missing quote keys.")
+  q <- tibble::as_tibble(quotes) |>
+    dplyr::filter(
+      as.Date(.data$marketdate) == .env$marketdate,
+      toupper(.data$currency) == .env$spec$currency
+    )
+  if (!nrow(q)) stop("No quotes for currency/marketdate.")
+  if (!"instrument_type" %in% names(q)) q$instrument_type <- "spot_ois"
+  # Historical overnight fixings must not masquerade as 1D OIS quotes.
+  if (anyNA(q$instrument_type) ||
+      any(!q$instrument_type %in% c("spot_ois", "deposit"))) {
+    stop("Only spot_ois/deposit inputs allowed. Separate overnight fixings and unconfirmed IRS.")
   }
+  q$tenor <- toupper(trimws(q$tenor))
+  if (anyNA(q$tenor) || any(!grepl("^[1-9][0-9]*[DWMY]$", q$tenor)) ||
+      anyDuplicated(q$tenor)) stop("Invalid/duplicate tenors.")
+  if (!is.numeric(q$rate_pct) || any(!is.finite(q$rate_pct))) stop("Invalid rates.")
+  q$marketdate <- as.Date(q$marketdate)
+  q$currency <- spec$currency
+  q$rate <- q$rate_pct / 100
+  if (!"instrument" %in% names(q)) q$instrument <- paste0(spec$index_name, "_OIS")
+  if (!"ticker" %in% names(q)) q$ticker <- NA_character_
   if (is.null(settlement_days)) settlement_days <- spec$settlement_days
-  valid_lag <- function(x) {
-    is.numeric(x) && length(x) == 1L && is.finite(x) &&
-      x >= 0 && x == as.integer(x)
-  }
-  if (!valid_lag(settlement_days) || !valid_lag(payment_lag)) {
-    stop("Settlement and payment lags must be nonnegative integers.")
-  }
+  valid_lag <- function(x) is.numeric(x) && length(x) == 1L &&
+    is.finite(x) && x >= 0 && x <= .Machine$integer.max && x == floor(x)
+  if (!valid_lag(settlement_days) || !valid_lag(payment_lag)) stop("Invalid lags.")
   ns <- asNamespace("QuantLib")
-  frequency_name <- paste0("Frequency_", payment_frequency, "_get")
-  if (length(frequency_name) != 1L || !exists(frequency_name, ns, inherits = FALSE)) {
-    stop("Unsupported payment_frequency.")
-  }
-  frequency <- get(frequency_name, ns, inherits = FALSE)()
-  eval_date <- QuantLib::DateParser_parseISO(as.character(date))
-  QuantLib::Settings_setEvaluationDate(QuantLib::Settings_instance(), eval_date)
+  fname <- paste0("Frequency_", payment_frequency, "_get")
+  if (length(fname) != 1L || !exists(fname, ns, inherits = FALSE)) stop("Invalid frequency.")
+  frequency <- get(fname, ns, inherits = FALSE)()
+  QuantLib::Settings_setEvaluationDate(
+    QuantLib::Settings_instance(), QuantLib::DateParser_parseISO(as.character(marketdate))
+  )
   index <- instance_overnight_index(spec$currency)
   calendar <- index$fixingCalendar()
   day_counter <- index$dayCounter()
   units <- c(D = "Days", W = "Weeks", M = "Months", Y = "Years")
-  tenor_n <- as.integer(sub("[DWMY]$", "", tenor))
-  tenor_unit <- unname(units[substring(tenor, nchar(tenor))])
-  helpers <- Map(function(n, unit, rate) {
-    QuantLib::OISRateHelper(
-      as.integer(settlement_days), QuantLib::Period(n, unit),
-      QuantLib::QuoteHandle(QuantLib::SimpleQuote(rate / 100)), index,
-      QuantLib::YieldTermStructureHandle(), FALSE,
-      as.integer(payment_lag), "ModifiedFollowing", frequency
-    )
-  }, tenor_n, tenor_unit, quotes$rate_pct)
+  helpers <- purrr::pmap(
+    list(q$tenor, q$rate, q$instrument_type),
+    function(tenor, rate, kind) {
+      handle <- QuantLib::QuoteHandle(QuantLib::SimpleQuote(rate))
+      if (kind == "deposit") {
+        if (tenor != "1D") stop("Only overnight index deposits are supported.")
+        return(QuantLib::DepositRateHelper(handle, index))
+      }
+      period <- QuantLib::Period(
+        as.integer(sub("[DWMY]$", "", tenor)), unname(units[substr(tenor, nchar(tenor), nchar(tenor))])
+      )
+      QuantLib::OISRateHelper(
+        as.integer(settlement_days), period, handle, index,
+        QuantLib::YieldTermStructureHandle(), FALSE,
+        as.integer(payment_lag), "ModifiedFollowing", frequency
+      )
+    }
+  )
   helper_vector <- QuantLib::RateHelperVector()
-  invisible(Map(function(helper) helper_vector$push_back(helper), helpers))
+  purrr::walk(helpers, function(h) helper_vector$push_back(h))
   constructor <- switch(curve_type,
     log_cubic_discount = QuantLib::PiecewiseLogCubicDiscount,
     flat_forward = QuantLib::PiecewiseFlatForward
   )
   curve <- constructor(0L, calendar, helper_vector, day_counter)
   if (isTRUE(extrapolate)) QuantLib::TermStructure_enableExtrapolation(curve)
-  # Force bootstrap errors to surface here rather than during bond valuation.
-  df <- as.numeric(curve$discount(curve$maxDate()))
-  if (length(df) != 1L || !is.finite(df) || df <= 0) {
-    stop("Invalid terminal discount factor.")
+  terminal_df <- as.numeric(curve$discount(curve$maxDate()))
+  if (!is.finite(terminal_df) || terminal_df <= 0) stop("Invalid curve.")
+  pillars <- purrr::map_chr(helpers, function(h) QuantLib::Date_ISO(h$pillarDate()))
+  if (anyDuplicated(pillars)) stop("Duplicate helper pillars, e.g. 12M and 1Y.")
+  maturities <- as.Date(purrr::map_chr(helpers, function(h) QuantLib::Date_ISO(h$maturityDate())))
+  if ("tenordate" %in% names(q)) {
+    supplied <- as.Date(q$tenordate)
+    if (any(!is.na(supplied) & supplied != maturities)) {
+      stop("Input tenordate differs from helper maturity; check conventions.")
+    }
   }
+  q$tenordate <- maturities
+  repricing <- q |>
+    dplyr::mutate(
+      pillar_date = as.Date(pillars),
+      implied_rate = purrr::map_dbl(helpers, function(h) as.numeric(h$impliedQuote())),
+      quote_error_bp = (.data$implied_rate - .data$rate) * 1e4
+    )
+  if (any(!is.finite(repricing$quote_error_bp)) ||
+      max(abs(repricing$quote_error_bp)) > 1e-4) stop("OIS repricing failed.")
   handle <- QuantLib::YieldTermStructureHandle(curve)
-  linked_index <- instance_overnight_index(spec$currency, handle)
+  linked <- instance_overnight_index(spec$currency, handle)
   list(
     currency = spec$currency, index_name = spec$index_name,
-    curve = curve, curve_handle = handle, overnight_index = linked_index,
-    index = linked_index, evaluation_date = as.character(date),
+    marketdate = marketdate, evaluation_date = as.character(marketdate),
+    curve = curve, curve_handle = handle, overnight_index = linked, index = linked,
     calendar = calendar, day_counter = day_counter,
-    helpers = helpers, helper_vector = helper_vector, quotes = quotes,
-    curve_type = curve_type, settlement_days = as.integer(settlement_days),
-    payment_lag = as.integer(payment_lag), payment_frequency = payment_frequency
+    helpers = helpers, helper_vector = helper_vector,
+    quotes = q, quote_repricing = repricing, curve_type = curve_type,
+    settlement_days = as.integer(settlement_days), payment_lag = as.integer(payment_lag),
+    payment_frequency = payment_frequency
   )
 }
 

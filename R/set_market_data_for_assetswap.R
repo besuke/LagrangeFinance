@@ -76,62 +76,42 @@ Glumgamma$rate <- Glumgamma$rate_pct / 100
 
 
 
-instance_swap_curve_TONAR <- function(date = "2026-10-09") {
-  date <- as.Date(date)
-  if (length(date) != 1L || is.na(date)) stop("Choose one date.")
-  if (date == as.Date("2022-08-19")) {
-    return(instance_swap_curve_TONAR_20220819())
+
+# Adapt the retained TONAR data to the same quote schema as the Excel reader.
+# No date relabelling: 2026-10-06 remains 2026-10-06.
+tonar_market_quotes <- function(marketdate, quote = c("mid", "bid", "ask")) {
+  quote <- match.arg(quote)
+  marketdate <- as.Date(marketdate)
+  if (length(marketdate) != 1L || is.na(marketdate)) stop("Choose one marketdate.")
+  if (quote != "mid") stop("Legacy TONAR data has mid quotes only.")
+  if (marketdate == as.Date("2022-08-19")) {
+    q <- tibble::tibble(
+      date = marketdate,
+      tenor = c("1D", "1M", "6M", "12M", "18M", "2Y", "3Y", "5Y", "7Y"),
+      rate_pct = c(-.009, -.01807, -.01043, .0125, .03125,
+                   .04875, .07375, .11854, .19146),
+      instrument_type = c("deposit", rep("spot_ois", 8))
+    )
+  } else {
+    q <- Glumgamma |> dplyr::filter(.data$date == .env$marketdate) |>
+      dplyr::mutate(instrument_type = "spot_ois")
   }
-  q <- Glumgamma[Glumgamma$date == date, ]
-  if (!nrow(q)) stop("No TONAR data for this date.")
-  if (any(!is.finite(q$rate_pct)) || anyDuplicated(q$tenor)) {
-    stop("Check TONAR rates and tenors.")
-  }
-  quotes <- tibble::tibble(
-    quote_id = paste0("TONAR-", q$tenor), instrument_type = "spot_ois",
-    rate_pct = q$rate_pct, rate = q$rate_pct / 100,
-    fixing_days = rep(2L, nrow(q)),
-    tenor_n = as.integer(sub("[MY]$", "", q$tenor)),
-    tenor_unit = ifelse(grepl("M$", q$tenor), "Months", "Years")
+  if (!nrow(q)) stop("No legacy TONAR data for marketdate.")
+  q |> dplyr::transmute(
+    marketdate = .data$date, currency = "JPY", tenor,
+    ticker = NA_character_, instrument = "TONAR_OIS", instrument_type,
+    tenordate = as.Date(NA), ask = NA_real_, mid = rate_pct, bid = NA_real_,
+    rate_pct, rate = rate_pct / 100,
+    source = "Retained TONAR data in set_market_data_for_assetswap.R"
   )
-  bundle <- .tasw_gq_GQH("build_tonar_curve_from_market_GQL",
-    quotes = quotes, evaluation_date = as.character(date),
-    curve_type = "log_cubic_discount"
-  )
-  bundle$overnight_index <- .tasw_ql_GQH("Tonar", bundle$curve_handle)
-  bundle
 }
 
-instance_swap_curve_TONAR_20220819 <- function() {
-  .tasw_gq_GQH("set_eval_date_GQL", .tasw_date_GQH("2022-08-19"))
-  cal <- .tasw_ql_GQH("Japan")
-  dc <- .tasw_ql_GQH("Actual365Fixed")
-  pct <- c(
-    -0.009, -0.01807, -0.01043, 0.0125, 0.03125,
-    0.04875, 0.07375, 0.11854, 0.19146
-  )
-  tenors <- c("1M", "6M", "12M", "18M", "2Y", "3Y", "5Y", "7Y")
-  index <- .tasw_gq_GQH("tonar_GQL")
-  helpers <- list(.tasw_ql_GQH(
-    "DepositRateHelper",
-    .tasw_gq_GQH("quote_handle_GQL", pct[1] / 100), index
-  ))
-  for (i in seq_along(tenors)) {
-    period <- .tasw_ql_GQH(
-      "Period", as.integer(sub("[MY]$", "", tenors[i])),
-      if (grepl("M$", tenors[i])) "Months" else "Years"
-    )
-    helpers[[i + 1L]] <- .tasw_ql_GQH(
-      "OISRateHelper", 2L, period,
-      .tasw_gq_GQH("quote_handle_GQL", pct[i + 1L] / 100), index
-    )
-  }
-  vector <- .tasw_gq_GQH("push_rate_helpers_GQL", helpers)
-  curve <- .tasw_ql_GQH("PiecewiseLogCubicDiscount", 0L, cal, vector, dc)
-  bundle <- list(
-    curve = curve, curve_handle = .tasw_ql_GQH("YieldTermStructureHandle", curve),
-    evaluation_date = "2022-08-19", helpers = helpers, helper_vector = vector
-  )
-  bundle$overnight_index <- .tasw_ql_GQH("Tonar", bundle$curve_handle)
-  bundle
+# Backward-compatible names; curve construction has one shared implementation.
+instance_swap_curve_TONAR <- function(date = "2026-10-09", ...) {
+  instance_swap_curve("JPY", marketdate = date,
+                      quotes = tonar_market_quotes(date), ...)
 }
+instance_swap_curve_TONAR_20220819 <- function(...) {
+  instance_swap_curve_TONAR("2022-08-19", ...)
+}
+
