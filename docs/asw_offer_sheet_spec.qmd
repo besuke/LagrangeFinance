@@ -1,0 +1,392 @@
+---
+title: "ASW・オファーシート開発仕様"
+subtitle: "OISスワップ・マルチイールドカーブ・円ベーシスASW・CTD"
+author: "LagrangeFinance"
+date: "2026-10-18"
+lang: ja
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: false
+    embed-resources: true
+execute:
+  eval: false
+  echo: true
+---
+
+# 目的と基準版
+
+本書は、複数通貨の債券オファーを取り込み、当日の銘柄属性・市場データと結合し、自国通貨ASWと円ベーシス込みASWによって比較するための開発仕様である。さらに、担保通貨の選択を含むCTD（Cheapest to Deposit、チーペスト・デポジット）へ拡張する設計を示す。
+
+基準は `besuke/LagrangeFinance` の `main`、コミット `e955cf4382af7935ba2c64b8ad27636f03ca5456` である。以下の「実装済み」はこの版のソース確認に基づく。「実行確認済み」はユーザーから引き継いだMacでの結果を指し、本書作成環境でのR再実行結果ではない。
+
+| 項目 | 基準 |
+|---|---|
+| 開発環境 | macOS、RStudio、R 4.5.2 |
+| ローカルプロジェクト | `~/AnalyticFin/Projects/LagrangeFinance` |
+| 金融計算 | QuantLib、GaussQuant |
+| 対象通貨 | JPY・USD・EUR・GBP・AUD |
+| 現行債券評価 | 固定利付・非償還途中減額・満期元本100償還を前提とするASW |
+| 円換算評価 | 円担保固定、元本一定、開始・満期元本交換、CCS気配1点校正 |
+| CTD | 概念・拡張仕様。本版に担保通貨最適化の実装はない |
+
+本QMDは仕様書として単独で読める構成とし、コード例は自動実行しない。データ取得、デモファイル作成、パッケージ導入がレンダリング時に発生しないよう、`execute.eval: false` とする。
+
+# ファイル構成と責務
+
+| ファイル | 主な責務・公開関数 |
+|---|---|
+| `R/import_data.R` | Excelオファー、RDS銘柄属性、パイプ区切り市場データ、Bloomberg形式OISブックの取込。`import_offer_sheet()`、`import_bond_master_attribute_ADP()`、`import_market_data()`、`import_ois_curves()` |
+| `R/workflows_validate_worksheet.R` | 属性選択・結合・入力検証。`merge_offer_bond_attributes()`、`workflows_validate_worksheet()` |
+| `R/instance_swap_curve.R` | 5通貨共通のOISカーブ生成。`ois_currency_spec()`、`instance_overnight_index()`、`instance_swap_curve()` |
+| `R/compute_asset_swap_ISO.R` | 自国通貨ASW、価格逆算、価格感応度表。`compute_asset_swap_ISO()`、`asset_swap_fair_price()`、`asset_swap_price_table()` |
+| `R/compute_asset_swap_basis_JPY.R` | 円担保のCCS校正・FXフォワード・円ASW。`asset_swap_jpy_from_legs()`、`compute_asset_swap_basis_JPY()` |
+| `R/sample_bond_asset_swap.R` | 統一実行サンプル、5通貨評価、価格感応度、オファー検証デモ、2022年TONAR例、CCS恒等式チェック |
+| `R/utility_LFL.R` | 書籍・プロジェクト共通の補助処理。価格評価の仕様は上記の専用ファイルを基準とする |
+
+入力検証と価格評価は現状別の処理である。`workflows_validate_worksheet()` が自動的に全オファーのASWまで計算する機能は、まだ実装されていない。統一サンプルはこの二つを一つのファイルから確認できる。
+
+# オファーシートのデータ仕様
+
+## オファー入力
+
+Excelの1行を1件のオファーとする。同一銘柄であってもブローカーが異なるオファーは別行として保持する。
+
+| 列 | 意味・単位 |
+|---|---|
+| `offer_date` | オファー日。日付範囲の両端を含めて抽出 |
+| `ISIN` | 前後空白除去・英大文字化した銘柄識別子 |
+| `broker_names` | ブローカー名 |
+| `offer_price` | 額面100当たりの価格。評価へ接続する際はclean価格であることを確認 |
+| `offer_size` | 提示数量。正数。額面通貨・数量単位の明示は本番接続の追加要件 |
+| `offer_settlementdate` | 受渡日。オファー日以降 |
+
+入力はファイル、複数ファイル、ディレクトリから読める。バッチごとに `sheet`、`column_map`、`skip` を指定できる。`column_map` は `c(標準列名 = "元列名")` とする。出所ファイル・シートを保持する。期間抽出後のオファーは、属性欠落があっても行を落とさず、元の行順を維持する。
+
+重複判定キーは `offer_date + ISIN + broker_names` である。同じブローカーの複数時刻・数量別提示を保持したい場合は、将来 `offer_id` や提示時刻を加える必要がある。
+
+## 銘柄属性
+
+RDSの標準キーは `ISIN + attribute_date`。同じキーの重複はエラーとする。属性日付を持たないスナップショットには、明示した `snapshot_date` を付与できる。
+
+| 必須属性 | 仕様 |
+|---|---|
+| `currency` | 対象5通貨のいずれか |
+| `coupon_type` | 現行ワークフローでは `FIXED` |
+| `coupon_rate` | 小数金利。5%は `0.05` |
+| `issue_date`, `maturity_date` | 発行日・満期日 |
+| `coupon_frequency` | 年間利払い回数。入力検証は1・2・4・12を許容 |
+| `day_count` | 債券の利息計算方式。現行検証は欠損確認であり名称の完全検証ではない |
+| `redemption` | 額面100当たり償還額。入力検証は正数、現行ASW評価は100償還に限定 |
+
+属性結合ではオファー側の古い属性を採用せず、RDS属性へ置き換える。一方、RDSからオファー価格・数量・日付・ブローカー名を上書きしない。
+
+属性の選択方針は次の二つとする。
+
+| `attribute_policy` | 選択条件 |
+|---|---|
+| `exact`（既定） | オファー日と同日の属性のみ |
+| `previous` | オファー日以前の最も新しい属性。未来の属性は除外 |
+
+`attribute_age_days = offer_date - attribute_date` を出力する。過去属性の許容経過日数上限は現行版では設けていないため、本番では別途方針を定める。
+
+## 市場データ
+
+一般取込は拡張子 `.txt`・`.psv`・`.csv` を対象とするが、区切り文字はいずれも `|` である。
+
+| 列 | 仕様 |
+|---|---|
+| `marketdate` | 市場観測日 |
+| `currency` | 通貨 |
+| `instrument` | `TONAR_OIS`、`SOFR_OIS`、`ESTR_OIS`、`SONIA_OIS`、`AONIA_OIS` 等 |
+| `tenor` | `1D`、`1M`、`18M`、`10Y` 等 |
+| `rate_pct` / `rate` | どちらか必須。4.25%はそれぞれ `4.25` / `0.0425` |
+| `tenordate` | 任意。指定する場合はカーブヘルパー満期と整合させる |
+
+`rate` と `rate_pct` の両方があれば単位整合性を確認する。市場データ取込の重複判定キーは現行コード上 `marketdate + instrument + tenor` である。複数通貨で共通のinstrument名を使う場合には、通貨もキーに含める改修が必要となる。
+
+ワークシートにはオファー日当日の自国通貨OISとJPY OISをリスト列 `market_quotes`・`jpy_market_quotes` として添付する。過去市場データの自動持越しは行わない。
+
+# 入力検証と状態管理
+
+`validation_status` は `valid` または `invalid`。複数の不備を `validation_issues` に保持し、`validation_message` に連結する。
+
+| 対象 | 現行チェック |
+|---|---|
+| オファー | ISIN形式、ブローカー名、重複、正の価格・数量、受渡日 |
+| 属性 | 属性存在、必須列欠損、対応通貨、固定利付、非負クーポン、頻度、償還額 |
+| 日付 | 発行日より後の満期、受渡日以前の発行、受渡日より後の満期 |
+| 市場 | 当日の自国通貨OISとJPY OISの存在 |
+
+ISINは文字形式の確認であり、チェックディジット検証ではない。`valid` は入力チェックに合格した状態であり、カーブ構築可能性、全キャッシュフローの期間カバー、商品慣行、オプション性、FX・CCS気配、評価成功までは保証しない。
+
+将来の一括評価では、入力検証状態とは別に `pricing_status`・`pricing_message`・使用したカーブ識別子を持たせる。評価エラーの行も残し、エラーをゼロASWへ置き換えない。
+
+また、ワークシートの `offer_settlementdate` とASWの開始日の接続が必要である。現行ASW関数は債券のQuantLib受渡日を開始日として求めるため、オファー受渡日を渡すだけの一括接続はできない。受渡日を明示できるAPI、または債券生成条件との一致検証を追加する。
+
+# OISスワップとカーブ
+
+## 商品の意味
+
+OIS（Overnight Indexed Swap）は固定金利と翌日物指標に連動する変動金利を交換する。基本形の変動クーポンは、利息期間内の翌日物金利を複利積算して求める。[BISの定義](https://data.bis.org/help/glossary?item=Overnight+indexed+swaps&m=2648&selection=273)を参照。
+
+$$
+C_i^{\mathrm{ON}}=N\left[\prod_{k\in i}(1+r_k\delta_k)-1\right],
+\qquad C_i^{\mathrm{fix}}=NK\alpha_i.
+$$
+
+日数計算・休日・観測方式・支払ラグによって具体的な金額は変わる。現行版はQuantLibの翌日物指標と `MakeOIS` / `OISRateHelper` に基づく。あらゆる市場の観測シフト・ロックアウト慣行を網羅する仕様ではない。
+
+翌日物の実績fixingは過去1日の観測値であり、1年・10年等のOISパーレートを代替しない。IBORスワップもOISとは別商品である。
+
+## 5通貨共通カーブ
+
+| 通貨 | 指標 | QuantLibコンストラクター | 現行既定settlement days |
+|---|---|---|---:|
+| JPY | TONAR | `Tonar` | 2 |
+| USD | SOFR | `Sofr` | 2 |
+| EUR | ESTR | `Estr` | 2 |
+| GBP | SONIA | `Sonia` | 0 |
+| AUD | AONIA | `Aonia` | 1 |
+
+上表は現行実装の設定値である。個々の取引・気配提供元の慣行との一致は別途確認する。カレンダーとday counterは各指標から取得する。
+
+`instance_swap_curve()` は `spot_ois` と明示的な `deposit` のみを受け付ける。depositは翌日物 `1D` に限定する。商品種別列が欠ける場合は現行コードで `spot_ois` と解釈されるため、本番データでは種別を明示する。
+
+補間方式は `log_cubic_discount` が既定、`flat_forward` が選択可能。外挿は既定で無効。入力tenor重複・ヘルパーpillar重複・指定満期不整合を検出し、再評価誤差の最大絶対値が `1e-4 bp` を超える場合は停止する。
+
+Bloomberg形式Excelの取込では `SONIO/N Index` をfixingとして分離し、AUDの未確認スワップも分離する。サンプルでは確定した短期AUD OISでカバーできる6か月債を使い、10年まで無断で外挿しない。
+
+# マルチイールドカーブとの関係
+
+マルチイールドでは「将来クーポンを予測するカーブ」と「現在価値へ割り引くカーブ」を区別する。さらに通貨・指標・担保通貨によって必要なカーブが変わる。[Fujii・Shimada・Takahashiの原論文](https://www.carf.e.u-tokyo.ac.jp/en/research/w2007/)は、この区別とベーシスを含む整合的カーブ構築を扱う。
+
+一般的な変動レッグの評価は、予測金利を $F^{x,\tau}$、担保条件に対応する割引係数を $D^{x\mid c}$ とすると、次の形で整理できる。
+
+$$
+PV=N\sum_i D^{x\mid c}(t,T_i)\alpha_i
+\{F^{x,\tau}(t;T_{i-1},T_i)+s\}.
+$$
+
+| カーブ | 役割 | 現行版との関係 |
+|---|---|---|
+| 自国OIS | 翌日物予測・同通貨担保下の割引の基礎 | 5通貨を構築済み |
+| 指標・tenor別予測 | 3M・6M等のターム指標クーポン予測 | 一般IBORマルチカーブ構築は未実装 |
+| 異通貨担保下の割引 | 外貨CFを円担保条件で評価 | CCS気配1点の一定スプレッドで近似 |
+| FXフォワード・CCSベーシス | 通貨間の整合性・円へのヘッジ | 現行の円ASWで使用 |
+
+`compute_asset_swap_ISO()` は `index` と `discount_curve` を別引数に持つ。ただし既定は同じ自国OISを用い、構築関数も自国OISを一つずつ生成する。したがって5通貨対応は、完全な指標別・担保通貨別マルチカーブ実装の完成を意味しない。
+
+将来、カーブキーは少なくとも「市場日・CF通貨・担保通貨・指標・tenor・気配side・慣行版」を区別する。自国OISに社債信用スプレッドを埋め込まず、債券の相対価値はASWとして取り出す。
+
+# 自国通貨ASWの評価仕様
+
+## パッケージと符号
+
+現行ASWは、債券CFを支払う側を負、翌日物変動レッグ・元本・初期調整を受け取る側を正とする。債券保有と組み合わせれば固定利付CFを翌日物＋スプレッドへ変換する構成となる。
+
+評価日を $t$、受渡日を $S$、額面を $N$、clean価格を $P$、経過利息を $AI$ とし、dirty価格は $P_d=P+AI$ とする。価格・経過利息はいずれも額面100当たりである。
+
+$$
+U=N\left(\frac{P_d}{100}-1\right),\qquad
+A=\sum_i N\alpha_iD(t,T_i).
+$$
+
+債券CFの正のPVを $B$、翌日物クーポンのPVを $L$、変動レッグ最終支払日の元本PVを $R$ とすると、実装のNPVとフェアスプレッドは次のとおり。
+
+$$
+V(s)=L+R+UD(t,S)+sA-B,
+\qquad s^*=\frac{B-L-R-UD(t,S)}{A}.
+$$
+
+`spread_bp` はbp入力であり、内部では $s=\mathrm{spread\_bp}/10000$。正のフェアスプレッドは、債券CFを支払う代わりに受け取る翌日物レッグに加算する金利を表す。
+
+## 対象制約と出力
+
+残存CFがあり、額面が途中で減額されず、満期元本が100償還であることを確認する。コーラブル・プッタブル等のオプション価値を評価する機能は含まない。固定利付以外をワークフローで除外するが、商品属性の完全検証は価格関数単独には備わっていない。
+
+主な戻り値は `valuation`、符号付き `cashflows`、`effective_date`、`maturity_date`、`ois`、`index`、`discount_curve`。`valuation` は `fair_spread_bp`、`npv`、`spread_annuity`、債券・変動・元本・初期調整のPVを含む。
+
+価格以外を固定したときの関係は、
+
+$$
+\frac{\partial s^*}{\partial P}=-\frac{ND(t,S)}{100A}<0.
+$$
+
+したがって購入価格が高くなるとASWは低下する。`asset_swap_price_table()` はこの線形関係を使う。`asset_swap_fair_price()` は、現在指定されたスプレッドでNPVがゼロとなるclean価格を逆算する。
+
+# 円ベーシス込みASW
+
+## CCS気配の定義
+
+現行の符号は「外貨翌日物をflatで支払い、円TONAR＋basisを受け取る」。`basis_bp` は円レッグへの加算幅、`fx_spot` は開始日交換に使う外貨1単位当たり円である。
+
+市場でいうスポット受渡日がASW開始日と異なる場合は、開始日までのFX swapで調整する必要がある。現行引数名が `fx_spot` でも、関数が必要とする値は開始日交換レートである。
+
+前提は円担保、元本一定、開始・満期に元本交換、MtM resetなし。満期に対応するCCS気配1点から、外貨側の一定割引スプレッド $z$ を校正する。CCSの市場期間構造をブートストラップするモデルではない。
+
+## 校正とFXフォワード
+
+外貨・円の自国OIS割引係数を $D_f,D_j$ とし、$\tau(S,T)$ は開始日からのACT/365時間とする。実装するモデルFXフォワードは、
+
+$$
+F_z(S,T)=X_S
+\frac{D_f(t,T)/D_f(t,S)}{D_j(t,T)/D_j(t,S)}
+e^{-z\tau(S,T)}.
+$$
+
+外貨翌日物＋最終元本の円PVを $Q_f(z)$、円翌日物＋最終元本のPVを $Q_j$、円スプレッドアニュイティを $A_j$ とすると、
+
+$$
+Q_f(z)-Q_j-bA_j=0
+$$
+
+となる $z$ を `uniroot()` で求める。探索区間は現行版で `[-1,1]`、許容誤差は `1e-12`。根が区間に存在しない場合には失敗し、その行を価格計算失敗として扱う設計が必要となる。
+
+債券の外貨CF $C_k$ はモデルFXフォワードで円へヘッジし、
+
+$$
+B_j=\sum_k C_k F_z(S,T_k)D_j(t,T_k)
+$$
+
+を求める。初期価格調整の円PVを $U_j$ とすると、円ASWは、
+
+$$
+s_j^*=\frac{B_j-Q_j-U_j}{A_j},\qquad
+V_j(s)=Q_j+U_j+sA_j-B_j.
+$$
+
+外貨ASWとCCS basisはPV・支払日・アニュイティが異なるため、通常は単純に加算できない。`simple_sum_bp` は比較用に出力される値であり、採用する評価値は `jpy_asw_bp` とする。
+
+## 主要出力と制限
+
+| 出力 | 意味 |
+|---|---|
+| `native_asw_bp` | 自国通貨ASW |
+| `basis_on_jpy_bp` | 入力した円レッグCCS basis |
+| `jpy_asw_bp` | 円TONAR基準へ変換したフェアスプレッド |
+| `calibrated_discount_spread_bp` | 1点CCS校正による一定 $z$ |
+| `ccs_repricing_npv_jpy` | CCS校正残差 |
+| `fair_spread_npv_jpy` | フェア円ASWによるNPV残差 |
+| `hedged_bond_cashflows` | 各CFのFXフォワード・円金額・割引係数・PV |
+
+取引費用、bid/ask、MtM CCS、確率的quanto調整、信用・資本・資金調達調整は現行評価に含まれない。サンプルのFX・basis・債券条件は合成入力であり、市場実測値として再利用しない。
+
+# CTD：Cheapest to Deposit
+
+## 本プロジェクトでの定義
+
+本書のCTDは **Cheapest to Deposit（最も経済的な通貨で担保を差し入れる選択）** と定義する。対象はCSA等の担保契約で許容される通貨の選択である。論文ではこの担保通貨選択権が “cheapest-to-deliver collateral” と呼ばれる場合があるが、本書ではユーザー指定の名称で統一する。[Fujii・Takahashiの担保通貨選択に関する原論文](https://www.carf.e.u-tokyo.ac.jp/old/pdf/workingpaper/fseries/240.pdf)を参照。
+
+円金利＋50bpとドル金利＋100bpは、基準金利・通貨・担保条件が異なるため、50と100だけでは割高・割安を判断できない。同じ評価日・期間・受払方向にそろえ、FXフォワードとCCSベーシスを反映して共通通貨のPVまたは同じ基準金利上のスプレッドへ変換する。
+
+ただし、預金商品の投資先比較と担保差入通貨の最適化は、キャッシュフローと目的関数が異なる。前者を扱う場合にも共通通貨への変換は使えるが、預金利回りの順位をそのまま担保CTDの順位にはしない。
+
+## 固定通貨比較と将来選択権
+
+最初の拡張では、担保通貨を全期間固定したシナリオを比較する。候補 $c$ の資金調達、担保受取利息、FXヘッジ、取引費用等を共通通貨のPVへ変換した正味費用を $K_c$ と定義し、差入側の選択を、
+
+$$
+c^*=\operatorname*{arg\,min}_{c\in\mathcal C_{\mathrm{eligible}}}K_c
+$$
+
+で表示する。この式は静的な比較仕様であり、現行実装の評価式ではない。$K_c$ の計算時には、FX/CCSに反映済みの費用を別途再加算しない。
+
+実際に将来各時点で通貨を切り替えられる場合は、金利・FX・ベーシス・エクスポージャーと切替制約を扱う選択権評価が必要である。今日のカーブで最安通貨を一つ選ぶ処理や、各時点の金利の最小値を機械的につなぐ処理だけでは、その価値は求められない。担保差入側と受取側、正負エクスポージャーによる権利の所在も区別する。
+
+## 追加データと開発単位
+
+| 追加要素 | 必要な内容 |
+|---|---|
+| CSA条件 | 適格通貨、担保付利、ヘアカット、閾値、最低移転額、差入頻度、通貨切替権 |
+| 資金調達 | 当事者・通貨・期間別の調達条件 |
+| 市場 | 各通貨OIS、FX spot/swap/forward、CCSの期間構造とbid/ask |
+| 評価 | 共通担保条件での割引カーブ、受払方向、残存期間、エクスポージャー |
+| 結果 | 通貨別費用PV、選択通貨、次点との差額、費用内訳、適用条件 |
+
+開発順序は、円担保固定の現行ASW、固定担保通貨を増やしたシナリオ比較、CCS期間構造の構築、将来の通貨切替を含む動的CTD評価とする。円担保固定の `compute_asset_swap_basis_JPY()` の結果だけからCTD達成と判定しない。
+
+# 実行例と確認仕様
+
+## Macでの統一サンプル
+
+プロジェクトをRStudioで開くか、次のようにルートへ移動して実行する。
+
+```{r}
+setwd(path.expand("~/AnalyticFin/Projects/LagrangeFinance"))
+source("R/sample_bond_asset_swap.R")
+```
+
+サンプル先頭のスイッチは現在、`run_asset_swap = TRUE`、`run_worksheet_demo = TRUE`、`run_historical = FALSE`、`run_ccs_checks = FALSE`。`source()` 時に先頭で再代入されるため、外部で変数を置くだけでは変更できない。必要なスイッチをファイル内で変更して実行する。
+
+通常の5通貨評価は2026-10-06のExcelを使う。過去例は2022-08-19のTONARフィクスチャと2025-07-28満期債を使う。過去例は別評価日の計算なので2026年処理の後で実行し、最後にQuantLibのグローバル評価日を戻す。
+
+サンプルは `data/demo` 配下へ合成入力を作成する。`writexl` が未導入の場合は導入処理を含むため、実行前に依存パッケージを用意する運用が望ましい。
+
+## ワークシートの利用
+
+```{r}
+source("R/import_data.R")
+source("R/workflows_validate_worksheet.R")
+
+worksheet <- workflows_validate_worksheet(
+  from = "2026-10-06", to = "2026-10-07",
+  offer_path = list(
+    list(path = "path/to/yen_offers.xlsx", sheet = "Offers"),
+    list(path = "path/to/iso_offers.xlsx", sheet = "Offers")
+  ),
+  master_path = "path/to/bond_master.rds",
+  market_path = "path/to/ois_quotes.txt",
+  attribute_policy = "previous"
+)
+
+valid_offers <- dplyr::filter(worksheet, validation_status == "valid")
+invalid_offers <- dplyr::filter(worksheet, validation_status == "invalid")
+```
+
+上記の `path/to` は実ファイルへ置換する。価格評価への接続前に、受渡日、日数計算方式、商品オプション性、カーブの満期カバー、FX・CCS条件を追加検証する。
+
+## 受入条件と確認状況
+
+| 項目 | 期待結果 | 状況 |
+|---|---|---|
+| 5通貨OIS・自国ASW・円ASW | 統一サンプルで計算可能 | Mac実行成功を引継ぎ |
+| オファーデモ | 全5行保持、valid 3行、invalid 2行 | Mac確認済みを引継ぎ |
+| 複数ブローカー | 同じUSD銘柄の2オファーを保持 | サンプルassertionあり |
+| 古い属性の置換 | オファー側のSTALE属性をRDSで置換 | サンプルassertionあり |
+| 過去属性選択・未来排除 | 10/7は10/6属性、10/8属性は不採用 | Mac確認済みを引継ぎ |
+| 当日市場欠落 | 過去属性を許容してもinvalid | サンプルassertionあり |
+| 0件期間 | 0行のtibbleを返す | Mac確認済みを引継ぎ |
+| OIS再評価 | 最大絶対誤差が1e-4 bp以下 | カーブ関数内で検査 |
+| 円ASW・CCS残差 | 絶対値1e-6円未満（サンプル額面） | サンプルassertionあり |
+| CCS恒等式 | basis方向、FXスケール不変、価格方向等 | 任意スイッチ。今回の実行確認は未実施 |
+| 2022年過去例 | 別評価日で計算し評価日復元 | ソースに保持。引継ぎ文が途中のため実行成功は未確認 |
+
+残差基準はサンプル額面での条件である。本番の大口額面では、絶対誤差と額面で正規化した誤差を併用する仕様へ拡張する。
+
+# 次の実装対象
+
+1. `valid` オファーを商品属性から債券オブジェクトへ変換し、受渡日の整合を確認する。
+2. 市場日・通貨・慣行ごとにカーブを再利用し、カーブ構築と期間カバーを別途検証する。
+3. FX・CCSを実測データで取り込み、出所・気配side・basisレッグ・元本仕様を記録する。
+4. 行ごとに自国ASWと円ASWを計算し、失敗行を保持する。
+5. 比較表にはオファー識別情報、属性日、clean/dirty価格、自国ASW、円ASW、校正残差、評価状態を出す。
+6. CCS期間構造と固定担保通貨別評価を追加し、CTDの静的比較へ進む。
+
+ランキングは、同じ受払方向・担保・ヘッジ条件で比較可能な行に限る。ASWが高いことだけで信用・流動性・オプション性を含む投資価値が高いとは判定しない。
+
+# 参照資料とソース
+
+- [基準コミット e955cf4](https://github.com/besuke/LagrangeFinance/tree/e955cf4382af7935ba2c64b8ad27636f03ca5456)
+- [入力・属性結合・検証](https://github.com/besuke/LagrangeFinance/blob/e955cf4/R/workflows_validate_worksheet.R)
+- [OISカーブ](https://github.com/besuke/LagrangeFinance/blob/e955cf4/R/instance_swap_curve.R)
+- [自国通貨ASW](https://github.com/besuke/LagrangeFinance/blob/e955cf4/R/compute_asset_swap_ISO.R)
+- [円ベーシスASW](https://github.com/besuke/LagrangeFinance/blob/e955cf4/R/compute_asset_swap_basis_JPY.R)
+- [統一サンプル](https://github.com/besuke/LagrangeFinance/blob/e955cf4/R/sample_bond_asset_swap.R)
+- BIS, [Overnight indexed swaps: glossary](https://data.bis.org/help/glossary?item=Overnight+indexed+swaps&m=2648&selection=273).
+- Fujii, Shimada, Takahashi, [A Note on Construction of Multiple Swap Curves with and without Collateral](https://www.carf.e.u-tokyo.ac.jp/en/research/w2007/).
+- Fujii, Takahashi, [CARF Working Paper F-240：担保通貨選択の研究](https://www.carf.e.u-tokyo.ac.jp/old/pdf/workingpaper/fseries/240.pdf).
+
+本書のモデル式・制約・列名は基準ソースを優先する。研究資料は概念上の背景であり、本版が論文モデルを完全実装していることを示すものではない。
