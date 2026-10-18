@@ -14,18 +14,17 @@ purrr::walk(c(
 marketdate <- as.Date("2026-10-06")
 path <- "data/raw/market/Bloomberg_MarketData_20261006.xlsx"
 
-# 1. Import; all quotes use the same marketdate/instrument/tenor/rate schema.
-# JPY remains an explicitly identified legacy source until an Excel JPY tab exists.
-excel_sheets <- readxl::excel_sheets(path)
-jpy_quotes <- if ("JPY" %in% excel_sheets) {
-  import_ois_curves(path, "JPY", marketdate)
-} else {
-  tonar_market_quotes(marketdate)
-}
+# 1. Import all five currencies from the same Excel workbook.
+currencies <- c("JPY", "USD", "EUR", "GBP", "AUD")
 tbl_market_quotes <- purrr::map_dfr(
-  c("USD", "EUR", "GBP", "AUD"),
-  function(ccy) import_ois_curves(path, ccy, marketdate)
-) |> bind_rows(jpy_quotes)
+  currencies,
+  function(ccy) import_ois_curves(
+    path = path,
+    currency = ccy,
+    marketdate = marketdate,
+    quote = "mid"
+  )
+)
 
 # 2. Do not treat a historical fixing or an unconfirmed AUD IRS as spot OIS.
 tbl_excluded_quotes <- tbl_market_quotes |>
@@ -35,7 +34,6 @@ tbl_curve_quotes <- tbl_market_quotes |>
 if (nrow(tbl_excluded_quotes)) print(tbl_excluded_quotes, n = Inf)
 
 # 3. Same curve builder, same date and same return fields for every currency.
-currencies <- c("JPY", "USD", "EUR", "GBP", "AUD")
 curves <- currencies |> purrr::set_names() |>
   purrr::map(function(ccy) instance_swap_curve(
     currency = ccy, marketdate = marketdate, quotes = tbl_curve_quotes
