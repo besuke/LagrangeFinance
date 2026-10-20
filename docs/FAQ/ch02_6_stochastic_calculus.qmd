@@ -12,7 +12,6 @@ execute:
   eval: false
 ---
 
-
 ## 第1問
 
 ### 問題
@@ -37,10 +36,8 @@ $X,Y$ は独立な指数確率変数で、平均はそれぞれ6と8である。
 
 **解説**　$\lambda_X=1/6,\lambda_Y=1/8$。独立性より
 
-$$
-P(Y>X)=\int_0^\infty e^{-\lambda_Yx}\lambda_Xe^{-\lambda_Xx}dx
-=\frac{\lambda_X}{\lambda_X+\lambda_Y}=\frac47.
-$$
+$$P(Y>X)=\int_0^\infty e^{-\lambda_Yx}\lambda_Xe^{-\lambda_Xx}dx
+=\frac{\lambda_X}{\lambda_X+\lambda_Y}=\frac47.$$
 
 平均が大きい方の $Y$ が上回る確率は1/2より大きい。
 
@@ -102,10 +99,7 @@ $X$ は平均 $\mu$、分散 $\sigma^2$ の正規確率変数とする。$\Phi$ 
 
 **解答**
 
-$$
-\mathbb E[\Phi(X)]=\Phi\left(\frac{\mu}{\sqrt{1+\sigma^2}}\right).
-$$
-
+$$\mathbb E[\Phi(X)]=\Phi\left(\frac{\mu}{\sqrt{1+\sigma^2}}\right).$$
 
 **解説**　独立な $Z\sim N(0,1)$ を導入し、$\mathbb E\Phi(X)=P(Z\le X)$ と書く。$X-Z\sim N(\mu,1+\sigma^2)$ から求まる。
 
@@ -131,10 +125,7 @@ $$
 
 **解答**　独立同分布、有限な平均 $\mu$ と正の分散 $\sigma^2$ のもとで
 
-$$
-\sqrt n(\bar X_n-\mu)/\sigma\Rightarrow N(0,1).
-$$
-
+$$\sqrt n(\bar X_n-\mu)/\sigma\Rightarrow N(0,1).$$
 
 **解説**　和そのものが正規になるのでなく、中心化・標準化した分布が近づく。依存系列や無限分散には別の条件・極限定理が必要。
 
@@ -192,20 +183,13 @@ $W_t$ をウィーナー過程とする。$\operatorname{var}(W_t+W_s)$ を求�
 
 $W_t$ をウィーナー過程とする。次の二つを求めよ。
 
-
-$$
-\int_0^t W_s\,dW_s,\qquad\mathbb E\left[\int_0^t W_s\,dW_s\right].
-$$
-
+$$\int_0^t W_s\,dW_s,\qquad\mathbb E\left[\int_0^t W_s\,dW_s\right].$$
 
 ### 解答・解説
 
 **解答**
 
-$$
-\int_0^tW_s\,dW_s=\frac12(W_t^2-t),\qquad \mathbb E\int_0^tW_s\,dW_s=0.
-$$
-
+$$\int_0^tW_s\,dW_s=\frac12(W_t^2-t),\qquad \mathbb E\int_0^tW_s\,dW_s=0.$$
 
 **解説**　伊藤公式 $d(W_t^2)=2W_tdW_t+dt$ を積分する。
 
@@ -215,11 +199,7 @@ $$
 
 次の確率変数の分布を求めよ。
 
-
-$$
-X=\int_0^1 W_t\,dW_t.
-$$
-
+$$X=\int_0^1 W_t\,dW_t.$$
 
 ### 解答・解説
 
@@ -233,11 +213,7 @@ $$
 
 $W_t$ をウィーナー過程とする。次の確率変数の平均と分散を求めよ。
 
-
-$$
-\int_0^t W_s^2\,dW_s.
-$$
-
+$$\int_0^t W_s^2\,dW_s.$$
 
 ### 解答・解説
 
@@ -245,9 +221,7 @@ $$
 
 **解説**　伊藤積分の平均0と等長性から
 
-$$
-\operatorname{Var}\left(\int_0^tW_s^2dW_s\right)=\int_0^t\mathbb EW_s^4ds=\int_0^t3s^2ds=t^3.
-$$
+$$\operatorname{Var}\left(\int_0^tW_s^2dW_s\right)=\int_0^t\mathbb EW_s^4ds=\int_0^t3s^2ds=t^3.$$
 
 ここで標準正規の4次モーメント3を使う。
 
@@ -257,20 +231,13 @@ $$
 
 $W_t$ をウィーナー過程とする。次の確率変数の分散を求めよ。
 
-
-$$
-X=\int_0^1\sqrt{t}\,e^{W_t^2/8}\,dW_t.
-$$
-
+$$X=\int_0^1\sqrt{t}\,e^{W_t^2/8}\,dW_t.$$
 
 ### 解答・解説
 
 **解答**
 
-$$
-\operatorname{Var}(X)=\int_0^1\frac{t}{\sqrt{1-t/2}}dt=\frac{16-10\sqrt2}{3}.
-$$
-
+$$\operatorname{Var}(X)=\int_0^1\frac{t}{\sqrt{1-t/2}}dt=\frac{16-10\sqrt2}{3}.$$
 
 **解説**　伊藤等長性と $\mathbb E e^{aW_t^2}=(1-2at)^{-1/2}$（$2at<1$）を使う。被積分過程を二乗するので指数係数は1/4。$u=1-t/2$ の置換で積分する。
 
@@ -280,11 +247,7 @@ $$
 
 $W_t$ をウィーナー過程とする。次の期待値を求めよ。
 
-
-$$
-\mathbb E[e^{W_t}].
-$$
-
+$$\mathbb E[e^{W_t}].$$
 
 ### 解答・解説
 
@@ -298,11 +261,7 @@ $$
 
 $W_t$ をウィーナー過程とする。次の確率変数の分散を求めよ。
 
-
-$$
-\int_0^t s\,dW_s.
-$$
-
+$$\int_0^t s\,dW_s.$$
 
 ### 解答・解説
 
@@ -316,11 +275,7 @@ $$
 
 $W_t$ をウィーナー過程とし、次のように定める。
 
-
-$$
-X_t=\int_0^t W_s\,ds.
-$$
-
+$$X_t=\int_0^t W_s\,ds.$$
 
 $X_t$ はどのような分布に従うか。$X_t$ はマルチンゲールか。
 
@@ -340,9 +295,7 @@ $X_t$ はどのような分布に従うか。$X_t$ はマルチンゲールか�
 
 **解答**
 
-$$
-X_t=X_0+\int_0^t a_sds+\int_0^t b_sdW_s
-$$
+$$X_t=X_0+\int_0^t a_sds+\int_0^t b_sdW_s$$
 
 と表される過程。
 
@@ -358,10 +311,7 @@ $$
 
 **解答**　$dX=a\,dt+b\,dW$ と $f\in C^{1,2}$ に対し
 
-$$
-df(t,X_t)=(f_t+af_x+\tfrac12b^2f_{xx})dt+bf_xdW_t.
-$$
-
+$$df(t,X_t)=(f_t+af_x+\tfrac12b^2f_{xx})dt+bf_xdW_t.$$
 
 **解説**　通常の連鎖律に二次変動の項が加わる。多次元ではHessianと共分散行列の縮約が補正になる。
 
@@ -383,11 +333,7 @@ $W_t$ をウィーナー過程とする。$X_t=W_t^2$ はマルチンゲール�
 
 $W_t$ をウィーナー過程とする。次の過程はマルチンゲールか。
 
-
-$$
-N_t=W_t^3-3tW_t.
-$$
-
+$$N_t=W_t^3-3tW_t.$$
 
 ### 解答・解説
 
@@ -395,9 +341,7 @@ $$
 
 **解説**　伊藤公式から
 
-$$
-d(W_t^3-3tW_t)=3(W_t^2-t)dW_t.
-$$
+$$d(W_t^3-3tW_t)=3(W_t^2-t)dW_t.$$
 
 有限時間区間で被積分過程は2乗可積分なので、局所マルチンゲールにとどまらず真のマルチンゲール。
 
@@ -413,9 +357,7 @@ Girsanovの定理とは何か。
 
 **解説**　Novikov条件などのもとで
 
-$$
-Z_T=\exp\left(-\int_0^T\theta_sdW_s-\tfrac12\int_0^T\theta_s^2ds\right),\quad d\mathbb Q=Z_Td\mathbb P
-$$
+$$Z_T=\exp\left(-\int_0^T\theta_sdW_s-\tfrac12\int_0^T\theta_s^2ds\right),\quad d\mathbb Q=Z_Td\mathbb P$$
 
 とすると、$W_t^{\mathbb Q}=W_t+\int_0^t\theta_sds$ が $\mathbb Q$ 下のブラウン運動。密度過程が期待値1の真のマルチンゲールであることが必要。
 
@@ -429,9 +371,7 @@ $$
 
 **解答**　ブラウン運動が生成するフィルトレーションの2乗可積分マルチンゲールは、適切な予測可能過程 $\phi$ によって
 
-$$
-M_t=M_0+\int_0^t\phi_s\,dW_s
-$$
+$$M_t=M_0+\int_0^t\phi_s\,dW_s$$
 
 と表せる。
 
@@ -443,11 +383,7 @@ $$
 
 $W_t$ をウィーナー過程とする。次の確率微分方程式を解け。
 
-
-$$
-dY_t=Y_t\,dW_t.
-$$
-
+$$dY_t=Y_t\,dW_t.$$
 
 ### 解答・解説
 
@@ -469,17 +405,12 @@ $$
 
 **解答**　(i)
 
-$$
-Y_t=Y_0e^{(\mu-\sigma^2/2)t+\sigma W_t}.
-$$
+$$Y_t=Y_0e^{(\mu-\sigma^2/2)t+\sigma W_t}.$$
 
 (ii) $E_t=e^{aW_t-a^2t/2}$ とおくと
 
-$$
-X_t=E_t\left[X_0+\int_0^tE_s^{-1}(\mu-ab)\,ds+
-\int_0^tE_s^{-1}b\,dW_s\right].
-$$
-
+$$X_t=E_t\left[X_0+\int_0^tE_s^{-1}(\mu-ab)\,ds+
+\int_0^tE_s^{-1}b\,dW_s\right].$$
 
 **解説**　(ii) は線形SDEの変数変化法。$d(E^{-1})=-aE^{-1}dW+a^2E^{-1}dt$ の交差項を含める。$a=0$ にも使え、その場合 $X_t=X_0+\mu t+bW_t$。
 
@@ -493,12 +424,9 @@ Hestonモデルとは何か。
 
 **解答**　資産価格の分散そのものを確率過程にする確率ボラティリティモデル。
 
-$$
-dS_t=(r-q)S_tdt+\sqrt{v_t}S_tdW_t^S,\quad
+$$dS_t=(r-q)S_tdt+\sqrt{v_t}S_tdW_t^S,\quad
 dv_t=\kappa(\theta-v_t)dt+\xi\sqrt{v_t}dW_t^v,\quad
-d[W^S,W^v]_t=\rho dt.
-$$
-
+d[W^S,W^v]_t=\rho dt.$$
 
 **解説**　これはリスク中立形。分散はCIR過程で、相関がスキューを作る。$2\kappa\theta\ge\xi^2$ は正の初期分散から0へ到達しないための代表的条件。条件を満たさなくても非負の解は存在するが数値処理に注意する。
 
@@ -514,9 +442,7 @@ $$
 
 **解説**　$I=\int_{-\infty}^\infty e^{-x^2/2}dx$ として二乗し、平面上の極座標へ変換すると
 
-$$
-I^2=\int_0^{2\pi}\int_0^\infty e^{-r^2/2}r\,dr\,d\theta=2\pi.
-$$
+$$I^2=\int_0^{2\pi}\int_0^\infty e^{-r^2/2}r\,dr\,d\theta=2\pi.$$
 
 従って正規化係数 $(2\pi)^{-1/2}$ を掛けた密度の積分は1。
 
@@ -534,10 +460,7 @@ $W_t=(X_t,Y_t)$ を $(x,y)$ から出発する2次元ブラウン運動とする
 
 **解答**　(i) $x,y\ne0$ なら $\frac2\pi\arctan(|y|/|x|)$。(ii)
 
-$$
-\frac{\log(r_2/\sqrt{x^2+y^2})}{\log(r_2/r_1)}.
-$$
-
+$$\frac{\log(r_2/\sqrt{x^2+y^2})}{\log(r_2/r_1)}.$$
 
 **解説**　(i) は各象限で調和関数として解く。第1象限の角度を $\theta$ とすれば、x軸で0、y軸で1となる $2\theta/\pi$。既に軸上にいる場合は到達時刻0を別扱いし、原点では「より先」が定まらない。(ii) は環状領域で $\log r$ が調和関数となることと内周1・外周0の境界条件を使う。
 
@@ -547,11 +470,7 @@ $$
 
 $B_t$（$t\ge0$）を確率測度 $\mathbb P$ のもとでの標準ブラウン運動とする。Radon–Nikodym微分
 
-
-$$
-\frac{d\widetilde{\mathbb P}}{d\mathbb P}=e^{B_1-1/2}
-$$
-
+$$\frac{d\widetilde{\mathbb P}}{d\mathbb P}=e^{B_1-1/2}$$
 
 によって定義される確率測度 $\widetilde{\mathbb P}$ のもとで、$B_{3/2}$ の確率密度関数を求めよ。
 
@@ -559,10 +478,7 @@ $$
 
 **解答**　$\widetilde{\mathbb P}$ 下で $B_{3/2}\sim N(1,3/2)$、従って
 
-$$
-f(x)=\frac1{\sqrt{3\pi}}\exp\left(-\frac{(x-1)^2}{3}\right).
-$$
-
+$$f(x)=\frac1{\sqrt{3\pi}}\exp\left(-\frac{(x-1)^2}{3}\right).$$
 
 **解説**　密度は時刻1までにのみ依存する。$B_1$ は指数傾斜で $N(1,1)$ となり、増分 $B_{3/2}-B_1$ は独立な $N(0,1/2)$ のまま。誤って $N(3/2,3/2)$ としない。
 
@@ -576,11 +492,6 @@ $B_t=(B_t^1,B_t^2)$ を $(x,y)$ 平面上の2次元ブラウン運動とする�
 
 **解答**　標準2次元ブラウン運動を原点から始めるなら、$B_\tau^1$ は位置0・尺度 $a$ のCauchy分布。
 
-$$
-f(z)=\frac{a}{\pi(a^2+z^2)}.
-$$
-
+$$f(z)=\frac{a}{\pi(a^2+z^2)}.$$
 
 **解説**　縦座標の到達時刻のLaplace変換は $\mathbb E e^{-s\tau}=e^{-a\sqrt{2s}}$。横座標との独立性から特性関数は $\mathbb E e^{-u^2\tau/2}=e^{-a|u|}$。開始点が $(x_0,y_0)$ で $y_0\ne a$ なら位置 $x_0$・尺度 $|a-y_0|$。既に直線上なら位置 $x_0$ の点質量。
-
-
