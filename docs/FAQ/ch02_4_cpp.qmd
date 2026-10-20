@@ -1,0 +1,652 @@
+---
+title: "クオンツ問題集：2.4　C++・データ構造"
+subtitle: "問題・解答・解説"
+lang: ja
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    html-math-method: mathjax
+execute:
+  eval: false
+---
+
+本稿は [GitHubの日本語問題集](https://github.com/besuke/LagrangeFinance/blob/cbce371663451dd595b5ced343b36cae589512a2/docs/quant_questions_ja.qmd) に基づく学習用の独自解答であり、原著の公式解答ではありません。問題番号は元ファイルに対応します。前提が不足する場合は解説で補います。数式はLaTeX、コードは自動実行しない設定です。
+
+## 第1問
+
+### 問題
+
+配列をどのように宣言するか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+int a[5]{};                 // 固定長、0初期化
+std::array<int, 5> b{};      // 固定長の標準コンテナ
+std::vector<int> c(5, 0);    // 動的長
+~~~
+
+**解説**　組込み配列は多くの式でポインタに変換され、長さ情報が失われる。用途に応じて標準コンテナを選ぶ。以下はC++17を基本とする。
+
+## 第2問
+
+### 問題
+
+変数のアドレスをどのように取得するか。
+
+### 解答・解説
+
+**解答**　単項演算子 $\texttt{\&}$ を使う。
+~~~cpp
+int x = 3;
+int* p = &x;
+~~~
+
+**解説**　オーバーロードされたアドレス演算子の影響を避ける汎用コードでは $\texttt{std::addressof(x)}$（$\texttt{<memory>}$）を使える。
+
+## 第3問
+
+### 問題
+
+ポインタの配列をどのように宣言するか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+int* p[5]{};
+std::array<int*, 5> q{};
+~~~
+
+**解説**　$\texttt{int* p[5]}$ は「5個のintポインタ」、$\texttt{int (*p)[5]}$ は「5個のintからなる配列へのポインタ」。括弧の位置で型が変わる。
+
+## 第4問
+
+### 問題
+
+定数ポインタ、定数へのポインタ、定数への定数ポインタを、それぞれどのように宣言するか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+int x = 1;
+int* const a = &x;        // ポインタの付替え不可
+const int* b = &x;        // この経路では対象を変更不可
+const int* const c = &x;  // 両方不可
+~~~
+
+**解説**　$\texttt{const}$ が何を修飾するかを型として読む。$\texttt{b}$ の参照先は他の変更可能な経路から変更され得る。
+
+## 第5問
+
+### 問題
+
+動的配列をどのように宣言するか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+std::vector<double> a(n, 0.0);     // 通常はこちら
+auto b = std::make_unique<double[]>(n);
+~~~
+
+**解説**　生の $\texttt{new double[n]}$ は $\texttt{delete[]}$ が必要。RAIIを使い寿命と例外時の解放を自動化する。標準C++では実行時サイズのスタック配列は使わない。
+
+## 第6問
+
+### 問題
+
+関数シグネチャの一般的な形式はどのようなものか。
+
+### 解答・解説
+
+**解答**　宣言の典型は $\texttt{ReturnType name(ParameterTypes...);}$。
+~~~cpp
+double price(double spot, double strike);
+~~~
+
+**解説**　厳密な規格用語のシグネチャは、単に宣言全体と同義ではない。通常の非テンプレート関数では名前・引数型等が区別に関与し、戻り値の型だけを変えてオーバーロードすることはできない。メンバ・テンプレートには追加の要素がある。
+
+## 第7問
+
+### 問題
+
+参照渡しをどのように行うか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+void increment(int& x) { ++x; }
+~~~
+
+**解説**　$\texttt{int\&}$ は呼び出し側のオブジェクトへの参照。値渡しと異なり、関数内の変更が呼び出し側に反映される。
+
+## 第8問
+
+### 問題
+
+読み取り専用の引数を参照渡しするにはどうするか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+double sum(const std::vector<double>& x);
+~~~
+
+**解説**　大きなオブジェクトのコピーを避け、関数内からの変更を型で禁止する。小さな組込み型では値渡しが適切なことも多い。
+
+## 第9問
+
+### 問題
+
+ポインタと参照を使う場合の主な違いは何か。
+
+### 解答・解説
+
+**解答**　ポインタは値として付け替え可能でnullを表せ、参照は初期化時に対象に結び付く。
+
+**解説**　参照への代入は参照先への代入であり付け替えではない。どちらも寿命切れの対象を指せば危険。参照でも寿命や有効性が自動保証されるわけではない。
+
+## 第10問
+
+### 問題
+
+引数のデフォルト値をどのように指定するか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+double discount(double t, double r = 0.01);
+~~~
+
+**解説**　呼出側で見える宣言に指定する。通常、デフォルト値のある引数より右の引数にもデフォルトが必要。同じスコープで既に指定済みのデフォルト値を再定義しない。
+
+## 第11問
+
+### 問題
+
+関数テンプレートをどのように宣言するか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+template<class T>
+T square(const T& x) { return x * x; }
+~~~
+
+**解説**　利用時に型が推論される。対応する型に必要な演算が存在することを要求する。テンプレート定義は通常利用側から見えるヘッダに置く。
+
+## 第12問
+
+### 問題
+
+関数へのポインタをどのように宣言するか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+double (*f)(double) = nullptr;
+using Function = double (*)(double);
+~~~
+
+**解説**　$\texttt{double (*f)(double)}$ はdoubleを受けdoubleを返す関数へのポインタ。状態を持つ呼出可能オブジェクトにはテンプレート引数や $\texttt{std::function}$ 等も選べる。
+
+## 第13問
+
+### 問題
+
+自分のクラスについて、コンパイラによる暗黙の型変換を防ぐにはどうするか。
+
+### 解答・解説
+
+**解答**　変換コンストラクタや変換演算子を $\texttt{explicit}$ にする。
+~~~cpp
+struct Price { explicit Price(double x) : value(x) {} double value; };
+~~~
+
+**解説**　意図しない暗黙変換を防ぐ。明示的な直接初期化 $\texttt{Price p(3.0)}$ は可能。
+
+## 第14問
+
+### 問題
+
+C++におけるキーワード `static` のすべての用途を説明せよ。
+
+### 解答・解説
+
+**解答**　主な用途は、静的記憶域の局所変数、クラスの静的データメンバ・静的メンバ関数、名前空間スコープでの内部リンケージ。
+
+**解説**　関数内の $\texttt{static int n=0;}$ は呼出しを跨いで存続する。クラスのstaticメンバは個別インスタンスに属さず、static関数には $\texttt{this}$ がない。名前空間スコープのstatic変数・関数は翻訳単位内に限定される。C由来の配列引数のstatic指定は標準C++の用途ではない。
+
+## 第15問
+
+### 問題
+
+静的メンバ関数を `const` にすることはできるか。
+
+### 解答・解説
+
+**解答**　できない。
+
+**解説**　メンバ関数末尾の $\texttt{const}$ は暗黙の対象オブジェクトを通した変更を制約する。静的メンバ関数には対象オブジェクトと $\texttt{this}$ がないので、その修飾を付けられない。
+
+## 第16問
+
+### 問題
+
+C++のコンストラクタでは、初期化リストを使ってメンバデータを初期化できる。この方法は、コンストラクタ本体での初期化より、どのような点で望ましいか。
+
+### 解答・解説
+
+**解答**　メンバを直接初期化でき、不要なデフォルト構築後の代入を避けられる。
+~~~cpp
+struct A {
+    const int n;
+    std::string name;
+    A(int k, std::string s) : n(k), name(std::move(s)) {}
+};
+~~~
+
+**解説**　constメンバ、参照メンバ、デフォルトコンストラクタのないメンバ等では特に必要。初期化順序はリストの記載順でなく、基底・メンバの宣言順。
+
+## 第17問
+
+### 問題
+
+コピーコンストラクタとは何か。ポインタ型のデータメンバがある場合、デフォルトのコピーコンストラクタによってどのような問題が起こり得るか。
+
+### 解答・解説
+
+**解答**　既存の同型オブジェクトから新しいオブジェクトを構築する特別なコンストラクタ。
+
+**解説**　典型形は $\texttt{A(const A\&)}$。生の所有ポインタを暗黙コピーするとアドレスだけが複製され、二重解放やダングリングが生じ得る。所有を $\texttt{unique_ptr}$ や標準コンテナで表現し、必要なら深いコピーまたはコピー禁止を明示する。
+
+## 第18問
+
+### 問題
+
+次のコードの出力はどうなるか。
+
+``` cpp
+#include <iostream>
+using namespace std;
+
+class A
+{
+public:
+    int * ptr;
+    ~A()
+    {
+        delete(ptr);
+    }
+};
+
+void foo(A object_input)
+{
+    ;
+}
+
+int main()
+{
+    A aa;
+    aa.ptr = new int(2);
+    foo(aa);
+    cout << (*aa.ptr) << endl;
+    return 0;
+}
+```
+
+### 解答・解説
+
+**解答**　未定義動作であり、出力は決まらない。
+
+**解説**　値渡し $\texttt{foo(aa)}$ でポインタが浅くコピーされ、関数終了時の引数のデストラクタが領域を解放する。その後 $\texttt{*aa.ptr}$ を読むと寿命の終わった領域へのアクセスとなる。さらにmain終了時にも同じポインタを解放しようとする。単に「2が出る」「必ずクラッシュ」と答えるのは誤り。
+
+## 第19問
+
+### 問題
+
+演算子をどのようにオーバーロードするか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+struct Amount {
+    double value;
+    friend Amount operator+(Amount a, Amount b) {
+        return Amount{a.value + b.value};
+    }
+};
+~~~
+
+**解説**　$\texttt{operator+}$ 等をメンバまたは非メンバとして定義する。優先順位や引数の個数など、演算子の基本文法は変更できない。意味が自然な場合にだけ使う。
+
+## 第20問
+
+### 問題
+
+スマートポインタとは何か。
+
+### 解答・解説
+
+**解答**　ポインタが指す資源の寿命をRAIIで管理するオブジェクト。
+
+**解説**　$\texttt{unique_ptr}$ は単独所有、$\texttt{shared_ptr}$ は共有所有、$\texttt{weak_ptr}$ は所有を増やさない観測。shared_ptr同士の循環は解放を妨げるため、必要に応じweak_ptrで切る。スマートポインタ自体が全種類の寿命不具合を解決するわけではない。
+
+## 第21問
+
+### 問題
+
+カプセル化とは何か。
+
+### 解答・解説
+
+**解答**　内部状態とその操作をまとめ、公開インターフェースを通して不変条件を保つ設計。
+
+**解説**　privateに隠すだけでなく、不正な状態を作れない操作を用意する。例えば数量が非負という条件をコンストラクタと更新関数で維持する。
+
+## 第22問
+
+### 問題
+
+多態性（ポリモーフィズム）とは何か。
+
+### 解答・解説
+
+**解答**　共通の呼出形式に対し、対象の型に応じて異なる動作を実現すること。
+
+**解説**　仮想関数の動的多態性、テンプレートの静的多態性、オーバーロード等を区別する。基底ポインタから仮想関数を呼ぶ場合、実行時の派生型に対応する実装が呼ばれる。
+
+## 第23問
+
+### 問題
+
+継承とは何か。
+
+### 解答・解説
+
+**解答**　既存の基底クラスの性質を派生クラスへ引き継ぐ仕組み。
+
+**解説**　public継承は通常「派生型は基底型の一種」という置換可能性を表す。単なるコード再利用なら合成が適することもある。多重継承や仮想継承には別の規則がある。
+
+## 第24問
+
+### 問題
+
+仮想関数とは何か。純粋仮想関数とは何か。また、どのような場合に使うか。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+struct Instrument {
+    virtual double npv() const = 0;
+    virtual ~Instrument() = default;
+};
+~~~
+
+**解説**　virtual関数は動的ディスパッチを可能にする。$\texttt{=0}$ は純粋仮想指定で、抽象インターフェースの表現に使う。純粋仮想関数が残るクラスは直接インスタンス化できない。
+
+## 第25問
+
+### 問題
+
+デストラクタに仮想関数を使うのはなぜか。コンストラクタを仮想関数にすることはできるか。
+
+### 解答・解説
+
+**解答**　基底ポインタ経由で派生オブジェクトを削除するとき、適切な派生デストラクタを呼ぶため。コンストラクタはvirtualにできない。
+
+**解説**　多態的に削除する基底には通常public virtualデストラクタを置く。構築時は完全な派生オブジェクトがまだ存在しない。仮想的な生成が必要ならfactoryやcloneを設計する。
+
+## 第26問
+
+### 問題
+
+正の整数の階乗を計算する関数を書け。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+std::uint64_t factorial(unsigned n) {
+    std::uint64_t r = 1;
+    for (unsigned i = 2; i <= n; ++i) {
+        if (r > UINT64_MAX / i) throw std::overflow_error("factorial");
+        r *= i;
+    }
+    return r;
+}
+~~~
+
+**解説**　$0!=1$、64ビット符号なし整数で20!まで表現可能。時間 $O(n)$、追加領域 $O(1)$。大きな $n$ には多倍長整数を使う。
+
+## 第27問
+
+### 問題
+
+配列を受け取り、要素の合計が最大となる連続部分配列を返す関数を書け。
+
+### 解答・解説
+
+**解答**　Kadane法。区間は半開区間 $[l,r)$ とする。
+~~~cpp
+std::pair<std::size_t, std::size_t>
+max_subarray(const std::vector<long long>& a) {
+    if (a.empty()) throw std::invalid_argument("empty");
+    long long cur = a[0], best = a[0];
+    std::size_t start = 0, left = 0, right = 1;
+    for (std::size_t i = 1; i < a.size(); ++i) {
+        if (cur < 0) { cur = a[i]; start = i; }
+        else cur += a[i];
+        if (cur > best) { best = cur; left = start; right = i + 1; }
+    }
+    return {left, right};
+}
+~~~
+
+**解説**　空でない部分配列を求める。すべて負でも最大の単一要素を返す。時間 $O(n)$、追加領域 $O(1)$。区間和がlong longに収まることを前提にする。
+
+## 第28問
+
+### 問題
+
+正の整数の素因数を返す関数を書け。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+std::vector<std::uint64_t> factors(std::uint64_t n) {
+    if (n == 0) throw std::invalid_argument("zero");
+    std::vector<std::uint64_t> out;
+    for (std::uint64_t p = 2; p <= n / p; ++p)
+        while (n % p == 0) { out.push_back(p); n /= p; }
+    if (n > 1) out.push_back(n);
+    return out;
+}
+~~~
+
+**解説**　重複度込みで素因数を返し、1なら空配列。$p^2\le n$ を $p\le n/p$ と書いて積のオーバーフローを避ける。最悪 $O(\sqrt n)$。
+
+## 第29問
+
+### 問題
+
+64ビット整数を受け取り、位置 $i$ と $j$ のビットを入れ替える関数を書け。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+std::uint64_t swap_bits(std::uint64_t x, unsigned i, unsigned j) {
+    if (i >= 64 || j >= 64) throw std::invalid_argument("bit");
+    if (((x >> i) & 1ULL) != ((x >> j) & 1ULL))
+        x ^= (1ULL << i) | (1ULL << j);
+    return x;
+}
+~~~
+
+**解説**　0始まりでビット位置を数える。異なるビットなら両方反転すれば交換できる。64以上のシフトを先に禁止する。時間・領域とも $O(1)$。
+
+## 第30問
+
+### 問題
+
+単方向連結リストを逆順にする関数を書け。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+struct Node { int value; Node* next; };
+Node* reverse(Node* head) {
+    Node* prev = nullptr;
+    while (head) {
+        Node* next = head->next;
+        head->next = prev;
+        prev = head;
+        head = next;
+    }
+    return prev;
+}
+~~~
+
+**解説**　次のノードを保存してからリンクを逆転する。時間 $O(n)$、追加領域 $O(1)$。循環がないリストを前提とする。ここでは所有権や解放の設計は呼出側にある。
+
+## 第31問
+
+### 問題
+
+文字列を受け取り、括弧の対応が正しければ `true` を返す関数を書け。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+bool balanced(const std::string& s) {
+    std::vector<char> st;
+    for (char c : s) {
+        if (c == '(' || c == '[' || c == '{') st.push_back(c);
+        else if (c == ')' || c == ']' || c == '}') {
+            if (st.empty()) return false;
+            char a = st.back(); st.pop_back();
+            if (!((a == '(' && c == ')') || (a == '[' && c == ']')
+               || (a == '{' && c == '}'))) return false;
+        }
+    }
+    return st.empty();
+}
+~~~
+
+**解説**　スタックで入れ子の順序を確認する。この実装では括弧以外の文字は無視する。時間 $O(n)$、領域 $O(n)$。
+
+## 第32問
+
+### 問題
+
+任意の二分木の高さを返す関数を書け。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+struct Tree { Tree* left; Tree* right; };
+std::size_t height(const Tree* t) {
+    return t ? 1 + std::max(height(t->left), height(t->right)) : 0;
+}
+~~~
+
+**解説**　空木0、葉1というノード数の定義。辺の本数を高さとする定義では葉0となる。時間 $O(n)$、呼出スタック $O(h)$。極端に深い木は反復探索でスタック溢れを避ける。
+
+## 第33問
+
+### 問題
+
+$n$ 番目のフィボナッチ数を計算するC++関数を書け。
+
+### 解答・解説
+
+**解答**
+~~~cpp
+std::uint64_t fib(unsigned n) {
+    if (n > 93) throw std::overflow_error("fib");
+    if (n == 0) return 0;
+    std::uint64_t a = 0, b = 1;
+    for (unsigned i = 1; i < n; ++i) {
+        auto c = a + b;
+        a = b; b = c;
+    }
+    return b;
+}
+~~~
+
+**解説**　$F_0=0,F_1=1$。時間 $O(n)$、追加領域 $O(1)$。このループは $F_{93}$ を返すために $F_{94}$ を余計に計算しない。多倍長整数と高速倍加法なら大きな添字にも対応できる。
+
+## 第34問
+
+### 問題
+
+単純な数式文字列を評価する基本的な電卓を実装せよ。文字列には、開き括弧 `(`、閉じ括弧 `)`、加算記号 `+`、減算記号 `-`、非負整数、空白が含まれる。入力式は常に有効であると仮定してよい。組み込みライブラリの `eval` 関数は使用してはならない。
+
+- 例1：入力 `"1 + 1"`、出力 `2`。
+- 例2：入力 `"2-1 + 2"`、出力 `3`。
+- 例3：入力 `"(1+(4+5+2)-3)+(6+8)"`、出力 `23`。
+
+### 解答・解説
+
+**解答**　再帰下降法で、整数・符号・括弧を読む。
+~~~cpp
+class Calculator {
+    const std::string& s;
+    std::size_t i = 0;
+    void spaces() { while (i < s.size() && s[i] == ' ') ++i; }
+    long long atom() {
+        spaces();
+        int sign = 1;
+        while (i < s.size() && (s[i] == '+' || s[i] == '-')) {
+            if (s[i++] == '-') sign = -sign;
+            spaces();
+        }
+        long long value = 0;
+        if (i < s.size() && s[i] == '(') {
+            ++i; value = expression(); spaces(); ++i;
+        } else {
+            while (i < s.size() && s[i] >= '0' && s[i] <= '9')
+                value = value * 10 + (s[i++] - '0');
+        }
+        return sign * value;
+    }
+    long long expression() {
+        long long value = atom();
+        for (;;) {
+            spaces();
+            if (i == s.size() || s[i] == ')') return value;
+            char op = s[i++];
+            long long rhs = atom();
+            value += (op == '+' ? rhs : -rhs);
+        }
+    }
+public:
+    explicit Calculator(const std::string& text) : s(text) {}
+    long long eval() { return expression(); }
+};
+~~~
+
+**解説**　入力が有効で、途中計算もlong longに収まることを仮定する。$\texttt{Calculator(text).eval()}$ は自作メソッドであり、組込みevalではない。時間 $O(n)$、再帰深度は括弧の深さ。必要ヘッダは章全体で $\texttt{<algorithm>, <array>, <cstdint>, <memory>, <stdexcept>, <string>, <utility>, <vector>}$。
+
+## 参照
+
+コピーと寿命の規則の確認：[C++規格作業草案：コピーコンストラクタ](https://eel.is/c++draft/class.copy.ctor)、[オブジェクトの寿命](https://eel.is/c++draft/basic.life)。コード例は各問独立の断片で、必要なヘッダと呼出側を補って使用します。
+
