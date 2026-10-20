@@ -12,7 +12,6 @@ execute:
   eval: false
 ---
 
-本稿は [GitHubの日本語問題集](https://github.com/besuke/LagrangeFinance/blob/cbce371663451dd595b5ced343b36cae589512a2/docs/quant_questions_ja.qmd) に基づく学習用の独自解答であり、原著の公式解答ではありません。問題番号は元ファイルに対応します。前提が不足する場合は解説で補います。数式はLaTeX、コードは自動実行しない設定です。
 
 ## 第1問
 
@@ -25,7 +24,11 @@ execute:
 **解答**　$U_i,V_i$ を独立な $U(0,1)$ とし、$\widehat\pi=4N^{-1}\sum_i\mathbf1_{\{U_i^2+V_i^2\le1\}}$。
 
 **解説**　4分の1円の面積は $p=\pi/4$。推定量の標準偏差は
-$$4\sqrt{p(1-p)/N}=\sqrt{(4\pi-\pi^2)/N}.$$
+
+$$
+4\sqrt{p(1-p)/N}=\sqrt{(4\pi-\pi^2)/N}.
+$$
+
 単一の指示変数の標準偏差と標本平均の標準誤差を区別する。
 
 ## 第2問
@@ -39,7 +42,11 @@ $$4\sqrt{p(1-p)/N}=\sqrt{(4\pi-\pi^2)/N}.$$
 **解答**　逆累積分布関数法、Box–Muller法、Marsagliaの極座標法、棄却法など。
 
 **解説**　Box–Mullerでは独立な $U_1,U_2\sim U(0,1)$ に対し
-$$Z_1=\sqrt{-2\log U_1}\cos(2\pi U_2),\quad Z_2=\sqrt{-2\log U_1}\sin(2\pi U_2)$$
+
+$$
+Z_1=\sqrt{-2\log U_1}\cos(2\pi U_2),\quad Z_2=\sqrt{-2\log U_1}\sin(2\pi U_2)
+$$
+
 が独立標準正規。$U_1=0$ を生成しないよう端点を扱う。
 
 ## 第3問
@@ -51,7 +58,11 @@ $$Z_1=\sqrt{-2\log U_1}\cos(2\pi U_2),\quad Z_2=\sqrt{-2\log U_1}\sin(2\pi U_2)$
 ### 解答・解説
 
 **解答**
-$$S_{t+\Delta}=S_t\exp\{(\mu-\sigma^2/2)\Delta+\sigma\sqrt\Delta Z\},\quad Z\sim N(0,1).$$
+
+$$
+S_{t+\Delta}=S_t\exp\{(\mu-\sigma^2/2)\Delta+\sigma\sqrt\Delta Z\},\quad Z\sim N(0,1).
+$$
+
 
 **解説**　一定係数の幾何ブラウン運動の厳密な時刻間遷移。各区間で独立な正規乱数を使う。リスク中立評価では $\mu=r-q$ とする。Euler近似と異なり価格の正値性を保つ。
 

@@ -12,8 +12,6 @@ execute:
   eval: false
 ---
 
-本稿は [GitHubの日本語問題集](https://github.com/besuke/LagrangeFinance/blob/cbce371663451dd595b5ced343b36cae589512a2/docs/quant_questions_ja.qmd) に基づく学習用の独自解答であり、原著の公式解答ではありません。問題番号は元ファイルに対応します。前提が不足する場合は解説で補います。数式はLaTeX、コードは自動実行しない設定です。
-
 ## 第1問
 
 ### 問題
@@ -23,7 +21,11 @@ $i=\sqrt{-1}$ とするとき、$i^i$ の値を求めよ。
 ### 解答・解説
 
 **解答**　主値は $e^{-\pi/2}$。多価の複素対数を認めるなら
-$$i^i\in\{e^{-\pi/2-2\pi k}:k\in\mathbb Z\}.$$
+
+$$
+i^i\in\{e^{-\pi/2-2\pi k}:k\in\mathbb Z\}.
+$$
+
 
 **解説**　$\log i=i(\pi/2+2\pi k)$ を $i^i=\exp(i\log i)$ に代入する。複素累乗では対数の枝の指定が必要である。
 
@@ -45,7 +47,11 @@ $\pi^e$ と $e^\pi$ のうち、どちらが大きいか。
 
 すべての実数 $x,y$ に対して次の不等式が成り立つことを示せ。
 
-$$\frac{e^x+e^y}{2}\ge e^{(x+y)/2}.$$
+
+$$
+\frac{e^x+e^y}{2}\ge e^{(x+y)/2}.
+$$
+
 
 ### 解答・解説
 
@@ -59,7 +65,11 @@ $$\frac{e^x+e^y}{2}\ge e^{(x+y)/2}.$$
 
 次の方程式を解け。
 
-$$x^6=64.$$
+
+$$
+x^6=64.
+$$
+
 
 ### 解答・解説
 
@@ -76,7 +86,11 @@ $x^x$ の導関数を求めよ。
 ### 解答・解説
 
 **解答**　実数で $x>0$ とすると
-$$\frac d{dx}x^x=x^x(\log x+1).$$
+
+$$
+\frac d{dx}x^x=x^x(\log x+1).
+$$
+
 
 **解説**　$y=x^x$ の両辺の対数を取り、$\log y=x\log x$ を微分する。
 
@@ -86,7 +100,11 @@ $$\frac d{dx}x^x=x^x(\log x+1).$$
 
 次の値を求めよ。
 
-$$\sqrt{2+\sqrt{2+\sqrt{2+\cdots}}}.$$
+
+$$
+\sqrt{2+\sqrt{2+\sqrt{2+\cdots}}}.
+$$
+
 
 ### 解答・解説
 
@@ -100,7 +118,11 @@ $$\sqrt{2+\sqrt{2+\sqrt{2+\cdots}}}.$$
 
 次の式を満たす $x$ を求めよ。
 
-$$x^{x^{x^{\cdot^{\cdot^{\cdot}}}}}=2.$$
+
+$$
+x^{x^{x^{\cdot^{\cdot^{\cdot}}}}}=2.
+$$
+
 
 ### 解答・解説
 
@@ -114,7 +136,11 @@ $$x^{x^{x^{\cdot^{\cdot^{\cdot}}}}}=2.$$
 
 次の級数のうち、収束するものはどれか。
 
-$$\sum_{k=1}^\infty\frac1k,\qquad\sum_{k=1}^\infty\frac1{k^2},\qquad\sum_{k=2}^\infty\frac1{k\ln k}.$$
+
+$$
+\sum_{k=1}^\infty\frac1k,\qquad\sum_{k=1}^\infty\frac1{k^2},\qquad\sum_{k=2}^\infty\frac1{k\ln k}.
+$$
+
 
 ### 解答・解説
 
@@ -128,7 +154,11 @@ $$\sum_{k=1}^\infty\frac1k,\qquad\sum_{k=1}^\infty\frac1{k^2},\qquad\sum_{k=2}^\
 
 次の不定積分を求めよ。
 
-$$\int\frac1{1+x^2}\,dx.$$
+
+$$
+\int\frac1{1+x^2}\,dx.
+$$
+
 
 ### 解答・解説
 
@@ -142,13 +172,25 @@ $$\int\frac1{1+x^2}\,dx.$$
 
 次の不定積分を求めよ。
 
-$$\int x\ln x\,dx,\qquad\int xe^x\,dx.$$
+
+$$
+\int x\ln x\,dx,\qquad\int xe^x\,dx.
+$$
+
 
 ### 解答・解説
 
 **解答**
-$$\int x\log x\,dx=\frac{x^2}{2}\log x-\frac{x^2}{4}+C\quad(x>0),$$
-$$\int xe^x\,dx=(x-1)e^x+C.$$
+
+$$
+\int x\log x\,dx=\frac{x^2}{2}\log x-\frac{x^2}{4}+C\quad(x>0),
+$$
+
+
+$$
+\int xe^x\,dx=(x-1)e^x+C.
+$$
+
 
 **解説**　部分積分 $\int u\,dv=uv-\int v\,du$ を使い、それぞれ $u=\log x$、$u=x$ とする。
 
@@ -158,12 +200,20 @@ $$\int xe^x\,dx=(x-1)e^x+C.$$
 
 次の不定積分を求めよ。
 
-$$\int x^n\ln x\,dx.$$
+
+$$
+\int x^n\ln x\,dx.
+$$
+
 
 ### 解答・解説
 
 **解答**　$x>0$、$n\ne-1$ では
-$$\frac{x^{n+1}}{n+1}\log x-\frac{x^{n+1}}{(n+1)^2}+C.$$
+
+$$
+\frac{x^{n+1}}{n+1}\log x-\frac{x^{n+1}}{(n+1)^2}+C.
+$$
+
 $n=-1$ なら $(\log x)^2/2+C$。
 
 **解説**　$u=\log x,\ dv=x^n dx$ による部分積分。$n=-1$ の例外を忘れない。
@@ -174,14 +224,26 @@ $n=-1$ なら $(\log x)^2/2+C$。
 
 次の不定積分を求めよ。
 
-$$\int(\ln x)^n\,dx.$$
+
+$$
+\int(\ln x)^n\,dx.
+$$
+
 
 ### 解答・解説
 
 **解答**　$n$ を非負整数、$x>0$ とすると
-$$I_n=x(\log x)^n-nI_{n-1},\quad I_0=x,$$
+
+$$
+I_n=x(\log x)^n-nI_{n-1},\quad I_0=x,
+$$
+
 従って
-$$I_n=x\sum_{k=0}^n(-1)^k\frac{n!}{(n-k)!}(\log x)^{n-k}+C.$$
+
+$$
+I_n=x\sum_{k=0}^n(-1)^k\frac{n!}{(n-k)!}(\log x)^{n-k}+C.
+$$
+
 
 **解説**　$u=(\log x)^n,\ dv=dx$ で部分積分し再帰する。任意の実数 $n$ に対する有限和ではない。
 
@@ -191,12 +253,20 @@ $$I_n=x\sum_{k=0}^n(-1)^k\frac{n!}{(n-k)!}(\log x)^{n-k}+C.$$
 
 次の常微分方程式を解け。
 
-$$y''-4y'+4y=1.$$
+
+$$
+y''-4y'+4y=1.
+$$
+
 
 ### 解答・解説
 
 **解答**
-$$y(x)=(C_1+C_2x)e^{2x}+\frac14.$$
+
+$$
+y(x)=(C_1+C_2x)e^{2x}+\frac14.
+$$
+
 
 **解説**　特性方程式は $(r-2)^2=0$。重根なので同次解は $(C_1+C_2x)e^{2x}$、定数の特解は $1/4$。
 
@@ -206,12 +276,20 @@ $$y(x)=(C_1+C_2x)e^{2x}+\frac14.$$
 
 次の条件を満たす関数 $f(x)$ を求めよ。
 
-$$f'(x)=f(x)(1-f(x)).$$
+
+$$
+f'(x)=f(x)(1-f(x)).
+$$
+
 
 ### 解答・解説
 
 **解答**　平衡解 $f\equiv0,\ f\equiv1$ と、分母が非零の区間で
-$$f(x)=\frac1{1+Ce^{-x}}.$$
+
+$$
+f(x)=\frac1{1+Ce^{-x}}.
+$$
+
 
 **解説**　$f\ne0,1$ なら変数分離で $\log|f/(1-f)|=x+C_0$。全実数で有限の解を要求する場合、表示式は $C\ge0$ に限定され、これに $f\equiv0$ を加える。
 
@@ -224,10 +302,18 @@ Black–Scholesの偏微分方程式を導出せよ。
 ### 解答・解説
 
 **解答**
-$$V_t+\frac12\sigma^2S^2V_{SS}+rSV_S-rV=0.$$
+
+$$
+V_t+\frac12\sigma^2S^2V_{SS}+rSV_S-rV=0.
+$$
+
 
 **解説**　配当なし、$dS=\mu Sdt+\sigma SdW$、一定の $r,\sigma$、摩擦のない市場を仮定する。伊藤公式で $dV=(V_t+\mu SV_S+\frac12\sigma^2S^2V_{SS})dt+\sigma SV_SdW$。株式を $\Delta=V_S$ 保有する自己資金調達型の複製ポートフォリオの残額は $V-\Delta S$ なので、ドリフトを照合して
-$$V_t+\mu SV_S+\tfrac12\sigma^2S^2V_{SS}=\Delta\mu S+r(V-\Delta S).$$
+
+$$
+V_t+\mu SV_S+\tfrac12\sigma^2S^2V_{SS}=\Delta\mu S+r(V-\Delta S).
+$$
+
 $\mu$ が消えて上式となる。満期条件 $V(T,S)=h(S)$ と境界条件を併せて価格を決める。連続配当利回り $q$ がある場合は $rS V_S$ を $(r-q)SV_S$ に置き換える。
 
 

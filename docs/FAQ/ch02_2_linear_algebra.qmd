@@ -12,8 +12,6 @@ execute:
   eval: false
 ---
 
-本稿は [GitHubの日本語問題集](https://github.com/besuke/LagrangeFinance/blob/cbce371663451dd595b5ced343b36cae589512a2/docs/quant_questions_ja.qmd) に基づく学習用の独自解答であり、原著の公式解答ではありません。問題番号は元ファイルに対応します。前提が不足する場合は解説で補います。数式はLaTeX、コードは自動実行しない設定です。
-
 ## 第1問
 
 ### 問題
@@ -25,7 +23,9 @@ execute:
 **解答**　対称かつ半正定値である。
 
 **解説**　有限な2次モーメントを持つベクトル $X$ について $\Sigma_{ij}=\operatorname{Cov}(X_i,X_j)=\Sigma_{ji}$、任意の実ベクトル $a$ に対し
+
 $$a^\mathsf T\Sigma a=\operatorname{Var}(a^\mathsf TX)\ge0.$$
+
 各分散が正なら $R=D^{-1}\Sigma D^{-1}$、$D=\operatorname{diag}(\sigma_i)$ も同じ性質を持つ。分散0では通常の相関係数は定義されない。
 
 ## 第2問
@@ -39,6 +39,7 @@ $$\Sigma_X=\begin{pmatrix}1&0.36&-1.44\\0.36&4&0.80\\-1.44&0.80&9\end{pmatrix}.$
 ### 解答・解説
 
 **解答**
+
 $$R=\begin{pmatrix}1&0.18&-0.48\\0.18&1&2/15\\-0.48&2/15&1\end{pmatrix}.$$
 
 **解説**　標準偏差は $(1,2,3)$。$R_{ij}=\Sigma_{ij}/(\sigma_i\sigma_j)$ に代入する。共分散と相関を同一視しない。
@@ -82,8 +83,11 @@ $$A=\begin{pmatrix}2&-2\\-2&5\end{pmatrix}.$$
 ### 解答・解説
 
 **解答**　(i) 主平方根の一例は
+
 $$M=\frac{A+\sqrt6 I}{\sqrt{7+2\sqrt6}}.$$
+
 (ii) Cholesky因子の一例は
+
 $$M=\begin{pmatrix}\sqrt2&0\\-\sqrt2&\sqrt3\end{pmatrix}.$$
 
 **解説**　$\det A=6,\operatorname{tr}A=7$。Cayley–Hamiltonの $A^2-7A+6I=0$ を使えば (i) の $M^2=A$ と確認できる。(ii) は直接積を計算すると $MM^\mathsf T=A$。二つの問いは異なる分解であり、答えの一意性を要求していない。
@@ -135,7 +139,9 @@ $AB-BA=I_n$ を満たす $n\times n$ 行列 $A,B$ は存在するか。$I_n$ は
 **解答**　積も確率行列。
 
 **解説**　$C_{ij}=\sum_kA_{ik}B_{kj}\ge0$、また
+
 $$\sum_j C_{ij}=\sum_kA_{ik}\sum_jB_{kj}=\sum_kA_{ik}=1.$$
+
 ここでは各行和が1の「行確率行列」の約束を使っている。
 
 ## 第10問
@@ -151,5 +157,3 @@ $$\begin{pmatrix}1&0.6&-0.3\\0.6&1&\rho\\-0.3&\rho&1\end{pmatrix}.$$
 **解答**　$\rho\in[-0.18-\sqrt{0.5824},-0.18+\sqrt{0.5824}]$、およそ $[-0.94315,0.58315]$。
 
 **解説**　主小行列式の非負性より $|\rho|\le1$ および $\det R=0.55-0.36\rho-\rho^2\ge0$。後者の区間が前者に含まれる。相関行列には半正定値で十分なので端点も含む。
-
-
