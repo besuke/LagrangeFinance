@@ -22,6 +22,7 @@ _freeze/
 !/_pdf_exclude_build/
 !/_pdf_exclude_build/lagrange-finance-exclude.pdf
 !/images/
+!/docs/CURIE_Mockup_Overview.pdf
 
 .DS_Store
 **pycache**/
@@ -49,3 +50,4 @@ _freeze/
 *.tex
 
 /.quarto/
+
