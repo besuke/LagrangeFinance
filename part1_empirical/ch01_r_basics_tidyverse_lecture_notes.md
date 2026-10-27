@@ -1,290 +1,141 @@
 # 講師用メモ：第I-1章 Rによるデータ分析の基礎
 
-元ファイル：`ch01_r_basics_tidyverse.qmd`（このメモは講義中の手元確認用。本文の補足ではない）
+元ファイル：`ch01_r_basics_tidyverse.qmd`。括弧内は節番号とチャンクのラベル。
 
-## 講義前の確認
+講義の主軸は次の 2 本。章の各節は、この 2 本を説明するための材料として使う。
 
-- 作業ディレクトリはプロジェクトルート。冒頭チャンクが `source(file.path("R", "utility_LFL.R"))` で tidyverse と `*_LFL` 関数を読み込む
-- `data/raw/market/daily_stock_returns.parquet` があること（I-1.2.1 以降で使う）
-- `arrow`、`furrr`、`future` が入っていること
-- 本章の方針：明示的なループは使わない（ベクトル化か `map()` 系）、パイプは `|>` に統一
-- 注意：I-1.1.2・I-1.1.4 で、tidyverse 紹介前に `tibble()`・`mutate()` が出てくる。「後で説明する」と一言添える
+1. 関数型プログラミング → 副作用の抑制 → 並列処理
+2. rlang による式の操作 → データ分析の DSL としての dplyr
 
 ---
 
-## I-1.1 Rの基礎
+## 1. 関数型プログラミング → 副作用の抑制 → 並列処理
 
-### I-1.1.1 Rの基本操作
+### 話すこと
 
-- 要点
-  - 代入は `<-`、オブジェクト名は snake_case
-  - 型：numeric / integer（`10L`）/ character / logical。`class()`・`typeof()`・`str()` で確認
-  - 欠損は `NA`。集計関数は `na.rm = TRUE` を指定しないと結果が `NA` になる
-- 実演
-  - `present_value <- future_cash_flow / (1 + risk_free_rate)`
-  - `mean(returns_with_na, na.rm = TRUE)`
-- つまずき
-  - `=` と `<-` の違い（関数の引数指定は `=`）
-  - `10` と `10L` の違い。`class()` と `typeof()` で表示が違う
-  - `NA` を含むと `mean()` が `NA` になる
+- 処理を「入力を受け取り、出力を返す関数」として書く。
+  - グローバル変数を書き換えない。共有状態に書き込まない。
+  - 結果は戻り値で受け取る。
+- そうすると、各要素の処理が互いに独立する。
+  - 独立していれば、実行の順番を問わない。
+  - 実行する場所（同じセッションか、別のプロセスか）も問わない。
+- その結果、`map()` を `future_map()` に置き換えるだけで並列化できる。これが tidyverse（purrr）流に書く実利。
+- ただし、副作用を減らしただけで自動的に並列になるわけではない。
+  - 並列にするかどうかと、どう並列にするかは、`future` の実行方式（plan）で決まる。
+  - Windows の `multisession` は、別の R プロセスに処理を配る。マルチスレッドではない。
+  - 副作用の抑制は、並列化の「前提条件を満たすこと」であって、「並列化そのもの」ではない。
 
-### I-1.1.2 ベクトル
+### QMD のコードとの結び付け（この順に見せる）
 
-- 要点
-  - 作り方：`c()`・`:`・`seq()`・`rep()`
-  - 添字は 1 から。負の添字は「除く」。条件で抽出できる
-  - 名前付きベクトル。計算はベクトル全体に一度に適用される（ベクトル化）
-- 実演
-  - `interest_rates[interest_rates >= 0.015]`
-  - `cash_flow / (1 + discount_rates)` → `tibble(discount_rates, present_values)`
-- つまずき
-  - 添字の 0 始まり（Python・C++ 経験者）。`[-1]` は「最後」ではなく「1番目を除く」
-  - `seq(0, 1, by = 0.25)` と `1:5` の違い
+1. **純粋な関数**（I-1.1.4 `custom-function`、`vectorized-function`）
+   - `calculate_present_value()` は、引数だけから結果が決まり、外部を変更しない。
+   - ベクトルをそのまま受け取れる（ベクトル化）。反復を書く前に、まずこれを検討する。
+2. **map は「関数を値に当てる」**（I-1.3.1 `purrr-map`、`purrr-map-dbl`、`purrr-pmap`）
+   - ループ変数も、途中で書き換えるオブジェクトもない。結果はベクトルやリストとして返る。
+   - `pmap_dbl()` は、表の各行を関数の引数に対応させる。
+3. **副作用は walk に隔離する**（I-1.3.1 `purrr-walk`）
+   - 表示やファイル出力のように戻り値が要らない処理は、`walk()` に分けて書く。
+   - 「計算は map、副作用は walk」と言葉で区別させる。
+4. **グループごとの独立した処理**（I-1.3.2 `nest-map-summary`）
+   - `nest()` でグループごとのデータを 1 行にまとめ、`map()` で同じ関数を当てる。
+   - 各グループは互いに独立しているので、そのまま並列化の単位になる。
+5. **map から future_map へ**（I-1.3.3 `compute-pi-path` → `pi-map-sequential` → `pi-future-map-parallel`）
+   - `compute_pi_path()` は、試行番号を受け取って tibble を返す関数。
+   - `map(tbl_path_ids, compute_pi_chunk)` を `future_map(...)` に替えるだけで、コードの残りは変わらない。
+   - `plan(sequential)` と `plan(multisession, workers = ...)` を切り替えるのは実行方式で、計算のコードとは別に指定する。
 
-### I-1.1.3 行列、リスト、データフレーム
+### 補足として話すこと
 
-- 要点
-  - 行列：`matrix(..., byrow = TRUE)`、行名・列名、`colMeans()`
-  - リスト：型・長さの違う要素をまとめる。`$`・`[[ ]]` で取り出す
-  - `data.frame` → `tibble`（表示が見やすく、型が保たれる）、`tribble()` は行単位で書く
-- 実演
-  - `return_matrix[, "stock_a"]`
-  - `analysis_result[["observations"]]`
-  - `tribble(~project, ~initial_cost, ~cash_flow, ...)`
-- つまずき
-  - リストの `[ ]` はリストのまま、`[[ ]]` は中身を返す
-  - `byrow` を忘れると数値の並びが変わる
+- **別プロセスであることの帰結**
+  - ワーカーが行った代入（`<<-` やグローバルなリストへの追記）は、親のセッションに戻ってこない。
+  - 例として「map の中でグローバルなリストに結果を足していくコード」を見せ、future_map では結果が空になることを示すと伝わりやすい（QMD の外のデモ）。
+  - 関数や必要なデータはワーカーへコピーされる。起動とデータ転送のコストがあるので、軽い処理では逐次処理のほうが速い（`pi-benchmark-summary` の速度比で確認する）。
+- **乱数は隠れた共有状態**
+  - `compute_pi_path()` は、試行番号ごとにシードを設定している。どのワーカーで実行しても結果が再現できるのはこのため。
+  - `furrr_options(seed = TRUE)` は、並列処理で乱数の流れを安全に分けるための指定。
+- **チャンク化**（`build-pi-chunks`）
+  - 1000 回の試行を、ワーカー数ぶんのまとまりに分けてから渡している。
+  - 細かく配りすぎると、転送のコストが計算を上回る。
+- **用語の区別**
+  - `multisession`：別プロセス（Windows を含む）。`multicore`：fork（Windows では使えない）。
+  - どちらも R のコードがマルチスレッドで動くわけではない。
 
-### I-1.1.4 条件判定と独自関数
+### つまずきやすい点
 
-- 要点
-  - スカラーの分岐は `if / else`、ベクトルの多分岐は `case_when()`
-  - 関数は `function(引数, 既定値)`。ベクトルを受け取れるように作ると再利用しやすい
-- 実演
-  - `case_when(score >= 80 ~ "A", score >= 65 ~ "B", TRUE ~ "C")`
-  - `calculate_present_value(c(100, 100, 100), 0.02, years = 1:3)`
-- つまずき
-  - `if` にベクトルを渡すとエラー（長さ 1 の条件しか取れない）
-  - `case_when()` は上から評価され、最初に当たった条件が使われる。`TRUE ~` は「その他」
-  - `calculate_present_value()` は I-1.3.1 で再利用する。消さないよう注意
-
-### I-1.1.5 記述統計
-
-- 要点
-  - `mean`・`median`・`var`・`sd`・`quantile`、`cov`・`cor`、`rank`・`order`
-- 実演
-  - `quantile(sample_returns)`
-  - `rank(-firm_returns)` と `order(firm_returns, decreasing = TRUE)` を並べて見せる
-- つまずき
-  - `rank()` は各要素の順位、`order()` は並べ替えの添字。混同しやすい
-  - `var()`・`sd()` は不偏推定（n − 1 で割る）
-
-### I-1.1.6 確率分布
-
-- 要点
-  - 接頭辞の規則：`r` 乱数、`d` 密度、`p` 累積確率、`q` 分位点
-  - 一様・正規・二項・ポアソン。最後に関数の対応表（tribble）
-  - 金融の例：`pnorm()` で損失確率、`qnorm(0.05, ...)` で 95% VaR に相当する分位点
-- 実演
-  - `pnorm(1.96)`、`qnorm(0.975)`（往復の関係を見せる）
-  - `qnorm(0.05, mean = 0.01, sd = 0.03)`
-- つまずき
-  - `set_random_seed_LFL()` を飛ばすと、乱数の結果がテキストと合わない
-  - 離散分布の `p`（以下の確率）と `q` の結果の解釈
-  - VaR の符号（分位点はリターンの値。損失額として言うときは符号を反転する）
+- 「関数型で書けば速くなる」「勝手に並列になる」という誤解。
+- map の中で外部の変数を書き換えるコード。逐次処理では動くが、並列にすると壊れる。
+- `plan()` を戻し忘れる（QMD では最後に `plan(sequential)` に戻している）。
+- 実行時間は PC によって変わる。テキストと速度比が違っても問題ない。
 
 ---
 
-## I-1.2 tidyverseによるデータ整形
+## 2. rlang による式の操作 → データ分析の DSL としての dplyr
 
-### I-1.2.1 プロジェクト内のデータを読み込む
+### 話すこと
 
-- 要点
-  - データは `data/raw`（外部入力）と `data/derived`（加工結果）に分ける
-  - パス探索は `utility_LFL.R` に集約。各章では相対パスだけを書く
-  - 読込み直後に、必要な列があるかを確認する
-- 実演
-  - `read_parquet_file_LFL(file.path("raw", "market", "daily_stock_returns.parquet"))`
-  - `setdiff(vec_required_columns, names(...))`
-- つまずき
-  - 作業ディレクトリがルートでないとファイルが見つからない
-  - 絶対パスを書きたくなる。書かない理由（環境が変わると動かない）を説明する
+- `filter(firm1 > 0)` の `firm1 > 0` は、呼び出した時点では評価されない。
+  - R は引数を遅延評価するので、関数は「式そのもの」を受け取れる。
+  - dplyr はその式を、データの列を変数とみなす環境（data mask）で評価する。
+- rlang は、式・環境・quosure（式とそれを書いた環境の組）を扱うための道具。
+  - tidy evaluation は、その上に作られた「列名や分析式をそのまま書ける記法」の仕組み。
+- だから dplyr は、データ分析のための小さな言語（DSL）として見られる。
+  - 動詞は `select`・`filter`・`mutate`・`summarise`・`group_by`。
+  - 列名をそのまま書け、式で計算を表す。
+- rlang は「静的な型付けをする仕組み」ではない。
+  - 言語を組み立てる仕組み、つまりメタプログラミングの道具と説明する。
 
-### I-1.2.2 dplyrによるデータ操作
+### QMD のコードとの結び付け
 
-- 要点
-  - `select`・`filter`・`mutate`・`arrange`・`summarise`・`group_by`・`count`・`left_join`
-- 実演
-  - `mutate(market_direction = case_when(...))`
-  - `group_by(market_direction) |> summarise(..., .groups = "drop")`
-  - `pivot_longer()` してから `left_join(firm_master, by = "firm")`
-- つまずき
-  - `filter()` のカンマは AND
-  - `group_by()` 後のグループが残り、後の処理に影響する（`.groups = "drop"` か `ungroup()`）
-  - `left_join()` のキー名・型が合わないと NA になる
-  - join の例で `pivot_longer()`（I-1.2.4）を先に使っている
+1. **列名をそのまま書く**（I-1.2.2 `dplyr-filter`、`dplyr-mutate`）
+   - `filter(firm1 > 0, firm2 > 0)`、`mutate(spread = firm1 - firm2)`
+   - `firm1` という R の変数は存在しない。data mask の中で列として解決される。
+2. **式の中の小さな言語**（I-1.1.4 `case-when-introduction`、I-1.2.2 `dplyr-mutate`）
+   - `case_when(score >= 80 ~ "A", ...)` の `~` は、「条件 ~ 値」を表す式。
+3. **文脈で意味が変わる**（I-1.2.4 `pivot-longer`）
+   - `pivot_longer(cols = c(firm1, firm2), ...)` の `c()` はベクトルを作るのではなく、列を選ぶ記法（tidyselect）。
+   - 同じ `c()` でも、置かれた文脈で解釈が変わる。DSL らしさが最も見える例。
+4. **集計の文法**（I-1.2.2 `dplyr-group-by`、I-1.5.2 `integrated-analysis-summary`）
+   - `group_by(firm) |> summarise(mean_return = mean(return), positive_ratio = mean(return > 0))`
+   - 列名 `return` は R の関数名と同じだが、data mask の中では列が優先される。
+5. **同じ式を別のエンジンで実行する**（I-1.4.3 `arrow-query-dataset`、I-1.4.1 の説明）
+   - Arrow の Dataset に対しても、同じ `filter()` / `select()` を書ける。式は Arrow の処理に翻訳され、`collect()` で初めて R に取り込まれる。
+   - dbplyr では、同じ式が SQL に翻訳される（`show_query()`）。
+   - 式をデータとして扱えるから、書き方（DSL）と実行するエンジンを分けられる。
+6. **ggplot2 も同じ考え方**（I-1.2.5 `ggplot-line`）
+   - `aes(x = date, y = return, linetype = firm)` は、列名を式として受け取っている。
 
-### I-1.2.3 stringrによる文字列処理
+### 補足デモ（QMD の外、短く）
 
-- 要点
-  - `str_` で始まる関数群：`str_squish`・`str_to_lower`・`str_length`・`str_detect`・`str_extract`・`str_remove`・`str_c`
-- 実演
-  - `str_detect(clean_name, regex("group", ignore_case = TRUE))`
-  - `str_remove(clean_name, regex(" co\\., ltd\\.$", ignore_case = TRUE))`
-- つまずき
-  - 正規表現のエスケープは `\\.` と二重にする
-  - `str_trim()` と `str_squish()` の違い（後者は内部の連続空白も 1 つにまとめる）
+```r
+expr(firm1 > 0)              # 評価されない式
+q <- quo(firm1 > 0)          # 式＋環境（quosure）
+filter(tbl_daily_stock_return, !!q)
 
-### I-1.2.4 tidyrによるデータ整形
+summarise_by <- function(data, group_col, value_col) {
+  data |>
+    group_by({{ group_col }}) |>
+    summarise(mean = mean({{ value_col }}), .groups = "drop")
+}
+summarise_by(analysis_data, firm, return)   # 自分で DSL の一部を作る
+```
 
-- 要点
-  - 横持ちと縦持ち：`pivot_longer()` / `pivot_wider()`
-  - 列の分割：`separate_wider_delim()`
-  - 欠損の処理：`replace_na()` / `drop_na()`
-- 実演
-  - `pivot_longer(cols = c(firm1, firm2), names_to = "firm", values_to = "return")`
-- つまずき
-  - `names_to` / `values_to` は文字列で指定する
-  - 古い資料の `gather` / `spread` / `separate` との違い
-  - 欠損を 0 で埋めることの意味（リターンを 0 とみなしてよいか）
+- `{{ }}`（embrace）を使うと、列名をそのまま受け取る関数を自作できる。
+- 曖昧さを解消したいときは、`.data$列名`（列）と `.env$変数名`（環境の変数）で明示する。
 
-### I-1.2.5 ggplot2による可視化
+### つまずきやすい点
 
-- 要点
-  - `ggplot()` にデータ → `aes()` で対応付け → `geom_*()` で図形 → `labs()`
-  - `facet_wrap()`、`linetype` による系列の区別、本書の標準テーマ `add_lagrange_theme_LFL()`
-- 実演
-  - 折れ線・ヒストグラム・密度・`dnorm` / `pnorm` の曲線、乱数分布の比較
-- つまずき
-  - ggplot の層は `+` でつなぐ（`|>` ではない）
-  - 本書の `( ... ) |> add_lagrange_theme_LFL()` という括弧の書き方。括弧を外すと動かない
-  - `scales = "free"` の有無で見え方が変わる
+- 列名を文字列で渡すか、記号（bare name）で渡すかの違い。関数を自作したところで初めて問題になる。
+- 列と同じ名前の変数が環境にあるとき、どちらが使われるか（列が優先される）。
+- 「rlang = 型チェック」「静的な型付け」という誤解。
 
 ---
 
-## I-1.3 関数型プログラミングと並列計算
+## 2 本の接点（締めで話す）
 
-### I-1.3.1 purrrによる反復処理
-
-- 要点
-  - `map()` はリストを返す。型を指定するなら `map_dbl()` など。複数引数は `map2()` / `pmap()`
-  - 行ごとに表を作って結合する（`map_dfr`）。副作用だけが目的なら `walk()`
-  - 無名関数 `\(x)`
-- 実演
-  - `discount_rates |> map_dbl(\(rate) calculate_present_value(100, rate))`
-  - `pmap_dbl(list(cash_flow, discount_rate, years), ...)`
-  - tribble の列に関数を入れて `map()` で呼ぶ（分布のシミュレーション）
-- つまずき
-  - `map()` の結果がリストになっていることに気づかない
-  - `pmap()` で、リストの名前と関数の引数名を合わせる
-  - `map_dfr()` は purrr 1.0 で非推奨扱い（`map() |> list_rbind()` に移行）。質問されたときに補足する
-
-### I-1.3.2 nestによるグループ別データ管理
-
-- 要点
-  - `nest(tbl_data = c(date, return), .by = firm)` でグループごとのデータをリスト列に入れる
-  - `map()` で各グループに同じ処理 → `unnest()`
-  - `group_by` は集計単位、`nest` はデータそのものを保持する
-- 実演
-  - `tbl_nested$tbl_data[[1]]`
-  - `mutate(tbl_summary = map(tbl_data, ...)) |> unnest(tbl_summary)`
-- つまずき
-  - リスト列の表示（`<tibble [n × 2]>`）が分かりにくい
-  - `unnest()` を忘れて、結果がリスト列のまま残る
-
-### I-1.3.3 futureとfurrrによる並列計算
-
-- 要点
-  - `plan(multisession)`（Windows）で `future_map()` が並列になる。記法は `map()` とほぼ同じ
-  - モンテカルロ法で円周率を推定し、逐次処理と並列処理の時間を比べる
-  - 起動・転送のオーバーヘッドがあるので、処理が軽いと逐次処理のほうが速いこともある
-- 実演
-  - `future::plan(future::multisession, workers = int_workers)`
-  - `future_map(..., .options = furrr::furrr_options(seed = TRUE))`
-- つまずき
-  - 実行時間と速度比は PC によって変わる。結果がテキストと違っても問題ない
-  - 並列処理での乱数（`seed = TRUE`）
-  - 終わったら `plan(sequential)` に戻す
-  - 初回はワーカーの起動に時間がかかる。授業中は待ち時間を見込む
-
----
-
-## I-1.4 データベースと大規模データ処理
-
-### I-1.4.1 dbplyrによるデータベース操作
-
-- 要点
-  - dplyr の処理が SQL に変換される。`show_query()` で確認し、`collect()` で R に取り込む
-  - `collect()` はできるだけ最後に（先にデータベース側で絞り込む）
-- 実演
-  - **QMD にはコードチャンクがない**（本文の説明のみ）。実演するなら、SQLite の一時 DB で `copy_to()` → `filter()` → `show_query()` → `collect()` を別途用意する
-- つまずき
-  - 遅延評価のため、`collect()` するまで結果が表示されないことがある
-
-### I-1.4.2 ArrowによるParquetデータ処理
-
-- 要点
-  - 列指向形式。Parquet の読み書き、他言語とのデータ交換
-- 実演
-  - 20 銘柄 × 365 日のデータを作り、`arrow::write_parquet()` → `read_parquet()`
-- つまずき
-  - 保存先は `tempdir()`。セッションを終えると消える
-
-### I-1.4.3 Arrow Dataset
-
-- 要点
-  - 複数ファイルを 1 つの Dataset として扱う。銘柄でパーティションを切る
-  - `filter` / `select` してから `collect()`
-- 実演
-  - `write_dataset(..., partitioning = "chr_symbol")` → `open_dataset()` → 絞り込み → `collect()`
-- つまずき
-  - `collect()` するまでは tibble ではない（表示が違う）
-
-### I-1.4.4 Sparkとの関係
-
-- 要点（説明のみ、コードなし）
-  - Arrow は 1 台の PC での効率化、Spark はクラスタで分散する基盤
-  - 本書では Arrow と dbplyr を実装対象とし、Spark は位置づけの説明にとどめる
-
----
-
-## I-1.5 総合演習
-
-### I-1.5.1 分析用データを作る
-
-- 要点：縦持ちにして、グロスリターン（1 + r）と方向（正・負・ゼロ）を付け、`arrange(firm, date)` で並べる
-- 実演：`pivot_longer()` → `mutate(case_when(...))`
-
-### I-1.5.2 企業別の要約統計量を計算する
-
-- 要点：`group_by(firm) |> summarise(...)`。`positive_ratio = mean(return > 0)`
-- つまずき：論理値の平均が割合になること
-
-### I-1.5.3 累積リターンを計算する
-
-- 要点：`cumprod(gross_return) - 1`
-- つまずき
-  - 単純リターンの累積は積（和ではない）
-  - `cumprod` の前に日付順へ並べておく必要がある
-  - 最後の `ungroup()`
-
-### I-1.5.4 purrrで企業別の統計量を再計算する
-
-- 要点：同じ集計を `map_dfr()` で書き、I-1.5.2 の結果と比べる。VaR 的な 5% 分位点も出す
-
-### I-1.5.5 累積リターンを可視化する
-
-- 要点：`geom_line()` に `geom_hline(yintercept = 0)` を重ねる
-
-### まとめ（I-1.5 末尾）
-
-- snake_case / ベクトル化を優先 / 反復は `map()` 系 / dplyr・stringr・tidyr の役割分担 / `|>` に統一 / ggplot は層で組み立てる / パスはプロジェクトルートを基準にする
-
----
-
-## I-1.6.1 金融データ分析パイプライン
-
-- 要点
-  - Parquet・DB → dbplyr / Arrow で絞り込み → `collect()` → 整形 → `nest()` → `map()` → `future_map()` → 集計・モデル・可視化
-  - 次章以降はこの流れで財務データと株式データを分析すると予告する
-- 注意：見出しが `I-1.6.1` だけで、親の `I-1.6` 見出しがない（目次の表示に影響する）
+- どちらも、「処理を値として扱う」発想。
+  - 関数（1 本目）は、計算を値として map に渡す。
+  - 式（2 本目）は、分析の意図を値として dplyr やエンジンに渡す。
+- その結果、何を計算するか（関数・式）と、どう実行するかを分けられる。
+  - どう実行するか：逐次か並列か（`future` の plan）、R か Arrow か DB か（エンジン）。
+- I-1.6.1 のパイプライン図（dbplyr / Arrow → `collect` → `nest` → `map` → `future_map`）で全体をつなぐ。
+- 注意：I-1.6.1 には親の見出し I-1.6 がない。I-1.4.1（dbplyr）には実行するコードがない（説明だけ）。
