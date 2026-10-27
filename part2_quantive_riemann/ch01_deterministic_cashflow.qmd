@@ -1698,7 +1698,7 @@ GaussQuantについても同じ40年債、同じクリーンプライスを用�
 GaussQuant::set_eval_date_GQL(trade_date)
 
 compute_bond_yield_gaussquant_LRL <- function() {
-  100 * GaussQuant::bond_yield_from_clean_safe_GQL(
+  100 * GaussQuant::bond_yield_from_price_GQL(
     bond = bond_obj,
     clean_price = benchmark_market_price,
     day_counter = dc_30,

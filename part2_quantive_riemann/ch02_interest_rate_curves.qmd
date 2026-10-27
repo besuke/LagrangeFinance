@@ -1371,7 +1371,7 @@ tbl_jgb_market <- tbl_jgb_deliverable |>
       bond,
       bb_price,
       \(bond, clean_price) {
-        GaussQuant::bond_yield_from_clean_price_GQL(
+        GaussQuant::bond_yield_from_price_GQL(
           bond = bond,
           clean_price = clean_price,
           day_counter = dc_jgb,

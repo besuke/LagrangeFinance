@@ -98,9 +98,7 @@ instance_swap_curve <- function(
   fname <- paste0("Frequency_", payment_frequency, "_get")
   if (length(fname) != 1L || !exists(fname, ns, inherits = FALSE)) stop("Invalid frequency.")
   frequency <- get(fname, ns, inherits = FALSE)()
-  QuantLib::Settings_setEvaluationDate(
-    QuantLib::Settings_instance(), QuantLib::DateParser_parseISO(as.character(marketdate))
-  )
+  GaussQuant::set_eval_date_GQL(marketdate)
   index <- instance_overnight_index(spec$currency)
   calendar <- index$fixingCalendar()
   day_counter <- index$dayCounter()

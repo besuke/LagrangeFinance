@@ -7,7 +7,7 @@
 
 .xasw_df <- function(curve, dates) {
   purrr::map_dbl(as.character(dates), function(d) {
-    x <- as.numeric(curve$discount(QuantLib::DateParser_parseISO(d)))
+    x <- as.numeric(curve$discount(GaussQuant::date_GQL(d)))
     if (length(x) != 1L || !is.finite(x) || x <= 0) stop("Invalid discount factor.")
     x
   }) 
