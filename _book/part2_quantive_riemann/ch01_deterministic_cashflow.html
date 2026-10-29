@@ -1132,7 +1132,7 @@ y+\dfrac{1}{T}
 <section id="ii-1.6.3-アセットスワップ" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.6.3-アセットスワップ">II-1.6.3 アセットスワップ</h3>
 <p>アセットスワップでは、固定利付債のキャッシュフローを金利スワップの変動金利キャッシュフローへ変換し、債券をスワップ市場の基準金利と比較する。したがって、単純な「債券利回り－スワップレート」ではなく、債券価格、経過利子、固定クーポン、スワップの割引係数および変動金利レグの現在価値を同じ評価時点で整合させる必要がある。</p>
-<p>本章ではアセットスワップの位置づけと計算構造を確認し、実際のOIS・IRSカーブ構築およびマルチカーブ評価は第II-3章で扱う。第II-3章で構築したスワップカーブを用いることで、本節の債券評価を実際のIRS市場との相対価値評価へ接続できる。</p>
+<p>本章ではアセットスワップの位置づけと計算構造を確認し、実際のOIS・IRSカーブ構築およびマルチカーブ評価は第II-3章で扱う。第II-3章で構築したスワップカーブを用いることで、本節の債券評価を実際のIRS市場との相対価値評価へ接続できる。€STR、SOFR、TONAR、SONIAのOISカーブを用いたアセットスワップ・スプレッドの計算と、外貨債を円の翌日物金利へ交換する円ベーシス込みのアセットスワップは、第II-3.7節で扱う。</p>
 </section>
 <section id="ii-1.6.4-債券利回りとスワップレートの比較" class="level3">
 <h3 class="anchored" data-anchor-id="ii-1.6.4-債券利回りとスワップレートの比較">II-1.6.4 債券利回りとスワップレートの比較</h3>
@@ -2017,7 +2017,7 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">set_eval_date_GQL</span>(trade_date)</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>compute_bond_yield_gaussquant_LRL <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="dv">100</span> <span class="sc">*</span> GaussQuant<span class="sc">::</span><span class="fu">bond_yield_from_clean_safe_GQL</span>(</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="dv">100</span> <span class="sc">*</span> GaussQuant<span class="sc">::</span><span class="fu">bond_yield_from_price_GQL</span>(</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">bond =</span> bond_obj,</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">clean_price =</span> benchmark_market_price,</span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">day_counter =</span> dc_30,</span>
@@ -2138,11 +2138,11 @@ P(Y_n)-P_{\mathrm{market}}
 <span id="cb18-102"><a href="#cb18-102" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
 <span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   method                   compound_yield_pct calculation_time_ms</span></span>
 <span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                    &lt;chr&gt;              &lt;chr&gt;              </span></span>
-<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.02               </span></span>
-<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.10               </span></span>
-<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.28               </span></span>
-<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 多項式求根法（polyroot） 6.710480           0.68               </span></span>
-<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 GaussQuant               6.710479           1.00</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 Brent法（uniroot）       6.710480           0.14               </span></span>
+<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ニュートン・ラフソン法   6.710480           0.28               </span></span>
+<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 二分法                   6.710480           0.68               </span></span>
+<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GaussQuant               6.710479           1.54               </span></span>
+<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 多項式求根法（polyroot） 6.710480           1.68</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>以上の結果から、本例では Brent法 → ニュートン・ラフソン法 → 二分法 → polyroot の順に高速な結果となった。Brent法は二分法の安定性と補間法の高速性を組み合わせた手法であり、本例のように価格関数が利回りに対して滑らかで単調な問題では特に有効である。一方、ニュートン・ラフソン法は解析微分を必要とするものの高い収束性能を持ち、二分法は計算速度では劣るものの安定性に優れる。polyrootは規則的なキャッシュフローでは利用できるが、本例の40年債では80次多項式となるため計算負荷が大きくなる。</p>
 <p>GaussQuantも同じ40年債、同じクリーンプライスを入力としている。ただし、単純な価格式だけを解く自作アルゴリズムとは異なり、債券オブジェクト、利払スケジュール、日数計算規則、価格種別などのマーケットコンベンションを含めて処理する。そのため、速度差には求根法そのものの差だけでなく、実務的な債券評価処理のオーバーヘッドも含まれる。</p>

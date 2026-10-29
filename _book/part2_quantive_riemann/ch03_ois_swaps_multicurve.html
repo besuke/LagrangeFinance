@@ -402,6 +402,14 @@ window.Quarto = {
   <li><a href="#ii-3.6.5-市場レート変動と評価損益" id="toc-ii-3.6.5-市場レート変動と評価損益" class="nav-link" data-scroll-target="#ii-3.6.5-市場レート変動と評価損益">II-3.6.5 市場レート変動と評価損益</a></li>
   <li><a href="#ii-3.6.6-1ベーシスポイント当たりの評価変化" id="toc-ii-3.6.6-1ベーシスポイント当たりの評価変化" class="nav-link" data-scroll-target="#ii-3.6.6-1ベーシスポイント当たりの評価変化">II-3.6.6 1ベーシスポイント当たりの評価変化</a></li>
   </ul></li>
+  <li><a href="#ii-3.7-4通貨oisカーブとアセットスワップ" id="toc-ii-3.7-4通貨oisカーブとアセットスワップ" class="nav-link" data-scroll-target="#ii-3.7-4通貨oisカーブとアセットスワップ">II-3.7 4通貨OISカーブとアセットスワップ</a>
+  <ul class="collapse">
+  <li><a href="#ii-3.7.1-市場データと通貨別の規約" id="toc-ii-3.7.1-市場データと通貨別の規約" class="nav-link" data-scroll-target="#ii-3.7.1-市場データと通貨別の規約">II-3.7.1 市場データと通貨別の規約</a></li>
+  <li><a href="#ii-3.7.2-4通貨oisカーブの構築と検証" id="toc-ii-3.7.2-4通貨oisカーブの構築と検証" class="nav-link" data-scroll-target="#ii-3.7.2-4通貨oisカーブの構築と検証">II-3.7.2 4通貨OISカーブの構築と検証</a></li>
+  <li><a href="#ii-3.7.3-oisアセットスワップ" id="toc-ii-3.7.3-oisアセットスワップ" class="nav-link" data-scroll-target="#ii-3.7.3-oisアセットスワップ">II-3.7.3 OISアセットスワップ</a></li>
+  <li><a href="#ii-3.7.4-円ベーシス込みasw簡略化モデル" id="toc-ii-3.7.4-円ベーシス込みasw簡略化モデル" class="nav-link" data-scroll-target="#ii-3.7.4-円ベーシス込みasw簡略化モデル">II-3.7.4 円ベーシス込みASW（簡略化モデル）</a></li>
+  <li><a href="#ii-3.7.5-担保のcheapest-to-depositと今後の拡張" id="toc-ii-3.7.5-担保のcheapest-to-depositと今後の拡張" class="nav-link" data-scroll-target="#ii-3.7.5-担保のcheapest-to-depositと今後の拡張">II-3.7.5 担保のCheapest to Depositと今後の拡張</a></li>
+  </ul></li>
   <li><a href="#ii-3.8-参考資料" id="toc-ii-3.8-参考資料" class="nav-link" data-scroll-target="#ii-3.8-参考資料">II-3.8 参考資料</a></li>
   </ul>
 </nav>
@@ -1226,6 +1234,7 @@ N
 <span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 multi_curve      39436.      -847103.          886539.  0.047095  -0.0020420</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>両方のスワップは同じフォワードカーブから将来EURIBORを予測するが、シングルカーブ評価ではそのカーブを割引にも使用し、マルチカーブ評価では別のディスカウントカーブを使用する。割引係数が異なるため、同じ将来キャッシュフローであってもNPVおよびフェアレートが変化する。</p>
+<p>このEURIBORの例は、フォワードカーブとディスカウントカーブの役割の違いを示すためのものである。OISを参照する取引では、同じ通貨のOISカーブが予測と割引の両方を担う。€STR、SOFR、TONAR、SONIAのOISカーブを用いた債券の評価はII-3.7節で扱い、異なる通貨のキャッシュフローを円担保で評価する場合に加わる通貨ベーシスはII-3.7.4節で扱う。</p>
 </section>
 </section>
 <section id="ii-3.5-ケーススタディ1eoniaカーブとois評価" class="level2">
@@ -1947,6 +1956,660 @@ N
 <p>ケーススタディでは、期間構造ハンドルを翌日物金利インデックスへ接続し、<code>MakeOIS</code>を用いてOISを構築した。さらに、NPV、フェアレート、固定レグおよび翌日物レグのキャッシュフローを確認し、OISの契約条件と市場カーブが評価結果へどのように反映されるかを示した。</p>
 <p>また、契約固定金利を変更せずに市場カーブを上下へ平行シフトし、OISの評価損益を比較した。契約締結後も固定金利は変化しないが、市場カーブの変動によって将来の翌日物金利予測と割引係数が変化するため、OISのNPVは日々変動する。固定金利支払側と固定金利受取側では、同じ市場変動に対する評価損益の符号が反対になる。</p>
 <p>実際のリスク管理では、カーブ全体の平行シフトだけでなく、短期、中期および長期の金利を個別に変化させる必要がある。また、Fixingの確定、休日カレンダー、日数計算規則、支払ラグ、予測カーブおよび割引カーブの設定を総合的に確認することが、OISと金利スワップを正しく評価するための基本となる。</p>
+</section>
+</section>
+<section id="ii-3.7-4通貨oisカーブとアセットスワップ" class="level2">
+<h2 class="anchored" data-anchor-id="ii-3.7-4通貨oisカーブとアセットスワップ">II-3.7 4通貨OISカーブとアセットスワップ</h2>
+<p>II-3.2節とII-3.4節では、TONAとSOFRのOISカーブを通貨ごとに構築した。本節では、€STR、SOFR、TONAR、SONIAの4通貨を同じ手順で扱い、そのカーブを用いて第II-1.6.3節で構造を確認したアセットスワップ（ASW）を実際に計算する。</p>
+<p>計算本体は、プロジェクトの<code>R/</code>に置いた次の関数である。本文ではこれらの関数を呼び出し、入力データ、計算、結果の読み方、検証の順に確認する。</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>関数</th>
+<th>ファイル</th>
+<th>役割</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>import_ois_curves()</code></td>
+<td><code>R/import_data.R</code></td>
+<td>市場データのExcelからOIS気配を読み込む</td>
+</tr>
+<tr class="even">
+<td><code>ois_currency_spec()</code>、<code>instance_overnight_index()</code></td>
+<td><code>R/instance_swap_curve.R</code></td>
+<td>通貨ごとの翌日物金利インデックスと規約を返す</td>
+</tr>
+<tr class="odd">
+<td><code>instance_swap_curve()</code></td>
+<td><code>R/instance_swap_curve.R</code></td>
+<td>4通貨共通のOISカーブ構築と気配の再現確認</td>
+</tr>
+<tr class="even">
+<td><code>compute_asset_swap_ISO()</code>、<code>asset_swap_price_table()</code></td>
+<td><code>R/compute_asset_swap_ISO.R</code></td>
+<td>債券通貨のOISに対するASWスプレッド</td>
+</tr>
+<tr class="odd">
+<td><code>compute_asset_swap_basis_JPY()</code></td>
+<td><code>R/compute_asset_swap_basis_JPY.R</code></td>
+<td>外貨債を円の翌日物金利へ交換するASW（簡略化モデル）</td>
+</tr>
+</tbody>
+</table>
+<p>市場データは2026年10月6日のBloomberg気配である。データの利用条件により、本節では入力気配の値そのものは表示せず、気配の件数、テナーの範囲および計算結果だけを示す。債券、為替スポットおよび通貨ベーシスは、計算の仕組みを示すための仮定値である。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>purrr<span class="sc">::</span><span class="fu">walk</span>(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"import_data.R"</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"instance_swap_curve.R"</span>,</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"compute_asset_swap_ISO.R"</span>,</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"compute_asset_swap_basis_JPY.R"</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(file_name) {</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">source</span>(<span class="fu">file.path</span>(<span class="st">"R"</span>, file_name))</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="ii-3.7.1-市場データと通貨別の規約" class="level3">
+<h3 class="anchored" data-anchor-id="ii-3.7.1-市場データと通貨別の規約">II-3.7.1 市場データと通貨別の規約</h3>
+<p><code>import_ois_curves()</code>は、通貨ごとのシートから気配を読み込み、<code>instrument_type</code>列で気配の種類を区別する。カーブ構築に使えるのは<code>spot_ois</code>と<code>deposit</code>だけであり、過去の翌日物Fixingを1日物OISの気配として扱ってはならない。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>asw4_marketdate <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2026-10-06"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>asw4_market_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"data"</span>, <span class="st">"raw"</span>, <span class="st">"market"</span>, <span class="st">"Bloomberg_MarketData_20261006.xlsx"</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>asw4_currencies <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"EUR"</span>, <span class="st">"USD"</span>, <span class="st">"JPY"</span>, <span class="st">"GBP"</span>)</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>asw4_quote_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>  asw4_currencies,</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(currency) {</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">import_ois_curves</span>(</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">path =</span> asw4_market_path,</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> currency,</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">marketdate =</span> asw4_marketdate,</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">quote =</span> <span class="st">"mid"</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>asw4_curve_quote_tbl <span class="ot">&lt;-</span> asw4_quote_tbl <span class="sc">|&gt;</span></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">filter</span>(</span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>    instrument_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"spot_ois"</span>, <span class="st">"deposit"</span>)</span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Show counts and tenor ranges only; quote values are not displayed.</span></span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>asw4_quote_summary_tbl <span class="ot">&lt;-</span> asw4_quote_tbl <span class="sc">|&gt;</span></span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(currency, instrument_type) <span class="sc">|&gt;</span></span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">summarise</span>(</span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">quotes =</span> dplyr<span class="sc">::</span><span class="fu">n</span>(),</span>
+<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">first_tenor =</span> dplyr<span class="sc">::</span><span class="fu">first</span>(tenor),</span>
+<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">last_tenor =</span> dplyr<span class="sc">::</span><span class="fu">last</span>(tenor),</span>
+<span id="cb32-33"><a href="#cb32-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb32-34"><a href="#cb32-34" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb32-35"><a href="#cb32-35" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
+<span id="cb32-36"><a href="#cb32-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">used_for_curve =</span> instrument_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"spot_ois"</span>, <span class="st">"deposit"</span>)</span>
+<span id="cb32-37"><a href="#cb32-37" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb32-38"><a href="#cb32-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a>  asw4_quote_summary_tbl,</span>
+<span id="cb32-41"><a href="#cb32-41" aria-hidden="true" tabindex="-1"></a>  <span class="st">"OIS quote inventory (values not shown)"</span>,</span>
+<span id="cb32-42"><a href="#cb32-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb32-43"><a href="#cb32-43" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-44"><a href="#cb32-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 6</span></span>
+<span id="cb32-45"><a href="#cb32-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency instrument_type  quotes first_tenor last_tenor used_for_curve</span></span>
+<span id="cb32-46"><a href="#cb32-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;             &lt;int&gt; &lt;chr&gt;       &lt;chr&gt;      &lt;lgl&gt;         </span></span>
+<span id="cb32-47"><a href="#cb32-47" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR      spot_ois             32 1W          50Y        TRUE          </span></span>
+<span id="cb32-48"><a href="#cb32-48" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 GBP      overnight_fixing      1 1D          1D         FALSE         </span></span>
+<span id="cb32-49"><a href="#cb32-49" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 GBP      spot_ois             31 1W          50Y        TRUE          </span></span>
+<span id="cb32-50"><a href="#cb32-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 JPY      spot_ois             14 1M          30Y        TRUE          </span></span>
+<span id="cb32-51"><a href="#cb32-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 USD      spot_ois             32 1W          50Y        TRUE</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>GBPのシートには、OIS気配のほかにSONIAの翌日物Fixingが1件含まれている。<code>used_for_curve</code>が<code>FALSE</code>の行はカーブ構築から除外する。Fixingは評価日以前に確定した実績値であり、II-3.3.2節で見たように、OISの変動レグでは評価日以後の予測値と区別して扱う。</p>
+<p>通貨ごとの規約は、<code>ois_currency_spec()</code>と、QuantLibの翌日物金利インデックスを返す<code>instance_overnight_index()</code>から確認できる。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>asw4_convention_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  asw4_currencies,</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(currency) {</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    spec <span class="ot">&lt;-</span> <span class="fu">ois_currency_spec</span>(currency)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    overnight_index <span class="ot">&lt;-</span> <span class="fu">instance_overnight_index</span>(currency)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> currency,</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">index =</span> spec<span class="sc">$</span>index_name,</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">settlement_days =</span> spec<span class="sc">$</span>settlement_days,</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">fixing_calendar =</span> overnight_index<span class="sc">$</span><span class="fu">fixingCalendar</span>()<span class="sc">$</span><span class="fu">name</span>(),</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">day_counter =</span> overnight_index<span class="sc">$</span><span class="fu">dayCounter</span>()<span class="sc">$</span><span class="fu">name</span>()</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a>  asw4_convention_tbl,</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Overnight index conventions"</span>,</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency index settlement_days fixing_calendar       day_counter       </span></span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;           &lt;int&gt; &lt;chr&gt;                 &lt;chr&gt;             </span></span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR      ESTR                2 TARGET                Actual/360        </span></span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD      SOFR                2 SOFR fixing calendar  Actual/360        </span></span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 JPY      TONAR               2 Japan                 Actual/365 (Fixed)</span></span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GBP      SONIA               0 London stock exchange Actual/365 (Fixed)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>€STRとSOFRはActual/360、TONARとSONIAはActual/365 (Fixed)で利息を計算する。受渡日数は、SONIAだけが0営業日で、ほかの3通貨は2営業日である。同じ年限の気配でも、開始日、休日カレンダー、日数計算規則が通貨ごとに異なるため、規約を一つの表で管理し、カーブ構築関数をすべての通貨で共通にしている。</p>
+</section>
+<section id="ii-3.7.2-4通貨oisカーブの構築と検証" class="level3">
+<h3 class="anchored" data-anchor-id="ii-3.7.2-4通貨oisカーブの構築と検証">II-3.7.2 4通貨OISカーブの構築と検証</h3>
+<p><code>instance_swap_curve()</code>は、気配ごとに<code>OISRateHelper</code>を作成し、既定では対数割引係数の3次補間（<code>PiecewiseLogCubicDiscount</code>）でブートストラップする。構築後には、各ヘルパーが再現する気配と入力気配の差を<code>quote_repricing</code>として返し、差が<span class="math inline">\(10^{-4}\)</span>ベーシスポイントを超えると停止する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>asw4_curves <span class="ot">&lt;-</span> asw4_currencies <span class="sc">|&gt;</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">|&gt;</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(currency) {</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">instance_swap_curve</span>(</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">currency =</span> currency,</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">marketdate =</span> asw4_marketdate,</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">quotes =</span> asw4_curve_quote_tbl</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>asw4_curve_summary_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  asw4_curves,</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(curve) {</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> curve<span class="sc">$</span>currency,</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">index =</span> curve<span class="sc">$</span>index_name,</span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">helpers =</span> <span class="fu">nrow</span>(curve<span class="sc">$</span>quotes),</span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">reference_date =</span> <span class="fu">as.Date</span>(QuantLib<span class="sc">::</span><span class="fu">Date_ISO</span>(curve<span class="sc">$</span>curve<span class="sc">$</span><span class="fu">referenceDate</span>())),</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">last_maturity =</span> <span class="fu">max</span>(curve<span class="sc">$</span>quotes<span class="sc">$</span>tenordate),</span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_abs_quote_error_bp =</span> <span class="fu">max</span>(<span class="fu">abs</span>(curve<span class="sc">$</span>quote_repricing<span class="sc">$</span>quote_error_bp))</span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a>  asw4_curve_summary_tbl,</span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Four-currency OIS curves"</span>,</span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-32"><a href="#cb34-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 6</span></span>
+<span id="cb34-33"><a href="#cb34-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency index helpers reference_date last_maturity max_abs_quote_error_bp</span></span>
+<span id="cb34-34"><a href="#cb34-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;    &lt;chr&gt;   &lt;int&gt; &lt;date&gt;         &lt;date&gt;                         &lt;dbl&gt;</span></span>
+<span id="cb34-35"><a href="#cb34-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR      ESTR       32 2026-10-06     2076-10-08                1.0465e- 7</span></span>
+<span id="cb34-36"><a href="#cb34-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD      SOFR       32 2026-10-06     2076-10-08                2.8098e- 7</span></span>
+<span id="cb34-37"><a href="#cb34-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 JPY      TONAR      14 2026-10-06     2056-10-10                3.3014e- 8</span></span>
+<span id="cb34-38"><a href="#cb34-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GBP      SONIA      31 2026-10-06     2076-10-06                7.2636e-10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>max_abs_quote_error_bp</code>は、カーブから求めたパーレートと入力気配の差の最大値である。どの通貨も<span class="math inline">\(10^{-6}\)</span>ベーシスポイント程度以下であり、ブートストラップが入力気配を再現していることを確認できる。</p>
+<p>次に、同じ気配からGaussQuantの<code>ir_build_ois_curve_GQH()</code>でもカーブを構築し、結果を照合する。GaussQuantの関数は補間に対数線形の割引係数（<code>PiecewiseLogLinearDiscount</code>）を用い、受渡日を基準日とする。対数線形の割引係数は区分一定のフォワード金利と同じであるため、<code>instance_swap_curve()</code>を<code>curve_type = "flat_forward"</code>で構築すれば、二つの関数は同じ計算方法になる。基準日の違いを除くため、比較は受渡日から各満期までの割引係数の比で行う。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>asw4_gq_instrument <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">EUR =</span> <span class="st">"ESTR"</span>,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">USD =</span> <span class="st">"SOFR"</span>,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">JPY =</span> <span class="st">"TONA"</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">GBP =</span> <span class="st">"SONIA"</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>asw4_curve_check_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>  asw4_currencies,</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(currency) {</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    curve_quotes <span class="ot">&lt;-</span> asw4_curve_quote_tbl <span class="sc">|&gt;</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">filter</span>(currency <span class="sc">==</span> .env<span class="sc">$</span>currency)</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>    gq_curve <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">ir_build_ois_curve_GQH</span>(</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">curve_data =</span> curve_quotes <span class="sc">|&gt;</span></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">transmute</span>(</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>          <span class="at">kind =</span> dplyr<span class="sc">::</span><span class="fu">if_else</span>(instrument_type <span class="sc">==</span> <span class="st">"deposit"</span>, <span class="st">"depo"</span>, <span class="st">"ois"</span>),</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>          tenor,</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>          rate</span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">trade_date =</span> <span class="fu">as.character</span>(asw4_marketdate),</span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> currency,</span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a>      <span class="at">instrument =</span> asw4_gq_instrument[[currency]],</span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">verbose =</span> <span class="cn">FALSE</span></span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a>    flat_curve <span class="ot">&lt;-</span> <span class="fu">instance_swap_curve</span>(</span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> currency,</span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true" tabindex="-1"></a>      <span class="at">marketdate =</span> asw4_marketdate,</span>
+<span id="cb35-30"><a href="#cb35-30" aria-hidden="true" tabindex="-1"></a>      <span class="at">quotes =</span> asw4_curve_quote_tbl,</span>
+<span id="cb35-31"><a href="#cb35-31" aria-hidden="true" tabindex="-1"></a>      <span class="at">curve_type =</span> <span class="st">"flat_forward"</span></span>
+<span id="cb35-32"><a href="#cb35-32" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb35-33"><a href="#cb35-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-34"><a href="#cb35-34" aria-hidden="true" tabindex="-1"></a>    cubic_curve <span class="ot">&lt;-</span> asw4_curves[[currency]]</span>
+<span id="cb35-35"><a href="#cb35-35" aria-hidden="true" tabindex="-1"></a>    settle_date <span class="ot">&lt;-</span> gq_curve<span class="sc">$</span>curve<span class="sc">$</span><span class="fu">referenceDate</span>()</span>
+<span id="cb35-36"><a href="#cb35-36" aria-hidden="true" tabindex="-1"></a>    maturities <span class="ot">&lt;-</span> cubic_curve<span class="sc">$</span>quote_repricing<span class="sc">$</span>tenordate</span>
+<span id="cb35-37"><a href="#cb35-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-38"><a href="#cb35-38" aria-hidden="true" tabindex="-1"></a>    forward_discount <span class="ot">&lt;-</span> <span class="cf">function</span>(curve) {</span>
+<span id="cb35-39"><a href="#cb35-39" aria-hidden="true" tabindex="-1"></a>      purrr<span class="sc">::</span><span class="fu">map_dbl</span>(</span>
+<span id="cb35-40"><a href="#cb35-40" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.character</span>(maturities),</span>
+<span id="cb35-41"><a href="#cb35-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">function</span>(x) {</span>
+<span id="cb35-42"><a href="#cb35-42" aria-hidden="true" tabindex="-1"></a>          curve<span class="sc">$</span><span class="fu">discount</span>(GaussQuant<span class="sc">::</span><span class="fu">date_GQL</span>(x)) <span class="sc">/</span></span>
+<span id="cb35-43"><a href="#cb35-43" aria-hidden="true" tabindex="-1"></a>            curve<span class="sc">$</span><span class="fu">discount</span>(settle_date)</span>
+<span id="cb35-44"><a href="#cb35-44" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb35-45"><a href="#cb35-45" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb35-46"><a href="#cb35-46" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb35-47"><a href="#cb35-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-48"><a href="#cb35-48" aria-hidden="true" tabindex="-1"></a>    year_fraction <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(</span>
+<span id="cb35-49"><a href="#cb35-49" aria-hidden="true" tabindex="-1"></a>      maturities <span class="sc">-</span> <span class="fu">as.Date</span>(gq_curve<span class="sc">$</span>settle_date)</span>
+<span id="cb35-50"><a href="#cb35-50" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">/</span> <span class="dv">365</span></span>
+<span id="cb35-51"><a href="#cb35-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-52"><a href="#cb35-52" aria-hidden="true" tabindex="-1"></a>    zero_rate <span class="ot">&lt;-</span> <span class="cf">function</span>(discount) <span class="sc">-</span><span class="fu">log</span>(discount) <span class="sc">/</span> year_fraction</span>
+<span id="cb35-53"><a href="#cb35-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-54"><a href="#cb35-54" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb35-55"><a href="#cb35-55" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> currency,</span>
+<span id="cb35-56"><a href="#cb35-56" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_abs_df_diff_flat_vs_gq =</span> <span class="fu">max</span>(<span class="fu">abs</span>(</span>
+<span id="cb35-57"><a href="#cb35-57" aria-hidden="true" tabindex="-1"></a>        <span class="fu">forward_discount</span>(flat_curve<span class="sc">$</span>curve) <span class="sc">-</span></span>
+<span id="cb35-58"><a href="#cb35-58" aria-hidden="true" tabindex="-1"></a>          <span class="fu">forward_discount</span>(gq_curve<span class="sc">$</span>curve)</span>
+<span id="cb35-59"><a href="#cb35-59" aria-hidden="true" tabindex="-1"></a>      )),</span>
+<span id="cb35-60"><a href="#cb35-60" aria-hidden="true" tabindex="-1"></a>      <span class="at">max_abs_zero_diff_cubic_vs_flat_bp =</span> <span class="fl">1e4</span> <span class="sc">*</span> <span class="fu">max</span>(<span class="fu">abs</span>(</span>
+<span id="cb35-61"><a href="#cb35-61" aria-hidden="true" tabindex="-1"></a>        <span class="fu">zero_rate</span>(<span class="fu">forward_discount</span>(cubic_curve<span class="sc">$</span>curve)) <span class="sc">-</span></span>
+<span id="cb35-62"><a href="#cb35-62" aria-hidden="true" tabindex="-1"></a>          <span class="fu">zero_rate</span>(<span class="fu">forward_discount</span>(flat_curve<span class="sc">$</span>curve))</span>
+<span id="cb35-63"><a href="#cb35-63" aria-hidden="true" tabindex="-1"></a>      ))</span>
+<span id="cb35-64"><a href="#cb35-64" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb35-65"><a href="#cb35-65" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb35-66"><a href="#cb35-66" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-67"><a href="#cb35-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-68"><a href="#cb35-68" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb35-69"><a href="#cb35-69" aria-hidden="true" tabindex="-1"></a>  asw4_curve_check_tbl,</span>
+<span id="cb35-70"><a href="#cb35-70" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Cross-check with GaussQuant"</span>,</span>
+<span id="cb35-71"><a href="#cb35-71" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb35-72"><a href="#cb35-72" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-73"><a href="#cb35-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 3</span></span>
+<span id="cb35-74"><a href="#cb35-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency max_abs_df_diff_flat_vs_gq max_abs_zero_diff_cubic_vs_flat_bp</span></span>
+<span id="cb35-75"><a href="#cb35-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                         &lt;dbl&gt;                              &lt;dbl&gt;</span></span>
+<span id="cb35-76"><a href="#cb35-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR                      5.0299e-13                            0.57347</span></span>
+<span id="cb35-77"><a href="#cb35-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD                      2.7674e-13                            1.1309 </span></span>
+<span id="cb35-78"><a href="#cb35-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 JPY                      5.8520e-13                            1.7643 </span></span>
+<span id="cb35-79"><a href="#cb35-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GBP                      1.9218e-13                            1.2937</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>max_abs_df_diff_flat_vs_gq</code>は<span class="math inline">\(10^{-12}\)</span>程度であり、同じ計算方法であれば<code>R/</code>の関数とGaussQuantの関数が同じカーブを作ることを示している。一方、<code>max_abs_zero_diff_cubic_vs_flat_bp</code>は、同じ気配を再現する二つのカーブでも、補間方式によって満期日のゼロ金利が1ベーシスポイント前後異なることを示している。長期のOISは毎年利払いを行うため、満期日のゼロ金利は途中の利払日の割引係数にも依存し、その割引係数は補間方式で決まる。気配の再現だけではカーブは一意に決まらないため、補間方式はカーブの前提として明示しておく必要がある。</p>
+<p>II-3.2節とII-3.4節のカーブ構築は、この照合で用いたGaussQuantの方法と同じである。本節の<code>instance_swap_curve()</code>は、それを4通貨の規約表と気配の再現確認つきで共通化したものである。</p>
+</section>
+<section id="ii-3.7.3-oisアセットスワップ" class="level3">
+<h3 class="anchored" data-anchor-id="ii-3.7.3-oisアセットスワップ">II-3.7.3 OISアセットスワップ</h3>
+<p>第II-1.6.3節で見たように、パー・パー型のASWでは、投資家は債券を額面で受け渡したものとして扱い、債券のクーポンを支払って、翌日物金利の複利にスプレッド<span class="math inline">\(s\)</span>を加えた変動金利を受け取る。債券価格と額面の差は開始時に授受する。</p>
+<p>債券の現在価値を<span class="math inline">\(PV_{\mathrm{bond}}\)</span>、翌日物レグの現在価値を<span class="math inline">\(PV_{\mathrm{float}}\)</span>、満期の元本受取の現在価値を<span class="math inline">\(PV_{\mathrm{principal}}\)</span>、開始時の授受額の現在価値を<span class="math inline">\(PV_{\mathrm{upfront}}\)</span>、スプレッド1単位当たりのアニュイティを<span class="math inline">\(A\)</span>とすると、ASW受取側のNPVは次式で表される。</p>
+<p><span class="math display">\[
+NPV(s)
+=
+PV_{\mathrm{float}}
++
+PV_{\mathrm{principal}}
++
+PV_{\mathrm{upfront}}
+-
+PV_{\mathrm{bond}}
++
+s A
+\]</span></p>
+<p>ASWスプレッド<span class="math inline">\(s^{*}\)</span>は、<span class="math inline">\(NPV(s^{*})=0\)</span>となるスプレッドである。</p>
+<p><span class="math display">\[
+s^{*}
+=
+-\frac{NPV(0)}{A}
+\]</span></p>
+<p><code>compute_asset_swap_ISO()</code>は、債券の通貨と同じ通貨のOISカーブで翌日物レグの予測と割引の両方を行う。例として、各通貨で2036年9月30日満期の仮想債券を作成する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>asw4_bond_assumption_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>currency, <span class="sc">~</span>coupon_rate, <span class="sc">~</span>clean_price, <span class="sc">~</span>fx_spot, <span class="sc">~</span>basis_bp,</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"EUR"</span>, <span class="fl">0.035</span>, <span class="fl">99.5</span>, <span class="dv">165</span>, <span class="sc">-</span><span class="dv">20</span>,</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"USD"</span>, <span class="fl">0.050</span>, <span class="fl">99.5</span>, <span class="dv">150</span>, <span class="sc">-</span><span class="dv">30</span>,</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"JPY"</span>, <span class="fl">0.030</span>, <span class="fl">99.5</span>, <span class="dv">1</span>, <span class="dv">0</span>,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"GBP"</span>, <span class="fl">0.050</span>, <span class="fl">99.5</span>, <span class="dv">195</span>, <span class="sc">-</span><span class="dv">25</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>  asw4_bond_assumption_tbl,</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Hypothetical bonds, FX and basis (assumptions)"</span>,</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency coupon_rate clean_price fx_spot basis_bp</span></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;       &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR            0.035        99.5     165      -20</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD            0.05         99.5     150      -30</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 JPY            0.03         99.5       1        0</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GBP            0.05         99.5     195      -25</span></span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">set_eval_date_GQL</span>(<span class="fu">as.character</span>(asw4_marketdate))</span>
+<span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-24"><a href="#cb36-24" aria-hidden="true" tabindex="-1"></a>asw4_bonds <span class="ot">&lt;-</span> asw4_currencies <span class="sc">|&gt;</span></span>
+<span id="cb36-25"><a href="#cb36-25" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">|&gt;</span></span>
+<span id="cb36-26"><a href="#cb36-26" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb36-27"><a href="#cb36-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(currency) {</span>
+<span id="cb36-28"><a href="#cb36-28" aria-hidden="true" tabindex="-1"></a>      row <span class="ot">&lt;-</span> asw4_bond_assumption_tbl <span class="sc">|&gt;</span></span>
+<span id="cb36-29"><a href="#cb36-29" aria-hidden="true" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(currency <span class="sc">==</span> .env<span class="sc">$</span>currency)</span>
+<span id="cb36-30"><a href="#cb36-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-31"><a href="#cb36-31" aria-hidden="true" tabindex="-1"></a>      GaussQuant<span class="sc">::</span><span class="fu">fixed_rate_bond_GQL</span>(</span>
+<span id="cb36-32"><a href="#cb36-32" aria-hidden="true" tabindex="-1"></a>        <span class="at">issue_date =</span> <span class="st">"2026-09-30"</span>,</span>
+<span id="cb36-33"><a href="#cb36-33" aria-hidden="true" tabindex="-1"></a>        <span class="at">maturity_date =</span> <span class="st">"2036-09-30"</span>,</span>
+<span id="cb36-34"><a href="#cb36-34" aria-hidden="true" tabindex="-1"></a>        <span class="at">coupon_rate =</span> row<span class="sc">$</span>coupon_rate,</span>
+<span id="cb36-35"><a href="#cb36-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">face_amount =</span> <span class="dv">100</span>,</span>
+<span id="cb36-36"><a href="#cb36-36" aria-hidden="true" tabindex="-1"></a>        <span class="at">redemption =</span> <span class="dv">100</span>,</span>
+<span id="cb36-37"><a href="#cb36-37" aria-hidden="true" tabindex="-1"></a>        <span class="at">settlement_days =</span> <span class="dv">2</span>L,</span>
+<span id="cb36-38"><a href="#cb36-38" aria-hidden="true" tabindex="-1"></a>        <span class="at">frequency =</span> QuantLib<span class="sc">::</span><span class="fu">Period</span>(<span class="st">"Semiannual"</span>),</span>
+<span id="cb36-39"><a href="#cb36-39" aria-hidden="true" tabindex="-1"></a>        <span class="at">calendar =</span> asw4_curves[[currency]]<span class="sc">$</span>calendar,</span>
+<span id="cb36-40"><a href="#cb36-40" aria-hidden="true" tabindex="-1"></a>        <span class="at">accrual_day_counter =</span> <span class="cf">if</span> (currency <span class="sc">==</span> <span class="st">"JPY"</span>) {</span>
+<span id="cb36-41"><a href="#cb36-41" aria-hidden="true" tabindex="-1"></a>          QuantLib<span class="sc">::</span><span class="fu">Actual365Fixed</span>()</span>
+<span id="cb36-42"><a href="#cb36-42" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">else</span> {</span>
+<span id="cb36-43"><a href="#cb36-43" aria-hidden="true" tabindex="-1"></a>          QuantLib<span class="sc">::</span><span class="fu">Thirty360</span>(<span class="st">"BondBasis"</span>)</span>
+<span id="cb36-44"><a href="#cb36-44" aria-hidden="true" tabindex="-1"></a>        },</span>
+<span id="cb36-45"><a href="#cb36-45" aria-hidden="true" tabindex="-1"></a>        <span class="at">payment_convention =</span> <span class="st">"Following"</span>,</span>
+<span id="cb36-46"><a href="#cb36-46" aria-hidden="true" tabindex="-1"></a>        <span class="at">schedule_convention =</span> <span class="st">"Unadjusted"</span>,</span>
+<span id="cb36-47"><a href="#cb36-47" aria-hidden="true" tabindex="-1"></a>        <span class="at">maturity_convention =</span> <span class="st">"Unadjusted"</span></span>
+<span id="cb36-48"><a href="#cb36-48" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb36-49"><a href="#cb36-49" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb36-50"><a href="#cb36-50" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>fx_spot</code>は外貨1単位当たりの円、<code>basis_bp</code>は円レグに付く通貨ベーシスであり、いずれも次のII-3.7.4節で使う仮定値である。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>asw4_native_asw <span class="ot">&lt;-</span> asw4_currencies <span class="sc">|&gt;</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">|&gt;</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(currency) {</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>      row <span class="ot">&lt;-</span> asw4_bond_assumption_tbl <span class="sc">|&gt;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(currency <span class="sc">==</span> .env<span class="sc">$</span>currency)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">compute_asset_swap_ISO</span>(</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">bond =</span> asw4_bonds[[currency]],</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">clean_price =</span> row<span class="sc">$</span>clean_price,</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">swap_curve =</span> asw4_curves[[currency]]</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>asw4_native_asw_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">imap_dfr</span>(</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>  asw4_native_asw,</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(asw, currency) {</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>    asw<span class="sc">$</span>valuation <span class="sc">|&gt;</span></span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">mutate</span>(<span class="at">currency =</span> currency, <span class="at">.before =</span> <span class="dv">1</span>)</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>  asw4_native_asw_tbl <span class="sc">|&gt;</span></span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>      currency,</span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>      bond_leg_pv,</span>
+<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a>      overnight_leg_pv,</span>
+<span id="cb37-30"><a href="#cb37-30" aria-hidden="true" tabindex="-1"></a>      principal_pv,</span>
+<span id="cb37-31"><a href="#cb37-31" aria-hidden="true" tabindex="-1"></a>      upfront_pv</span>
+<span id="cb37-32"><a href="#cb37-32" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb37-33"><a href="#cb37-33" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Native-currency OIS asset swap: leg present values"</span>,</span>
+<span id="cb37-34"><a href="#cb37-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb37-35"><a href="#cb37-35" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-36"><a href="#cb37-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb37-37"><a href="#cb37-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency bond_leg_pv overnight_leg_pv principal_pv upfront_pv</span></span>
+<span id="cb37-38"><a href="#cb37-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;            &lt;dbl&gt;        &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb37-39"><a href="#cb37-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR          -101.28           28.416       71.570   -0.42217</span></span>
+<span id="cb37-40"><a href="#cb37-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD          -100.86           38.478       61.500   -0.38880</span></span>
+<span id="cb37-41"><a href="#cb37-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 JPY          -100.62           25.686       74.307   -0.43422</span></span>
+<span id="cb37-42"><a href="#cb37-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GBP          -100.73           38.652       61.327   -0.38881</span></span>
+<span id="cb37-43"><a href="#cb37-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-44"><a href="#cb37-44" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb37-45"><a href="#cb37-45" aria-hidden="true" tabindex="-1"></a>  asw4_native_asw_tbl <span class="sc">|&gt;</span></span>
+<span id="cb37-46"><a href="#cb37-46" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb37-47"><a href="#cb37-47" aria-hidden="true" tabindex="-1"></a>      currency,</span>
+<span id="cb37-48"><a href="#cb37-48" aria-hidden="true" tabindex="-1"></a>      dirty_price,</span>
+<span id="cb37-49"><a href="#cb37-49" aria-hidden="true" tabindex="-1"></a>      <span class="at">npv_at_zero_spread =</span> npv,</span>
+<span id="cb37-50"><a href="#cb37-50" aria-hidden="true" tabindex="-1"></a>      spread_annuity,</span>
+<span id="cb37-51"><a href="#cb37-51" aria-hidden="true" tabindex="-1"></a>      fair_spread_bp</span>
+<span id="cb37-52"><a href="#cb37-52" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb37-53"><a href="#cb37-53" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Native-currency OIS asset swap: fair spread"</span>,</span>
+<span id="cb37-54"><a href="#cb37-54" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb37-55"><a href="#cb37-55" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-56"><a href="#cb37-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb37-57"><a href="#cb37-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency dirty_price npv_at_zero_spread spread_annuity fair_spread_bp</span></span>
+<span id="cb37-58"><a href="#cb37-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;              &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;</span></span>
+<span id="cb37-59"><a href="#cb37-59" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR           99.578            -1.7189         859.23         20.006</span></span>
+<span id="cb37-60"><a href="#cb37-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD           99.611            -1.2694         796.57         15.936</span></span>
+<span id="cb37-61"><a href="#cb37-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 JPY           99.566            -1.0592         874.91         12.107</span></span>
+<span id="cb37-62"><a href="#cb37-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GBP           99.611            -1.1418         786.60         14.516</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>結果は額面100当たりの現在価値である。一つ目の表の4項目の合計が、二つ目の表の<code>npv_at_zero_spread</code>になる。<code>npv_at_zero_spread</code>がマイナスであることは、スプレッドがゼロでは翌日物レグ側の受取が不足することを意味し、それを<code>spread_annuity</code>で割った大きさが<code>fair_spread_bp</code>になる。同じ価格99.5の債券でも、クーポン、カーブの水準と形状、日数計算規則が異なるため、ASWスプレッドは通貨ごとに異なる。</p>
+<p>ASWスプレッドの定義を二つの方法で検証する。第一に、求めたスプレッドを契約スプレッドとして与えて再評価すると、NPVはゼロになり、そのNPVから逆算した債券価格は入力価格と一致する。第二に、<code>asset_swap_price_table()</code>で入力価格に対応するスプレッドを求めると、<code>fair_spread_bp</code>と一致する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>asw4_native_check_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">imap_dfr</span>(</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  asw4_native_asw,</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(asw, currency) {</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    row <span class="ot">&lt;-</span> asw4_bond_assumption_tbl <span class="sc">|&gt;</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">filter</span>(currency <span class="sc">==</span> .env<span class="sc">$</span>currency)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    repriced <span class="ot">&lt;-</span> <span class="fu">compute_asset_swap_ISO</span>(</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">bond =</span> asw4_bonds[[currency]],</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">clean_price =</span> row<span class="sc">$</span>clean_price,</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">swap_curve =</span> asw4_curves[[currency]],</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">spread_bp =</span> asw<span class="sc">$</span>valuation<span class="sc">$</span>fair_spread_bp</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a>    tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> currency,</span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>      <span class="at">npv_at_fair =</span> repriced<span class="sc">$</span>valuation<span class="sc">$</span>npv,</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">implied_price =</span> <span class="fu">asset_swap_fair_price</span>(repriced),</span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">price_table_bp =</span> <span class="fu">asset_swap_price_table</span>(</span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>        asw, row<span class="sc">$</span>clean_price</span>
+<span id="cb38-20"><a href="#cb38-20" aria-hidden="true" tabindex="-1"></a>      )<span class="sc">$</span>AS_spread_bp,</span>
+<span id="cb38-21"><a href="#cb38-21" aria-hidden="true" tabindex="-1"></a>      <span class="at">fair_spread_bp =</span> asw<span class="sc">$</span>valuation<span class="sc">$</span>fair_spread_bp</span>
+<span id="cb38-22"><a href="#cb38-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb38-23"><a href="#cb38-23" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb38-24"><a href="#cb38-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb38-25"><a href="#cb38-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-26"><a href="#cb38-26" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb38-27"><a href="#cb38-27" aria-hidden="true" tabindex="-1"></a>  asw4_native_check_tbl,</span>
+<span id="cb38-28"><a href="#cb38-28" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Asset swap consistency checks"</span>,</span>
+<span id="cb38-29"><a href="#cb38-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb38-30"><a href="#cb38-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb38-31"><a href="#cb38-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 5</span></span>
+<span id="cb38-32"><a href="#cb38-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency npv_at_fair implied_price price_table_bp fair_spread_bp</span></span>
+<span id="cb38-33"><a href="#cb38-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;         &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;</span></span>
+<span id="cb38-34"><a href="#cb38-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR                0          99.5         20.006         20.006</span></span>
+<span id="cb38-35"><a href="#cb38-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD                0          99.5         15.936         15.936</span></span>
+<span id="cb38-36"><a href="#cb38-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 JPY                0          99.5         12.107         12.107</span></span>
+<span id="cb38-37"><a href="#cb38-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 GBP                0          99.5         14.516         14.516</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>債券価格が変わると、開始時の授受額が変わり、その差はアニュイティで割った分だけスプレッドに反映される。USD債で価格とスプレッドの関係を確認する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">asset_swap_price_table</span>(</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    asw4_native_asw<span class="sc">$</span>USD,</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">c</span>(<span class="dv">98</span>, <span class="dv">99</span>, <span class="fl">99.5</span>, <span class="dv">100</span>, <span class="dv">101</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"USD asset swap spread by clean price"</span>,</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 3</span></span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   clean_price AS_spread_bp AS_spread_pct</span></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;         &lt;dbl&gt;        &lt;dbl&gt;         &lt;dbl&gt;</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1        98        34.762       0.34762 </span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2        99        22.211       0.22211 </span></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3        99.5      15.936       0.15936 </span></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4       100         9.6602      0.096602</span></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5       101        -2.8909     -0.028909</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>価格が1上がると、スプレッドはおよそ12ベーシスポイント低下する。価格の変化を額面100当たりのアニュイティで割った値であり、価格が高い債券ほど投資家が受け取るスプレッドは小さくなる。</p>
+</section>
+<section id="ii-3.7.4-円ベーシス込みasw簡略化モデル" class="level3">
+<h3 class="anchored" data-anchor-id="ii-3.7.4-円ベーシス込みasw簡略化モデル">II-3.7.4 円ベーシス込みASW（簡略化モデル）</h3>
+<p>日本の投資家が外貨債を保有する場合、外貨の翌日物金利ではなく、円の翌日物金利に対するスプレッドで相対価値を比較したいことがある。<code>compute_asset_swap_basis_JPY()</code>は、外貨債のキャッシュフローを通貨スワップで円へ交換し、TONARに対するASWスプレッドを求める。</p>
+<p>モデルの為替フォワードは次式で与える。</p>
+<p><span class="math display">\[
+F(t)
+=
+S
+\frac{P_f(t)/P_f(t_0)}{P_d(t)/P_d(t_0)}
+e^{-z(t-t_0)}
+\]</span></p>
+<p>ここで、<span class="math inline">\(S\)</span>は開始日<span class="math inline">\(t_0\)</span>の為替スポット、<span class="math inline">\(P_f\)</span>は外貨のOISカーブの割引係数、<span class="math inline">\(P_d\)</span>はTONARカーブの割引係数である。<span class="math inline">\(z\)</span>は、満期の通貨ベーシスで通貨スワップがパーになるように一つだけ決める定数である。外貨債のクーポンと償還金をこの<span class="math inline">\(F(t)\)</span>で円に換算し、TONARカーブで割り引いて円のASWスプレッドを求める。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>asw4_foreign_currencies <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(asw4_currencies, <span class="st">"JPY"</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>asw4_jpy_asw <span class="ot">&lt;-</span> asw4_foreign_currencies <span class="sc">|&gt;</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">set_names</span>() <span class="sc">|&gt;</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  purrr<span class="sc">::</span><span class="fu">map</span>(</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(currency) {</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>      row <span class="ot">&lt;-</span> asw4_bond_assumption_tbl <span class="sc">|&gt;</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>        dplyr<span class="sc">::</span><span class="fu">filter</span>(currency <span class="sc">==</span> .env<span class="sc">$</span>currency)</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">compute_asset_swap_basis_JPY</span>(</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">bond =</span> asw4_bonds[[currency]],</span>
+<span id="cb40-12"><a href="#cb40-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">clean_price =</span> row<span class="sc">$</span>clean_price,</span>
+<span id="cb40-13"><a href="#cb40-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">foreign_curve =</span> asw4_curves[[currency]],</span>
+<span id="cb40-14"><a href="#cb40-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">jpy_curve =</span> asw4_curves<span class="sc">$</span>JPY,</span>
+<span id="cb40-15"><a href="#cb40-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">fx_spot =</span> row<span class="sc">$</span>fx_spot,</span>
+<span id="cb40-16"><a href="#cb40-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">basis_bp =</span> row<span class="sc">$</span>basis_bp,</span>
+<span id="cb40-17"><a href="#cb40-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">currency =</span> currency</span>
+<span id="cb40-18"><a href="#cb40-18" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb40-19"><a href="#cb40-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb40-20"><a href="#cb40-20" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb40-21"><a href="#cb40-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-22"><a href="#cb40-22" aria-hidden="true" tabindex="-1"></a>asw4_jpy_asw_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb40-23"><a href="#cb40-23" aria-hidden="true" tabindex="-1"></a>  asw4_jpy_asw,</span>
+<span id="cb40-24"><a href="#cb40-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(asw) {</span>
+<span id="cb40-25"><a href="#cb40-25" aria-hidden="true" tabindex="-1"></a>    asw<span class="sc">$</span>valuation <span class="sc">|&gt;</span></span>
+<span id="cb40-26"><a href="#cb40-26" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb40-27"><a href="#cb40-27" aria-hidden="true" tabindex="-1"></a>        currency,</span>
+<span id="cb40-28"><a href="#cb40-28" aria-hidden="true" tabindex="-1"></a>        native_asw_bp,</span>
+<span id="cb40-29"><a href="#cb40-29" aria-hidden="true" tabindex="-1"></a>        basis_on_jpy_bp,</span>
+<span id="cb40-30"><a href="#cb40-30" aria-hidden="true" tabindex="-1"></a>        jpy_asw_bp,</span>
+<span id="cb40-31"><a href="#cb40-31" aria-hidden="true" tabindex="-1"></a>        simple_sum_bp</span>
+<span id="cb40-32"><a href="#cb40-32" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb40-33"><a href="#cb40-33" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb40-34"><a href="#cb40-34" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb40-35"><a href="#cb40-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-36"><a href="#cb40-36" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb40-37"><a href="#cb40-37" aria-hidden="true" tabindex="-1"></a>  asw4_jpy_asw_tbl,</span>
+<span id="cb40-38"><a href="#cb40-38" aria-hidden="true" tabindex="-1"></a>  <span class="st">"JPY-converted asset swap (single-quote model)"</span>,</span>
+<span id="cb40-39"><a href="#cb40-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb40-40"><a href="#cb40-40" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb40-41"><a href="#cb40-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 5</span></span>
+<span id="cb40-42"><a href="#cb40-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency native_asw_bp basis_on_jpy_bp jpy_asw_bp simple_sum_bp</span></span>
+<span id="cb40-43"><a href="#cb40-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;            &lt;dbl&gt;           &lt;dbl&gt;      &lt;dbl&gt;         &lt;dbl&gt;</span></span>
+<span id="cb40-44"><a href="#cb40-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR             20.006             -20   -0.35701     0.0055389</span></span>
+<span id="cb40-45"><a href="#cb40-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD             15.936             -30  -15.463     -14.064    </span></span>
+<span id="cb40-46"><a href="#cb40-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 GBP             14.516             -25  -11.847     -10.484</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>native_asw_bp</code>は債券通貨のOISに対するスプレッド、<code>jpy_asw_bp</code>はTONARに対するスプレッドである。<code>simple_sum_bp</code>は両者を単純に足した値であり、<code>jpy_asw_bp</code>とは1ベーシスポイント程度異なる。円と外貨ではアニュイティと割引係数が異なり、さらにクーポンと償還金が満期までの為替フォワードで換算されるため、スプレッドの単純な足し算は近似にすぎない。</p>
+<p>この計算では、二つの条件を確認する。満期の通貨スワップが、決めた<span class="math inline">\(z\)</span>（<code>calibrated_discount_spread_bp</code>）で再びパーになること（<code>ccs_repricing_npv_jpy</code>）と、求めた円のASWスプレッドでNPVがゼロになること（<code>fair_spread_npv_jpy</code>）である。どちらも数値誤差の範囲でゼロになる。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>asw4_jpy_check_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  asw4_jpy_asw,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(asw) {</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    asw<span class="sc">$</span>valuation <span class="sc">|&gt;</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>        currency,</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>        calibrated_discount_spread_bp,</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>        ccs_repricing_npv_jpy,</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>        fair_spread_npv_jpy</span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>  asw4_jpy_check_tbl,</span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>  <span class="st">"JPY asset swap repricing checks"</span>,</span>
+<span id="cb41-17"><a href="#cb41-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb41-18"><a href="#cb41-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb41-19"><a href="#cb41-19" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 4</span></span>
+<span id="cb41-20"><a href="#cb41-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   currency calibrated_discount_sprea…¹ ccs_repricing_npv_jpy fair_spread_npv_jpy</span></span>
+<span id="cb41-21"><a href="#cb41-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                          &lt;dbl&gt;                 &lt;dbl&gt;               &lt;dbl&gt;</span></span>
+<span id="cb41-22"><a href="#cb41-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 EUR                           20.503           -1.9611e-11                   0</span></span>
+<span id="cb41-23"><a href="#cb41-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 USD                           33.104           -6.8303e-10                   0</span></span>
+<span id="cb41-24"><a href="#cb41-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 GBP                           27.481           -1.7604e-10                   0</span></span>
+<span id="cb41-25"><a href="#cb41-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ abbreviated name: ¹​calibrated_discount_spread_bp</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>通貨ベーシスと為替スポットを変えた場合の結果も確認する。</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>asw4_basis_sensitivity_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="sc">-</span><span class="dv">50</span>, <span class="sc">-</span><span class="dv">30</span>, <span class="sc">-</span><span class="dv">10</span>, <span class="dv">0</span>),</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(basis_bp) {</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">compute_asset_swap_basis_JPY</span>(</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>      <span class="at">bond =</span> asw4_bonds<span class="sc">$</span>USD,</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">clean_price =</span> <span class="fl">99.5</span>,</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">foreign_curve =</span> asw4_curves<span class="sc">$</span>USD,</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">jpy_curve =</span> asw4_curves<span class="sc">$</span>JPY,</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">fx_spot =</span> <span class="dv">150</span>,</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">basis_bp =</span> basis_bp,</span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> <span class="st">"USD"</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>valuation <span class="sc">|&gt;</span></span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">select</span>(basis_on_jpy_bp, native_asw_bp, jpy_asw_bp)</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>  asw4_basis_sensitivity_tbl,</span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"USD bond: JPY asset swap by basis"</span>,</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 4 × 3</span></span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   basis_on_jpy_bp native_asw_bp jpy_asw_bp</span></span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             &lt;dbl&gt;         &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1             -50        15.936   -35.447 </span></span>
+<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2             -30        15.936   -15.463 </span></span>
+<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3             -10        15.936     4.5198</span></span>
+<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4               0        15.936    14.511</span></span>
+<span id="cb42-29"><a href="#cb42-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-30"><a href="#cb42-30" aria-hidden="true" tabindex="-1"></a>asw4_fx_sensitivity_tbl <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dfr</span>(</span>
+<span id="cb42-31"><a href="#cb42-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="dv">140</span>, <span class="dv">150</span>, <span class="dv">160</span>),</span>
+<span id="cb42-32"><a href="#cb42-32" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(fx_spot) {</span>
+<span id="cb42-33"><a href="#cb42-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">compute_asset_swap_basis_JPY</span>(</span>
+<span id="cb42-34"><a href="#cb42-34" aria-hidden="true" tabindex="-1"></a>      <span class="at">bond =</span> asw4_bonds<span class="sc">$</span>USD,</span>
+<span id="cb42-35"><a href="#cb42-35" aria-hidden="true" tabindex="-1"></a>      <span class="at">clean_price =</span> <span class="fl">99.5</span>,</span>
+<span id="cb42-36"><a href="#cb42-36" aria-hidden="true" tabindex="-1"></a>      <span class="at">foreign_curve =</span> asw4_curves<span class="sc">$</span>USD,</span>
+<span id="cb42-37"><a href="#cb42-37" aria-hidden="true" tabindex="-1"></a>      <span class="at">jpy_curve =</span> asw4_curves<span class="sc">$</span>JPY,</span>
+<span id="cb42-38"><a href="#cb42-38" aria-hidden="true" tabindex="-1"></a>      <span class="at">fx_spot =</span> fx_spot,</span>
+<span id="cb42-39"><a href="#cb42-39" aria-hidden="true" tabindex="-1"></a>      <span class="at">basis_bp =</span> <span class="sc">-</span><span class="dv">30</span>,</span>
+<span id="cb42-40"><a href="#cb42-40" aria-hidden="true" tabindex="-1"></a>      <span class="at">currency =</span> <span class="st">"USD"</span></span>
+<span id="cb42-41"><a href="#cb42-41" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>valuation <span class="sc">|&gt;</span></span>
+<span id="cb42-42"><a href="#cb42-42" aria-hidden="true" tabindex="-1"></a>      dplyr<span class="sc">::</span><span class="fu">transmute</span>(<span class="at">fx_spot =</span> fx_spot, jpy_asw_bp)</span>
+<span id="cb42-43"><a href="#cb42-43" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb42-44"><a href="#cb42-44" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb42-45"><a href="#cb42-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-46"><a href="#cb42-46" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb42-47"><a href="#cb42-47" aria-hidden="true" tabindex="-1"></a>  asw4_fx_sensitivity_tbl,</span>
+<span id="cb42-48"><a href="#cb42-48" aria-hidden="true" tabindex="-1"></a>  <span class="st">"USD bond: JPY asset swap by FX spot"</span>,</span>
+<span id="cb42-49"><a href="#cb42-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb42-50"><a href="#cb42-50" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb42-51"><a href="#cb42-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 3 × 2</span></span>
+<span id="cb42-52"><a href="#cb42-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   fx_spot jpy_asw_bp</span></span>
+<span id="cb42-53"><a href="#cb42-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;     &lt;dbl&gt;      &lt;dbl&gt;</span></span>
+<span id="cb42-54"><a href="#cb42-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     140    -15.463</span></span>
+<span id="cb42-55"><a href="#cb42-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2     150    -15.463</span></span>
+<span id="cb42-56"><a href="#cb42-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3     160    -15.463</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>通貨ベーシスが10ベーシスポイント変わると、円のASWスプレッドもほぼ10ベーシスポイント変わる。一方、為替スポットを変えても円のASWスプレッドは変わらない。この簡略化モデルでは、元本を開始時の為替レートで固定して交換し、為替フォワードも<span class="math inline">\(S\)</span>に比例するため、円建ての現在価値とアニュイティが同じ比率で変わるからである。</p>
+<p>このモデルは、次の前提を置いた簡略化モデルである。関数の戻り値<code>assumptions</code>にも同じ前提を記録している。</p>
+<ul>
+<li>担保は円に固定しており、担保通貨を選ぶ権利は考慮しない。</li>
+<li>通貨スワップは元本一定で、為替の変動に応じて元本を洗い替えるMtM型ではない。</li>
+<li>満期の通貨ベーシス1本から一定の<span class="math inline">\(z\)</span>を決めるだけで、通貨ベーシスの期間構造は構築しない。満期前の為替フォワードは、期間構造を反映した市場の値とは一致しない。</li>
+<li>債券、為替スポットおよび通貨ベーシスは仮定値であり、市場の気配ではない。</li>
+<li>信用リスク、資金調達コスト、取引コスト、為替と金利の相関による調整は含まない。</li>
+</ul>
+<p>したがって、本節の結果は、通貨ごとのOISカーブと通貨ベーシスがASWスプレッドへどう反映されるかを示すための計算例であり、外貨債の相対価値をそのまま判断するための値ではない。</p>
+</section>
+<section id="ii-3.7.5-担保のcheapest-to-depositと今後の拡張" class="level3">
+<h3 class="anchored" data-anchor-id="ii-3.7.5-担保のcheapest-to-depositと今後の拡張">II-3.7.5 担保のCheapest to Depositと今後の拡張</h3>
+<p>担保契約が複数の通貨での担保差入れを認めている場合、担保を差し入れる側は、受け取る付利と調達コストを比べて、最も有利な通貨の担保を選ぶことができる。この選択はCheapest to Deposit（担保CTD）と呼ばれる。II-2.6節の国債先物で受渡銘柄を選ぶCheapest to Deliverとは別の概念であり、選ぶ対象は受渡銘柄ではなく担保通貨である。</p>
+<p>担保CTDがある場合、割引に使う金利は一つの通貨のOISではなく、日ごとに最も有利な担保通貨の翌日物金利を、通貨ベーシスで円へ換算した金利になる。II-3.7.4節の円ベーシス込みASWは担保を円に固定しているため、この選択権の価値を含まない。円担保の値は、担保CTDを考慮した評価の一つの境界と位置付けられる。</p>
+<p>本節の計算を担保CTDへ拡張するには、次の三段階が考えられる。</p>
+<ol type="1">
+<li><strong>通貨ベーシスの期間構造</strong>：FXスワップと複数年限の通貨ベーシスから、外貨担保の割引カーブを構築する。II-3.7.4節の一定の<span class="math inline">\(z\)</span>を、年限ごとの期間構造に置き換える段階である。</li>
+<li><strong>担保選択の本源的価値</strong>：各担保通貨の割引カーブを円の同一基準に揃え、日ごとに最も有利な翌日物フォワードを選んで割引係数をつなぐ。現在のフォワードに基づく選択であり、将来の金利変動による選択権の価値は含まない。</li>
+<li><strong>担保選択の時間価値</strong>：通貨ごとの翌日物金利と通貨ベーシスの変動をモデル化し、将来の担保選択を期待値として評価する。ヘアカット、担保の差替え条件、差替えコストも考慮する必要がある。</li>
+</ol>
+<p>これらには、担保契約の担保通貨、付利条件、適格通貨、ヘアカット、差替え条件などのデータが必要になる。本節の4通貨OISカーブと円ベーシス込みASWは、その出発点となる。</p>
+<p>本節では、€STR、SOFR、TONAR、SONIAのOISカーブを、通貨別の規約表と共通の構築関数で作成し、入力気配の再現とGaussQuantとの一致を確認した。さらに、そのカーブを用いて債券通貨のOISに対するASWと、円ベーシス込みのASWを計算し、スプレッドの定義と通貨スワップの再現を検証した。円ベーシス込みASWは、担保を円に固定し、満期1本の通貨ベーシスで為替フォワードを決める簡略化モデルであり、担保CTDを扱うには通貨ベーシスの期間構造と担保選択のモデルが必要になる。</p>
 </section>
 </section>
 <section id="ii-3.8-参考資料" class="level2">
