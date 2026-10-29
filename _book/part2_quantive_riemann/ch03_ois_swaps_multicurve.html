@@ -614,7 +614,7 @@ PV_{\mathrm{fixed}}
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>tona_quotes <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>as_of_date, <span class="sc">~</span>currency, <span class="sc">~</span>instrument, <span class="sc">~</span>kind, <span class="sc">~</span>tenor, <span class="sc">~</span>rate,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_tona), <span class="st">"JPY"</span>, <span class="st">"TONA"</span>, <span class="st">"depo"</span>, <span class="st">"1D"</span>,  <span class="sc">-</span><span class="fl">0.0000900</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_tona), <span class="st">"JPY"</span>, <span class="st">"TONA"</span>, <span class="st">"overnight_deposit"</span>, <span class="st">"1D"</span>,  <span class="sc">-</span><span class="fl">0.0000900</span>,</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_tona), <span class="st">"JPY"</span>, <span class="st">"TONA"</span>, <span class="st">"ois"</span>,  <span class="st">"1W"</span>,  <span class="sc">-</span><span class="fl">0.0001261</span>,</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_tona), <span class="st">"JPY"</span>, <span class="st">"TONA"</span>, <span class="st">"ois"</span>,  <span class="st">"2W"</span>,  <span class="sc">-</span><span class="fl">0.0001469</span>,</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_tona), <span class="st">"JPY"</span>, <span class="st">"TONA"</span>, <span class="st">"ois"</span>,  <span class="st">"1M"</span>,  <span class="sc">-</span><span class="fl">0.0001807</span>,</span>
@@ -636,22 +636,22 @@ PV_{\mathrm{fixed}}
 <span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
 <span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 14 × 6</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    as_of_date currency instrument kind  tenor       rate</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;     &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt; &lt;chr&gt;      &lt;dbl&gt;</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 2022-08-19 JPY      TONA       depo  1D    -0.00009  </span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 2022-08-19 JPY      TONA       ois   1W    -0.0001261</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 2022-08-19 JPY      TONA       ois   2W    -0.0001469</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 2022-08-19 JPY      TONA       ois   1M    -0.0001807</span></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 2022-08-19 JPY      TONA       ois   3M    -0.0001919</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 2022-08-19 JPY      TONA       ois   6M    -0.0001043</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 2022-08-19 JPY      TONA       ois   9M     0.0000022</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 2022-08-19 JPY      TONA       ois   12M    0.000125 </span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 2022-08-19 JPY      TONA       ois   18M    0.0003125</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2022-08-19 JPY      TONA       ois   2Y     0.0004875</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 2022-08-19 JPY      TONA       ois   3Y     0.0007375</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 2022-08-19 JPY      TONA       ois   4Y     0.0009479</span></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13 2022-08-19 JPY      TONA       ois   5Y     0.0011854</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14 2022-08-19 JPY      TONA       ois   7Y     0.0019146</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    as_of_date currency instrument kind              tenor       rate</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;     &lt;chr&gt;    &lt;chr&gt;      &lt;chr&gt;             &lt;chr&gt;      &lt;dbl&gt;</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 2022-08-19 JPY      TONA       overnight_deposit 1D    -0.00009  </span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 2022-08-19 JPY      TONA       ois               1W    -0.0001261</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 2022-08-19 JPY      TONA       ois               2W    -0.0001469</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 2022-08-19 JPY      TONA       ois               1M    -0.0001807</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 2022-08-19 JPY      TONA       ois               3M    -0.0001919</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 2022-08-19 JPY      TONA       ois               6M    -0.0001043</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 2022-08-19 JPY      TONA       ois               9M     0.0000022</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 2022-08-19 JPY      TONA       ois               12M    0.000125 </span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 2022-08-19 JPY      TONA       ois               18M    0.0003125</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2022-08-19 JPY      TONA       ois               2Y     0.0004875</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 2022-08-19 JPY      TONA       ois               3Y     0.0007375</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 2022-08-19 JPY      TONA       ois               4Y     0.0009479</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13 2022-08-19 JPY      TONA       ois               5Y     0.0011854</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14 2022-08-19 JPY      TONA       ois               7Y     0.0019146</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="ii-3.2.2-tona-oisカーブの構築" class="level3">
@@ -660,57 +660,96 @@ PV_{\mathrm{fixed}}
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>tona_curve_envs <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">ir_build_ois_curve_envs_GQH</span>(</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">quotes =</span> tona_quotes,</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">trade_date =</span> trade_date_tona,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>tona_curve_env <span class="ot">&lt;-</span> tona_curve_envs[[<span class="st">"JPY::TONA"</span>]]</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>tona_curve <span class="ot">&lt;-</span> tona_curve_env<span class="sc">$</span>curve</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>tona_curve_display_tbl <span class="ot">&lt;-</span> <span class="fu">curve_tbl_local</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">curve_obj =</span> tona_curve,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">200</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  tona_curve_display_tbl,</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="st">"TONA OIS curve"</span>,</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">12</span></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 12 × 4</span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    date           time discount_factor   zero_rate</span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;        &lt;dbl&gt;           &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 2022-08-23 0                 1       0         </span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 2022-09-05 0.035203          1.0000 -0.00014504</span></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 2022-09-18 0.070407          1.0000 -0.00017306</span></span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 2022-10-01 0.10561           1.0000 -0.00018278</span></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 2022-10-13 0.14081           1.0000 -0.00018668</span></span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 2022-10-26 0.17602           1.0000 -0.00018902</span></span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 2022-11-08 0.21122           1.0000 -0.00019057</span></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 2022-11-21 0.24642           1.0000 -0.00019169</span></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 2022-12-04 0.28163           1.0000 -0.00017512</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2022-12-17 0.31683           1.0000 -0.00015741</span></span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 2022-12-29 0.35203           1.0001 -0.00014325</span></span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 2023-01-11 0.38724           1.0001 -0.00013166</span></span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>tona_curve_check_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference_date =</span> GaussQuant<span class="sc">::</span><span class="fu">iso_GQL</span>(</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    tona_curve<span class="sc">$</span><span class="fu">referenceDate</span>()</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">discount_2022_08_23 =</span> tona_curve<span class="sc">$</span><span class="fu">discount</span>(</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    GaussQuant<span class="sc">::</span><span class="fu">date_GQL</span>(<span class="st">"2022-08-23"</span>)</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>  tona_curve_check_tbl,</span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>  <span class="st">"TONA curve checks"</span>,</span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 2</span></span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   reference_date discount_2022_08_23</span></span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                        &lt;dbl&gt;</span></span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 2022-08-23                       1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference =</span> <span class="st">"evaluation"</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_quote_error_bp =</span> <span class="fl">1e-6</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>tona_curve_env <span class="ot">&lt;-</span> tona_curve_envs[[<span class="st">"JPY::TONA"</span>]]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>tona_curve <span class="ot">&lt;-</span> tona_curve_env<span class="sc">$</span>curve</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>tona_curve_display_tbl <span class="ot">&lt;-</span> <span class="fu">curve_tbl_local</span>(</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">curve_obj =</span> tona_curve,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">200</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>  tona_curve_display_tbl,</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="st">"TONA OIS curve"</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">12</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 12 × 4</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    date           time discount_factor   zero_rate</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;        &lt;dbl&gt;           &lt;dbl&gt;       &lt;dbl&gt;</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 2022-08-19 0                 1       0         </span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 2022-09-01 0.035258          1.0000 -0.00012373</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 2022-09-14 0.070517          1.0000 -0.00015674</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 2022-09-27 0.10578           1.0000 -0.00017252</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 2022-10-09 0.14103           1.0000 -0.00017898</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 2022-10-22 0.17629           1.0000 -0.00018285</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 2022-11-04 0.21155           1.0000 -0.00018544</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 2022-11-17 0.24681           1.0000 -0.00018729</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 2022-11-30 0.28207           1.0001 -0.00017811</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2022-12-13 0.31733           1.0001 -0.00016007</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 2022-12-26 0.35258           1.0001 -0.00014564</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 2023-01-08 0.38784           1.0001 -0.00013383</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>tona_curve_check_tbl <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference_date =</span> GaussQuant<span class="sc">::</span><span class="fu">iso_GQL</span>(</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    tona_curve<span class="sc">$</span><span class="fu">referenceDate</span>()</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>  <span class="at">discount_2022_08_22 =</span> tona_curve<span class="sc">$</span><span class="fu">discount</span>(</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    GaussQuant<span class="sc">::</span><span class="fu">date_GQL</span>(<span class="st">"2022-08-22"</span>)</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>  <span class="at">discount_2022_08_23 =</span> tona_curve<span class="sc">$</span><span class="fu">discount</span>(</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    GaussQuant<span class="sc">::</span><span class="fu">date_GQL</span>(<span class="st">"2022-08-23"</span>)</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>  tona_curve_check_tbl,</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>  <span class="st">"TONA curve checks"</span>,</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   reference_date discount_2022_08_22 discount_2022_08_23</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;                        &lt;dbl&gt;               &lt;dbl&gt;</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 2022-08-19                  1.0000              1.0000</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>  tona_curve_env<span class="sc">$</span>quote_repricing <span class="sc">|&gt;</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>      kind,</span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>      tenor,</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>      start_date,</span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>      maturity_date,</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>      used_in_bootstrap,</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>      quote_error_bp</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>  <span class="st">"TONA quote repricing"</span>,</span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">20</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 14 × 6</span></span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    kind          tenor start_date maturity_date used_in_bootstrap quote_error_bp</span></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;chr&gt;         &lt;chr&gt; &lt;date&gt;     &lt;date&gt;        &lt;lgl&gt;                      &lt;dbl&gt;</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 overnight_de… 1D    2022-08-19 2022-08-22    TRUE                 -4.2534e-11</span></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 ois           1W    2022-08-23 2022-08-30    TRUE                 -5.5266e- 9</span></span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 ois           2W    2022-08-23 2022-09-06    TRUE                 -4.9127e- 9</span></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 ois           1M    2022-08-23 2022-09-26    TRUE                  9.3949e-12</span></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 ois           3M    2022-08-23 2022-11-24    TRUE                  4.4301e-12</span></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 ois           6M    2022-08-23 2023-02-24    TRUE                 -1.8005e-11</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 ois           9M    2022-08-23 2023-05-23    TRUE                 -6.8636e-11</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 ois           12M   2022-08-23 2023-08-23    TRUE                 -2.0719e-10</span></span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 ois           18M   2022-08-23 2024-02-26    TRUE                 -1.2756e- 9</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 ois           2Y    2022-08-23 2024-08-23    TRUE                 -3.9641e-10</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 ois           3Y    2022-08-23 2025-08-25    TRUE                  1.5340e-10</span></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 ois           4Y    2022-08-23 2026-08-24    TRUE                 -3.5911e-10</span></span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 13 ois           5Y    2022-08-23 2027-08-23    TRUE                 -2.6273e-10</span></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 14 ois           7Y    2022-08-23 2029-08-23    TRUE                 -2.2768e-13</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>評価日は2022年8月19日（金）である。1D預金は翌日物（O/N）の気配であり、評価日に始まり翌営業日の8月22日（月）に満期を迎える。一方、OISは評価日の2営業日後の8月23日に始まる。そこで、1D預金は<code>kind = "overnight_deposit"</code>として翌日物金利インデックスから作成し、カーブの基準日を評価日（<code>reference = "evaluation"</code>）とする。</p>
+<p>GaussQuantの<code>kind = "depo"</code>は、通貨ごとの規約の日数（円は2営業日）だけ後に始まる預金であり、円の1Dでは8月23日から24日までの先日付の預金になる。O/Nの気配をこの種類で渡すと、O/Nの金利が受渡日以後の期間に置かれてしまうため、本節では使わない。OISの受渡日数は規約どおり2営業日のままである。</p>
+<p><code>quote_repricing</code>の<code>start_date</code>と<code>maturity_date</code>で各気配の期間を確認でき、<code>used_in_bootstrap</code>がすべて<code>TRUE</code>、<code>quote_error_bp</code>が十分小さいことから、1D預金を含むすべての気配をカーブが再現していることを確認できる。カーブ表は評価日から始まる。8月22日の割引係数はO/N（週末を含む3日間）の割引、8月23日の割引係数は受渡日までの4日間の割引を表し、金利がマイナスであるため、どちらも1をわずかに上回る。</p>
 <p>割引係数 <span class="math inline">\(P(0,T)\)</span> は、将来時点 <span class="math inline">\(T\)</span> の1円を評価日時点の価値へ換算する係数である。満期が長くなるほど、通常は割引係数が低下する。ゼロ金利は、各満期の割引係数を単一の金利として表したものである。</p>
 </section>
 <section id="ii-3.2.3-jpy短期oisの評価" class="level3">
@@ -809,7 +848,7 @@ P(0,T_0)-P(0,T_1)
 <span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 5</span></span>
 <span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   effective_discount_fa…¹ maturity_discount_fa…² payment_discount_fac…³  annuity</span></span>
 <span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;                     &lt;dbl&gt;                  &lt;dbl&gt;                  &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1                       1                 1.0000                 1.0000 0.019178</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1                  1.0000                 1.0000                 1.0000 0.019178</span></span>
 <span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ abbreviated names: ¹​effective_discount_factor, ²​maturity_discount_factor,</span></span>
 <span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   ³​payment_discount_factor</span></span>
 <span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 1 more variable: fair_swap_rate_hand &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -854,11 +893,11 @@ P(0,T_0)-P(0,T_1)
 <span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 5 × 9</span></span>
 <span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   fixing_date next_date   days fixing_before_eval fixing_on_eval fixing_value</span></span>
 <span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;       &lt;chr&gt;      &lt;int&gt; &lt;lgl&gt;              &lt;lgl&gt;                 &lt;dbl&gt;</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 2022-08-23  2022-08-24     1 FALSE              FALSE          -0.000090000</span></span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2022-08-24  2022-08-25     1 FALSE              FALSE          -0.00013212 </span></span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 2022-08-25  2022-08-26     1 FALSE              FALSE          -0.00013212 </span></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 2022-08-26  2022-08-29     3 FALSE              FALSE          -0.00013212 </span></span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 2022-08-29  2022-08-30     1 FALSE              FALSE          -0.00013212 </span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 2022-08-23  2022-08-24     1 FALSE              FALSE           -0.00012610</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 2022-08-24  2022-08-25     1 FALSE              FALSE           -0.00012610</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 2022-08-25  2022-08-26     1 FALSE              FALSE           -0.00012610</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 2022-08-26  2022-08-29     3 FALSE              FALSE           -0.00012610</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 2022-08-29  2022-08-30     1 FALSE              FALSE           -0.00012610</span></span>
 <span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # ℹ 3 more variables: forward_rate_from_df &lt;dbl&gt;, applied_rate &lt;dbl&gt;,</span></span>
 <span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; #   amount &lt;dbl&gt;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -956,7 +995,7 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 3</span></span>
 <span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   row_id amount_before amount_after</span></span>
 <span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;int&gt;         &lt;dbl&gt;        &lt;dbl&gt;</span></span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1      1       -24.184      -24.183</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1      1       -24.184      -22.117</span></span>
 <span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">ir_show_swap_summary_GQH</span>(</span>
 <span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">trade_env =</span> jpy_ois_short,</span>
@@ -977,7 +1016,7 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 1 × 7</span></span>
 <span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       i fixing_date fixing_value pay_date    amount     df      pv</span></span>
 <span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;int&gt; &lt;chr&gt;              &lt;dbl&gt; &lt;chr&gt;        &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;</span></span>
-<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     1 2022-08-29   -0.00014154 2022-08-30 -24.183 1.0000 -24.183</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1     1 2022-08-29   -0.00012645 2022-08-30 -22.117 1.0000 -22.117</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 </section>
@@ -994,7 +1033,7 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>sofr_quotes <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tribble</span>(</span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>as_of_date, <span class="sc">~</span>currency, <span class="sc">~</span>instrument, <span class="sc">~</span>kind, <span class="sc">~</span>tenor, <span class="sc">~</span>rate,</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_sofr), <span class="st">"USD"</span>, <span class="st">"SOFR"</span>, <span class="st">"depo"</span>, <span class="st">"1D"</span>, <span class="fl">0.0531</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_sofr), <span class="st">"USD"</span>, <span class="st">"SOFR"</span>, <span class="st">"overnight_deposit"</span>, <span class="st">"1D"</span>, <span class="fl">0.0531</span>,</span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_sofr), <span class="st">"USD"</span>, <span class="st">"SOFR"</span>, <span class="st">"ois"</span>,  <span class="st">"1M"</span>, <span class="fl">0.0532</span>,</span>
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_sofr), <span class="st">"USD"</span>, <span class="st">"SOFR"</span>, <span class="st">"ois"</span>,  <span class="st">"3M"</span>, <span class="fl">0.0538</span>,</span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.Date</span>(trade_date_sofr), <span class="st">"USD"</span>, <span class="st">"SOFR"</span>, <span class="st">"ois"</span>,  <span class="st">"6M"</span>, <span class="fl">0.0546</span>,</span>
@@ -1006,33 +1045,59 @@ P(0,t_i)/P(0,t_{i+1})-1
 <span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>sofr_curve_envs <span class="ot">&lt;-</span> GaussQuant<span class="sc">::</span><span class="fu">ir_build_ois_curve_envs_GQH</span>(</span>
 <span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">quotes =</span> sofr_quotes,</span>
 <span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">trade_date =</span> trade_date_sofr,</span>
-<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span></span>
-<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>sofr_curve_env <span class="ot">&lt;-</span> sofr_curve_envs[[<span class="st">"USD::SOFR"</span>]]</span>
-<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>sofr_curve <span class="ot">&lt;-</span> sofr_curve_env<span class="sc">$</span>curve</span>
-<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
-<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">curve_tbl_local</span>(sofr_curve),</span>
-<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>  <span class="st">"SOFR OIS curve"</span>,</span>
-<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">12</span></span>
-<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 12 × 4</span></span>
-<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    date           time discount_factor zero_rate</span></span>
-<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;        &lt;dbl&gt;           &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 2023-09-28 0                1        0       </span></span>
-<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 2023-10-04 0.015299         0.99919  0.053075</span></span>
-<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 2023-10-09 0.030597         0.99838  0.053075</span></span>
-<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 2023-10-15 0.045896         0.99757  0.053075</span></span>
-<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 2023-10-20 0.061195         0.99676  0.053075</span></span>
-<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 2023-10-26 0.076494         0.99595  0.053075</span></span>
-<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 2023-11-01 0.091792         0.99514  0.053092</span></span>
-<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 2023-11-06 0.10709          0.99432  0.053170</span></span>
-<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 2023-11-12 0.12239          0.99351  0.053228</span></span>
-<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2023-11-17 0.13769          0.99269  0.053273</span></span>
-<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 2023-11-23 0.15299          0.99188  0.053309</span></span>
-<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 2023-11-28 0.16829          0.99106  0.053339</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">verbose =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">reference =</span> <span class="st">"evaluation"</span>,</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_quote_error_bp =</span> <span class="fl">1e-6</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>sofr_curve_env <span class="ot">&lt;-</span> sofr_curve_envs[[<span class="st">"USD::SOFR"</span>]]</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>sofr_curve <span class="ot">&lt;-</span> sofr_curve_env<span class="sc">$</span>curve</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">curve_tbl_local</span>(sofr_curve),</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>  <span class="st">"SOFR OIS curve"</span>,</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">12</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 12 × 4</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    date           time discount_factor zero_rate</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    &lt;date&gt;        &lt;dbl&gt;           &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  1 2023-09-26 0                1        0       </span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  2 2023-10-02 0.015327         0.99919  0.053078</span></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  3 2023-10-07 0.030653         0.99837  0.053077</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  4 2023-10-13 0.045980         0.99756  0.053076</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  5 2023-10-18 0.061307         0.99675  0.053076</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  6 2023-10-24 0.076633         0.99594  0.053075</span></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  7 2023-10-30 0.091960         0.99513  0.053075</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  8 2023-11-04 0.10729          0.99431  0.053142</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  9 2023-11-10 0.12261          0.99350  0.053204</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 10 2023-11-15 0.13794          0.99268  0.053252</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 11 2023-11-21 0.15327          0.99187  0.053290</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 12 2023-11-27 0.16859          0.99105  0.053321</span></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>GaussQuant<span class="sc">::</span><span class="fu">show_tbl_GQH</span>(</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>  sofr_curve_env<span class="sc">$</span>quote_repricing <span class="sc">|&gt;</span></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>    dplyr<span class="sc">::</span><span class="fu">select</span>(</span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>      kind,</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>      tenor,</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>      maturity_date,</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>      used_in_bootstrap,</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>      quote_error_bp</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>  <span class="st">"SOFR quote repricing"</span>,</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">12</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; # A tibble: 7 × 5</span></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   kind              tenor maturity_date used_in_bootstrap quote_error_bp</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;   &lt;chr&gt;             &lt;chr&gt; &lt;date&gt;        &lt;lgl&gt;                      &lt;dbl&gt;</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 overnight_deposit 1D    2023-09-27    TRUE                  2.2796e- 9</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 ois               1M    2023-10-30    TRUE                  1.3402e- 8</span></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 ois               3M    2023-12-28    TRUE                 -9.4647e-11</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 ois               6M    2024-03-28    TRUE                 -1.9571e- 9</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 ois               1Y    2024-09-30    TRUE                  2.6516e- 9</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 ois               2Y    2025-09-29    TRUE                 -4.3576e-11</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 7 ois               3Y    2026-09-28    TRUE                 -1.8735e-12</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>1D預金は翌日物（O/N）の気配であり、II-3.2節のTONAと同じく<code>kind = "overnight_deposit"</code>として評価日に始まり翌営業日に満期を迎える預金として扱う。SOFR OISの受渡日は評価日の2営業日後であるため、受渡日をカーブの基準日にすると、1D預金の満期が基準日より前になり、ブートストラップに使われない。そこで本節では<code>reference = "evaluation"</code>を指定し、評価日を基準日とする。<code>used_in_bootstrap</code>がすべて<code>TRUE</code>であり、<code>quote_error_bp</code>が十分小さいことから、1D預金を含むすべての気配がカーブに反映されていることを確認できる。</p>
 </section>
 <section id="ii-3.4.2-sofr-oisの評価" class="level3">
 <h3 class="anchored" data-anchor-id="ii-3.4.2-sofr-oisの評価">II-3.4.2 SOFR OISの評価</h3>

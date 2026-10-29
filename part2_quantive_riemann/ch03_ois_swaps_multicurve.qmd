@@ -197,7 +197,7 @@ GaussQuant::set_eval_date_GQL(trade_date_tona)
 
 tona_quotes <- tibble::tribble(
   ~as_of_date, ~currency, ~instrument, ~kind, ~tenor, ~rate,
-  as.Date(trade_date_tona), "JPY", "TONA", "depo", "1D",  -0.0000900,
+  as.Date(trade_date_tona), "JPY", "TONA", "overnight_deposit", "1D",  -0.0000900,
   as.Date(trade_date_tona), "JPY", "TONA", "ois",  "1W",  -0.0001261,
   as.Date(trade_date_tona), "JPY", "TONA", "ois",  "2W",  -0.0001469,
   as.Date(trade_date_tona), "JPY", "TONA", "ois",  "1M",  -0.0001807,
@@ -226,7 +226,9 @@ GaussQuant::show_tbl_GQH(
 tona_curve_envs <- GaussQuant::ir_build_ois_curve_envs_GQH(
   quotes = tona_quotes,
   trade_date = trade_date_tona,
-  verbose = TRUE
+  verbose = TRUE,
+  reference = "evaluation",
+  max_quote_error_bp = 1e-6
 )
 
 tona_curve_env <- tona_curve_envs[["JPY::TONA"]]
@@ -247,6 +249,9 @@ tona_curve_check_tbl <- tibble::tibble(
   reference_date = GaussQuant::iso_GQL(
     tona_curve$referenceDate()
   ),
+  discount_2022_08_22 = tona_curve$discount(
+    GaussQuant::date_GQL("2022-08-22")
+  ),
   discount_2022_08_23 = tona_curve$discount(
     GaussQuant::date_GQL("2022-08-23")
   )
@@ -257,7 +262,27 @@ GaussQuant::show_tbl_GQH(
   "TONA curve checks",
   n = 20
 )
+
+GaussQuant::show_tbl_GQH(
+  tona_curve_env$quote_repricing |>
+    dplyr::select(
+      kind,
+      tenor,
+      start_date,
+      maturity_date,
+      used_in_bootstrap,
+      quote_error_bp
+    ),
+  "TONA quote repricing",
+  n = 20
+)
 ```
+
+評価日は2022年8月19日（金）である。1D預金は翌日物（O/N）の気配であり、評価日に始まり翌営業日の8月22日（月）に満期を迎える。一方、OISは評価日の2営業日後の8月23日に始まる。そこで、1D預金は`kind = "overnight_deposit"`として翌日物金利インデックスから作成し、カーブの基準日を評価日（`reference = "evaluation"`）とする。
+
+GaussQuantの`kind = "depo"`は、通貨ごとの規約の日数（円は2営業日）だけ後に始まる預金であり、円の1Dでは8月23日から24日までの先日付の預金になる。O/Nの気配をこの種類で渡すと、O/Nの金利が受渡日以後の期間に置かれてしまうため、本節では使わない。OISの受渡日数は規約どおり2営業日のままである。
+
+`quote_repricing`の`start_date`と`maturity_date`で各気配の期間を確認でき、`used_in_bootstrap`がすべて`TRUE`、`quote_error_bp`が十分小さいことから、1D預金を含むすべての気配をカーブが再現していることを確認できる。カーブ表は評価日から始まる。8月22日の割引係数はO/N（週末を含む3日間）の割引、8月23日の割引係数は受渡日までの4日間の割引を表し、金利がマイナスであるため、どちらも1をわずかに上回る。
 
 割引係数 $P(0,T)$ は、将来時点 $T$ の1円を評価日時点の価値へ換算する係数である。満期が長くなるほど、通常は割引係数が低下する。ゼロ金利は、各満期の割引係数を単一の金利として表したものである。
 
@@ -518,7 +543,7 @@ GaussQuant::set_eval_date_GQL(trade_date_sofr)
 
 sofr_quotes <- tibble::tribble(
   ~as_of_date, ~currency, ~instrument, ~kind, ~tenor, ~rate,
-  as.Date(trade_date_sofr), "USD", "SOFR", "depo", "1D", 0.0531,
+  as.Date(trade_date_sofr), "USD", "SOFR", "overnight_deposit", "1D", 0.0531,
   as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "1M", 0.0532,
   as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "3M", 0.0538,
   as.Date(trade_date_sofr), "USD", "SOFR", "ois",  "6M", 0.0546,
@@ -530,7 +555,9 @@ sofr_quotes <- tibble::tribble(
 sofr_curve_envs <- GaussQuant::ir_build_ois_curve_envs_GQH(
   quotes = sofr_quotes,
   trade_date = trade_date_sofr,
-  verbose = TRUE
+  verbose = TRUE,
+  reference = "evaluation",
+  max_quote_error_bp = 1e-6
 )
 
 sofr_curve_env <- sofr_curve_envs[["USD::SOFR"]]
@@ -541,7 +568,22 @@ GaussQuant::show_tbl_GQH(
   "SOFR OIS curve",
   n = 12
 )
+
+GaussQuant::show_tbl_GQH(
+  sofr_curve_env$quote_repricing |>
+    dplyr::select(
+      kind,
+      tenor,
+      maturity_date,
+      used_in_bootstrap,
+      quote_error_bp
+    ),
+  "SOFR quote repricing",
+  n = 12
+)
 ```
+
+1D預金は翌日物（O/N）の気配であり、II-3.2節のTONAと同じく`kind = "overnight_deposit"`として評価日に始まり翌営業日に満期を迎える預金として扱う。SOFR OISの受渡日は評価日の2営業日後であるため、受渡日をカーブの基準日にすると、1D預金の満期が基準日より前になり、ブートストラップに使われない。そこで本節では`reference = "evaluation"`を指定し、評価日を基準日とする。`used_in_bootstrap`がすべて`TRUE`であり、`quote_error_bp`が十分小さいことから、1D預金を含むすべての気配がカーブに反映されていることを確認できる。
 
 ### II-3.4.2 SOFR OISの評価
 
