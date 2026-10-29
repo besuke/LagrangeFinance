@@ -4,6 +4,11 @@ ZIP内のRフォルダを、LagrangeFinanceプロジェクトのRフォルダに
 既存のExcelは変更しません。
 
 関数名：
+（2026-10-30追記）OISカーブとASWの計算はGaussQuantへ移管し、
+R/instance_swap_curve.R、R/compute_asset_swap_ISO.R、R/compute_asset_swap_basis_JPY.R は削除した。
+現在の関数：GaussQuant::ir_build_ois_curve_GQH()、GaussQuant::ois_asset_swap_GQL()、
+GaussQuant::ois_asset_swap_jpy_basis_GQL()。以下の記述は移管前の配布時点のもの。
+
 compute_asset_swap_ISO.R → compute_asset_swap_ISO()
 compute_asset_swap_basis_JPY.R → compute_asset_swap_basis_JPY()
 
