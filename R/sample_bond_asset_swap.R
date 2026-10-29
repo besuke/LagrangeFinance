@@ -13,8 +13,7 @@ library(tibble)
 library(purrr)
 
 purrr::walk(c(
-  "import_data.R", "workflows_validate_worksheet.R", "instance_swap_curve.R",
-  "compute_asset_swap_ISO.R", "compute_asset_swap_basis_JPY.R"
+  "import_data.R", "workflows_validate_worksheet.R"
 ), function(f) source(file.path("R", f)))
 
 # Retained historical and October TONAR fixtures; values unchanged.
@@ -126,13 +125,39 @@ tonar_market_quotes <- function(marketdate, quote = c("mid", "bid", "ask")) {
   )
 }
 
-# Backward-compatible names; curve construction has one shared implementation.
-instance_swap_curve_TONAR <- function(date = "2026-10-09", ...) {
-  instance_swap_curve("JPY", marketdate = date,
-                      quotes = tonar_market_quotes(date), ...)
-}
-instance_swap_curve_TONAR_20220819 <- function(...) {
-  instance_swap_curve_TONAR("2022-08-19", ...)
+# Map the quote schema of import_ois_curves() / tonar_market_quotes() to
+# GaussQuant::ir_build_ois_curve_GQH(). Conventions: log-cubic discount factors,
+# evaluation date as reference, annual OIS helpers, no lag, ModifiedFollowing.
+ois_curve_from_quotes <- function(currency, marketdate, quotes,
+                                  curve_type = "log_cubic_discount") {
+  q <- quotes |>
+    dplyr::filter(
+      as.Date(.data$marketdate) == as.Date(.env$marketdate),
+      toupper(.data$currency) == toupper(.env$currency)
+    )
+  if (!nrow(q)) stop("No quotes for currency/marketdate.")
+  if (!"instrument_type" %in% names(q)) q$instrument_type <- "spot_ois"
+  # Historical overnight fixings must not masquerade as 1D OIS quotes.
+  if (any(!q$instrument_type %in% c("spot_ois", "deposit"))) {
+    stop("Only spot_ois/deposit inputs allowed. Separate overnight fixings and unconfirmed IRS.")
+  }
+  GaussQuant::ir_build_ois_curve_GQH(
+    curve_data = q |>
+      dplyr::transmute(
+        kind = dplyr::if_else(instrument_type == "deposit", "overnight_deposit", "ois"),
+        tenor = toupper(trimws(tenor)),
+        rate = rate_pct / 100
+      ),
+    trade_date = as.character(as.Date(marketdate)),
+    currency = currency,
+    verbose = FALSE,
+    curve_type = curve_type,
+    reference = "evaluation",
+    payment_frequency = "Annual",
+    payment_lag = 0L,
+    payment_convention = "ModifiedFollowing",
+    max_quote_error_bp = 1e-4
+  )
 }
 
 
@@ -164,13 +189,15 @@ if (nrow(tbl_excluded_quotes)) print(tbl_excluded_quotes, n = Inf)
 
 # 3. Same curve builder, same date and same return fields for every currency.
 curves <- currencies |> purrr::set_names() |>
-  purrr::map(function(ccy) instance_swap_curve(
+  purrr::map(function(ccy) ois_curve_from_quotes(
     currency = ccy, marketdate = marketdate, quotes = tbl_curve_quotes
   ))
-tbl_quote_repricing <- purrr::map_dfr(curves, function(x) x$quote_repricing)
+tbl_quote_repricing <- purrr::map_dfr(curves, function(x) {
+  x$quote_repricing |> mutate(currency = x$currency, .before = 1)
+})
 tbl_curve_summary <- purrr::map_dfr(curves, function(x) tibble(
-  currency = x$currency, index = x$index_name, marketdate = x$marketdate,
-  quotes = nrow(x$quotes), last_tenordate = max(x$quotes$tenordate),
+  currency = x$currency, index = x$instrument, marketdate = x$trade_date,
+  quotes = nrow(x$quote_repricing), last_tenordate = max(x$quote_repricing$maturity_date),
   max_quote_error_bp = max(abs(x$quote_repricing$quote_error_bp))
 ))
 print(tbl_curve_summary)
@@ -208,7 +235,7 @@ bonds <- tbl_bonds$currency |> purrr::set_names() |>
 native_asw <- tbl_bonds$currency |> purrr::set_names() |>
   purrr::map(function(ccy) {
     row <- tbl_bonds |> filter(currency == ccy)
-    compute_asset_swap_ISO(bonds[[ccy]], row$clean_price, curves[[ccy]])
+    GaussQuant::ois_asset_swap_GQL(bonds[[ccy]], row$clean_price, curves[[ccy]])
   })
 tbl_native_asw <- purrr::imap_dfr(native_asw, function(x, ccy) {
   x$valuation |> mutate(currency = ccy, .before = 1)
@@ -220,7 +247,7 @@ foreign_ccys <- setdiff(tbl_bonds$currency, "JPY")
 jpy_asw <- foreign_ccys |> purrr::set_names() |>
   purrr::map(function(ccy) {
     row <- tbl_bonds |> filter(currency == ccy)
-    compute_asset_swap_basis_JPY(
+    GaussQuant::ois_asset_swap_jpy_basis_GQL(
       bond = bonds[[ccy]], clean_price = row$clean_price,
       foreign_curve = curves[[ccy]], jpy_curve = curves$JPY,
       fx_spot = row$fx_spot, basis_bp = row$basis_bp, currency = ccy
@@ -238,13 +265,13 @@ stopifnot(
 
 # 6. All price sensitivities are generated here, not in another sample file.
 tbl_native_prices <- purrr::imap_dfr(native_asw, function(x, ccy) {
-  asset_swap_price_table(x, seq(95, 105, .5)) |>
+  GaussQuant::ois_asset_swap_price_table_GQL(x, seq(95, 105, .5)) |>
     mutate(currency = ccy, .before = 1)
 })
 tbl_jpy_prices <- purrr::map_dfr(foreign_ccys, function(ccy) {
   row <- tbl_bonds |> filter(currency == ccy)
   purrr::map_dfr(seq(95, 105, .5), function(price) {
-    compute_asset_swap_basis_JPY(
+    GaussQuant::ois_asset_swap_jpy_basis_GQL(
       bonds[[ccy]], price, curves[[ccy]], curves$JPY,
       row$fx_spot, row$basis_bp, currency = ccy
     )$valuation |> mutate(clean_price = price, .before = 1)
@@ -257,7 +284,7 @@ historical <- NULL
 if (run_historical) {
   historical <- local({
     historical_date <- as.Date("2022-08-19")
-    cb <- instance_swap_curve(
+    cb <- ois_curve_from_quotes(
       "JPY", historical_date, tonar_market_quotes(historical_date)
     )
     bond <- GaussQuant::fixed_rate_bond_GQL(
@@ -268,9 +295,9 @@ if (run_historical) {
       payment_convention = "Following", schedule_convention = "Unadjusted",
       maturity_convention = "Unadjusted"
     )
-    x <- compute_asset_swap_ISO(bond, 97, cb, spread_bp = 130)
+    x <- GaussQuant::ois_asset_swap_GQL(bond, 97, cb, spread_bp = 130)
     list(curve = cb, bond = bond, asw = x,
-         prices = asset_swap_price_table(x, seq(96, 98, .05)))
+         prices = GaussQuant::ois_asset_swap_price_table_GQL(x, seq(96, 98, .05)))
   })
   print(historical$asw$valuation)
 }
@@ -411,7 +438,7 @@ message("Demo checks passed. Synthetic input files: ", results_worksheet_demo$pa
 }
 
 if (run_ccs_checks) local({
-# Deterministic fixtures test PV identities independently of GaussQuant.
+# Deterministic fixtures test PV identities independently of QuantLib curves.
 start <- as.Date("2026-10-14")
 dates <- start + 365 * 1:10
 N <- 100
@@ -446,7 +473,7 @@ make_template <- function(r, clean = 99.5, coupon = 5) {
   )
 }
 calc <- function(basis = 0, fx = 150, price = 99.5, coupon = 5) {
-  asset_swap_jpy_from_legs(
+  GaussQuant::ois_asset_swap_jpy_from_legs_GQL(
     make_template(.04, price, coupon), make_template(.01, price, coupon),
     fc, jc, fx, basis, "USD"
   )

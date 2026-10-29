@@ -1401,30 +1401,22 @@ OISでは、固定金利と、計算期間中の日々の翌日物金利を複�
 
 II-3.2節とII-3.4節では、TONAとSOFRのOISカーブを通貨ごとに構築した。本節では、€STR、SOFR、TONAR、SONIAの4通貨を同じ手順で扱い、そのカーブを用いて第II-1.6.3節で構造を確認したアセットスワップ（ASW）を実際に計算する。
 
-計算本体は、プロジェクトの`R/`に置いた次の関数である。本文ではこれらの関数を呼び出し、入力データ、計算、結果の読み方、検証の順に確認する。
+計算本体はGaussQuantの次の関数であり、市場データの読込だけをプロジェクトの`R/import_data.R`で行う。本文ではこれらの関数を呼び出し、入力データ、計算、結果の読み方、検証の順に確認する。
 
-| 関数 | ファイル | 役割 |
+| 関数 | 置き場所 | 役割 |
 |---|---|---|
 | `import_ois_curves()` | `R/import_data.R` | 市場データのExcelからOIS気配を読み込む |
-| `ois_currency_spec()`、`instance_overnight_index()` | `R/instance_swap_curve.R` | 通貨ごとの翌日物金利インデックスと規約を返す |
-| `instance_swap_curve()` | `R/instance_swap_curve.R` | 4通貨共通のOISカーブ構築と気配の再現確認 |
-| `compute_asset_swap_ISO()`、`asset_swap_price_table()` | `R/compute_asset_swap_ISO.R` | 債券通貨のOISに対するASWスプレッド |
-| `compute_asset_swap_basis_JPY()` | `R/compute_asset_swap_basis_JPY.R` | 外貨債を円の翌日物金利へ交換するASW（簡略化モデル） |
+| `ir_ois_convention_table_GQH()` | GaussQuant | 通貨ごとの翌日物金利インデックスと規約を返す |
+| `ir_build_ois_curve_GQH()` | GaussQuant | OISカーブ構築と気配の再現確認 |
+| `ois_asset_swap_GQL()`、`ois_asset_swap_price_table_GQL()` | GaussQuant | 債券通貨のOISに対するASWスプレッド |
+| `ois_asset_swap_jpy_basis_GQL()` | GaussQuant | 外貨債を円の翌日物金利へ交換するASW（簡略化モデル） |
+
+GaussQuantには、QuantLibの`AssetSwap`を用いる`make_asset_swap_GQL()`もある。こちらは変動レグがIBORの期間金利のクーポンであり、本節の`ois_asset_swap_GQL()`は、変動レグを翌日物金利の日次複利（OISレグ）とする点が異なる。
 
 市場データは2026年10月6日のBloomberg気配である。データの利用条件により、本節では入力気配の値そのものは表示せず、気配の件数、テナーの範囲および計算結果だけを示す。債券、為替スポットおよび通貨ベーシスは、計算の仕組みを示すための仮定値である。
 
 ```{r asw4-source}
-purrr::walk(
-  c(
-    "import_data.R",
-    "instance_swap_curve.R",
-    "compute_asset_swap_ISO.R",
-    "compute_asset_swap_basis_JPY.R"
-  ),
-  function(file_name) {
-    source(file.path("R", file_name))
-  }
-)
+source(file.path("R", "import_data.R"))
 ```
 
 ### II-3.7.1 市場データと通貨別の規約
@@ -1479,27 +1471,22 @@ GaussQuant::show_tbl_GQH(
 
 GBPのシートには、OIS気配のほかにSONIAの翌日物Fixingが1件含まれている。`used_for_curve`が`FALSE`の行はカーブ構築から除外する。Fixingは評価日以前に確定した実績値であり、II-3.3.2節で見たように、OISの変動レグでは評価日以後の予測値と区別して扱う。
 
-通貨ごとの規約は、`ois_currency_spec()`と、QuantLibの翌日物金利インデックスを返す`instance_overnight_index()`から確認できる。
+通貨ごとの規約は、GaussQuantの`ir_ois_convention_table_GQH()`で確認できる。カーブ構築関数`ir_build_ois_curve_GQH()`は、この規約表を参照してOISヘルパーと翌日物金利インデックスを作成する。
 
 ```{r asw4-conventions}
-asw4_convention_tbl <- purrr::map_dfr(
-  asw4_currencies,
-  function(currency) {
-    spec <- ois_currency_spec(currency)
-    overnight_index <- instance_overnight_index(currency)
-
-    tibble::tibble(
-      currency = currency,
-      index = spec$index_name,
-      settlement_days = spec$settlement_days,
-      fixing_calendar = overnight_index$fixingCalendar()$name(),
-      day_counter = overnight_index$dayCounter()$name()
-    )
-  }
+asw4_convention_tbl <- GaussQuant::ir_ois_convention_table_GQH(
+  asw4_currencies
 )
 
 GaussQuant::show_tbl_GQH(
-  asw4_convention_tbl,
+  asw4_convention_tbl |>
+    dplyr::select(
+      currency,
+      instrument,
+      settlement_days,
+      fixing_calendar,
+      day_counter
+    ),
   "Overnight index conventions",
   n = 20
 )
@@ -1509,30 +1496,44 @@ GaussQuant::show_tbl_GQH(
 
 ### II-3.7.2 4通貨OISカーブの構築と検証
 
-`instance_swap_curve()`は、気配ごとに`OISRateHelper`を作成し、既定では対数割引係数の3次補間（`PiecewiseLogCubicDiscount`）でブートストラップする。構築後には、各ヘルパーが再現する気配と入力気配の差を`quote_repricing`として返し、差が$10^{-4}$ベーシスポイントを超えると停止する。
+`ir_build_ois_curve_GQH()`は、気配ごとに`OISRateHelper`を作成してブートストラップする。本節では、補間に対数割引係数の3次補間（`curve_type = "log_cubic_discount"`）を、基準日に評価日（`reference = "evaluation"`）を指定し、OISヘルパーの利払頻度、支払ラグ、支払日の調整規則も明示する。構築後には、各ヘルパーが再現する気配と入力気配の差を`quote_repricing`として返し、`max_quote_error_bp`を指定すると、差がその値を超えたときに停止する。
+
+既定値（対数線形の割引係数、受渡日を基準日とする設定）は、II-3.2節とII-3.4節のカーブ構築と同じである。本節の指定は、同じ関数の引数を変えたものである。
 
 ```{r asw4-curves}
+asw4_build_curve <- function(currency, curve_type = "log_cubic_discount") {
+  GaussQuant::ir_build_ois_curve_GQH(
+    curve_data = asw4_curve_quote_tbl |>
+      dplyr::filter(currency == .env$currency) |>
+      dplyr::transmute(
+        kind = dplyr::if_else(instrument_type == "deposit", "depo", "ois"),
+        tenor,
+        rate
+      ),
+    trade_date = as.character(asw4_marketdate),
+    currency = currency,
+    verbose = FALSE,
+    curve_type = curve_type,
+    reference = "evaluation",
+    payment_frequency = "Annual",
+    payment_lag = 0L,
+    payment_convention = "ModifiedFollowing",
+    max_quote_error_bp = 1e-4
+  )
+}
+
 asw4_curves <- asw4_currencies |>
   purrr::set_names() |>
-  purrr::map(
-    function(currency) {
-      instance_swap_curve(
-        currency = currency,
-        marketdate = asw4_marketdate,
-        quotes = asw4_curve_quote_tbl
-      )
-    }
-  )
+  purrr::map(asw4_build_curve)
 
 asw4_curve_summary_tbl <- purrr::map_dfr(
   asw4_curves,
   function(curve) {
     tibble::tibble(
       currency = curve$currency,
-      index = curve$index_name,
-      helpers = nrow(curve$quotes),
+      helpers = nrow(curve$quote_repricing),
       reference_date = as.Date(QuantLib::Date_ISO(curve$curve$referenceDate())),
-      last_maturity = max(curve$quotes$tenordate),
+      last_maturity = max(curve$quote_repricing$maturity_date),
       max_abs_quote_error_bp = max(abs(curve$quote_repricing$quote_error_bp))
     )
   }
@@ -1545,88 +1546,49 @@ GaussQuant::show_tbl_GQH(
 )
 ```
 
-`max_abs_quote_error_bp`は、カーブから求めたパーレートと入力気配の差の最大値である。どの通貨も$10^{-6}$ベーシスポイント程度以下であり、ブートストラップが入力気配を再現していることを確認できる。
+`max_abs_quote_error_bp`は、カーブから求めたパーレートと入力気配の差の最大値である。どの通貨も$10^{-6}$ベーシスポイント程度以下であり、ブートストラップが入力気配を再現していることを確認できる。これが、本節でカーブの計算が正しいことを確かめる検証である。
 
-次に、同じ気配からGaussQuantの`ir_build_ois_curve_GQH()`でもカーブを構築し、結果を照合する。GaussQuantの関数は補間に対数線形の割引係数（`PiecewiseLogLinearDiscount`）を用い、受渡日を基準日とする。対数線形の割引係数は区分一定のフォワード金利と同じであるため、`instance_swap_curve()`を`curve_type = "flat_forward"`で構築すれば、二つの関数は同じ計算方法になる。基準日の違いを除くため、比較は受渡日から各満期までの割引係数の比で行う。
+この関数は、以前`R/`に置いていた独立した実装から移管したものである。GaussQuantの回帰テスト（`tests/testthat/test-ois-asset-swap-GQL.R`）では、移管前の実装で計算した割引係数とASWの結果に一致すること、既定値のカーブが区分一定のフォワード金利で構築したカーブと一致することを、合成した気配で確認している。
 
-```{r asw4-curve-cross-check}
-asw4_gq_instrument <- c(
-  EUR = "ESTR",
-  USD = "SOFR",
-  JPY = "TONA",
-  GBP = "SONIA"
-)
+次に、補間方式の違いが結果にどう表れるかを見る。これは計算の正しさの検証ではなく、カーブの前提の違いを読み取るための比較である。同じ気配から、区分一定のフォワード金利（`curve_type = "flat_forward"`）でもカーブを構築し、各気配の満期日におけるゼロ金利を比較する。
 
-asw4_curve_check_tbl <- purrr::map_dfr(
+```{r asw4-curve-interpolation}
+asw4_interpolation_tbl <- purrr::map_dfr(
   asw4_currencies,
   function(currency) {
-    curve_quotes <- asw4_curve_quote_tbl |>
-      dplyr::filter(currency == .env$currency)
-
-    gq_curve <- GaussQuant::ir_build_ois_curve_GQH(
-      curve_data = curve_quotes |>
-        dplyr::transmute(
-          kind = dplyr::if_else(instrument_type == "deposit", "depo", "ois"),
-          tenor,
-          rate
-        ),
-      trade_date = as.character(asw4_marketdate),
-      currency = currency,
-      instrument = asw4_gq_instrument[[currency]],
-      verbose = FALSE
-    )
-
-    flat_curve <- instance_swap_curve(
-      currency = currency,
-      marketdate = asw4_marketdate,
-      quotes = asw4_curve_quote_tbl,
-      curve_type = "flat_forward"
-    )
-
     cubic_curve <- asw4_curves[[currency]]
-    settle_date <- gq_curve$curve$referenceDate()
-    maturities <- cubic_curve$quote_repricing$tenordate
+    flat_curve <- asw4_build_curve(currency, curve_type = "flat_forward")
+    maturities <- cubic_curve$quote_repricing$maturity_date
+    year_fraction <- as.numeric(maturities - asw4_marketdate) / 365
 
-    forward_discount <- function(curve) {
-      purrr::map_dbl(
+    zero_rate <- function(curve) {
+      discount <- purrr::map_dbl(
         as.character(maturities),
-        function(x) {
-          curve$discount(GaussQuant::date_GQL(x)) /
-            curve$discount(settle_date)
-        }
+        function(x) curve$discount(GaussQuant::date_GQL(x))
       )
+
+      -log(discount) / year_fraction
     }
-
-    year_fraction <- as.numeric(
-      maturities - as.Date(gq_curve$settle_date)
-    ) / 365
-
-    zero_rate <- function(discount) -log(discount) / year_fraction
 
     tibble::tibble(
       currency = currency,
-      max_abs_df_diff_flat_vs_gq = max(abs(
-        forward_discount(flat_curve$curve) -
-          forward_discount(gq_curve$curve)
-      )),
-      max_abs_zero_diff_cubic_vs_flat_bp = 1e4 * max(abs(
-        zero_rate(forward_discount(cubic_curve$curve)) -
-          zero_rate(forward_discount(flat_curve$curve))
+      cubic_quote_error_bp = max(abs(cubic_curve$quote_repricing$quote_error_bp)),
+      flat_quote_error_bp = max(abs(flat_curve$quote_repricing$quote_error_bp)),
+      max_zero_diff_bp = 1e4 * max(abs(
+        zero_rate(cubic_curve$curve) - zero_rate(flat_curve$curve)
       ))
     )
   }
 )
 
 GaussQuant::show_tbl_GQH(
-  asw4_curve_check_tbl,
-  "Cross-check with GaussQuant",
+  asw4_interpolation_tbl,
+  "Interpolation choice: log-cubic discount vs flat forward",
   n = 20
 )
 ```
 
-`max_abs_df_diff_flat_vs_gq`は$10^{-12}$程度であり、同じ計算方法であれば`R/`の関数とGaussQuantの関数が同じカーブを作ることを示している。一方、`max_abs_zero_diff_cubic_vs_flat_bp`は、同じ気配を再現する二つのカーブでも、補間方式によって満期日のゼロ金利が1ベーシスポイント前後異なることを示している。長期のOISは毎年利払いを行うため、満期日のゼロ金利は途中の利払日の割引係数にも依存し、その割引係数は補間方式で決まる。気配の再現だけではカーブは一意に決まらないため、補間方式はカーブの前提として明示しておく必要がある。
-
-II-3.2節とII-3.4節のカーブ構築は、この照合で用いたGaussQuantの方法と同じである。本節の`instance_swap_curve()`は、それを4通貨の規約表と気配の再現確認つきで共通化したものである。
+`cubic_quote_error_bp`と`flat_quote_error_bp`は、二つのカーブがどちらも入力気配を再現していることを示す。それでも`max_zero_diff_bp`は1ベーシスポイント前後になり、満期日のゼロ金利は補間方式によって異なる。長期のOISは毎年利払いを行うため、満期日のゼロ金利は途中の利払日の割引係数にも依存し、その割引係数は補間方式で決まる。気配の再現だけではカーブは一意に決まらないため、補間方式はカーブの前提として明示しておく必要がある。
 
 ### II-3.7.3 OISアセットスワップ
 
@@ -1656,7 +1618,7 @@ s^{*}
 -\frac{NPV(0)}{A}
 $$
 
-`compute_asset_swap_ISO()`は、債券の通貨と同じ通貨のOISカーブで翌日物レグの予測と割引の両方を行う。例として、各通貨で2036年9月30日満期の仮想債券を作成する。
+`ois_asset_swap_GQL()`は、債券の通貨と同じ通貨のOISカーブで翌日物レグの予測と割引の両方を行う。例として、各通貨で2036年9月30日満期の仮想債券を作成する。
 
 ```{r asw4-bonds}
 asw4_bond_assumption_tbl <- tibble::tribble(
@@ -1714,10 +1676,10 @@ asw4_native_asw <- asw4_currencies |>
       row <- asw4_bond_assumption_tbl |>
         dplyr::filter(currency == .env$currency)
 
-      compute_asset_swap_ISO(
+      GaussQuant::ois_asset_swap_GQL(
         bond = asw4_bonds[[currency]],
         clean_price = row$clean_price,
-        swap_curve = asw4_curves[[currency]]
+        ois_curve = asw4_curves[[currency]]
       )
     }
   )
@@ -1759,7 +1721,7 @@ GaussQuant::show_tbl_GQH(
 
 結果は額面100当たりの現在価値である。一つ目の表の4項目の合計が、二つ目の表の`npv_at_zero_spread`になる。`npv_at_zero_spread`がマイナスであることは、スプレッドがゼロでは翌日物レグ側の受取が不足することを意味し、それを`spread_annuity`で割った大きさが`fair_spread_bp`になる。同じ価格99.5の債券でも、クーポン、カーブの水準と形状、日数計算規則が異なるため、ASWスプレッドは通貨ごとに異なる。
 
-ASWスプレッドの定義を二つの方法で検証する。第一に、求めたスプレッドを契約スプレッドとして与えて再評価すると、NPVはゼロになり、そのNPVから逆算した債券価格は入力価格と一致する。第二に、`asset_swap_price_table()`で入力価格に対応するスプレッドを求めると、`fair_spread_bp`と一致する。
+ASWスプレッドの定義を二つの方法で検証する。第一に、求めたスプレッドを契約スプレッドとして与えて再評価すると、NPVはゼロになり、そのNPVから逆算した債券価格は入力価格と一致する。第二に、`ois_asset_swap_price_table_GQL()`で入力価格に対応するスプレッドを求めると、`fair_spread_bp`と一致する。
 
 ```{r asw4-native-check}
 asw4_native_check_tbl <- purrr::imap_dfr(
@@ -1768,18 +1730,18 @@ asw4_native_check_tbl <- purrr::imap_dfr(
     row <- asw4_bond_assumption_tbl |>
       dplyr::filter(currency == .env$currency)
 
-    repriced <- compute_asset_swap_ISO(
+    repriced <- GaussQuant::ois_asset_swap_GQL(
       bond = asw4_bonds[[currency]],
       clean_price = row$clean_price,
-      swap_curve = asw4_curves[[currency]],
+      ois_curve = asw4_curves[[currency]],
       spread_bp = asw$valuation$fair_spread_bp
     )
 
     tibble::tibble(
       currency = currency,
       npv_at_fair = repriced$valuation$npv,
-      implied_price = asset_swap_fair_price(repriced),
-      price_table_bp = asset_swap_price_table(
+      implied_price = GaussQuant::ois_asset_swap_fair_price_GQL(repriced),
+      price_table_bp = GaussQuant::ois_asset_swap_price_table_GQL(
         asw, row$clean_price
       )$AS_spread_bp,
       fair_spread_bp = asw$valuation$fair_spread_bp
@@ -1798,7 +1760,7 @@ GaussQuant::show_tbl_GQH(
 
 ```{r asw4-price-table}
 GaussQuant::show_tbl_GQH(
-  asset_swap_price_table(
+  GaussQuant::ois_asset_swap_price_table_GQL(
     asw4_native_asw$USD,
     c(98, 99, 99.5, 100, 101)
   ),
@@ -1811,7 +1773,7 @@ GaussQuant::show_tbl_GQH(
 
 ### II-3.7.4 円ベーシス込みASW（簡略化モデル）
 
-日本の投資家が外貨債を保有する場合、外貨の翌日物金利ではなく、円の翌日物金利に対するスプレッドで相対価値を比較したいことがある。`compute_asset_swap_basis_JPY()`は、外貨債のキャッシュフローを通貨スワップで円へ交換し、TONARに対するASWスプレッドを求める。
+日本の投資家が外貨債を保有する場合、外貨の翌日物金利ではなく、円の翌日物金利に対するスプレッドで相対価値を比較したいことがある。`ois_asset_swap_jpy_basis_GQL()`は、外貨債のキャッシュフローを通貨スワップで円へ交換し、TONARに対するASWスプレッドを求める。
 
 モデルの為替フォワードは次式で与える。
 
@@ -1835,7 +1797,7 @@ asw4_jpy_asw <- asw4_foreign_currencies |>
       row <- asw4_bond_assumption_tbl |>
         dplyr::filter(currency == .env$currency)
 
-      compute_asset_swap_basis_JPY(
+      GaussQuant::ois_asset_swap_jpy_basis_GQL(
         bond = asw4_bonds[[currency]],
         clean_price = row$clean_price,
         foreign_curve = asw4_curves[[currency]],
@@ -1899,7 +1861,7 @@ GaussQuant::show_tbl_GQH(
 asw4_basis_sensitivity_tbl <- purrr::map_dfr(
   c(-50, -30, -10, 0),
   function(basis_bp) {
-    compute_asset_swap_basis_JPY(
+    GaussQuant::ois_asset_swap_jpy_basis_GQL(
       bond = asw4_bonds$USD,
       clean_price = 99.5,
       foreign_curve = asw4_curves$USD,
@@ -1921,7 +1883,7 @@ GaussQuant::show_tbl_GQH(
 asw4_fx_sensitivity_tbl <- purrr::map_dfr(
   c(140, 150, 160),
   function(fx_spot) {
-    compute_asset_swap_basis_JPY(
+    GaussQuant::ois_asset_swap_jpy_basis_GQL(
       bond = asw4_bonds$USD,
       clean_price = 99.5,
       foreign_curve = asw4_curves$USD,

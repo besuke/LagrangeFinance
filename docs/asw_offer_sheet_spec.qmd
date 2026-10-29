@@ -112,7 +112,7 @@ $$
 
 上表は現行実装の設定値である。個々の取引・気配提供元の慣行との一致は別途確認する。営業日カレンダーと日数計算方式は各指標から取得する。
 
-`instance_swap_curve()` は `spot_ois` と明示的な `deposit` のみを受け付ける。depositは翌日物 `1D` に限定する。商品種別列が欠ける場合は現行コードで `spot_ois` と解釈されるため、本番データでは種別を明示する。
+OISカーブはGaussQuantの `ir_build_ois_curve_GQH()` で構築する。サンプルの `ois_curve_from_quotes()` は、取込データを同関数の入力へ変換し、`spot_ois` と明示的な `deposit` のみを受け付ける。depositは翌日物 `1D` に限定し、`overnight_deposit` として渡す。商品種別列が欠ける場合は現行コードで `spot_ois` と解釈されるため、本番データでは種別を明示する。
 
 補間方式は `log_cubic_discount` が既定、`flat_forward` が選択可能。外挿は既定で無効。入力期間の重複、校正に用いる基準日の重複、指定満期日の不整合を検出し、再評価誤差の最大絶対値が `1e-4 bp` を超える場合は停止する。
 
@@ -153,7 +153,7 @@ $$
 
 ## 現行実装との対応
 
-`compute_asset_swap_ISO()` は、予測用の `index` と割引用の `discount_curve` を別々に受け取る。既定では、どちらにも同じ通貨のOISカーブを使う。5通貨のカーブを個別に構築する機能と、指標・担保条件ごとに複数カーブを使い分ける機能は区別する。
+GaussQuantの `ois_asset_swap_GQL()` は、予測用の `index` と割引用の `discount_curve` を別々に受け取る。変動レグは翌日物金利の日次複利であり、IBOR型の `make_asset_swap_GQL()` とは別の関数である。既定では、どちらにも同じ通貨のOISカーブを使う。5通貨のカーブを個別に構築する機能と、指標・担保条件ごとに複数カーブを使い分ける機能は区別する。
 
 カーブの識別には、市場日、キャッシュフローの通貨、担保通貨、参照指標、指標の期間、気配の種類、取引慣行の設定を使う。債券の信用・流動性等による価格差はOISへ混ぜ込まず、所定の条件におけるASWとして表示する。
 
@@ -309,7 +309,7 @@ $$
 \frac{\partial s^*}{\partial P}=-\frac{ND(t,S)}{100A}<0.
 $$
 
-したがって購入価格が高くなるとASWは低下する。`asset_swap_price_table()` はこの線形関係を使う。`asset_swap_fair_price()` は、現在指定されたスプレッドでNPVがゼロとなるクリーン価格を逆算する。
+したがって購入価格が高くなるとASWは低下する。`ois_asset_swap_price_table_GQL()` はこの線形関係を使う。`ois_asset_swap_fair_price_GQL()` は、現在指定されたスプレッドでNPVがゼロとなるクリーン価格を逆算する。
 
 # 通貨ベーシスを反映した円換算ASW
 
@@ -507,13 +507,13 @@ ASWの数値は、評価条件と一体で保存する。`currency` だけで割
 
 # ファイル構成と役割
 
-| ファイル | 主な役割・関数 |
+| ファイル・パッケージ | 主な役割・関数 |
 |---|---|
 | `R/import_data.R` | Excelオファー、RDS銘柄属性、パイプ区切り市場データ、Bloomberg形式OISブックの取込。`import_offer_sheet()`、`import_bond_master_attribute_ADP()`、`import_market_data()`、`import_ois_curves()` |
 | `R/workflows_validate_worksheet.R` | 属性選択・結合・入力検証。`merge_offer_bond_attributes()`、`workflows_validate_worksheet()` |
-| `R/instance_swap_curve.R` | 5通貨共通のOISカーブ生成。`ois_currency_spec()`、`instance_overnight_index()`、`instance_swap_curve()` |
-| `R/compute_asset_swap_ISO.R` | 発行通貨建てASW、価格の逆算、価格感応度表。`compute_asset_swap_ISO()`、`asset_swap_fair_price()`、`asset_swap_price_table()` |
-| `R/compute_asset_swap_basis_JPY.R` | 円担保のCCS校正・FXフォワード・円換算ASW。`asset_swap_jpy_from_legs()`、`compute_asset_swap_basis_JPY()` |
+| GaussQuant | 5通貨共通のOISカーブ生成と規約表。`ir_build_ois_curve_GQH()`、`ir_ois_convention_table_GQH()` |
+| GaussQuant | 発行通貨建てOIS ASW、価格の逆算、価格感応度表。`ois_asset_swap_GQL()`、`ois_asset_swap_fair_price_GQL()`、`ois_asset_swap_price_table_GQL()` |
+| GaussQuant | 円担保のCCS校正・FXフォワード・円換算ASW。`ois_asset_swap_jpy_from_legs_GQL()`、`ois_asset_swap_jpy_basis_GQL()` |
 | `R/sample_bond_asset_swap.R` | 統一実行サンプル、5通貨評価、価格感応度、オファー検証デモ、2022年TONAR例、CCSの現在価値に関する整合性検証 |
 | `R/utility_LFL.R` | 書籍・プロジェクト共通の補助処理。価格計算の仕様は上記の専用ファイルを基準とする |
 
