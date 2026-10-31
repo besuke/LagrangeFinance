@@ -747,7 +747,7 @@ $$\frac{\Delta P}{P}
 ```{r}
 #| label: bond-duration
 
-# VBA定義に合わせ、利回り Y は「%」単位で扱う。
+# 利回り Y は「%」単位で扱う。
 # 例: 6.71047990% は Y = 6.71047990。
 #
 # P      : 単価（円 / 額面100円）
@@ -888,7 +888,7 @@ compute_bond_price_second_derivative_example_LRL <- function(
 }
 
 
-tbl_vba_zero_yield <- tibble::tribble(
+tbl_zero_yield_risk <- tibble::tribble(
   ~item, ~value,
   "price_Y0", compute_bond_price_example_LRL(0),
   "dP_dY_Y0", compute_bond_price_derivative_example_LRL(0),
@@ -903,8 +903,8 @@ tbl_vba_zero_yield <- tibble::tribble(
 )
 
 GaussQuant::show_tbl_GQH(
-  tbl_vba_zero_yield,
-  "VBA定義：利回り0%の場合"
+  tbl_zero_yield_risk,
+  "利回り0%の場合"
 )
 
 formula_price <- compute_bond_price_example_LRL(
@@ -970,10 +970,10 @@ tbl_risk_compare <- tibble::tribble(
 
 GaussQuant::show_tbl_GQH(
   tbl_risk_compare,
-  "VBA定義とGaussQuantによる金利リスクの照合"
+  "解析式とGaussQuantによる金利リスクの照合"
 )
 
-tbl_vba_derivatives <- tibble::tribble(
+tbl_pct_unit_derivatives <- tibble::tribble(
   ~item, ~value,
   "dP_dY_yen_per_1pct", formula_price_derivative,
   "d2P_dY2_yen_per_pct2", formula_price_second_derivative,
@@ -983,8 +983,8 @@ tbl_vba_derivatives <- tibble::tribble(
 )
 
 GaussQuant::show_tbl_GQH(
-  tbl_vba_derivatives,
-  "VBAの%単位による微分量"
+  tbl_pct_unit_derivatives,
+  "%単位による微分量"
 )
 ```
 
@@ -994,7 +994,7 @@ GaussQuant::show_tbl_GQH(
 
 ### II-1.7.4 BPVによる価格感応度
 
-本章ではVBAの定義に合わせ、複利利回り $Y$ を **%単位**で扱う。したがって、$Y=6.71047990$ は6.71047990%を意味する。
+本章では複利利回り $Y$ を **%単位**で扱う。したがって、$Y=6.71047990$ は6.71047990%を意味する。
 
 単価 $P$ を「円／額面100円」で表すと、
 
@@ -1019,7 +1019,7 @@ $$D_{\mathrm{mod}}
 -\frac{100}{P}
 \frac{\partial P}{\partial Y}$$
 
-となる。VBAで%単位の微分値を扱う場合には、この100倍の換算を明示する必要がある。
+となる。%単位の微分値を扱う場合には、この100倍の換算を明示する必要がある。
 
 ## II-1.8 数値解法による複利利回りの計算
 
@@ -1082,7 +1082,7 @@ GaussQuant::show_tbl_GQH(
 ```{r}
 #| label: yield-solver-common-functions
 
-# 数値解法でもVBAと同じく、複利利回りは%単位で扱う。
+# 数値解法でも、複利利回りは%単位で扱う。
 # 例: 6.71047990% -> yield_pct = 6.71047990
 
 compute_bond_price_benchmark_LRL <- function(
@@ -1125,7 +1125,7 @@ y_k
 -
 \frac{f(y_k)}{f'(y_k)}$$
 
-ここではVBAと同じく $Y$ を **%単位**で扱う。つまり、6.71047990% は $Y=6.71047990$ とする。小数表記の $0.067104799$ ではない点が重要である。
+ここでは $Y$ を **%単位**で扱う。つまり、6.71047990% は $Y=6.71047990$ とする。小数表記の $0.067104799$ ではない点が重要である。
 
 半年複利の割引係数を
 
@@ -1156,7 +1156,7 @@ $$P=100+CT$$
 
 となる。
 
-この価格関数を、%単位の利回り $Y$ で微分する。VBAではBPVを
+この価格関数を、%単位の利回り $Y$ で微分する。BPVを
 
 $$\boxed{
 \mathrm{BPV}
@@ -1164,7 +1164,7 @@ $$\boxed{
 -\frac{\partial P}{\partial Y}
 }$$
 
-と定義している。
+と定義する。
 
 ここで $\partial P/\partial Y$ の単位は「円／1 percentage point」である。すなわち、利回りが1.00%変化したときの、額面100円あたりの単価変化を表す。
 
@@ -1256,7 +1256,7 @@ $$\mathrm{BPV}
 
 となる。
 
-同様に、Convexityでは価格関数の2階微分を用いる。VBAの定義では $Y$ を%単位で扱うため、
+同様に、Convexityでは価格関数の2階微分を用いる。$Y$ を%単位で扱うため、
 
 $$\mathrm{Convexity}_{\%}
 =
@@ -1304,7 +1304,7 @@ $$\boxed{
 
 ### $Y=0$ の場合
 
-VBAでは $Y=0$ を別ケースとして明示的に扱う。半年複利の割引係数は
+$Y=0$ は別ケースとして明示的に扱う。半年複利の割引係数は
 
 $$\alpha=
 \left(
@@ -1353,7 +1353,7 @@ $$\boxed{
 T
 }$$
 
-となり、この数値はVBAの単位規約ではそのまま銭／bpである。
+となり、この数値はそのまま銭／bpである。
 
 2階微分は、
 
@@ -1417,7 +1417,7 @@ $$P
 
 を直接微分する。
 
-VBAで使用する1階微分は、
+使用する1階微分は、
 
 $$\boxed{
 \frac{\partial P}{\partial Y}
@@ -1455,7 +1455,7 @@ $$\boxed{
 
 これにより、価格 $P$、BPV、Modified Duration、Convexityをすべて同一の価格関数と同一の%単位規約から計算できる。
 
-さらに、一般的なModified Durationは利回りを小数単位で定義するため、VBAの%単位微分との関係は
+さらに、一般的なModified Durationは利回りを小数単位で定義するため、%単位微分との関係は
 
 $$D_{\mathrm{mod}}
 =
@@ -1492,7 +1492,7 @@ P(Y_n)-P_{\mathrm{market}}
 ```{r}
 #| label: yield-newton-method
 
-# ニュートン・ラフソン法は、VBAと同じ解析微分 dP/dY をそのまま使用する。
+# ニュートン・ラフソン法は、解析微分 dP/dY をそのまま使用する。
 # Yの単位は%なので、更新式にも追加の1e-4換算は不要。
 
 compute_bond_yield_newton_LRL <- function(
@@ -1548,7 +1548,7 @@ tbl_newton_check <- tibble::tribble(
 
 GaussQuant::show_tbl_GQH(
   tbl_newton_check,
-  "ニュートン・ラフソン法：VBA解析微分による複利利回り計算"
+  "ニュートン・ラフソン法：解析微分による複利利回り計算"
 )
 ```
 
