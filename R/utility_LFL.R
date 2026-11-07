@@ -2002,6 +2002,9 @@ read_xbrl_instance_LFL <- function(path) {
       context_nodes,
       \(node) {
         members <- xml2::xml_find_all(node, ".//*[local-name()='segment']/*")
+        if (!length(members)) {
+          return("")
+        }
         paste(
           paste0(xml2::xml_attr(members, "dimension"), "=", stringr::str_squish(xml2::xml_text(members))),
           collapse = "; "
