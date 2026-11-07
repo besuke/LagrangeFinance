@@ -1,0 +1,337 @@
+---
+title: "AIがつなぐ決算データ"
+execute:
+  eval: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+knitr:
+  opts_knit:
+    root.dir: ".."
+---
+
+<!-- xbl_edinet_tidy_demo.qmd -->
+
+```{r}
+#| label: load-utility
+#| include: false
+
+source(file.path("R", "utility_LFL.R"))
+```
+
+## X.0 AIがつなぐ決算データ
+
+画像認識や囲碁・将棋は、ディープラーニングの進歩を広く印象づけた。そこからAIは、大規模言語モデル（LLM）や、画像・文書も扱う大規模マルチモーダルモデル（LMM）へと発展した。法律文書や医学書のような専門的な資料も扱い、人がプロンプトで問いを投げかけると、資料を読み解きながら対話を進められるようになった。
+
+その延長にあるのが、**AIにデータ連携を任せる**という使い方である。たとえば「この8社の貸借対照表を直近5期分並べてほしい」と指示すると、AIは各社の開示元を探し、書類を取得し、異なる勘定科目や金額の単位を揃え、比較表やグラフを作るところまで進められる。RDB・XML・JSONのような構造化データに加え、PDFの表や注記も取り込みの対象になる。従来はアナリストが資料を一つずつ探して転記していた作業を短時間で進められれば、どの数字を比較し、その差をどう解釈するかに時間を使える。
+
+本章では、その入り口として**企業が開示する財務数値を機械で読み取るための標準、XBRL**に着目する。まず国内証券3社とGAFAMの公開決算を直近5期分集め、XBRLを中心に、必要に応じてPDFやJSONも使って貸借対照表を揃える。原本と照合した数値を使い、資産・負債・純資産の構成がどう違い、5年間でどう変わったかを分析する。公開決算を題材に、データベンダーを介さず、開示元から取得して分析まで進める一連の流れを実演する。
+
+「金融データから関数を考える」で述べたデータ連携を、この章では次の順に進める。
+
+1. **開示資料を探す**：対象の法人自身が開示しているか、どの書類のどの頁に貸借対照表があるかを確かめる。たとえば野村證券株式会社は有価証券報告書の提出義務者ではなく、決算公告を使う。大和証券株式会社の有価証券報告書は2023年3月期が最後であり、それ以降はグループの決算説明資料を使う。
+2. **異なる形式から数値を取り出す**：XBRL（SEC EDGARの10-K・20-F）は `xml2` で、PDF（EDINETの有価証券報告書、決算公告、決算説明資料、サムスン電子の監査済財務諸表）は文字列として読み、表の行から金額を取り出す。
+3. **勘定科目を対応づける**：「流動資産計」「流動資産合計」「`us-gaap:AssetsCurrent`」「`ifrs-full:CurrentAssets`」を同じ「流動資産」にそろえる。記載のない項目は算出し、算出したことを記録する。
+4. **原本と照合する**：総資産＝流動資産＋固定資産、総資産＝負債＋純資産を検算する。XBRLの総資産はSECのCompany Factsとも突き合わせる。
+5. **財務構成の変化を説明する**：総資産に対する比率で、会社間と年度間の違いを読む。
+
+取得・解析・整形・検証・集計はすべて `R/utility_LFL.R` の共通関数で行い、この章のコードはそれを呼び出して結果を表示するだけにする。どの数値も、元の開示書類の書類番号・URL・科目名までたどれる形で残す。
+
+応用例として、IT・半導体（サムスン電子・ソフトバンクグループ・NVIDIA）と製薬（イーライリリー・武田薬品工業・ノボ ノルディスク）の比較を最後に示す。
+
+### X.0.1 XBRLとは何か
+
+XBRL（eXtensible Business Reporting Language）は、企業の財務報告をコンピューターで読み取れるようにするための国際標準である。たとえば、貸借対照表に「1,000」と書いてあっても、その数字だけでは何を表すか分からない。XBRLでは、その値に「総資産」という項目名、対象企業、決算日、通貨、連結・単体などの情報を結びつける。報告項目の意味や項目間の関係を定義する辞書を、**タクソノミ**と呼ぶ。
+
+背景には、決算書の数字を集計・比較するたびに、人が表を読み、科目を判断し、別のシステムに転記する手間があった。1998年、米国の公認会計士チャールズ・ホフマンが、XMLを使って財務情報を電子的に報告する方法を探り始めた。その取り組みが、2000年にXBRLとして公表された。現在使われている **Inline XBRL（iXBRL）** では、ブラウザーで読める決算書の中にXBRLタグを埋め込むため、同じ文書を人が読んで確認し、プログラムが数値とその意味を取り出せる。
+
+XBRLが取得できる資料からはタグを使って数値を取り出し、PDFやJSONで提供される資料からも必要な項目を取得する。AIは、資料を探し、形式や科目の違いを調べ、比較できる形に整える処理を組み立てる。Rで取得・照合した結果は、出典を残したうえでParquetに保存し、Arrowで読み戻して表やグラフにする。**XBRLは開示された数値の意味を伝える標準で、Parquetは整えた分析用データを保存する形式である。**
+
+この章のデータでは、たとえばAppleの2024年9月期の総資産は、10-KのXBRLインスタンスに `us-gaap:Assets` という要素で、決算日（`2024-09-28`）の文脈と通貨単位（`iso4217:USD`）を伴って記録されている。`read_xbrl_instance_LFL()` は、この要素名・文脈・単位をまとめて読み、値の意味を保ったまま表に取り込む。
+
+## X.1 取得元と取得方法
+
+大和証券・野村證券・SBI証券は、証券会社本体の単体決算を円建てで、Alphabet・Apple・Meta・Amazon・Microsoftは連結決算をドル建てで扱う。
+
+| 会社 | 区分 | 決算期 | 取得元 | 取得方法 |
+|:--|:--|:--|:--|:--|
+| SBI証券 | 単体 | 2022/3〜2026/3 | EDINET 有価証券報告書 | APIキー（`EDINET_API_KEY`）があればXBRLを `xml2` で読み、なければ同じ書類のPDFの【貸借対照表】を読む |
+| 大和証券 | 単体 | 2022/3・2023/3 | EDINET 有価証券報告書 | 同上 |
+| 大和証券 | 単体 | 2024/3〜2026/3 | TDnet 大和証券グループ本社 決算説明資料 | PDFの「大和証券貸借対照表」頁を読む（十億円単位） |
+| 野村證券 | 単体 | 2022/3〜2026/3 | 野村證券 決算公告（nomura.co.jp） | PDFの貸借対照表を読む |
+| GAFAM | 連結 | 直近5通期 | SEC EDGAR | Company Factsで各年度の10-Kを特定し、その10-KのXBRLインスタンスを `xml2` で読む |
+
+取得したファイルは `data/raw/fundamentals/` 以下に保存し、2回目以降はそれを使う。
+
+```{r}
+#| label: show-sources
+
+securities_sources <- get_securities_balance_sheet_sources_LFL()
+gafam_companies <- get_gafam_companies_LFL()
+
+show_table_LFL(securities_sources, n = 15)
+show_table_LFL(gafam_companies)
+```
+
+## X.2 貸借対照表の取得と整形
+
+`build_balance_sheet_comparison_LFL()` は各取得元から総資産・流動資産・固定資産・流動負債・固定負債・特別法上の準備金・負債合計・純資産を読み、1社・1決算期につき1行の `tibble` にそろえる。金額の単位は、証券会社が百万円、GAFAMが百万USDである。
+
+公表資料に記載のない項目は次の式で算出し、`calculated_items` 列に記録する。
+
+- 固定資産 ＝ 総資産 − 流動資産
+- 固定負債 ＝ 負債合計 − 流動負債
+- 負債合計 ＝ 総資産 − 純資産（`Liabilities` をタグ付けしていないAmazon）
+- 特別法上の準備金 ＝ 負債合計 − 流動負債 − 固定負債（大和証券の2022/3・2023/3、決算説明資料の各期）
+
+証券会社の負債の部には、流動負債・固定負債のほかに金融商品取引責任準備金などの特別法上の準備金があるため、これを別の列にした。GAFAMの純資産は株主資本合計（`StockholdersEquity`）である。
+
+### X.2.1 Parquetへの保存とarrowによる読込み
+
+開示元から取り込んで検証した表は、`arrow` で列指向のParquetファイルに保存する。保存するのは、貸借対照表・元の科目名との対応・検証結果の3種類で、本編の比較と応用例のそれぞれについて作る。これ以降の表とグラフは、すべてこのParquetを `arrow` で読み戻したデータから作る。
+
+`load_balance_sheet_datasets_LFL()` の動きは、初回と2回目以降で異なる。
+
+- **初回**（Parquetがないとき）：公開開示の取得・検証からParquetの生成までを行い、生成したParquetを読み戻す。
+- **2回目以降**：保存済みのParquetを読むだけで、開示元には問い合わせない。
+
+読み戻したデータについては、件数（本編40行・応用例30行）、主要数値、出典が基準と一致することを確かめる。基準は、初回は取得直後のデータ、2回目以降は保存時に記録した指紋（ハッシュ値）である。
+
+```{r}
+#| label: load-datasets
+
+balance_sheet_datasets <- load_balance_sheet_datasets_LFL(
+  securities_sources = securities_sources,
+  gafam_companies = gafam_companies,
+  application_companies = get_application_companies_LFL(),
+  years = 5L
+)
+
+create_dataset_file_kable_LFL(balance_sheet_datasets$files)
+create_dataset_verification_kable_LFL(balance_sheet_datasets)
+```
+
+```{r}
+#| label: read-datasets
+
+balance_sheet_comparison <- balance_sheet_datasets$comparison
+application <- balance_sheet_datasets$application
+balance_sheets <- balance_sheet_comparison$balance_sheets
+
+show_data_structure_LFL(balance_sheets)
+```
+
+`arrow` は、ファイルをRに読み込む前に、Dataset のまま絞り込みや集計を行うこともできる。次の例では、比率の計算と会社ごとの5期平均をarrow側で行い、結果だけをRに取り込む。
+
+```{r}
+#| label: query-dataset
+
+query_balance_sheet_dataset_LFL("balance_sheets") |>
+  create_dataset_query_kable_LFL()
+```
+
+## X.3 貸借対照表の一覧
+
+8社×5期の計40行を示す。金額の末尾の `*` は、公表値ではなく上記の式で算出した値である。大和証券の2024年3月期以降は、十億円単位の公表値を百万円に換算している。
+
+```{r}
+#| label: show-balance-sheets
+
+create_balance_sheet_kable_LFL(balance_sheets)
+```
+
+## X.4 出典と勘定科目の対応
+
+各行の出典書類と、各項目をどの科目名・XBRL要素から読んだかを示す。分析に使った数値から、元の開示書類の該当行までたどれる。
+
+```{r}
+#| label: show-balance-sheet-sources
+
+create_balance_sheet_source_kable_LFL(balance_sheets)
+```
+
+```{r}
+#| label: show-original-items
+
+create_original_item_kable_LFL(
+  balance_sheet_comparison$original_items,
+  balance_sheets
+)
+```
+
+## X.5 検証
+
+各社について次のことを確かめる。
+
+- 5期分がそろい、欠損がないこと。
+- 総資産 ＝ 流動資産 ＋ 固定資産 が成り立つこと。
+- 総資産 ＝ 流動負債 ＋ 固定負債 ＋ 特別法上の準備金 ＋ 純資産 が成り立つこと。
+
+公表単位の端数処理による差は、3単位まで許す。GAFAMについては、これとは別に、XBRLインスタンスの総資産とCompany Factsの総資産の一致、総資産と負債・純資産合計の一致も確かめている。
+
+```{r}
+#| label: show-checks
+
+create_balance_sheet_check_kable_LFL(balance_sheet_comparison$checks)
+```
+
+## X.6 財務構成の変化
+
+最初の期から直近期までに、総資産に対する比率がどう変わったかをまとめる。
+
+```{r}
+#| label: show-composition-change
+
+summarize_composition_change_LFL(balance_sheets) |>
+  create_composition_change_kable_LFL()
+```
+
+```{r}
+#| label: plot-funding-composition
+#| fig-width: 10
+#| fig-height: 6
+
+balance_sheet_composition <- compute_balance_sheet_composition_LFL(balance_sheets)
+
+plot_balance_sheet_composition_LFL(balance_sheet_composition, side = "負債・純資産") |>
+  show_plot_LFL()
+```
+
+```{r}
+#| label: plot-asset-composition
+#| fig-width: 10
+#| fig-height: 6
+
+plot_balance_sheet_composition_LFL(balance_sheet_composition, side = "資産") |>
+  show_plot_LFL()
+```
+
+**証券会社**は、3社とも総資産の98〜100%が流動資産である。中身は、トレーディング商品、有価証券担保貸付金、信用取引資産などである。調達側では流動負債が総資産の8〜9割を占め、純資産比率は3〜5%にとどまる。短期の担保付き資金調達で証券在庫を抱える、高レバレッジの構造である。5年間では、SBI証券の総資産がほぼ倍（+94.7%）になった。その一方で純資産比率は5.0%から3.2%へ下がり、流動負債比率は91.0%から93.6%へ上がった。大和証券も、流動負債比率が84.3%から89.3%へ上がっている。
+
+**GAFAM**は、証券会社と反対に、固定資産と純資産の比率が高い。5年間で、Alphabet（52.4%→34.6%）、Meta（40.2%→29.7%）、Amazon（38.4%→28.0%）、Microsoft（46.5%→27.4%）の流動資産比率が大きく下がり、資産の重心が固定資産へ移った。データセンターなどへの設備投資の拡大と整合的な動きである。純資産比率は、Amazon（32.9%→50.2%）、Microsoft（45.6%→58.3%）、Apple（14.4%→27.7%）で上がった。Meta（75.2%→59.4%）は負債の増加で下がった。Appleは5社の中で唯一、流動資産比率が上がった（38.4%→43.0%）。
+
+## X.7 応用例1：IT・半導体
+
+連結・直近5通期。金額は報告通貨、比較は比率。サムスン電子：IR監査済財務諸表（K-IFRS、百万KRW）、ソフトバンクグループ：EDINET（IFRS、百万円）、NVIDIA：SEC 10-K（百万USD）。サムスン電子の無形資産はのれんを含む。
+
+```{r}
+#| label: compute-application-metrics
+
+application_ratios <- compute_application_ratios_LFL(application$balance_sheets)
+application_metrics <- compute_application_metrics_LFL(application$balance_sheets)
+```
+
+```{r}
+#| label: show-it
+
+create_application_kable_LFL(application$balance_sheets, theme = "IT・半導体")
+```
+
+```{r}
+#| label: plot-it-metrics
+#| fig-width: 10
+#| fig-height: 6
+
+plot_application_metrics_LFL(application_metrics, theme = "IT・半導体") |>
+  show_plot_LFL()
+```
+
+```{r}
+#| label: plot-it-assets
+#| fig-width: 10
+#| fig-height: 4.5
+
+plot_application_composition_LFL(application$balance_sheets, theme = "IT・半導体", side = "資産") |>
+  show_plot_LFL()
+```
+
+```{r}
+#| label: plot-it-funding
+#| fig-width: 10
+#| fig-height: 4.5
+
+plot_application_composition_LFL(application$balance_sheets, theme = "IT・半導体", side = "負債・純資産") |>
+  show_plot_LFL()
+```
+
+```{r}
+#| label: plot-it-breakdown
+#| fig-width: 10
+#| fig-height: 4.5
+
+plot_noncurrent_breakdown_LFL(application_ratios, theme = "IT・半導体") |>
+  show_plot_LFL()
+```
+
+## X.8 応用例2：製薬
+
+連結・直近5通期。イーライリリー：SEC 10-K（百万USD）、武田薬品工業：EDINET（IFRS、百万円）、ノボ ノルディスク：SEC 20-F（IFRS、百万DKK）。`†`：のれんを注記で分割（2021〜2023年のノボ ノルディスク）。
+
+```{r}
+#| label: show-pharma
+
+create_application_kable_LFL(application$balance_sheets, theme = "製薬")
+```
+
+```{r}
+#| label: plot-pharma-metrics
+#| fig-width: 10
+#| fig-height: 6
+
+plot_application_metrics_LFL(application_metrics, theme = "製薬") |>
+  show_plot_LFL()
+```
+
+```{r}
+#| label: plot-pharma-assets
+#| fig-width: 10
+#| fig-height: 4.5
+
+plot_application_composition_LFL(application$balance_sheets, theme = "製薬", side = "資産") |>
+  show_plot_LFL()
+```
+
+```{r}
+#| label: plot-pharma-funding
+#| fig-width: 10
+#| fig-height: 4.5
+
+plot_application_composition_LFL(application$balance_sheets, theme = "製薬", side = "負債・純資産") |>
+  show_plot_LFL()
+```
+
+```{r}
+#| label: plot-pharma-breakdown
+#| fig-width: 10
+#| fig-height: 4.5
+
+plot_noncurrent_breakdown_LFL(application_ratios, theme = "製薬") |>
+  show_plot_LFL()
+```
+
+## X.9 応用例の出典と検証
+
+```{r}
+#| label: show-application-sources
+
+create_balance_sheet_source_kable_LFL(application$balance_sheets)
+```
+
+```{r}
+#| label: show-application-original-items
+
+create_application_original_item_kable_LFL(application)
+```
+
+```{r}
+#| label: show-application-checks
+
+create_balance_sheet_check_kable_LFL(application$checks)
+```
+
+## X.10 まとめ
+
+開示元と書式が異なる14社について、貸借対照表を同じ形の `tibble` に取り込み、原本の科目名・XBRL要素・書類番号までたどれる形で比較した。取得元は、EDINET・TDnet・各社の公告・SEC EDGAR・各社のIRサイトであり、形式はXBRL・PDF・JSONである。
+
+データベンダーを介さずに済むのは、「どこに何が開示されているか」を調べ、形式の違いを関数で吸収し、検算で原本と照合する作業を、AIが組み立てられるようになったからである。同じ枠組みは、韓国のOpen DART、台湾のMOPS、英国のFCA National Storage Mechanism、EUのfilings.xbrl.org（ESEF）にも広げられる。
