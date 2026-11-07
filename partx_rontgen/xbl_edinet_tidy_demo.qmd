@@ -46,9 +46,24 @@ XBRL（eXtensible Business Reporting Language）は、企業の財務報告を�
 
 背景には、決算書の数字を集計・比較するたびに、人が表を読み、科目を判断し、別のシステムに転記する手間があった。1998年、米国の公認会計士チャールズ・ホフマンが、XMLを使って財務情報を電子的に報告する方法を探り始めた。その取り組みが、2000年にXBRLとして公表された。現在使われている **Inline XBRL（iXBRL）** では、ブラウザーで読める決算書の中にXBRLタグを埋め込むため、同じ文書を人が読んで確認し、プログラムが数値とその意味を取り出せる。
 
+出典：XBRL International「[XBRL技術資料](https://www.xbrl.org/2010techdiscussion/2010techdiscussion.pdf)」、「[XBRL Glossary](https://www.xbrl.org/guidance/xbrl-glossary/)」。
+
 XBRLが取得できる資料からはタグを使って数値を取り出し、PDFやJSONで提供される資料からも必要な項目を取得する。AIは、資料を探し、形式や科目の違いを調べ、比較できる形に整える処理を組み立てる。Rで取得・照合した結果は、出典を残したうえでParquetに保存し、Arrowで読み戻して表やグラフにする。**XBRLは開示された数値の意味を伝える標準で、Parquetは整えた分析用データを保存する形式である。**
 
 この章のデータでは、たとえばAppleの2024年9月期の総資産は、10-KのXBRLインスタンスに `us-gaap:Assets` という要素で、決算日（`2024-09-28`）の文脈と通貨単位（`iso4217:USD`）を伴って記録されている。`read_xbrl_instance_LFL()` は、この要素名・文脈・単位をまとめて読み、値の意味を保ったまま表に取り込む。
+
+### X.0.2 各国・地域のXBRL取得先
+
+XBRLは共通の報告標準だが、開示資料の検索や取得の窓口は国・地域によって異なる。本章で使う日本・米国の窓口と、他の市場に対象を広げる際の取得先を示す。
+
+| 国・地域 | 取得先 | 取得できる資料・データ |
+|---|---|---|
+| 日本 | [金融庁 EDINET](https://disclosure2dl.edinet-fsa.go.jp/guide/static/disclosure/WZEK0110.html) | 有価証券報告書などのXBRL原本。今回の証券会社のように、対象法人自身の提出書類があるかを確認する。 |
+| 米国 | [SEC EDGAR](https://www.sec.gov/search-filings/edgar-application-programming-interfaces) | 10-K・20-Fなどの提出書類と、標準タグの数値をまとめた `Company Facts`。 |
+| 韓国 | [Open DART](https://engopendart.fss.or.kr/intro/main.do) | 財務諸表の項目データとXBRL原本ZIP。APIの利用にはキーが必要。 |
+| 台湾 | [MOPS（公開資訊觀測站）](https://mops.twse.com.tw/) | XBRL書類の企業別・一括ダウンロード。 |
+| 英国 | [FCA National Storage Mechanism](https://www.fca.org.uk/publication/primary-market/fca-nsm-user-guide.pdf) | 上場企業の構造化年次報告書を探す窓口。 |
+| EU | [filings.xbrl.org](https://filings.xbrl.org/) | 複数国のESEF報告書を探せる公開リポジトリ。収録範囲は国・年度によって異なる。 |
 
 ## X.1 取得元と取得方法
 
@@ -85,7 +100,7 @@ show_table_LFL(gafam_companies)
 - 負債合計 ＝ 総資産 − 純資産（`Liabilities` をタグ付けしていないAmazon）
 - 特別法上の準備金 ＝ 負債合計 − 流動負債 − 固定負債（大和証券の2022/3・2023/3、決算説明資料の各期）
 
-証券会社の負債の部には、流動負債・固定負債のほかに金融商品取引責任準備金などの特別法上の準備金があるため、これを別の列にした。GAFAMの純資産は株主資本合計（`StockholdersEquity`）である。
+証券会社の負債の部には、流動負債・固定負債のほかに金融商品取引責任準備金などの特別法上の準備金があるため、これを別の列にした。GAFAMの純資産には、非支配持分を含む `StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest` が報告されていればそれを、なければ株主資本合計の `StockholdersEquity` を使う。各社・各項目で採用したタグは、X.4の「勘定科目の対応」の表で確認できる（今回の5社はいずれも `StockholdersEquity`）。
 
 ### X.2.1 Parquetへの保存とarrowによる読込み
 
